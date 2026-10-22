@@ -34,13 +34,36 @@
     }
     window.scrollTo(0, 0);
   }
+  var annoyedTimer = null;
+
   function sleepNgern() {
     document.querySelectorAll("#guide .ngern-wrap, #guide-ask .ngern-wrap").forEach(function (wrap) {
+      // Remember the awake cat so a poke can wake her briefly.
+      if (!wrap.dataset.awake && wrap.querySelector(".ngern")) wrap.dataset.awake = wrap.innerHTML;
       wrap.innerHTML = '<img src="/mascot/ngern-sleeping.svg" alt="Ngern the Korat cat" width="120" height="120">';
     });
     setGuide("sleep");
     var ga = document.getElementById("guide-ask");
     if (ga) ga.className = "guide guide-ask s-sleep";
+  }
+
+  // Clicking the sleeping cat: she wakes, complains, and goes back
+  // to sleep a couple of seconds later.
+  function pokeSleep(wrap) {
+    var guide = wrap.closest ? wrap.closest(".guide") : null;
+    if (!guide || !guide.classList.contains("s-sleep")) return;
+    if (wrap.dataset.awake) wrap.innerHTML = wrap.dataset.awake;
+    guide.classList.remove("s-sleep");
+    guide.classList.add("s-done");
+    var b = guide.querySelector(".bubble");
+    if (b) b.textContent = uiLang() === "th"
+      ? "\u0e40\u0e2e\u0e49\u0e22! \u0e01\u0e33\u0e25\u0e31\u0e07\u0e19\u0e2d\u0e19\u0e2d\u0e22\u0e39\u0e48\u0e40\u0e25\u0e22 \u0e02\u0e2d\u0e2d\u0e35\u0e01\u0e41\u0e1b\u0e4a\u0e1a\u0e19\u0e30\u2026"
+      : "Hey! I was sleeping\u2026 five more minutes\u2026";
+    clearTimeout(annoyedTimer);
+    annoyedTimer = setTimeout(function () {
+      sleepNgern();
+      bubble(t("sleep"));
+    }, 2400);
   }
 
   var STR = {
@@ -360,6 +383,9 @@
   function init() {
     var form = document.getElementById("ask-form");
     if (!form || !window.TarotDraw) return;
+    document.querySelectorAll("#guide .ngern-wrap, #guide-ask .ngern-wrap").forEach(function (wrap) {
+      wrap.addEventListener("click", function () { pokeSleep(wrap); });
+    });
     var back = document.getElementById("draw-back");
     if (back) back.addEventListener("click", function () {
       if (history.state && history.state.step) history.back();
