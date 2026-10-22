@@ -53,9 +53,10 @@
     }
     var label = row.querySelector("[data-quota-label]");
     if (label) {
+      var limit = quota.limit || 3;
       label.textContent = uiLang() === "th"
-        ? "\u0e40\u0e2b\u0e25\u0e37\u0e2d " + remaining + "/3 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49"
-        : remaining + " of 3 questions left today";
+        ? "\u0e40\u0e2b\u0e25\u0e37\u0e2d " + remaining + "/" + limit + " \u0e04\u0e33\u0e16\u0e32\u0e21\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49"
+        : remaining + " of " + limit + " questions left today";
     }
   }
 

@@ -289,7 +289,8 @@ app.post("/api/readings", async (c) => {
     return c.json({
       id: open.id,
       cards: open.cards,
-      remaining: Math.max(0, limit - usedNow + 1),
+      // The open draw already counts in usedNow; resuming adds no try.
+      remaining: Math.max(0, limit - usedNow),
       resumed: true,
       question: open.question,
       topic: open.topic,
@@ -323,7 +324,9 @@ app.post("/api/readings", async (c) => {
   await store.ipDayBump(ip, today);
   // SPEC §12: ids + orientations only. Names/images are library data
   // the client fetches separately; nothing to peek at before the flip.
-  const remaining = Math.max(0, limit - used);
+  // `used` was counted before this insert, so this draw leaves
+  // limit - used - 1 tries.
+  const remaining = Math.max(0, limit - used - 1);
   return c.json({ id, cards: drawn, remaining });
 });
 

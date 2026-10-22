@@ -352,7 +352,7 @@
     bubble(lang === "th" ? "\u0e19\u0e35\u0e48\u0e04\u0e37\u0e2d\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13" : "Here is your reading");
     streamInto(mount2, reading, lang, function () {
       if (window.TarotHome) window.TarotHome.refresh();
-      var left = typeof res.data.remaining === "number" ? res.data.remaining - 1 : 1;
+      var left = typeof res.data.remaining === "number" ? res.data.remaining : 1;
       againButton(mount2, reading, left);
     });
   }
@@ -363,9 +363,12 @@
     var back = document.getElementById("draw-back");
     if (back) back.addEventListener("click", function () {
       if (history.state && history.state.step) history.back();
-      else showStep(1);
+      else { showStep(1); if (window.TarotHome) window.TarotHome.refresh(); }
     });
-    window.addEventListener("popstate", function () { showStep(1); });
+    window.addEventListener("popstate", function () {
+      showStep(1);
+      if (window.TarotHome) window.TarotHome.refresh();
+    });
     if (/[?&]focus=q/.test(location.search)) {
       var q0 = document.getElementById("q");
       if (q0) q0.focus();
