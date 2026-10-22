@@ -323,3 +323,7 @@ a{color:var(--accent)}
 .rtext .sec-advice .sec-title{font-family:var(--f-display);font-size:1.08rem;color:#4a3d78;margin:0 0 .45rem}
 .rtext .sec-advice ul{margin:0;padding-left:1.15rem;display:flex;flex-direction:column;gap:.35rem;line-height:1.55}
 .rtext .sec-warning{border-left:4px solid var(--gold);background:color-mix(in srgb,var(--gold) 12%,transparent);border-radius:0 12px 12px 0;padding:.7rem .95rem;line-height:1.55}
+.rtext .sec-follow .sec-title{font-family:var(--f-display);font-size:1.08rem;color:var(--accent);margin:0 0 .5rem}
+.follow-btns{display:flex;flex-direction:column;gap:.5rem}
+.follow-btn{text-align:left;background:var(--card-face);color:var(--card-ink);border:1.5px solid var(--gold-dim);border-radius:12px;padding:.7rem .9rem;font-family:var(--f-body);font-size:.98rem;cursor:pointer;min-height:44px}
+.disclaimer{margin-top:1.2rem;border-top:1px solid var(--gold-dim);padding-top:.8rem;color:var(--muted);font-size:.82rem;line-height:1.55}

@@ -319,6 +319,10 @@
       }, 250 * (i + 1));
     });
     var synth = el("div", "rc rtext", "");
+    synth.addEventListener("click", function (e) {
+      var b = e.target && e.target.closest ? e.target.closest("[data-fq]") : null;
+      if (b && opts.onFollowUp) opts.onFollowUp(decodeURIComponent(b.getAttribute("data-fq") || ""));
+    });
     // Waiting state until the first streamed words arrive.
     synth.innerHTML =
       '<div class="reading-wait" role="status"><span class="spinner" aria-hidden="true"></span>' +
@@ -355,6 +359,15 @@
           }
           return '<div class="sec sec-advice"><p class="sec-title">' + esc(title) + "</p><p>" +
             esc(b.replace(/^\*\*[^*]+\*\*:?\s*/, "")).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>") + "</p></div>";
+        }
+        if (/^(\*\*)?(\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d|Explore further)/.test(b)) {
+          var fTitle = (b.match(/^\*\*([^*]+)\*\*/) || b.match(/^([^:\n]+):/) || [])[1] || "Explore further";
+          var fItems = b.replace(/^\*\*[^*]+\*\*:?\s*/, "").replace(/^[^:\n]+:\s*/, "")
+            .split(/\n/).map(function (x) { return x.replace(/^-\s*/, "").trim(); }).filter(Boolean);
+          return '<div class="sec sec-follow"><p class="sec-title">' + esc(fTitle) + '</p><div class="follow-btns">' +
+            fItems.map(function (q) {
+              return '<button type="button" class="follow-btn" data-fq="' + encodeURIComponent(q) + '">' + esc(q) + "</button>";
+            }).join("") + "</div></div>";
         }
         if (/^\*\*(\u0e04\u0e33\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e08\u0e32\u0e01\u0e44\u0e1e\u0e48|Warning)/.test(b)) {
           return '<p class="sec sec-warning">' + html + "</p>";

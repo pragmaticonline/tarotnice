@@ -134,7 +134,8 @@ describe("prompt builder", () => {
       prev: [{ topic: "career", cardNames: ["The Tower"], summary: "Change at work." }],
       nickname: "Ploy",
     });
-    expect(system).toContain("No past/present/future framing");
+    expect(system).toContain("Never");
+    expect(system).toContain("Explore further");
     expect(system).toContain("Summary: ");
     expect(user).toContain("Should we move in?");
     expect(user).toContain("The Lovers");
