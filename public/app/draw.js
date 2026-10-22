@@ -87,9 +87,8 @@
     var G = geom(W);
     var cx = W / 2;
     stage.style.height = G.H + "px";
-    try {
-      stage.scrollIntoView({ block: "start", behavior: REDUCED ? "auto" : "smooth" });
-    } catch (e) {}
+    // No auto-scroll: the page must not jump when shuffling starts;
+    // the header stays on screen (the wizard already scrolled to top).
     stage.innerHTML = '<p class="sr" data-live aria-live="polite"></p>';
 
     var deckPos = function (c, i) {
