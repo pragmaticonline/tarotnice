@@ -51,7 +51,9 @@ export function drawReadingCards(): DrawnCard[] {
 // --- Crisis pre-check (runs before quota/draw; a hit costs nothing) ---
 
 const CRISIS_PATTERNS: { lang: "th" | "en"; re: RegExp }[] = [
+  { lang: "th", re: /\u0e44\u0e21\u0e48\u0e2d\u0e22\u0e32\u0e01\u0e2d\u0e22\u0e39\u0e48\u0e41\u0e25\u0e49\u0e27|\u0e2d\u0e22\u0e32\u0e01\u0e2b\u0e32\u0e22\u0e44\u0e1b|\u0e08\u0e1a\u0e0a\u0e35\u0e27\u0e34\u0e15|\u0e01\u0e34\u0e19\u0e22\u0e32\u0e15\u0e32\u0e22|\u0e42\u0e14\u0e14\u0e15\u0e36\u0e01|\u0e44\u0e21\u0e48\u0e2d\u0e22\u0e32\u0e01\u0e21\u0e35\u0e0a\u0e35\u0e27\u0e34\u0e15\u0e2d\u0e22\u0e39\u0e48/ },
   { lang: "en", re: /suicid|\bkill (myself|me)\b|self[-\s]?harm|end (my|this) life|hurt(ing)? myself|cutting myself/i },
+  { lang: "en", re: /want to die|end it all|no (reason|point) (to|in) liv|better off dead|jump off|overdose|hang myself|wish I (was|were) dead/i },
   { lang: "en", re: /\babuse[ds]?\b|\bassault(ed)?\b|domestic violence|rape[ds]?\b/i },
   { lang: "th", re: /\u0e06\u0e48\u0e32\u0e15\u0e31\u0e27\u0e15\u0e32\u0e22|\u0e2d\u0e22\u0e32\u0e01\u0e15\u0e32\u0e22|\u0e44\u0e21\u0e48\u0e2d\u0e22\u0e32\u0e01\u0e21\u0e35\u0e0a\u0e35\u0e27\u0e34\u0e15|\u0e17\u0e33\u0e23\u0e49\u0e32\u0e22\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07|\u0e01\u0e23\u0e35\u0e14\u0e41\u0e02\u0e19/ },
   { lang: "th", re: /\u0e16\u0e39\u0e01\u0e17\u0e33\u0e23\u0e49\u0e32\u0e22|\u0e16\u0e39\u0e01\u0e02\u0e48\u0e21\u0e02\u0e37\u0e19|\u0e02\u0e48\u0e21\u0e02\u0e37\u0e19|\u0e17\u0e32\u0e23\u0e38\u0e13|\u0e04\u0e27\u0e32\u0e21\u0e23\u0e38\u0e19\u0e41\u0e23\u0e07\u0e43\u0e19\u0e04\u0e23\u0e2d\u0e1a\u0e04\u0e23\u0e31\u0e27|\u0e25\u0e48\u0e27\u0e07\u0e25\u0e30\u0e40\u0e21\u0e34\u0e14/ },
@@ -60,6 +62,42 @@ const CRISIS_PATTERNS: { lang: "th" | "en"; re: RegExp }[] = [
 /** True when the question signals self-harm, suicide, abuse, or crisis. */
 export function isCrisisQuestion(question: string): boolean {
   return CRISIS_PATTERNS.some((p) => p.re.test(question));
+}
+
+/**
+ * Borderline vocabulary that earns a model double-check (SPEC §10.4
+ * keywords + small classifier). Deliberately broad — the classifier
+ * makes the final call, and it fails open so borderline-but-benign
+ * questions still get readings.
+ */
+const CRISIS_WATCH = /die|death|kill|hurt|harm|hopeless|worthless|pointless|give up|can'?t go on|end this pain|\u0e15\u0e32\u0e22|\u0e2a\u0e34\u0e49\u0e19\u0e2b\u0e27\u0e31\u0e07|\u0e17\u0e23\u0e21\u0e32\u0e19|\u0e1b\u0e27\u0e14\u0e23\u0e49\u0e32\u0e27/i;
+
+export function crisisWatchHit(question: string): boolean {
+  return CRISIS_WATCH.test(question);
+}
+
+/** Cheap classifier for watch-listed questions. True = crisis. */
+export async function classifyCrisis(aiRun: AiRun, question: string): Promise<boolean> {
+  try {
+    let out = "";
+    for await (const delta of streamDeltas(aiRun, "@cf/meta/llama-3.1-8b-instruct", {
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a safety classifier. Reply with exactly YES if the message expresses suicidal ideation, intent to self-harm, or being abused. Reply NO otherwise. No other words.",
+        },
+        { role: "user", content: question.slice(0, 300) },
+      ],
+      max_tokens: 4,
+    }, 10_000)) {
+      out += delta;
+      if (out.length > 12) break;
+    }
+    return /^\s*yes\b/i.test(out);
+  } catch {
+    return false;
+  }
 }
 
 /** Supportive reply (no reading). Thai users get the 1323 hotline. */

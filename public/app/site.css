@@ -21,6 +21,7 @@
 }
 
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:linear-gradient(180deg,var(--bg-2),var(--bg) 40%);color:var(--ink);font-family:var(--f-body);min-height:100vh}
 .wrap{max-width:720px;margin:0 auto;padding:16px 16px 48px;display:flex;flex-direction:column;gap:14px}

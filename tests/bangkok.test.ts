@@ -23,4 +23,13 @@ describe("bangkokDay", () => {
     expect(midnight - now).toBeLessThanOrEqual(24 * 3600 * 1000);
     expect(bangkokDay(new Date(midnight))).not.toBe(bangkokDay(new Date(now)));
   });
+
+  it("is exact epoch math, independent of the runtime timezone", () => {
+    // Bangkok midnight starting Oct 15 is Oct 14 17:00 UTC sharp.
+    expect(nextBangkokMidnight(new Date("2026-10-14T16:59:00Z"))).toBe(Date.parse("2026-10-14T17:00:00Z"));
+    expect(nextBangkokMidnight(new Date("2026-10-14T17:00:00Z"))).toBe(Date.parse("2026-10-15T17:00:00Z"));
+    // 17:00 UTC is 00:00 Bangkok: already the new day.
+    expect(bangkokDay(new Date("2026-10-14T17:00:00Z"))).toBe("2026-10-15");
+    expect(bangkokDay(new Date(nextBangkokMidnight(new Date("2026-10-14T16:59:00Z"))))).toBe("2026-10-15");
+  });
 });

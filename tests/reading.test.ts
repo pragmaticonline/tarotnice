@@ -4,6 +4,8 @@ import {
   cleanQuestion,
   crisisMessage,
   drawReadingCards,
+  classifyCrisis,
+  crisisWatchHit,
   isCrisisQuestion,
   isLang,
   isTopic,
@@ -60,6 +62,27 @@ describe("drawReadingCards", () => {
 });
 
 describe("crisis pre-check", () => {
+  it("catches the expanded English + Thai phrasings", () => {
+    expect(isCrisisQuestion("I want to die")).toBe(true);
+    expect(isCrisisQuestion("I just want to end it all")).toBe(true);
+    expect(isCrisisQuestion("There is no reason to live anymore")).toBe(true);
+    expect(isCrisisQuestion("\u0e44\u0e21\u0e48\u0e2d\u0e22\u0e32\u0e01\u0e2d\u0e22\u0e39\u0e48\u0e41\u0e25\u0e49\u0e27")).toBe(true);
+    expect(isCrisisQuestion("\u0e2d\u0e22\u0e32\u0e01\u0e2b\u0e32\u0e22\u0e44\u0e1b")).toBe(true);
+    expect(isCrisisQuestion("\u0e42\u0e14\u0e14\u0e15\u0e36\u0e01")).toBe(true);
+    expect(isCrisisQuestion("\u0e01\u0e34\u0e19\u0e22\u0e32\u0e15\u0e32\u0e22")).toBe(true);
+    expect(crisisWatchHit("Everything feels hopeless lately")).toBe(true);
+    expect(crisisWatchHit("Will my business grow this year?")).toBe(false);
+  });
+
+  it("classifies via the model and fails open", async () => {
+    const yes = async () => ({ response: "YES" });
+    const no = async () => ({ response: "NO" });
+    const boom = async () => { throw new Error("ai down"); };
+    expect(await classifyCrisis(yes, "anything")).toBe(true);
+    expect(await classifyCrisis(no, "anything")).toBe(false);
+    expect(await classifyCrisis(boom, "anything")).toBe(false);
+  });
+
   it("catches English crisis signals", () => {
     expect(isCrisisQuestion("I want to kill myself")).toBe(true);
     expect(isCrisisQuestion("I have been cutting myself")).toBe(true);

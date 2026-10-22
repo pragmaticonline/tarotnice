@@ -1,38 +1,24 @@
 // Asia/Bangkok day boundaries. Every "day" in TarotNice (daily card,
-// question quota, streaks) is a Bangkok calendar day, computed on the
-// server so visitors in any timezone share one clock.
-const BKK = "Asia/Bangkok";
-
-const dayFmt = new Intl.DateTimeFormat("en-CA", {
-  timeZone: BKK,
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-});
+// question quota, streaks) is a Bangkok calendar day. Bangkok is a
+// fixed UTC+7 with no DST, so all boundaries are pure epoch math —
+// no locale parsing, identical in every runtime timezone.
+const OFFSET_MS = 7 * 3600 * 1000;
+const DAY_MS = 24 * 3600 * 1000;
 
 /** "YYYY-MM-DD" in Asia/Bangkok. */
 export function bangkokDay(d = new Date()): string {
-  return dayFmt.format(d);
+  return new Date(d.getTime() + OFFSET_MS).toISOString().slice(0, 10);
 }
 
-const weekdayFmt = new Intl.DateTimeFormat("en-US", {
-  timeZone: BKK,
-  weekday: "short",
-});
-
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-/** 0 (Sunday) .. 6 (Saturday) in Asia/Bangkok. */
+/** 0 (Sunday) .. 6 (Saturday) in Asia/Bangkok.
+ *  Epoch day 0 (1970-01-01) was a Thursday. */
 export function bangkokWeekday(d = new Date()): number {
-  return WEEKDAYS.indexOf(weekdayFmt.format(d));
+  const days = Math.floor((d.getTime() + OFFSET_MS) / DAY_MS);
+  return (((days + 4) % 7) + 7) % 7;
 }
 
 /** Epoch ms of the next Bangkok midnight (quota reset countdown). */
 export function nextBangkokMidnight(d = new Date()): number {
-  const bkk = new Date(d.toLocaleString("en-US", { timeZone: BKK }));
-  const utc = new Date(d.toLocaleString("en-US", { timeZone: "UTC" }));
-  const offset = bkk.getTime() - utc.getTime();
-  const bkkMidnight = new Date(bkk);
-  bkkMidnight.setHours(24, 0, 0, 0);
-  return bkkMidnight.getTime() - offset;
+  const shifted = d.getTime() + OFFSET_MS;
+  return (Math.floor(shifted / DAY_MS) + 1) * DAY_MS - OFFSET_MS;
 }

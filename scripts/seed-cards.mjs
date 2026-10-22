@@ -4,7 +4,9 @@
 // Requires content/cards.json + content/meanings.{en,th}.json
 // (see scripts/build-meanings.mjs).
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+
+mkdirSync("build", { recursive: true });
 
 function esc(value) {
   return String(value ?? "").replace(/'/g, "''");

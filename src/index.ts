@@ -8,8 +8,10 @@ import { bangkokDay, nextBangkokMidnight } from "./lib/bangkok";
 import { dailyMessage, drawDailyCard, luckyColour } from "./lib/daily";
 import {
   buildReadingPrompt,
+  classifyCrisis,
   cleanQuestion,
   crisisMessage,
+  crisisWatchHit,
   drawReadingCards,
   isCrisisQuestion,
   isLang,
@@ -265,8 +267,14 @@ app.post("/api/readings", async (c) => {
   const topic: Topic = isTopic(body.topic) ? body.topic : "general";
   const lang = isLang(body.lang) ? body.lang : requestUiLang(c);
   if (!question) return c.json({ error: "bad_question" }, 400);
-  // Crisis pre-check first: supportive reply, no reading, no quota cost.
-  if (isCrisisQuestion(question)) {
+  // Crisis pre-check first: supportive reply, no reading, no quota
+  // cost. Keywords, then a cheap classifier for borderline phrasing.
+  let crisis = isCrisisQuestion(question);
+  if (!crisis && crisisWatchHit(question) && c.env.AI) {
+    const aiRun = (m: string, input: unknown) => c.env.AI!.run(m as never, input as never) as Promise<unknown>;
+    crisis = await classifyCrisis(aiRun, question);
+  }
+  if (crisis) {
     return c.json({ crisis: true, message: crisisMessage(lang) });
   }
   const store = d1TarotStore(c.env.DB);
@@ -942,12 +950,14 @@ app.delete("/api/readings/:id", async (c) => {
 app.put("/api/readings/:id/journal", async (c) => {
   const user = await authedUser(c);
   if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
-  let body: { journal?: unknown };
+  let body: { journal?: unknown; text?: unknown };
   try {
     body = await c.req.json();
   } catch {
     return c.json({ error: "bad_request" }, 400);
   }
+  // SPEC §12 names the field {text}; the app sends {journal}. Accept both.
+  if (body.journal === undefined && body.text !== undefined) body.journal = body.text;
   if (body.journal !== null && typeof body.journal !== "string") {
     return c.json({ error: "bad_request" }, 400);
   }
@@ -1209,8 +1219,16 @@ app.get("/api/me/summary", async (c) => {
   ]);
   let dailyView = null;
   if (daily) {
-    const card = await store.getCard(daily.cardId, daily.lang === "th" ? "th" : "en");
+    const card = await store.getCard(daily.cardId, ui);
     if (card) {
+      // Name + message in the UI language: fall back to the drawn
+      // message only when no cached translation exists yet (the
+      // daily endpoint generates + caches it on demand).
+      let message = daily.message;
+      if (daily.lang !== ui) {
+        const translated = await store.getCachedMessage(today, daily.cardId, daily.reversed, ui);
+        if (translated) message = translated;
+      }
       dailyView = {
         card: {
           id: card.id,
@@ -1220,10 +1238,10 @@ app.get("/api/me/summary", async (c) => {
           image2x: `/static/${card.imageKey}@2x.webp`,
           reversed: daily.reversed,
         },
-        message: daily.message,
+        message,
         luckyColour: luckyColour(),
         shareId: daily.shareId,
-        lang: daily.lang,
+        lang: ui,
       };
     }
   }
@@ -1319,7 +1337,22 @@ app.post("/api/daily", async (c) => {
     });
   };
   const existing = await store.getDaily(user.id, today);
-  if (existing) return respond(existing, false);
+  if (existing) {
+    if (existing.lang === lang) return respond(existing, false);
+    // Drawn earlier in another language: serve name + message in the
+    // language being asked for now (the per-language message cache
+    // makes this one AI call per card/day at most).
+    const view = await store.getCard(existing.cardId, lang);
+    if (!view) return c.json({ error: "unknown_card" }, 500);
+    const cachedMsg = await store.getCachedMessage(today, existing.cardId, existing.reversed, lang);
+    const msg = cachedMsg ?? (await dailyMessage(c.env, view, existing.reversed, lang)).text;
+    if (!cachedMsg) {
+      try {
+        await store.setCachedMessage(today, existing.cardId, existing.reversed, lang, msg);
+      } catch { /* cache is best-effort */ }
+    }
+    return respond({ ...existing, message: msg, lang }, false);
+  }
   const { id, reversed } = drawDailyCard();
   const card = await store.getCard(id, lang);
   if (!card) return c.json({ error: "unknown_card" }, 500);
