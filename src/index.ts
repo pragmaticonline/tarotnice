@@ -23,6 +23,8 @@ import {
 import { computeStreak } from "./lib/streaks";
 import { d1PrefsStore } from "./db/prefs-store";
 import { d1TarotStore } from "./db/tarot-store";
+import { renderShareImage, type ShareCard } from "./lib/share-images";
+import { shareLandingPage, unsharedPage } from "./routes/share";
 import {
   clientCategory,
   countryOf,
@@ -190,6 +192,15 @@ async function currentUser(c: {
 }
 
 app.get("/", async (c) => {
+  // Referral touch: ?ref={shareId} from a share landing CTA, kept 7 days.
+  const ref = c.req.query("ref");
+  if (isShareId(ref)) {
+    setCookie(c, "tarotnice_ref", ref, {
+      path: "/",
+      maxAge: 7 * 24 * 3600,
+      sameSite: "Lax",
+    });
+  }
   const origin = new URL(c.req.url).origin;
   return c.html(homePage({ origin, uiLang: requestUiLang(c) }));
 });
@@ -239,8 +250,9 @@ app.post("/api/readings", async (c) => {
     return c.json({ crisis: true, message: crisisMessage(lang) });
   }
   const store = d1TarotStore(c.env.DB);
+  await attributeReferral(c, store, user.id);
   const today = bangkokDay();
-  const limit = questionLimit(c.env);
+  const limit = await effectiveLimit(c.env, store, user.id);
   const used = await store.countReadings(user.id, today);
   if (used >= limit) {
     recordEvent(c.env, { name: "limit_hit", lang, ...requestContext(c), userKind: userKind(user) });
@@ -369,6 +381,14 @@ app.get("/api/readings/:id/stream", async (c) => {
           name: "reading_completed", lang, topic: row.topic,
           ...requestContext(c), userKind: userKind(user),
         });
+        try {
+          const referral = await store.getReferral(user.id);
+          if (referral && !referral.converted && (await store.convertReferral(user.id))) {
+            recordEvent(c.env, { name: "referral_converted", ...requestContext(c), userKind: userKind(user) });
+          }
+        } catch {
+          /* attribution is best-effort */
+        }
         send(await donePayload(summary));
         controller.close();
       } catch (error) {
@@ -399,6 +419,237 @@ app.post("/api/readings/:id/retry", async (c) => {
   await store.setReadingResult(row.id, { aiText: "", aiSummary: "", model: "", status: "drawn" });
   return c.json({ ok: true });
 });
+
+// Create (lazily) a share link for a reading or daily card.
+// {kind:'reading'|'daily', ref, showQuestion, mode} -> share URLs.
+// The question stays private unless showQuestion is explicitly true.
+app.post("/api/share", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  let body: { kind?: unknown; ref?: unknown; showQuestion?: unknown; mode?: unknown };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "bad_request" }, 400);
+  }
+  const showQuestion = body.showQuestion === true || body.showQuestion === 1;
+  const mode = body.mode === "night" ? "night" : "day";
+  const store = d1TarotStore(c.env.DB);
+  let shareId: string | null = null;
+  let base = "";
+  let lang = requestUiLang(c);
+  if (body.kind === "reading") {
+    if (typeof body.ref !== "string") return c.json({ error: "bad_request" }, 400);
+    const row = await store.getReading(body.ref);
+    if (!row || row.userId !== user.id || row.status !== "complete") {
+      return c.json({ error: "not_found" }, 404);
+    }
+    lang = row.lang === "th" ? "th" : "en";
+    shareId = row.shareId;
+    if (!shareId) {
+      shareId = newShareId();
+    }
+    await store.setReadingShare(body.ref, shareId, showQuestion);
+    base = `/r/${shareId}`;
+  } else if (body.kind === "daily") {
+    const draw = await store.getDaily(user.id, bangkokDay());
+    if (!draw) return c.json({ error: "no_daily" }, 400);
+    lang = draw.lang === "th" ? "th" : "en";
+    shareId = draw.shareId;
+    if (!shareId) {
+      shareId = newShareId();
+      await store.setDailyShare(user.id, bangkokDay(), shareId);
+    }
+    base = `/d/${shareId}`;
+  } else {
+    // Badge/milestone shares arrive with /progress (M8).
+    return c.json({ error: "bad_kind" }, 400);
+  }
+  const origin = new URL(c.req.url).origin;
+  return c.json({
+    shareId,
+    url: `${origin}${base}`,
+    storyImageUrl: `${origin}${base}/story.png?lang=${lang}&mode=${mode}`,
+    ogImageUrl: `${origin}${base}/og.png?lang=${lang}&mode=${mode}`,
+  });
+});
+
+// Log a share-target tap (virality metrics).
+app.post("/api/shares", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  let body: { shareId?: unknown; target?: unknown };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "bad_request" }, 400);
+  }
+  if (!isShareId(body.shareId)) return c.json({ error: "bad_request" }, 400);
+  if (typeof body.target !== "string" || !(SHARE_TARGETS as readonly string[]).includes(body.target)) {
+    return c.json({ error: "bad_request" }, 400);
+  }
+  const store = d1TarotStore(c.env.DB);
+  if (!(await store.shareOwner(body.shareId))) return c.json({ error: "not_found" }, 404);
+  await store.insertShare(crypto.randomUUID(), body.shareId, user.id, body.target);
+  recordEvent(c.env, { name: "share_target", detail: body.target, ...requestContext(c), userKind: userKind(user) });
+  return c.json({ ok: true });
+});
+
+// Unshare: the landing page becomes a friendly 410.
+app.delete("/api/share/:shareId", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  const shareId = c.req.param("shareId");
+  if (!isShareId(shareId)) return c.json({ error: "bad_request" }, 400);
+  const store = d1TarotStore(c.env.DB);
+  const cleared =
+    (await store.clearReadingShare(shareId, user.id)) ||
+    (await store.clearDailyShare(shareId, user.id));
+  if (!cleared) return c.json({ error: "not_found" }, 404);
+  return c.json({ ok: true });
+});
+
+async function landingCards(
+  store: ReturnType<typeof d1TarotStore>,
+  cards: { id: number; reversed: boolean }[],
+  lang: "th" | "en",
+): Promise<{ image: string; image2x: string; name: string; reversed: boolean; reversedLabel: string }[]> {
+  const out = [];
+  for (const card of cards) {
+    const view = await store.getCard(card.id, lang);
+    if (!view) continue;
+    out.push({
+      image: `/static/${view.imageKey}.webp`,
+      image2x: `/static/${view.imageKey}@2x.webp`,
+      name: view.name,
+      reversed: card.reversed,
+      reversedLabel: lang === "th" ? "\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27" : "reversed",
+    });
+  }
+  return out;
+}
+
+app.get("/r/:shareId", async (c) => {
+  const ui = requestUiLang(c);
+  const origin = new URL(c.req.url).origin;
+  const shareId = c.req.param("shareId");
+  if (!isShareId(shareId) || !c.env?.DB) return c.html(unsharedPage(origin, ui), 410);
+  const store = d1TarotStore(c.env.DB);
+  const row = await store.getReadingByShare(shareId);
+  if (!row) return c.html(unsharedPage(origin, ui), 410);
+  const cards = await landingCards(store, row.cards, ui);
+  recordEvent(c.env, { name: "share_landing", kind: "reading", ...requestContext(c), userKind: "guest" });
+  return c.html(
+    shareLandingPage({
+      kind: "reading",
+      origin,
+      shareId,
+      ui,
+      cards,
+      summary: row.aiSummary ?? "",
+      question: row.showQuestion ? row.question : null,
+      ogImage: `${origin}/r/${shareId}/og.png`,
+    }),
+  );
+});
+
+app.get("/d/:shareId", async (c) => {
+  const ui = requestUiLang(c);
+  const origin = new URL(c.req.url).origin;
+  const shareId = c.req.param("shareId");
+  if (!isShareId(shareId) || !c.env?.DB) return c.html(unsharedPage(origin, ui), 410);
+  const store = d1TarotStore(c.env.DB);
+  const row = await store.getDailyByShare(shareId);
+  if (!row) return c.html(unsharedPage(origin, ui), 410);
+  const cards = await landingCards(store, [{ id: row.cardId, reversed: row.reversed }], ui);
+  recordEvent(c.env, { name: "share_landing", kind: "daily", ...requestContext(c), userKind: "guest" });
+  return c.html(
+    shareLandingPage({
+      kind: "daily",
+      origin,
+      shareId,
+      ui,
+      cards,
+      summary: row.message,
+      question: null,
+      ogImage: `${origin}/d/${shareId}/og.png`,
+    }),
+  );
+});
+
+async function shareImageResponse(
+  c: { env: Env; req: { query: (n: string) => string | undefined } },
+  kind: "reading" | "daily",
+  shareId: string,
+  img: "story" | "og",
+): Promise<Response> {
+  const empty = new Response("Not found", { status: 404 });
+  if (!c.env?.DB || !c.env.MEDIA || !c.env.ASSETS) {
+    return new Response("Share images unavailable", { status: 503 });
+  }
+  const store = d1TarotStore(c.env.DB);
+  const qLang = c.req.query("lang");
+  const qMode = c.req.query("mode");
+  const mode = qMode === "night" ? "night" : "day";
+  let lang: "th" | "en" = qLang === "en" || qLang === "th" ? qLang : "th";
+  let cards: { id: number; reversed: boolean }[] = [];
+  let summary = "";
+  let question: string | null = null;
+  if (kind === "reading") {
+    const row = await store.getReadingByShare(shareId);
+    if (!row) return empty;
+    if (qLang !== "en" && qLang !== "th") lang = row.lang === "th" ? "th" : "en";
+    cards = row.cards;
+    summary = row.aiSummary ?? "";
+    if (img === "story" && row.showQuestion) question = row.question;
+  } else {
+    const row = await store.getDailyByShare(shareId);
+    if (!row) return empty;
+    if (qLang !== "en" && qLang !== "th") lang = row.lang === "th" ? "th" : "en";
+    cards = [{ id: row.cardId, reversed: row.reversed }];
+    summary = row.message;
+  }
+  const views: ShareCard[] = [];
+  for (const card of cards) {
+    const view = await store.getCard(card.id, lang);
+    if (!view) return empty;
+    views.push({ key: view.imageKey.replace(/^cards\//, ""), name: view.name, reversed: card.reversed });
+  }
+  const r2key = `share/${shareId}/${img}-${lang}-${mode}${question ? "-q" : ""}.png`;
+  const cached = await c.env.MEDIA.get(r2key);
+  if (cached) {
+    const headers = new Headers();
+    cached.writeHttpMetadata(headers);
+    headers.set("Content-Type", "image/png");
+    headers.set("Cache-Control", "public, max-age=31536000, immutable");
+    return new Response(await cached.arrayBuffer(), { headers });
+  }
+  let png: Uint8Array;
+  try {
+    png = await renderShareImage(
+      { MEDIA: c.env.MEDIA, ASSETS: c.env.ASSETS },
+      { kind: img, shareKind: kind, lang, mode, cards: views, summary, question },
+    );
+  } catch (error) {
+    console.error(JSON.stringify({ message: "share image failed", error: error instanceof Error ? error.message : String(error) }));
+    return new Response("Share images unavailable", { status: 503 });
+  }
+  try {
+    await c.env.MEDIA.put(r2key, png.slice().buffer as ArrayBuffer, {
+      httpMetadata: { contentType: "image/png", cacheControl: "public, max-age=31536000, immutable" },
+    });
+  } catch {
+    /* serve anyway */
+  }
+  return new Response(png.slice().buffer as ArrayBuffer, {
+    headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=31536000, immutable" },
+  });
+}
+
+app.get("/r/:shareId/story.png", (c) => shareImageResponse(c, "reading", c.req.param("shareId"), "story"));
+app.get("/r/:shareId/og.png", (c) => shareImageResponse(c, "reading", c.req.param("shareId"), "og"));
+app.get("/d/:shareId/story.png", (c) => shareImageResponse(c, "daily", c.req.param("shareId"), "story"));
+app.get("/d/:shareId/og.png", (c) => shareImageResponse(c, "daily", c.req.param("shareId"), "og"));
 
 // Account pages (free registration saves readings across devices).
 app.get("/register", (c) => c.html(registerPage(c.req.query("return"), new URL(c.req.url).origin, requestUiLang(c))));
@@ -436,6 +687,68 @@ app.get("/api/me", async (c) => {
 function questionLimit(env: Env | undefined): number {
   const n = Number(env?.DAILY_QUESTION_LIMIT ?? "3");
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : 3;
+}
+
+/** 10-char unguessable public id (base62). Never expose readings.id. */
+function newShareId(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const buf = new Uint32Array(10);
+  crypto.getRandomValues(buf);
+  return [...buf].map((v) => chars[v % 62]).join("");
+}
+
+function isShareId(value: unknown): value is string {
+  return typeof value === "string" && /^[A-Za-z0-9]{10}$/.test(value);
+}
+
+const SHARE_TARGETS = ["native", "line", "facebook", "x", "instagram", "copy", "save"] as const;
+
+function refCookie(c: { req: { raw: Request; header: (n: string) => string | undefined } }): string | null {
+  const header = c.req.header("cookie") ?? "";
+  const found = header
+    .split(";")
+    .map((p) => p.trim())
+    .find((p) => p.startsWith("tarotnice_ref="))
+    ?.slice("tarotnice_ref=".length);
+  const ref = found ? decodeURIComponent(found) : "";
+  return isShareId(ref) ? ref : null;
+}
+
+/** Attribute a referred visitor once (first touch wins). */
+async function attributeReferral(
+  c: { env: Env; req: { raw: Request; header: (n: string) => string | undefined } },
+  store: ReturnType<typeof d1TarotStore>,
+  userId: string,
+): Promise<void> {
+  const ref = refCookie(c);
+  if (!ref) return;
+  try {
+    if (await store.getReferral(userId)) return;
+    const owner = await store.shareOwner(ref);
+    if (!owner || owner.userId === userId) return;
+    await store.insertReferral(userId, ref, owner.userId);
+    recordEvent(c.env, { name: "referral_signup", ...requestContext(c), userKind: "anon" });
+  } catch {
+    /* attribution is best-effort */
+  }
+}
+
+/** Effective question limit: base + referral bonus (max +3/day,
+ *  only when REFERRAL_BONUS is switched on). */
+async function effectiveLimit(
+  env: Env,
+  store: ReturnType<typeof d1TarotStore>,
+  userId: string,
+): Promise<number> {
+  const base = questionLimit(env);
+  if (env.REFERRAL_BONUS !== "1") return base;
+  try {
+    const since = nextBangkokMidnight() - 24 * 3600 * 1000;
+    const bonus = await store.countReferralBonus(userId, since);
+    return base + Math.min(3, bonus);
+  } catch {
+    return base;
+  }
 }
 
 function authedUser(c: { env: AuthEnv; req: { raw: { headers: Headers } } }) {
@@ -525,7 +838,7 @@ app.delete("/api/me", async (c) => {
 });
 
 // Daily card: one per Bangkok day, idempotent. Does not count toward
-// the question quota. 401 when there is no session yet — the client
+// the question quota. 401 when there is no session yet \u2014 the client
 // creates the anonymous session first, then retries.
 app.post("/api/daily", async (c) => {
   const user = await authedUser(c);
@@ -538,6 +851,7 @@ app.post("/api/daily", async (c) => {
   }
   const lang = body.lang === "en" || body.lang === "th" ? body.lang : requestUiLang(c);
   const store = d1TarotStore(c.env.DB);
+  await attributeReferral(c, store, user.id);
   const today = bangkokDay();
   const respond = async (draw: { cardId: number; reversed: boolean; message: string; lang: string; shareId: string | null }, fresh: boolean) => {
     const card = await store.getCard(draw.cardId, lang);

@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, gte } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import * as schema from "./schema";
 
@@ -200,6 +200,7 @@ export function d1TarotStore(db: D1Database) {
       id: string; userId: string; day: string; topic: string; question: string;
       lang: string; cards: { id: number; reversed: boolean }[];
       aiText: string | null; aiSummary: string | null; status: string;
+      shareId: string | null;
     } | null> {
       const rows = await orm
         .select()
@@ -218,6 +219,7 @@ export function d1TarotStore(db: D1Database) {
         id: row.id, userId: row.userId, day: row.bangkokDay, topic: row.topic,
         question: row.question, lang: row.lang, cards,
         aiText: row.aiText, aiSummary: row.aiSummary, status: row.status,
+        shareId: row.shareId,
       };
     },
 
@@ -258,7 +260,131 @@ export function d1TarotStore(db: D1Database) {
         });
     },
 
-    /** Per-IP daily draws (SPEC §5.3 backstop; generous: 15/day). */
+    /** A reading by its public share id (never exposes readings.id). */
+    async getReadingByShare(shareId: string): Promise<{
+      id: string; userId: string; topic: string; question: string; lang: string;
+      cards: { id: number; reversed: boolean }[]; aiSummary: string | null;
+      showQuestion: boolean;
+    } | null> {
+      const rows = await orm
+        .select()
+        .from(schema.readings)
+        .where(eq(schema.readings.shareId, shareId));
+      const row = rows[0];
+      if (!row || row.status !== "complete") return null;
+      let cards: { id: number; reversed: boolean }[] = [];
+      try {
+        const parsed: unknown = JSON.parse(row.cards);
+        if (Array.isArray(parsed)) cards = parsed as { id: number; reversed: boolean }[];
+      } catch {
+        cards = [];
+      }
+      return {
+        id: row.id, userId: row.userId, topic: row.topic, question: row.question,
+        lang: row.lang, cards, aiSummary: row.aiSummary,
+        showQuestion: row.shareQuestion === 1,
+      };
+    },
+
+    async setReadingShare(id: string, shareId: string, showQuestion: boolean): Promise<void> {
+      await orm
+        .update(schema.readings)
+        .set({ shareId, shareQuestion: showQuestion ? 1 : 0 })
+        .where(eq(schema.readings.id, id));
+    },
+
+    async clearReadingShare(shareId: string, userId: string): Promise<boolean> {
+      const rows = await orm
+        .update(schema.readings)
+        .set({ shareId: null })
+        .where(and(eq(schema.readings.shareId, shareId), eq(schema.readings.userId, userId)))
+        .returning({ id: schema.readings.id });
+      return rows.length > 0;
+    },
+
+    async getDailyByShare(shareId: string): Promise<{
+      userId: string; day: string; cardId: number; reversed: boolean;
+      message: string; lang: string;
+    } | null> {
+      const rows = await orm
+        .select()
+        .from(schema.dailyDraws)
+        .where(eq(schema.dailyDraws.shareId, shareId));
+      const row = rows[0];
+      if (!row) return null;
+      return {
+        userId: row.userId, day: row.bangkokDay, cardId: row.cardId,
+        reversed: row.reversed === 1, message: row.message, lang: row.lang,
+      };
+    },
+
+    async setDailyShare(userId: string, day: string, shareId: string): Promise<void> {
+      await orm
+        .update(schema.dailyDraws)
+        .set({ shareId })
+        .where(and(eq(schema.dailyDraws.userId, userId), eq(schema.dailyDraws.bangkokDay, day)));
+    },
+
+    async clearDailyShare(shareId: string, userId: string): Promise<boolean> {
+      const rows = await orm
+        .update(schema.dailyDraws)
+        .set({ shareId: null })
+        .where(and(eq(schema.dailyDraws.shareId, shareId), eq(schema.dailyDraws.userId, userId)))
+        .returning({ userId: schema.dailyDraws.userId });
+      return rows.length > 0;
+    },
+
+    /** Who owns a share id (for referral attribution + unshare). */
+    async shareOwner(shareId: string): Promise<{ kind: "reading" | "daily"; userId: string } | null> {
+      const [reading, daily] = await Promise.all([
+        orm.select({ userId: schema.readings.userId }).from(schema.readings).where(eq(schema.readings.shareId, shareId)),
+        orm.select({ userId: schema.dailyDraws.userId }).from(schema.dailyDraws).where(eq(schema.dailyDraws.shareId, shareId)),
+      ]);
+      if (reading[0]) return { kind: "reading", userId: reading[0].userId };
+      if (daily[0]) return { kind: "daily", userId: daily[0].userId };
+      return null;
+    },
+
+    async insertShare(id: string, shareId: string, userId: string, target: string): Promise<void> {
+      await orm.insert(schema.shares).values({ id, shareId, userId, target, createdAt: Date.now() });
+    },
+
+    async getReferral(visitorId: string): Promise<{ shareId: string; referrerId: string; converted: boolean } | null> {
+      const rows = await orm
+        .select()
+        .from(schema.referrals)
+        .where(eq(schema.referrals.visitorUserId, visitorId));
+      const row = rows[0];
+      if (!row) return null;
+      return { shareId: row.shareId, referrerId: row.referrerUserId, converted: row.firstReadingAt !== null };
+    },
+
+    async insertReferral(visitorId: string, shareId: string, referrerId: string): Promise<void> {
+      await orm
+        .insert(schema.referrals)
+        .values({ visitorUserId: visitorId, shareId, referrerUserId: referrerId, createdAt: Date.now() })
+        .onConflictDoNothing();
+    },
+
+    /** Conversions (first readings) attributed to a referrer since epoch ms. */
+    async countReferralBonus(referrerId: string, since: number): Promise<number> {
+      const rows = await orm
+        .select({ at: schema.referrals.firstReadingAt })
+        .from(schema.referrals)
+        .where(and(eq(schema.referrals.referrerUserId, referrerId), gte(schema.referrals.firstReadingAt, since)));
+      return rows.filter((r) => r.at !== null).length;
+    },
+
+    async convertReferral(visitorId: string): Promise<boolean> {
+      const rows = await orm
+        .update(schema.referrals)
+        .set({ firstReadingAt: Date.now() })
+        .where(and(eq(schema.referrals.visitorUserId, visitorId)))
+        .returning({ visitorUserId: schema.referrals.visitorUserId });
+      return rows.length > 0;
+    },
+
+    /** Per-IP daily draws (SPEC \u00a75.3 backstop; generous: 15/day). */
     async ipDayCount(ip: string, day: string): Promise<number> {
       const rows = await orm
         .select({ count: schema.rateDays.count })
@@ -295,7 +421,7 @@ export function d1TarotStore(db: D1Database) {
       return rows.length;
     },
 
-    /** Distinct active days: daily draws ∪ completed readings. */
+    /** Distinct active days: daily draws \u222a completed readings. */
     async activityDays(userId: string): Promise<string[]> {
       const [draws, readings] = await Promise.all([
         orm

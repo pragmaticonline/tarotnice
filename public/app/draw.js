@@ -5,7 +5,7 @@
 //
 // window.TarotDraw.run(stage, opts) where opts =
 // { cards: [{image, image2x, name, reversed} x3], lang, readingId,
-//   onEvent(name, detail) } — events: picked(n), revealed, streamed,
+//   onEvent(name, detail) } \u2014 events: picked(n), revealed, streamed,
 //   failed, done. Reduced-motion and screen-reader paths included.
 (function () {
   "use strict";
@@ -94,7 +94,7 @@
         card.type = "button";
         card.style.width = G.cw + "px";
         card.style.height = G.ch + "px";
-        card.setAttribute("aria-label", lang === "th" ? "ไพ่ใบที่ " + (i + 1) + " จาก 78" : "Card " + (i + 1) + " of 78");
+        card.setAttribute("aria-label", lang === "th" ? "\u0e44\u0e1e\u0e48\u0e43\u0e1a\u0e17\u0e35\u0e48 " + (i + 1) + " \u0e08\u0e32\u0e01 78" : "Card " + (i + 1) + " of 78");
         var p = deckPos(card, i);
         place(card, p.x, p.y, 0, 1, 10 + i, true);
         card.addEventListener("click", function () {
@@ -124,7 +124,7 @@
     async function shuffle() {
       state = "shuffling";
       setGuide("shuffling");
-      bubble(lang === "th" ? "กำลังสับไพ่…" : "Shuffling…");
+      bubble(lang === "th" ? "\u0e01\u0e33\u0e25\u0e31\u0e07\u0e2a\u0e31\u0e1a\u0e44\u0e1e\u0e48\u2026" : "Shuffling\u2026");
       if (REDUCED) {
         fan();
         return;
@@ -191,7 +191,7 @@
     }
 
     function updatePickHint(left) {
-      var msg = lang === "th" ? "เลือกไพ่อีก " + left + " ใบ" : "Choose " + left + " more card" + (left === 1 ? "" : "s");
+      var msg = lang === "th" ? "\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e1e\u0e48\u0e2d\u0e35\u0e01 " + left + " \u0e43\u0e1a" : "Choose " + left + " more card" + (left === 1 ? "" : "s");
       bubble(msg);
       announce(stage, msg);
     }
@@ -229,7 +229,7 @@
     async function reveal() {
       state = "reveal";
       setGuide("reveal");
-      bubble(lang === "th" ? "กำลังเปิดไพ่…" : "Turning the cards…");
+      bubble(lang === "th" ? "\u0e01\u0e33\u0e25\u0e31\u0e07\u0e40\u0e1b\u0e34\u0e14\u0e44\u0e1e\u0e48\u2026" : "Turning the cards\u2026");
       deck.forEach(function (card, i) {
         if (picked.indexOf(card) >= 0) return;
         card.classList.remove("pickable");
@@ -246,7 +246,7 @@
       for (var k = 0; k < picked.length; k++) {
         if (!REDUCED) await wait(650);
         picked[k].classList.add("flipped");
-        var name = picked[k]._server.name + (picked[k]._server.reversed ? (lang === "th" ? " (กลับหัว)" : " (reversed)") : "");
+        var name = picked[k]._server.name + (picked[k]._server.reversed ? (lang === "th" ? " (\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27)" : " (reversed)") : "");
         announce(stage, name);
         onEvent("revealed", { n: k + 1, name: name });
       }
@@ -284,7 +284,7 @@
     opts = opts || {};
     mount.innerHTML = "";
     reading.cards.forEach(function (c, i) {
-      var block = el("div", "rc", "<b>" + esc(c.name) + (c.reversed ? (lang === "th" ? " (กลับหัว)" : " (reversed)") : "") + "</b>");
+      var block = el("div", "rc", "<b>" + esc(c.name) + (c.reversed ? (lang === "th" ? " (\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27)" : " (reversed)") : "") + "</b>");
       mount.appendChild(block);
       setTimeout(function () {
         block.classList.add("on");

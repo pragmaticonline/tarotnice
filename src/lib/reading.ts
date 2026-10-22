@@ -53,8 +53,8 @@ export function drawReadingCards(): DrawnCard[] {
 const CRISIS_PATTERNS: { lang: "th" | "en"; re: RegExp }[] = [
   { lang: "en", re: /suicid|\bkill (myself|me)\b|self[-\s]?harm|end (my|this) life|hurt(ing)? myself|cutting myself/i },
   { lang: "en", re: /\babuse[ds]?\b|\bassault(ed)?\b|domestic violence|rape[ds]?\b/i },
-  { lang: "th", re: /ฆ่าตัวตาย|อยากตาย|ไม่อยากมีชีวิต|ทำร้ายตัวเอง|กรีดแขน/ },
-  { lang: "th", re: /ถูกทำร้าย|ถูกข่มขืน|ข่มขืน|ทารุณ|ความรุนแรงในครอบครัว|ล่วงละเมิด/ },
+  { lang: "th", re: /\u0e06\u0e48\u0e32\u0e15\u0e31\u0e27\u0e15\u0e32\u0e22|\u0e2d\u0e22\u0e32\u0e01\u0e15\u0e32\u0e22|\u0e44\u0e21\u0e48\u0e2d\u0e22\u0e32\u0e01\u0e21\u0e35\u0e0a\u0e35\u0e27\u0e34\u0e15|\u0e17\u0e33\u0e23\u0e49\u0e32\u0e22\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07|\u0e01\u0e23\u0e35\u0e14\u0e41\u0e02\u0e19/ },
+  { lang: "th", re: /\u0e16\u0e39\u0e01\u0e17\u0e33\u0e23\u0e49\u0e32\u0e22|\u0e16\u0e39\u0e01\u0e02\u0e48\u0e21\u0e02\u0e37\u0e19|\u0e02\u0e48\u0e21\u0e02\u0e37\u0e19|\u0e17\u0e32\u0e23\u0e38\u0e13|\u0e04\u0e27\u0e32\u0e21\u0e23\u0e38\u0e19\u0e41\u0e23\u0e07\u0e43\u0e19\u0e04\u0e23\u0e2d\u0e1a\u0e04\u0e23\u0e31\u0e27|\u0e25\u0e48\u0e27\u0e07\u0e25\u0e30\u0e40\u0e21\u0e34\u0e14/ },
 ];
 
 /** True when the question signals self-harm, suicide, abuse, or crisis. */
@@ -65,7 +65,7 @@ export function isCrisisQuestion(question: string): boolean {
 /** Supportive reply (no reading). Thai users get the 1323 hotline. */
 export function crisisMessage(lang: "th" | "en"): string {
   if (lang === "th") {
-    return "เงินได้ยินคุณ และเรื่องนี้สำคัญกว่าคำทำนายใดๆ ถ้าคุณกำลังคิดทำร้ายตัวเองหรืออยู่ในภาวะวิกฤต โปรดโทรสายด่วนสุขภาพจิต 1323 (ฟรี ตลอด 24 ชั่วโมง) หรือบอกคนที่คุณไว้ใจตอนนี้เลย คุณไม่ต้องเผชิญเรื่องนี้คนเดียว";
+    return "\u0e40\u0e07\u0e34\u0e19\u0e44\u0e14\u0e49\u0e22\u0e34\u0e19\u0e04\u0e38\u0e13 \u0e41\u0e25\u0e30\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e19\u0e35\u0e49\u0e2a\u0e33\u0e04\u0e31\u0e0d\u0e01\u0e27\u0e48\u0e32\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e43\u0e14\u0e46 \u0e16\u0e49\u0e32\u0e04\u0e38\u0e13\u0e01\u0e33\u0e25\u0e31\u0e07\u0e04\u0e34\u0e14\u0e17\u0e33\u0e23\u0e49\u0e32\u0e22\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07\u0e2b\u0e23\u0e37\u0e2d\u0e2d\u0e22\u0e39\u0e48\u0e43\u0e19\u0e20\u0e32\u0e27\u0e30\u0e27\u0e34\u0e01\u0e24\u0e15 \u0e42\u0e1b\u0e23\u0e14\u0e42\u0e17\u0e23\u0e2a\u0e32\u0e22\u0e14\u0e48\u0e27\u0e19\u0e2a\u0e38\u0e02\u0e20\u0e32\u0e1e\u0e08\u0e34\u0e15 1323 (\u0e1f\u0e23\u0e35 \u0e15\u0e25\u0e2d\u0e14 24 \u0e0a\u0e31\u0e48\u0e27\u0e42\u0e21\u0e07) \u0e2b\u0e23\u0e37\u0e2d\u0e1a\u0e2d\u0e01\u0e04\u0e19\u0e17\u0e35\u0e48\u0e04\u0e38\u0e13\u0e44\u0e27\u0e49\u0e43\u0e08\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49\u0e40\u0e25\u0e22 \u0e04\u0e38\u0e13\u0e44\u0e21\u0e48\u0e15\u0e49\u0e2d\u0e07\u0e40\u0e1c\u0e0a\u0e34\u0e0d\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e19\u0e35\u0e49\u0e04\u0e19\u0e40\u0e14\u0e35\u0e22\u0e27";
   }
   return "I hear you, and this matters more than any reading. If you are thinking of harming yourself or are in crisis, please contact local emergency services or a crisis line right now, or tell someone you trust. You do not have to face this alone.";
 }
@@ -101,12 +101,12 @@ export function toPromptCard(card: CardView, reversed: boolean, topic: Topic): P
   };
 }
 
-const SYSTEM_TH = `คุณคือเงิน นักอ่านไพ่ทาโรต์ที่อบอุ่นและให้กำลังใจ ตอบเป็นภาษาไทย
-กฎ: อบอุ่น สะท้อนความคิด ไม่ฟันธงร้าย (ห้ามพูดว่าผู้ถามจะล้มเหลวหรือมีคนตาย)
-ห้ามให้คำสั่งทางการแพทย์ กฎหมาย หรือการเงิน (เช่น ห้ามบอกให้หยุดยา ให้ซื้อหุ้น) หัวข้อสุขภาพให้สะท้อนความรู้สึกเท่านั้นและแนะนำให้ปรึกษาผู้เชี่ยวชาญ
-ห้ามใช้กรอบอดีต/ปัจจุบัน/อนาคต อ่านไพ่ทั้งสามใบรวมกันเป็นคำตอบเดียว
-โครงคำตอบ: 1) ภาพรวม 2-3 ประโยคตอบคำถามตรงๆ 2) ไพ่ละหนึ่งย่อหน้าสั้นๆ ว่าแต่ละใบเสริมคำตอบอย่างไร 3) คำแนะนำที่เป็นรูปธรรมและอ่อนโยน 2-3 ข้อ 4) บรรทัดสุดท้ายขึ้นต้นด้วย "สรุป: " ไม่เกิน 140 ตัวอักษร
-ความยาว: ประมาณ 180-260 คำ ปิดท้ายด้วย "เพื่อความบันเทิงและการทบทวนตนเอง"`;
+const SYSTEM_TH = `\u0e04\u0e38\u0e13\u0e04\u0e37\u0e2d\u0e40\u0e07\u0e34\u0e19 \u0e19\u0e31\u0e01\u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e17\u0e32\u0e42\u0e23\u0e15\u0e4c\u0e17\u0e35\u0e48\u0e2d\u0e1a\u0e2d\u0e38\u0e48\u0e19\u0e41\u0e25\u0e30\u0e43\u0e2b\u0e49\u0e01\u0e33\u0e25\u0e31\u0e07\u0e43\u0e08 \u0e15\u0e2d\u0e1a\u0e40\u0e1b\u0e47\u0e19\u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22
+\u0e01\u0e0e: \u0e2d\u0e1a\u0e2d\u0e38\u0e48\u0e19 \u0e2a\u0e30\u0e17\u0e49\u0e2d\u0e19\u0e04\u0e27\u0e32\u0e21\u0e04\u0e34\u0e14 \u0e44\u0e21\u0e48\u0e1f\u0e31\u0e19\u0e18\u0e07\u0e23\u0e49\u0e32\u0e22 (\u0e2b\u0e49\u0e32\u0e21\u0e1e\u0e39\u0e14\u0e27\u0e48\u0e32\u0e1c\u0e39\u0e49\u0e16\u0e32\u0e21\u0e08\u0e30\u0e25\u0e49\u0e21\u0e40\u0e2b\u0e25\u0e27\u0e2b\u0e23\u0e37\u0e2d\u0e21\u0e35\u0e04\u0e19\u0e15\u0e32\u0e22)
+\u0e2b\u0e49\u0e32\u0e21\u0e43\u0e2b\u0e49\u0e04\u0e33\u0e2a\u0e31\u0e48\u0e07\u0e17\u0e32\u0e07\u0e01\u0e32\u0e23\u0e41\u0e1e\u0e17\u0e22\u0e4c \u0e01\u0e0e\u0e2b\u0e21\u0e32\u0e22 \u0e2b\u0e23\u0e37\u0e2d\u0e01\u0e32\u0e23\u0e40\u0e07\u0e34\u0e19 (\u0e40\u0e0a\u0e48\u0e19 \u0e2b\u0e49\u0e32\u0e21\u0e1a\u0e2d\u0e01\u0e43\u0e2b\u0e49\u0e2b\u0e22\u0e38\u0e14\u0e22\u0e32 \u0e43\u0e2b\u0e49\u0e0b\u0e37\u0e49\u0e2d\u0e2b\u0e38\u0e49\u0e19) \u0e2b\u0e31\u0e27\u0e02\u0e49\u0e2d\u0e2a\u0e38\u0e02\u0e20\u0e32\u0e1e\u0e43\u0e2b\u0e49\u0e2a\u0e30\u0e17\u0e49\u0e2d\u0e19\u0e04\u0e27\u0e32\u0e21\u0e23\u0e39\u0e49\u0e2a\u0e36\u0e01\u0e40\u0e17\u0e48\u0e32\u0e19\u0e31\u0e49\u0e19\u0e41\u0e25\u0e30\u0e41\u0e19\u0e30\u0e19\u0e33\u0e43\u0e2b\u0e49\u0e1b\u0e23\u0e36\u0e01\u0e29\u0e32\u0e1c\u0e39\u0e49\u0e40\u0e0a\u0e35\u0e48\u0e22\u0e27\u0e0a\u0e32\u0e0d
+\u0e2b\u0e49\u0e32\u0e21\u0e43\u0e0a\u0e49\u0e01\u0e23\u0e2d\u0e1a\u0e2d\u0e14\u0e35\u0e15/\u0e1b\u0e31\u0e08\u0e08\u0e38\u0e1a\u0e31\u0e19/\u0e2d\u0e19\u0e32\u0e04\u0e15 \u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e17\u0e31\u0e49\u0e07\u0e2a\u0e32\u0e21\u0e43\u0e1a\u0e23\u0e27\u0e21\u0e01\u0e31\u0e19\u0e40\u0e1b\u0e47\u0e19\u0e04\u0e33\u0e15\u0e2d\u0e1a\u0e40\u0e14\u0e35\u0e22\u0e27
+\u0e42\u0e04\u0e23\u0e07\u0e04\u0e33\u0e15\u0e2d\u0e1a: 1) \u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21 2-3 \u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04\u0e15\u0e2d\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21\u0e15\u0e23\u0e07\u0e46 2) \u0e44\u0e1e\u0e48\u0e25\u0e30\u0e2b\u0e19\u0e36\u0e48\u0e07\u0e22\u0e48\u0e2d\u0e2b\u0e19\u0e49\u0e32\u0e2a\u0e31\u0e49\u0e19\u0e46 \u0e27\u0e48\u0e32\u0e41\u0e15\u0e48\u0e25\u0e30\u0e43\u0e1a\u0e40\u0e2a\u0e23\u0e34\u0e21\u0e04\u0e33\u0e15\u0e2d\u0e1a\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23 3) \u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33\u0e17\u0e35\u0e48\u0e40\u0e1b\u0e47\u0e19\u0e23\u0e39\u0e1b\u0e18\u0e23\u0e23\u0e21\u0e41\u0e25\u0e30\u0e2d\u0e48\u0e2d\u0e19\u0e42\u0e22\u0e19 2-3 \u0e02\u0e49\u0e2d 4) \u0e1a\u0e23\u0e23\u0e17\u0e31\u0e14\u0e2a\u0e38\u0e14\u0e17\u0e49\u0e32\u0e22\u0e02\u0e36\u0e49\u0e19\u0e15\u0e49\u0e19\u0e14\u0e49\u0e27\u0e22 "\u0e2a\u0e23\u0e38\u0e1b: " \u0e44\u0e21\u0e48\u0e40\u0e01\u0e34\u0e19 140 \u0e15\u0e31\u0e27\u0e2d\u0e31\u0e01\u0e29\u0e23
+\u0e04\u0e27\u0e32\u0e21\u0e22\u0e32\u0e27: \u0e1b\u0e23\u0e30\u0e21\u0e32\u0e13 180-260 \u0e04\u0e33 \u0e1b\u0e34\u0e14\u0e17\u0e49\u0e32\u0e22\u0e14\u0e49\u0e27\u0e22 "\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e1a\u0e31\u0e19\u0e40\u0e17\u0e34\u0e07\u0e41\u0e25\u0e30\u0e01\u0e32\u0e23\u0e17\u0e1a\u0e17\u0e27\u0e19\u0e15\u0e19\u0e40\u0e2d\u0e07"`;
 
 const SYSTEM_EN = `You are Ngern, a warm and encouraging tarot reader. Reply in English.
 Rules: warm, reflective, never fatalistic (never say the asker will fail or someone will die).
@@ -126,31 +126,31 @@ export function buildReadingPrompt(input: {
   const { lang, topic, question, cards, prev, nickname } = input;
   const system = lang === "th" ? SYSTEM_TH : SYSTEM_EN;
   const lines: string[] = [];
-  lines.push(lang === "th" ? `หัวข้อ: ${topic}` : `Topic: ${topic}`);
-  lines.push(lang === "th" ? `คำถาม: ${question}` : `Question: ${question}`);
-  if (nickname) lines.push(lang === "th" ? `ชื่อผู้ถาม: ${nickname}` : `Asker name: ${nickname}`);
+  lines.push(lang === "th" ? `\u0e2b\u0e31\u0e27\u0e02\u0e49\u0e2d: ${topic}` : `Topic: ${topic}`);
+  lines.push(lang === "th" ? `\u0e04\u0e33\u0e16\u0e32\u0e21: ${question}` : `Question: ${question}`);
+  if (nickname) lines.push(lang === "th" ? `\u0e0a\u0e37\u0e48\u0e2d\u0e1c\u0e39\u0e49\u0e16\u0e32\u0e21: ${nickname}` : `Asker name: ${nickname}`);
   cards.forEach((c, i) => {
     lines.push(
       lang === "th"
-        ? `ไพ่ที่ ${i + 1}: ${c.name}${c.reversed ? " (กลับหัว)" : ""} คำสำคัญ: ${c.keywords.join(", ")} ความหมาย: ${c.meaning}${c.topicNote ? ` ประกอบหัวข้อ: ${c.topicNote}` : ""}`
+        ? `\u0e44\u0e1e\u0e48\u0e17\u0e35\u0e48 ${i + 1}: ${c.name}${c.reversed ? " (\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27)" : ""} \u0e04\u0e33\u0e2a\u0e33\u0e04\u0e31\u0e0d: ${c.keywords.join(", ")} \u0e04\u0e27\u0e32\u0e21\u0e2b\u0e21\u0e32\u0e22: ${c.meaning}${c.topicNote ? ` \u0e1b\u0e23\u0e30\u0e01\u0e2d\u0e1a\u0e2b\u0e31\u0e27\u0e02\u0e49\u0e2d: ${c.topicNote}` : ""}`
         : `Card ${i + 1}: ${c.name}${c.reversed ? " (reversed)" : ""}. Keywords: ${c.keywords.join(", ")}. Meaning: ${c.meaning}${c.topicNote ? ` Topic note: ${c.topicNote}` : ""}`,
     );
   });
   if (prev.length > 0) {
-    lines.push(lang === "th" ? "คำทำนายก่อนหน้า (เพื่อความต่อเนื่อง):" : "Previous readings (for continuity):");
+    lines.push(lang === "th" ? "\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e01\u0e48\u0e2d\u0e19\u0e2b\u0e19\u0e49\u0e32 (\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e15\u0e48\u0e2d\u0e40\u0e19\u0e37\u0e48\u0e2d\u0e07):" : "Previous readings (for continuity):");
     for (const p of prev.slice(0, 3)) {
-      lines.push(`- ${p.topic}: ${p.cardNames.join(" / ")} — ${p.summary}`);
+      lines.push(`- ${p.topic}: ${p.cardNames.join(" / ")} \u2014 ${p.summary}`);
     }
   }
   return { system, user: lines.join("\n") };
 }
 
-/** Pull the trailing "Summary: ..."/"สรุป: ..." line (≤140 chars).
+/** Pull the trailing "Summary: ..."/"\u0e2a\u0e23\u0e38\u0e1b: ..." line (\u2264140 chars).
  *  Falls back to the first sentence, truncated. */
 export function parseSummary(text: string): string {
   const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
   for (let i = lines.length - 1; i >= 0; i--) {
-    const m = /^(?:summary|สรุป)\s*:\s*(.+)$/i.exec(lines[i]);
+    const m = /^(?:summary|\u0e2a\u0e23\u0e38\u0e1b)\s*:\s*(.+)$/i.exec(lines[i]);
     if (m) return m[1].slice(0, 140);
   }
   const first = (text.split(/(?<=[.!?])\s/)[0] ?? text).trim();

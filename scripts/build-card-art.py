@@ -18,6 +18,8 @@ from PIL import Image
 SRC_ZIP = "/tmp/tarotcards.zip"
 OUT = "build/cards"
 SIZES = {"": 240, "@2x": 600}
+# JPEG copies (480px) for server-side share-image rendering: the rasterizer
+# decodes JPEG/PNG but not WebP. Never referenced by pages (WebP stays).
 
 
 def key_for(path):
@@ -56,6 +58,8 @@ def main():
             h = round(img.height * width / img.width)
             out = os.path.join(OUT, key + suffix + ".webp")
             img.resize((width, h), Image.LANCZOS).save(out, "WEBP", quality=82, method=6)
+        h = round(img.height * 480 / img.width)
+        img.resize((480, h), Image.LANCZOS).save(os.path.join(OUT, key + ".jpg"), "JPEG", quality=80)
         done += 1
         print(key, "%dx%d" % (img.width, img.height))
     print("converted: %d, skipped: %d" % (done, len(skipped)))

@@ -23,7 +23,7 @@ export type StreakInfo = {
 };
 
 /**
- * Freeze rule (SPEC §5.4): one missed day is forgiven when no other
+ * Freeze rule (SPEC \u00a75.4): one missed day is forgiven when no other
  * day was missed in the 7 days before it. Forgiven days are added to
  * the set, so current and longest streaks both bridge exactly one
  * isolated single-day gap; back-to-back misses never merge.
@@ -36,7 +36,7 @@ export function applyFreeze(days: Iterable<string>): Set<string> {
   const first = sorted[0];
   const last = sorted[sorted.length - 1];
   // Two passes: every decision reads the observed days only, so a
-  // forgiven miss never cleans the window of a second miss — at most
+  // forgiven miss never cleans the window of a second miss \u2014 at most
   // one forgiveness per 7-day window.
   const forgiven: string[] = [];
   let cursor = first;

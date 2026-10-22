@@ -1,5 +1,5 @@
 // Verifies every expected card key exists: in content/cards.json,
-// in build/cards/ (local WebP output), and — with --remote — in the
+// in build/cards/ (local WebP output), and \u2014 with --remote \u2014 in the
 // R2 bucket. Fails (exit 1) on any missing key.
 // Usage: node scripts/check-cards.mjs [--remote]
 import { existsSync, readFileSync } from "node:fs";
@@ -10,14 +10,21 @@ const expected = new Set();
 for (const c of cards) {
   expected.add(`${c.image}.webp`);
   expected.add(`${c.image}@2x.webp`);
+  // JPEG copies feed server-side share-image rendering (never pages).
+  expected.add(`${c.image}.jpg`);
 }
 // Card back (owner-supplied art; see content/REVIEW.md).
 expected.add("cards/back.webp");
 expected.add("cards/back@2x.webp");
+expected.add("cards/back.jpg");
+// resvg-wasm binary for share-image rendering.
+expected.add("share-assets/resvg.wasm");
 
 let missing = [];
 for (const key of expected) {
-  if (!existsSync(`build/${key}`)) missing.push(`local:build/${key}`);
+  // The renderer wasm ships from node_modules (uploaded to R2 once).
+  const local = key === "share-assets/resvg.wasm" ? "node_modules/@resvg/resvg-wasm/index_bg.wasm" : `build/${key}`;
+  if (!existsSync(local)) missing.push(`local:${local}`);
 }
 if (missing.length) {
   console.error(`missing ${missing.length} local files (showing 10):\n${missing.slice(0, 10).join("\n")}`);

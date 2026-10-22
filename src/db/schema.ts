@@ -172,7 +172,7 @@ export const shares = sqliteTable("shares", {
   createdAt: integer("created_at").notNull(),
 });
 
-// Per-IP daily draw counts for the SPEC §5.3 abuse backstop (the
+// Per-IP daily draw counts for the SPEC \u00a75.3 abuse backstop (the
 // Rate Limiting binding only does burst windows on this wrangler).
 export const rateDays = sqliteTable(
   "rate_days",

@@ -21,6 +21,13 @@ Cloudflare credentials live in `/root/.env`
 (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`):
 `set -a && . /root/.env` before wrangler commands.
 
+Quirk: with the `routes` custom domain configured, `wrangler dev`
+rewrites `Origin: http://localhost:PORT` to `http://tarotnice.com`,
+so cookie-bearing `/api/auth/*` POSTs 403 in dev (Better Auth origin
+check). Real browsers hit the same path in production with the real
+origin. To exercise auth-with-cookies locally, temporarily comment
+out `routes` in `wrangler.toml` and restart dev.
+
 ## Deploy
 
 ```sh

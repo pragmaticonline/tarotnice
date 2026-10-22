@@ -33,22 +33,22 @@
       crisis: "Support",
       retry: "Try again",
       again: "Ask again",
-      failed: "Ngern couldn't read the cards right now. Try again — your question is saved on the same cards.",
-      noModel: "Readings are warming up. Your cards are drawn — please try again in a bit.",
+      failed: "Ngern couldn't read the cards right now. Try again \u2014 your question is saved on the same cards.",
+      noModel: "Readings are warming up. Your cards are drawn \u2014 please try again in a bit.",
       newIn: "New questions in ",
       shareToday: "Share today's reading",
     },
     th: {
-      need: "พิมพ์คำถามก่อนนะ แล้วค่อยสับไพ่",
-      sleep: "เงินขอพักก่อนนะ คำถามใหม่พรุ่งนี้",
-      browse: "เปิดห้องสมุดไพ่",
-      crisis: "กำลังใจ",
-      retry: "ลองอีกครั้ง",
-      again: "ถามใหม่",
-      failed: "เงินอ่านไพ่ไม่ได้ตอนนี้ ลองอีกครั้งได้เลย คำถามของคุณอยู่กับไพ่ชุดเดิม",
-      noModel: "คำทำนายกำลังเตรียมตัว ไพ่ของคุณจั่วแล้ว ลองอีกครั้งในอีกสักครู่",
-      newIn: "คำถามใหม่ในอีก ",
-      shareToday: "แชร์ดวงวันนี้",
+      need: "\u0e1e\u0e34\u0e21\u0e1e\u0e4c\u0e04\u0e33\u0e16\u0e32\u0e21\u0e01\u0e48\u0e2d\u0e19\u0e19\u0e30 \u0e41\u0e25\u0e49\u0e27\u0e04\u0e48\u0e2d\u0e22\u0e2a\u0e31\u0e1a\u0e44\u0e1e\u0e48",
+      sleep: "\u0e40\u0e07\u0e34\u0e19\u0e02\u0e2d\u0e1e\u0e31\u0e01\u0e01\u0e48\u0e2d\u0e19\u0e19\u0e30 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e43\u0e2b\u0e21\u0e48\u0e1e\u0e23\u0e38\u0e48\u0e07\u0e19\u0e35\u0e49",
+      browse: "\u0e40\u0e1b\u0e34\u0e14\u0e2b\u0e49\u0e2d\u0e07\u0e2a\u0e21\u0e38\u0e14\u0e44\u0e1e\u0e48",
+      crisis: "\u0e01\u0e33\u0e25\u0e31\u0e07\u0e43\u0e08",
+      retry: "\u0e25\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07",
+      again: "\u0e16\u0e32\u0e21\u0e43\u0e2b\u0e21\u0e48",
+      failed: "\u0e40\u0e07\u0e34\u0e19\u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49 \u0e25\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e2d\u0e22\u0e39\u0e48\u0e01\u0e31\u0e1a\u0e44\u0e1e\u0e48\u0e0a\u0e38\u0e14\u0e40\u0e14\u0e34\u0e21",
+      noModel: "\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e01\u0e33\u0e25\u0e31\u0e07\u0e40\u0e15\u0e23\u0e35\u0e22\u0e21\u0e15\u0e31\u0e27 \u0e44\u0e1e\u0e48\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e08\u0e31\u0e48\u0e27\u0e41\u0e25\u0e49\u0e27 \u0e25\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07\u0e43\u0e19\u0e2d\u0e35\u0e01\u0e2a\u0e31\u0e01\u0e04\u0e23\u0e39\u0e48",
+      newIn: "\u0e04\u0e33\u0e16\u0e32\u0e21\u0e43\u0e2b\u0e21\u0e48\u0e43\u0e19\u0e2d\u0e35\u0e01 ",
+      shareToday: "\u0e41\u0e0a\u0e23\u0e4c\u0e14\u0e27\u0e07\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49",
     },
   };
   function t(k) {
@@ -123,8 +123,21 @@
     return mount;
   }
 
-  function againButton(mount, remaining) {
+  function againButton(mount, reading, remaining) {
+    var row = document.createElement("div");
+    row.className = "actions";
+    if (window.TarotShare) {
+      var share = document.createElement("button");
+      share.type = "button";
+      share.className = "btn";
+      share.textContent = uiLang() === "th" ? "\u0e41\u0e0a\u0e23\u0e4c\u0e14\u0e27\u0e07" : "Share";
+      share.addEventListener("click", function () {
+        window.TarotShare.open("reading", reading.id);
+      });
+      row.appendChild(share);
+    }
     if (remaining <= 0) {
+      mount.appendChild(row);
       sleepMode(null);
       return;
     }
@@ -135,8 +148,6 @@
     btn.addEventListener("click", function () {
       location.reload();
     });
-    var row = document.createElement("div");
-    row.className = "actions";
     row.appendChild(btn);
     mount.appendChild(row);
   }
@@ -245,11 +256,11 @@
       if (btn) btn.disabled = false;
       return;
     }
-    bubble(lang === "th" ? "นี่คือคำทำนายของคุณ" : "Here is your reading");
+    bubble(lang === "th" ? "\u0e19\u0e35\u0e48\u0e04\u0e37\u0e2d\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13" : "Here is your reading");
     streamInto(mount2, reading, lang, function () {
       if (window.TarotHome) window.TarotHome.refresh();
       var left = typeof res.data.remaining === "number" ? res.data.remaining - 1 : 1;
-      againButton(mount2, left);
+      againButton(mount2, reading, left);
     });
   }
 

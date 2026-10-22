@@ -1,4 +1,4 @@
-// Model eval (SPEC §10.1): run 20 fixed readings (10 Thai, 10 English,
+// Model eval (SPEC \u00a710.1): run 20 fixed readings (10 Thai, 10 English,
 // mixed topics) through candidate Workers AI chat models and save every
 // output for the owner to review. The winner goes in wrangler.toml as
 // READING_MODEL.
@@ -21,16 +21,16 @@ const MODELS = (
 
 // 20 fixed cases: [lang, topic, question, [cardId, reversed] x3].
 const CASES = [
-  ["th", "career", "งานใหม่ที่กำลังจะเริ่ม จะเป็นอย่างไร", [[1, false], [17, false], [6, true]]],
-  ["th", "love", "เขาคิดอย่างไรกับความสัมพันธ์นี้", [[6, false], [18, false], [2, false]]],
-  ["th", "money", "ควรลงทุนเพิ่มตอนนี้ไหม", [[10, false], [4, false], [36, true]]],
-  ["th", "health", "ร่างกายของฉันต้องการอะไรตอนนี้", [[3, false], [14, false], [9, true]]],
-  ["th", "general", "เดือนนี้มีอะไรรออยู่", [[21, false], [16, true], [0, false]]],
-  ["th", "career", "ควรเปลี่ยนงานตอนนี้เลยไหม", [[7, false], [13, true], [8, false]]],
-  ["th", "love", "ความรักครั้งนี้จะไปต่อได้ไหม", [[19, false], [5, false], [12, true]]],
-  ["th", "money", "หนี้ก้อนนี้จะหมดเมื่อไหร่", [[15, true], [11, false], [64, false]]],
-  ["th", "health", "ทำไมนอนไม่หลับ ควรทำอย่างไร", [[18, true], [9, false], [14, true]]],
-  ["th", "general", "ควรให้อภัยเขาไหม", [[20, false], [6, true], [3, true]]],
+  ["th", "career", "\u0e07\u0e32\u0e19\u0e43\u0e2b\u0e21\u0e48\u0e17\u0e35\u0e48\u0e01\u0e33\u0e25\u0e31\u0e07\u0e08\u0e30\u0e40\u0e23\u0e34\u0e48\u0e21 \u0e08\u0e30\u0e40\u0e1b\u0e47\u0e19\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23", [[1, false], [17, false], [6, true]]],
+  ["th", "love", "\u0e40\u0e02\u0e32\u0e04\u0e34\u0e14\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23\u0e01\u0e31\u0e1a\u0e04\u0e27\u0e32\u0e21\u0e2a\u0e31\u0e21\u0e1e\u0e31\u0e19\u0e18\u0e4c\u0e19\u0e35\u0e49", [[6, false], [18, false], [2, false]]],
+  ["th", "money", "\u0e04\u0e27\u0e23\u0e25\u0e07\u0e17\u0e38\u0e19\u0e40\u0e1e\u0e34\u0e48\u0e21\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49\u0e44\u0e2b\u0e21", [[10, false], [4, false], [36, true]]],
+  ["th", "health", "\u0e23\u0e48\u0e32\u0e07\u0e01\u0e32\u0e22\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19\u0e15\u0e49\u0e2d\u0e07\u0e01\u0e32\u0e23\u0e2d\u0e30\u0e44\u0e23\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49", [[3, false], [14, false], [9, true]]],
+  ["th", "general", "\u0e40\u0e14\u0e37\u0e2d\u0e19\u0e19\u0e35\u0e49\u0e21\u0e35\u0e2d\u0e30\u0e44\u0e23\u0e23\u0e2d\u0e2d\u0e22\u0e39\u0e48", [[21, false], [16, true], [0, false]]],
+  ["th", "career", "\u0e04\u0e27\u0e23\u0e40\u0e1b\u0e25\u0e35\u0e48\u0e22\u0e19\u0e07\u0e32\u0e19\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49\u0e40\u0e25\u0e22\u0e44\u0e2b\u0e21", [[7, false], [13, true], [8, false]]],
+  ["th", "love", "\u0e04\u0e27\u0e32\u0e21\u0e23\u0e31\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07\u0e19\u0e35\u0e49\u0e08\u0e30\u0e44\u0e1b\u0e15\u0e48\u0e2d\u0e44\u0e14\u0e49\u0e44\u0e2b\u0e21", [[19, false], [5, false], [12, true]]],
+  ["th", "money", "\u0e2b\u0e19\u0e35\u0e49\u0e01\u0e49\u0e2d\u0e19\u0e19\u0e35\u0e49\u0e08\u0e30\u0e2b\u0e21\u0e14\u0e40\u0e21\u0e37\u0e48\u0e2d\u0e44\u0e2b\u0e23\u0e48", [[15, true], [11, false], [64, false]]],
+  ["th", "health", "\u0e17\u0e33\u0e44\u0e21\u0e19\u0e2d\u0e19\u0e44\u0e21\u0e48\u0e2b\u0e25\u0e31\u0e1a \u0e04\u0e27\u0e23\u0e17\u0e33\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23", [[18, true], [9, false], [14, true]]],
+  ["th", "general", "\u0e04\u0e27\u0e23\u0e43\u0e2b\u0e49\u0e2d\u0e20\u0e31\u0e22\u0e40\u0e02\u0e32\u0e44\u0e2b\u0e21", [[20, false], [6, true], [3, true]]],
   ["en", "career", "How will the new job I'm starting go?", [[1, false], [17, false], [6, true]]],
   ["en", "love", "What does this relationship need most?", [[6, false], [18, false], [2, false]]],
   ["en", "money", "Should I invest more right now?", [[10, false], [4, false], [36, true]]],

@@ -72,7 +72,7 @@ ${topicChips(ui)}
     origin,
     canonicalPath: "/",
     description: d.homeLede,
-    extraHead: `<script src="/app/home.js" defer></script><script src="/app/draw.js" defer></script><script src="/app/ask.js" defer></script>`,
+    extraHead: `<script src="/app/home.js" defer></script><script src="/app/draw.js" defer></script><script src="/app/ask.js" defer></script><script src="/app/share.js" defer></script>`,
     jsonLd,
     body: `${head}${body}${siteFooterHtml(ui, "/")}`,
   });

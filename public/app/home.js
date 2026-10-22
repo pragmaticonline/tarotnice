@@ -54,7 +54,7 @@
     var label = row.querySelector("[data-quota-label]");
     if (label) {
       label.textContent = uiLang() === "th"
-        ? "เหลือ " + remaining + "/3 คำถามวันนี้"
+        ? "\u0e40\u0e2b\u0e25\u0e37\u0e2d " + remaining + "/3 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49"
         : remaining + " of 3 questions left today";
     }
   }
@@ -67,12 +67,22 @@
       esc(daily.card.image2x) + ' 2x" alt="' + esc(daily.card.name) + '"' +
       (daily.card.reversed ? ' class="rev"' : "") + ">" +
       '<div class="daily-body"><p class="daily-name">' + esc(daily.card.name) +
-      (daily.card.reversed ? (lang === "th" ? " (กลับหัว)" : " (reversed)") : "") + "</p>" +
+      (daily.card.reversed ? (lang === "th" ? " (\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27)" : " (reversed)") : "") + "</p>" +
       "<p class="daily-msg">" + esc(daily.message) + "</p>" +
       (colour ? '<p class="daily-lucky">' + esc(colour) + "</p>" : "") +
-      "</div></div>"
+      "</div>" +
+      '<button type="button" class="btn btn-outline daily-share">' +
+      (uiLang() === "th" ? "\u0e41\u0e0a\u0e23\u0e4c\u0e14\u0e27\u0e07" : "Share") + "</button></div>"
     );
   }
+
+  document.addEventListener("click", function (e) {
+    var b = e.target && e.target.closest ? e.target.closest(".daily-share") : null;
+    if (b && window.TarotShare) {
+      e.preventDefault();
+      window.TarotShare.open("daily", null);
+    }
+  });
 
   function paintDaily(daily, lang) {
     var box = document.getElementById("daily");
@@ -81,8 +91,8 @@
       box.innerHTML = dailyCardHtml(daily, lang);
       return;
     }
-    var prompt = lang === "th" ? "ไพ่ประจำวันของคุณ" : "Your card for today";
-    var tap = lang === "th" ? "แตะเพื่อเปิดไพ่" : "Tap to reveal";
+    var prompt = lang === "th" ? "\u0e44\u0e1e\u0e48\u0e1b\u0e23\u0e30\u0e08\u0e33\u0e27\u0e31\u0e19\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13" : "Your card for today";
+    var tap = lang === "th" ? "\u0e41\u0e15\u0e30\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e40\u0e1b\u0e34\u0e14\u0e44\u0e1e\u0e48" : "Tap to reveal";
     box.innerHTML =
       '<p class="daily-prompt">' + esc(prompt) + "</p>" +
       '<button type="button" class="daily-tap" id="daily-tap"><span class="card-back" aria-hidden="true"></span><span>' +

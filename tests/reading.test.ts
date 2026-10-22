@@ -68,14 +68,14 @@ describe("crisis pre-check", () => {
   });
 
   it("catches Thai crisis signals", () => {
-    expect(isCrisisQuestion("ผมอยากฆ่าตัวตาย")).toBe(true);
-    expect(isCrisisQuestion("เธอถูกทำร้ายทุกวัน ควรทำอย่างไร")).toBe(true);
-    expect(isCrisisQuestion("งานใหม่จะเป็นอย่างไร")).toBe(false);
+    expect(isCrisisQuestion("\u0e1c\u0e21\u0e2d\u0e22\u0e32\u0e01\u0e06\u0e48\u0e32\u0e15\u0e31\u0e27\u0e15\u0e32\u0e22")).toBe(true);
+    expect(isCrisisQuestion("\u0e40\u0e18\u0e2d\u0e16\u0e39\u0e01\u0e17\u0e33\u0e23\u0e49\u0e32\u0e22\u0e17\u0e38\u0e01\u0e27\u0e31\u0e19 \u0e04\u0e27\u0e23\u0e17\u0e33\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23")).toBe(true);
+    expect(isCrisisQuestion("\u0e07\u0e32\u0e19\u0e43\u0e2b\u0e21\u0e48\u0e08\u0e30\u0e40\u0e1b\u0e47\u0e19\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23")).toBe(false);
   });
 
   it("answers supportively with the 1323 hotline in Thai", () => {
     expect(crisisMessage("th")).toContain("1323");
-    expect(crisisMessage("th")).not.toContain("ไพ่");
+    expect(crisisMessage("th")).not.toContain("\u0e44\u0e1e\u0e48");
     expect(crisisMessage("en")).toContain("crisis line");
   });
 });
@@ -110,12 +110,12 @@ describe("prompt builder", () => {
 
   it("writes Thai prompts in Thai", () => {
     const { system, user } = buildReadingPrompt({
-      lang: "th", topic: "general", question: "งานใหม่ดีไหม",
+      lang: "th", topic: "general", question: "\u0e07\u0e32\u0e19\u0e43\u0e2b\u0e21\u0e48\u0e14\u0e35\u0e44\u0e2b\u0e21",
       cards: [toPromptCard(card, false, "general")],
       prev: [], nickname: null,
     });
-    expect(system).toContain("สรุป: ");
-    expect(user).toContain("งานใหม่ดีไหม");
+    expect(system).toContain("\u0e2a\u0e23\u0e38\u0e1b: ");
+    expect(user).toContain("\u0e07\u0e32\u0e19\u0e43\u0e2b\u0e21\u0e48\u0e14\u0e35\u0e44\u0e2b\u0e21");
   });
 });
 

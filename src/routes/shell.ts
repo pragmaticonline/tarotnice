@@ -35,6 +35,10 @@ export function pageShell(opts: {
   description?: string;
   /** Inline JSON-LD block (already stringified and escaped). */
   jsonLd?: string;
+  /** Override the default /og.png preview (share landings). */
+  ogImage?: string;
+  /** og:locale override (share landings: th_TH / en_US). */
+  ogLocale?: string;
   /** Extra <head> tags (page scripts, OG images). */
   extraHead?: string;
 }): string {
@@ -64,11 +68,12 @@ ${opts.noindex ? `<meta name="robots" content="noindex">` : `${canonical}${hrefl
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#15122b">
 <meta property="og:title" content="${escapeHtml(opts.title)}">
 <meta property="og:description" content="${escapeHtml(desc)}">
-<meta property="og:image" content="${opts.origin}/og.png">
+<meta property="og:image" content="${escapeHtml(opts.ogImage ?? `${opts.origin}/og.png`)}">
+${opts.ogLocale ? `<meta property="og:locale" content="${escapeHtml(opts.ogLocale)}">` : ""}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${escapeHtml(opts.title)}">
 <meta name="twitter:description" content="${escapeHtml(desc)}">
-<meta name="twitter:image" content="${opts.origin}/og.png">
+<meta name="twitter:image" content="${escapeHtml(opts.ogImage ?? `${opts.origin}/og.png`)}">
 ${opts.jsonLd ? `<script type="application/ld+json">${opts.jsonLd}</script>` : ""}
 <link rel="icon" href="/mascot/ngern-head-mark.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/mascot/ngern-head-mark.png">
