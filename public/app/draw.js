@@ -350,19 +350,33 @@
       var glanceDone = false;
       var out = blocks.map(function (b, bi) {
         var html = esc(b).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
-        var cm = b.match(/^\*\*([^*]+)\*\*\s*:?\s*([\s\S]*)$/);
-        if (cm) {
-          var card = (reading.cards || []).find(function (c) {
-            return c.name && (cm[1] === c.name || cm[1].indexOf(c.name) === 0) && !usedCard[c.name];
-          });
-          if (card) {
-            usedCard[card.name] = true;
-            var kw = (card.keywords || []).join(" \u00b7 ");
-            return '<div class="sec card-row"><img class="card-thumb' + (card.reversed ? " rev" : "") + '" src="' + esc(card.image) + '" alt="">' +
-              '<div class="card-row-body"><h3>' + esc(card.name) + (card.reversed ? (lang === "th" ? " (\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27)" : " (reversed)") : "") + "</h3>" +
-              (kw ? '<p class="kw-line">' + esc(kw) + "</p>" : "") +
-              "<p>" + esc(cm[2]).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>") + "</p></div></div>";
+        // Card paragraphs: bold-led (**The Star**) or plain-led
+        // (The Queen of Wands indicates...). Match either so the
+        // thumbnail row does not depend on model bolding.
+        var plain = b.replace(/\*\*/g, "");
+        var card = null;
+        var bodyStart = 0;
+        (reading.cards || []).forEach(function (c) {
+          if (card || !c.name || usedCard[c.name]) return;
+          var variants = [c.name, "The " + c.name];
+          for (var vi = 0; vi < variants.length; vi++) {
+            var v = variants[vi];
+            if (plain === v || (plain.indexOf(v) === 0 && /[\s:\u2014-]/.test(plain.charAt(v.length)))) {
+              card = c;
+              bodyStart = v.length;
+              break;
+            }
           }
+        });
+        if (card) {
+          usedCard[card.name] = true;
+          var kw = (card.keywords || []).join(" \u00b7 ");
+          var cBody = plain.slice(bodyStart).replace(/^[\s:\u2014-]+/, "");
+          // Drop a leading "The " duplicated before names like The Hierophant.
+          return '<div class="sec card-row"><img class="card-thumb' + (card.reversed ? " rev" : "") + '" src="' + esc(card.image) + '" alt="">' +
+            '<div class="card-row-body"><h3>' + esc(card.name) + (card.reversed ? (lang === "th" ? " (\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27)" : " (reversed)") : "") + "</h3>" +
+            (kw ? '<p class="kw-line">' + esc(kw) + "</p>" : "") +
+            "<p>" + esc(card.name) + " " + esc(cBody) + "</p></div></div>";
         }
         if (!glanceDone && bi === 0 && !/^(\*\*)?(\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48|\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33|What to do|Advice|Guidance|\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21|Explore)/.test(b)) {
           glanceDone = true;
