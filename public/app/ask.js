@@ -275,6 +275,29 @@
     }
   }
 
+  // While the reading request is in flight, Ngern gets ready:
+  // shuffling animation + a rotating bubble, cleared on every exit.
+  var waitTimer = null;
+  function startWait() {
+    var ga = document.getElementById("guide-ask");
+    if (ga) ga.className = "guide guide-ask s-shuffling";
+    var lines = uiLang() === "th"
+      ? ["\u0e01\u0e33\u0e25\u0e31\u0e07\u0e40\u0e15\u0e23\u0e35\u0e22\u0e21\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e43\u0e2b\u0e49\u0e04\u0e38\u0e13\u2026", "\u0e2d\u0e38\u0e48\u0e19\u0e2a\u0e33\u0e23\u0e31\u0e1a\u0e44\u0e1e\u0e48\u0e2a\u0e31\u0e01\u0e04\u0e23\u0e39\u0e48\u2026", "\u0e16\u0e32\u0e21\u0e44\u0e1e\u0e48\u0e27\u0e48\u0e32\u0e2d\u0e22\u0e32\u0e01\u0e1a\u0e2d\u0e01\u0e2d\u0e30\u0e44\u0e23\u0e04\u0e38\u0e13\u2026"]
+      : ["Getting your reading ready\u2026", "Warming up the deck\u2026", "Asking the cards about you\u2026"];
+    var i = 0;
+    bubble(lines[0]);
+    waitTimer = setInterval(function () {
+      i = (i + 1) % lines.length;
+      bubble(lines[i]);
+    }, 1600);
+  }
+  function stopWait() {
+    if (waitTimer) clearInterval(waitTimer);
+    waitTimer = null;
+    var ga = document.getElementById("guide-ask");
+    if (ga && ga.classList.contains("s-shuffling")) ga.className = "guide guide-ask s-idle";
+  }
+
   async function submit(form) {
     var q = document.getElementById("q");
     var question = ((q && q.value) || "").trim();
@@ -299,13 +322,16 @@
         token = window.turnstile.getResponse() || "";
       }
     } catch (e) {}
+    startWait();
     var res;
     try {
       res = await postReading({ question: question, topic: topic, lang: lang, turnstileToken: token });
     } catch (e) {
+      stopWait();
       if (btn) btn.disabled = false;
       return;
     }
+    stopWait();
     if (res.status === 400) {
       if (q) {
         q.classList.add("need");
@@ -315,12 +341,14 @@
       if (btn) btn.disabled = false;
       return;
     }
+    stopWait();
     if (res.status === 403) {
       // Bot check / forbidden: not a question problem, say so.
       bubble(t("blocked"));
       if (btn) btn.disabled = false;
       return;
     }
+    stopWait();
     if (res.data && res.data.crisis) {
       setGuide("done");
       enterRead(question, topicLabel(topic), []);
@@ -329,6 +357,7 @@
       if (btn) btn.disabled = false;
       return;
     }
+    stopWait();
     if (res.status === 429) {
       // Two different 429s: the daily quota (cat sleeps) and the
       // per-connection rate backstop (just slow down). Only the
@@ -343,6 +372,7 @@
       if (window.TarotHome) window.TarotHome.refresh();
       return;
     }
+    stopWait();
     if (res.status !== 200 || !res.data.id) {
       if (btn) btn.disabled = false;
       return;
