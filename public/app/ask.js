@@ -219,13 +219,13 @@
   async function streamInto(mount, reading, lang, onDone) {
     window.TarotDraw.renderReading(mount, reading, lang, "/api/readings/" + reading.id + "/stream", {
       onDone: function (summary, full) {
-        // Disclaimer from the reader guidelines, added by the app
-        // (not the model) at the end of every finished reading.
+        // Actions first, then the disclaimer above the footer
+        // (layout order: Share/Ask again, then disclaimer).
+        (onDone || function () {})(summary, full);
         var disc = document.createElement("p");
         disc.className = "disclaimer";
         disc.textContent = t("disclaimer");
         mount.appendChild(disc);
-        (onDone || function () {})(summary, full);
       },
       onFollowUp: function (question) {
         showStep(1);
