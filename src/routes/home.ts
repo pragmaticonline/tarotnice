@@ -67,7 +67,7 @@ ${quotaRow(ui, 3)}
 </section>
 <section id="step-read" data-step="3" hidden>
 <p class="read-eyebrow" id="read-eyebrow"></p>
-<p class="draw-q read-q" id="read-q"></p>
+<h1 class="draw-q read-q" id="read-q"></h1>
 <div class="read-cards" id="read-cards"></div>
 <div id="reading" class="reading"></div>
 </section>

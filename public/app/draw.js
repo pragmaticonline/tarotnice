@@ -80,7 +80,7 @@
     var onEvent = opts.onEvent || function () {};
     // Resolved at the end of reveal(): callers must not stream the
     // reading (or show any card name) before the user has picked
-    // three cards and watched them flip (SPEC §8.2 steps 4-6).
+    // three cards and watched them flip (SPEC \u00a78.2 steps 4-6).
     var finishRun = function () {};
     var finished = new Promise(function (resolve) { finishRun = resolve; });
     var W = stage.clientWidth || 360;
@@ -184,7 +184,7 @@
     function fan() {
       state = "fan";
       // Prototype geometry (designs/prototype.html): two arcs of 39,
-      // span 110°, edges normalised by sin(span/2) so the outermost
+      // span 110\u00b0, edges normalised by sin(span/2) so the outermost
       // cards stay inside the stage; back row sits 0.62*ch higher,
       // both arcs sag by droop toward the edges.
       var span = 110 * (Math.PI / 180);
@@ -313,7 +313,7 @@
     mount.innerHTML = "";
     // No per-card name blocks here any more: names sit under the
     // card images in step 3, and each card paragraph names itself.
-    mount.appendChild(el("h3", "sec-h", lang === "th" ? "\u0e44\u0e1e\u0e48\u0e17\u0e35\u0e25\u0e30\u0e43\u0e1a" : "Card by card"));
+    mount.appendChild(el("h2", "sec-h", lang === "th" ? "\u0e44\u0e1e\u0e48\u0e17\u0e35\u0e25\u0e30\u0e43\u0e1a" : "Card by card"));
     var synth = el("div", "rc rtext", "");
     synth.addEventListener("click", function (e) {
       var b = e.target && e.target.closest ? e.target.closest("[data-fq]") : null;
@@ -338,42 +338,61 @@
       if (blocks.length <= 1) {
         blocks = full.split(/\n/).map(function (b) { return b.trim(); }).filter(Boolean);
       }
-      synth.innerHTML = blocks.map(function (b, bi) {
+      // The Summary line moves up into At-a-glance as its lead.
+      var summaryText = "";
+      var sIdx = -1;
+      blocks.forEach(function (b, i) { if (/^(SUMMARY:|\u0e2a\u0e23\u0e38\u0e1b:)/.test(b)) sIdx = i; });
+      if (sIdx >= 0) {
+        summaryText = blocks[sIdx].replace(/^(SUMMARY:|\u0e2a\u0e23\u0e38\u0e1b:)\s*/, "");
+        blocks.splice(sIdx, 1);
+      }
+      var usedCard = {};
+      var glanceDone = false;
+      var out = blocks.map(function (b, bi) {
         var html = esc(b).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
-        if (bi === 0 && !/^(\*\*)?(SUMMARY:|\u0e2a\u0e23\u0e38\u0e1b:|\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48|\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33|What to do|Advice|Guidance|\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21|Explore)/.test(b)) {
-          var chips = (reading.cards || []).map(function (c) { return c.keyword || ""; }).filter(Boolean);
-          return '<div class="sec sec-glance"><div class="glance-head"><p class="sec-title">' +
-            (lang === "th" ? "\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21" : "At a glance") + "</p>" +
-            (chips.length ? '<span class="glance-chips">' + chips.map(function (k) { return '<span class="gchip">' + esc(k) + "</span>"; }).join("") + "</span>" : "") +
-            '</div><p class="glance-text">' + html + "</p></div>";
+        var cm = b.match(/^\*\*([^*]+)\*\*\s*:?\s*([\s\S]*)$/);
+        if (cm) {
+          var card = (reading.cards || []).find(function (c) {
+            return c.name && (cm[1] === c.name || cm[1].indexOf(c.name) === 0) && !usedCard[c.name];
+          });
+          if (card) {
+            usedCard[card.name] = true;
+            var kw = (card.keywords || []).join(" \u00b7 ");
+            return '<div class="sec card-row"><img class="card-thumb' + (card.reversed ? " rev" : "") + '" src="' + esc(card.image) + '" alt="">' +
+              '<div class="card-row-body"><h3>' + esc(card.name) + (card.reversed ? (lang === "th" ? " (\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27)" : " (reversed)") : "") + "</h3>" +
+              (kw ? '<p class="kw-line">' + esc(kw) + "</p>" : "") +
+              "<p>" + esc(cm[2]).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>") + "</p></div></div>";
+          }
+        }
+        if (!glanceDone && bi === 0 && !/^(\*\*)?(\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48|\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33|What to do|Advice|Guidance|\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21|Explore)/.test(b)) {
+          glanceDone = true;
+          return '<div class="sec sec-glance"><h2 class="sec-title">' +
+            (lang === "th" ? "\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21" : "At a glance") + "</h2>" +
+            (summaryText ? '<p class="glance-lead">' + esc(summaryText) + "</p>" : "") +
+            '<p class="glance-text">' + html + "</p></div>";
         }
         if (/^\*\*(\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33|Guidance)/.test(b) || /^Guidance:/.test(b)) {
           var gTitle = (b.match(/^\*\*([^*]+)\*\*/) || b.match(/^([^:\n]+):/) || [])[1] || "Guidance";
           var gBody = b.replace(/^\*\*[^*]+\*\*:?\s*/, "").replace(/^[^:\n]+:\s*/, "");
-          return '<div class="sec sec-guidance"><p class="sec-title">' + esc(gTitle) + "</p><p>" +
+          return '<div class="sec sec-guidance"><h2 class="sec-title">' + esc(gTitle) + "</h2><p>" +
             esc(gBody).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>") + "</p></div>";
-        }
-        // Section the answer visually: summary as a quote card,
-        // advice as a checklist card, the card warning as a callout.
-        if (/^(SUMMARY:|\u0e2a\u0e23\u0e38\u0e1b:)/.test(b)) {
-          return '<p class="sec sec-summary">' + html.replace(/^(SUMMARY:|\u0e2a\u0e23\u0e38\u0e1b:)\s*/, "") + "</p>";
         }
         if (/^(\*\*)?(\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22|\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33|What to do|Advice)/.test(b)) {
           var title = (b.match(/^\*\*([^*]+)\*\*/) || b.match(/^([^:\n]+):/) || [])[1] || "What to do";
           var bodyText = b.replace(/^\*\*[^*]+\*\*:?\s*/, "").replace(/^[^:\n]+:\s*/, "");
           var items = bodyText.split(/\s\u00b7\s|\n-\s*/).map(function (x) { return x.trim(); }).filter(Boolean);
           if (items.length > 1) {
-            return '<div class="sec sec-advice"><p class="sec-title">' + esc(title) + "</p><ul>" +
-              items.map(function (x) { return "<li>" + esc(x).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>") + "</li>"; }).join("") + "</ul></div>";
+            return '<div class="sec sec-advice"><h2 class="sec-title">' + esc(title) + "</h2><ol>" +
+              items.map(function (x) { return "<li>" + esc(x).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>") + "</li>"; }).join("") + "</ol></div>";
           }
-          return '<div class="sec sec-advice"><p class="sec-title">' + esc(title) + "</p><p>" +
+          return '<div class="sec sec-advice"><h2 class="sec-title">' + esc(title) + "</h2><p>" +
             esc(b.replace(/^\*\*[^*]+\*\*:?\s*/, "")).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>") + "</p></div>";
         }
         if (/^(\*\*)?(\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d|Explore further)/.test(b)) {
           var fTitle = (b.match(/^\*\*([^*]+)\*\*/) || b.match(/^([^:\n]+):/) || [])[1] || "Explore further";
           var fItems = b.replace(/^\*\*[^*]+\*\*:?\s*/, "").replace(/^[^:\n]+:\s*/, "")
             .split(/\n/).map(function (x) { return x.replace(/^-\s*/, "").trim(); }).filter(Boolean);
-          return '<div class="sec sec-follow"><p class="sec-title">' + esc(fTitle) + '</p><div class="follow-btns">' +
+          return '<div class="sec sec-follow"><h2 class="sec-title">' + esc(fTitle) + '</h2><div class="follow-btns">' +
             fItems.map(function (q) {
               return '<button type="button" class="follow-btn" data-fq="' + encodeURIComponent(q) + '">' + esc(q) + "</button>";
             }).join("") + "</div></div>";
@@ -383,6 +402,10 @@
         }
         return "<p>" + html + "</p>";
       }).join("");
+      if (summaryText && !glanceDone) {
+        out += '<p class="sec sec-summary">' + esc(summaryText) + "</p>";
+      }
+      synth.innerHTML = out;
     }
 
     var es = new EventSource(streamUrl);

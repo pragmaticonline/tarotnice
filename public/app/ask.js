@@ -420,7 +420,7 @@
       return {
         id: drawn.id,
         name: view.nameEn || view.name || "",
-        keyword: ((drawn.reversed ? view.keywordsReversed : view.keywordsUpright) || [])[0] || "",
+        keywords: ((drawn.reversed ? view.keywordsReversed : view.keywordsUpright) || []).slice(0, 3),
         image: view.image || "",
         image2x: view.image2x || "",
         reversed: !!drawn.reversed,
