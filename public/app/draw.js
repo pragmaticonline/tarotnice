@@ -345,9 +345,10 @@
         if (/^(SUMMARY:|\u0e2a\u0e23\u0e38\u0e1b:)/.test(b)) {
           return '<p class="sec sec-summary">' + html.replace(/^(SUMMARY:|\u0e2a\u0e23\u0e38\u0e1b:)\s*/, "") + "</p>";
         }
-        if (/^\*\*(\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22|What to do)/.test(b)) {
-          var title = (b.match(/^\*\*([^*]+)\*\*/) || [])[1] || "What to do";
-          var items = b.replace(/^\*\*[^*]+\*\*:?\s*/, "").split(/\s\u00b7\s/).map(function (x) { return x.trim(); }).filter(Boolean);
+        if (/^(\*\*)?(\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22|\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33|What to do|Advice)/.test(b)) {
+          var title = (b.match(/^\*\*([^*]+)\*\*/) || b.match(/^([^:\n]+):/) || [])[1] || "What to do";
+          var bodyText = b.replace(/^\*\*[^*]+\*\*:?\s*/, "").replace(/^[^:\n]+:\s*/, "");
+          var items = bodyText.split(/\s\u00b7\s|\n-\s*/).map(function (x) { return x.trim(); }).filter(Boolean);
           if (items.length > 1) {
             return '<div class="sec sec-advice"><p class="sec-title">' + esc(title) + "</p><ul>" +
               items.map(function (x) { return "<li>" + esc(x).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>") + "</li>"; }).join("") + "</ul></div>";
