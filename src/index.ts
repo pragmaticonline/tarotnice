@@ -957,6 +957,8 @@ app.get("/api/cards", async (c) => {
       suit: card.suit,
       rank: card.rank,
       reviewed: card.reviewed,
+      keywordsUpright: card.keywordsUpright,
+      keywordsReversed: card.keywordsReversed,
     })),
   });
 });

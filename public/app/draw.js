@@ -318,6 +318,7 @@
         block.classList.add("on");
       }, 250 * (i + 1));
     });
+    mount.appendChild(el("h3", "sec-h", lang === "th" ? "\u0e44\u0e1e\u0e48\u0e17\u0e35\u0e25\u0e30\u0e43\u0e1a" : "Card by card"));
     var synth = el("div", "rc rtext", "");
     synth.addEventListener("click", function (e) {
       var b = e.target && e.target.closest ? e.target.closest("[data-fq]") : null;
@@ -342,8 +343,21 @@
       if (blocks.length <= 1) {
         blocks = full.split(/\n/).map(function (b) { return b.trim(); }).filter(Boolean);
       }
-      synth.innerHTML = blocks.map(function (b) {
+      synth.innerHTML = blocks.map(function (b, bi) {
         var html = esc(b).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+        if (bi === 0 && !/^(\*\*)?(SUMMARY:|\u0e2a\u0e23\u0e38\u0e1b:|\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48|\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33|What to do|Advice|Guidance|\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21|Explore)/.test(b)) {
+          var chips = (reading.cards || []).map(function (c) { return c.keyword || ""; }).filter(Boolean);
+          return '<div class="sec sec-glance"><div class="glance-head"><p class="sec-title">' +
+            (lang === "th" ? "\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21" : "At a glance") + "</p>" +
+            (chips.length ? '<span class="glance-chips">' + chips.map(function (k) { return '<span class="gchip">' + esc(k) + "</span>"; }).join("") + "</span>" : "") +
+            '</div><p class="glance-text">' + html + "</p></div>";
+        }
+        if (/^\*\*(\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33|Guidance)/.test(b) || /^Guidance:/.test(b)) {
+          var gTitle = (b.match(/^\*\*([^*]+)\*\*/) || b.match(/^([^:\n]+):/) || [])[1] || "Guidance";
+          var gBody = b.replace(/^\*\*[^*]+\*\*:?\s*/, "").replace(/^[^:\n]+:\s*/, "");
+          return '<div class="sec sec-guidance"><p class="sec-title">' + esc(gTitle) + "</p><p>" +
+            esc(gBody).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>") + "</p></div>";
+        }
         // Section the answer visually: summary as a quote card,
         // advice as a checklist card, the card warning as a callout.
         if (/^(SUMMARY:|\u0e2a\u0e23\u0e38\u0e1b:)/.test(b)) {

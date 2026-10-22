@@ -66,6 +66,7 @@ ${quotaRow(ui, 3)}
 <div id="guide" class="guide s-idle"><span class="ngern-wrap">${NGERN_SITTING_SVG.replaceAll("ngFur", "ngFurD").replaceAll("ngEye", "ngEyeD")}</span><p class="bubble">${escapeHtml(d.hintIdle)}</p></div>
 </section>
 <section id="step-read" data-step="3" hidden>
+<p class="read-eyebrow" id="read-eyebrow"></p>
 <p class="draw-q read-q" id="read-q"></p>
 <div class="read-cards" id="read-cards"></div>
 <div id="reading" class="reading"></div>

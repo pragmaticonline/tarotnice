@@ -27,7 +27,14 @@
       var sec = document.querySelector('[data-step="' + k + '"]');
       if (sec) sec.hidden = k !== n;
       var ind = document.querySelector('[data-step-ind="' + k + '"]');
-      if (ind) ind.classList.toggle("on", k <= n);
+      if (ind) {
+        ind.classList.toggle("on", k <= n);
+        var lbl = ind.querySelector(".step-label");
+        if (lbl) {
+          if (!lbl.dataset.base) lbl.dataset.base = lbl.textContent.replace(/^[0-9]+\s*/, "");
+          lbl.textContent = (k < n ? "\u2713 " : k === n ? k + " \u00b7 " : k + " ") + lbl.dataset.base;
+        }
+      }
     });
     if (push) {
       try { history.pushState({ step: n }, ""); } catch (e) {}
@@ -266,6 +273,8 @@
   }
 
   function enterRead(question, topicText, cards) {
+    var eb = document.getElementById("read-eyebrow");
+    if (eb) eb.textContent = uiLang() === "th" ? "\u0e04\u0e33\u0e16\u0e32\u0e21\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13" : "Your question";
     // Smooth handoff: fade/slide the current step out, then the
     // reading step in (cards stagger in below).
     var current = document.querySelector("[data-step]:not([hidden])");
@@ -287,9 +296,11 @@
     if (rq) rq.textContent = "\u201c" + question + "\u201d";
     var row = document.getElementById("read-cards");
     if (row) {
-      row.innerHTML = (cards || []).map(function (c) {
-        return '<img src="' + esc(c.image) + '" srcset="' + esc(c.image2x || "") + ' 2x" alt="' + esc(c.name) + '"' +
-          (c.reversed ? ' class="rev"' : "") + ">";
+      var cardWord = uiLang() === "th" ? "\u0e43\u0e1a\u0e17\u0e35\u0e48" : "Card";
+      row.innerHTML = (cards || []).map(function (c, i) {
+        return '<figure class="read-card"><img src="' + esc(c.image) + '" srcset="' + esc(c.image2x || "") + ' 2x" alt="' + esc(c.name) + '"' +
+          (c.reversed ? ' class="rev"' : "") + ">" +
+          "<figcaption><span class=\"rc-num\">" + cardWord + " " + (i + 1) + '</span><span class="rc-name">' + esc(c.name) + "</span></figcaption></figure>";
       }).join("");
     }
   }
@@ -409,6 +420,7 @@
       return {
         id: drawn.id,
         name: view.nameEn || view.name || "",
+        keyword: ((drawn.reversed ? view.keywordsReversed : view.keywordsUpright) || [])[0] || "",
         image: view.image || "",
         image2x: view.image2x || "",
         reversed: !!drawn.reversed,
