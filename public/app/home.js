@@ -70,9 +70,7 @@
       (daily.card.reversed ? (lang === "th" ? " (\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27)" : " (reversed)") : "") + "</p>" +
       '<p class="daily-msg">' + esc(daily.message) + "</p>" +
       (colour ? '<p class="daily-lucky">' + esc(colour) + "</p>" : "") +
-      "</div>" +
-      '<button type="button" class="btn btn-outline daily-share">' +
-      (uiLang() === "th" ? "\u0e41\u0e0a\u0e23\u0e4c\u0e14\u0e27\u0e07" : "Share") + "</button></div>"
+      "</div></div>"
     );
   }
 
@@ -92,14 +90,16 @@
     if (sheet) return sheet;
     sheet = document.createElement("div");
     sheet.id = "daily-sheet";
-    sheet.className = "sheet";
+    sheet.className = "sheet daily-sheet";
     sheet.hidden = true;
     sheet.innerHTML =
       '<div class="panel daily-panel" role="dialog" aria-modal="true" aria-label="Daily card">' +
-      '<button type="button" class="btn btn-outline daily-close"></button>' +
+      '<div class="daily-head"><button type="button" class="btn btn-outline daily-close"></button>' +
+      '<button type="button" class="btn btn-outline daily-share daily-head-share"></button></div>' +
       '<div class="daily-modal-body"></div></div>';
     document.body.appendChild(sheet);
     sheet.querySelector(".daily-close").textContent = uiLang() === "th" ? "\u0e1b\u0e34\u0e14" : "Close";
+    sheet.querySelector(".daily-head-share").textContent = uiLang() === "th" ? "\u0e41\u0e0a\u0e23\u0e4c\u0e14\u0e27\u0e07" : "Share";
     sheet.querySelector(".daily-close").addEventListener("click", closeDaily);
     sheet.addEventListener("click", function (e) { if (e.target === sheet) closeDaily(); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !sheet.hidden) closeDaily(); });
@@ -114,6 +114,8 @@
   function openDaily() {
     var sheet = dailyModal();
     var body = sheet.querySelector(".daily-modal-body");
+    var shareBtn = sheet.querySelector(".daily-head-share");
+    if (shareBtn) shareBtn.hidden = !(dailyState && dailyState.card);
     var lang = uiLang();
     if (dailyState && dailyState.card) {
       body.innerHTML = dailyCardHtml(dailyState, lang);
@@ -137,6 +139,7 @@
           if (!res.ok) throw new Error("draw failed");
           var data = await res.json();
           dailyState = data;
+          if (shareBtn) shareBtn.hidden = false;
           body.innerHTML = dailyCardHtml(data, data.lang || uiLang());
           if (data.streak) paintStreak(data.streak);
           paintDailyBar();
