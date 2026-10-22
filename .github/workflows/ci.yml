@@ -16,6 +16,14 @@ jobs:
       - run: npm ci
       - run: npx tsc --noEmit
       - run: npx vitest run
+      - name: client JS parses (home.js shipped dead once — never again)
+        run: |
+          for f in public/app/*.js; do
+            case "$f" in
+              public/app/history.js) node --input-type=module --check < "$f" || exit 1;;
+              *) node --check "$f" || exit 1;;
+            esac
+          done
       - name: leak test (no CJK script in code, no raw non-ASCII)
         run: |
           # Thai IS a TarotNice UI language but stays \u-escaped in code

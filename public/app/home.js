@@ -68,7 +68,7 @@
       (daily.card.reversed ? ' class="rev"' : "") + ">" +
       '<div class="daily-body"><p class="daily-name">' + esc(daily.card.name) +
       (daily.card.reversed ? (lang === "th" ? " (\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27)" : " (reversed)") : "") + "</p>" +
-      "<p class="daily-msg">" + esc(daily.message) + "</p>" +
+      '<p class="daily-msg">' + esc(daily.message) + "</p>" +
       (colour ? '<p class="daily-lucky">' + esc(colour) + "</p>" : "") +
       "</div>" +
       '<button type="button" class="btn btn-outline daily-share">' +
