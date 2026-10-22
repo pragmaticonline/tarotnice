@@ -311,13 +311,8 @@
   function renderReading(mount, reading, lang, streamUrl, opts) {
     opts = opts || {};
     mount.innerHTML = "";
-    reading.cards.forEach(function (c, i) {
-      var block = el("div", "rc", "<b>" + esc(c.name) + (c.reversed ? (lang === "th" ? " (\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27)" : " (reversed)") : "") + "</b>");
-      mount.appendChild(block);
-      setTimeout(function () {
-        block.classList.add("on");
-      }, 250 * (i + 1));
-    });
+    // No per-card name blocks here any more: names sit under the
+    // card images in step 3, and each card paragraph names itself.
     mount.appendChild(el("h3", "sec-h", lang === "th" ? "\u0e44\u0e1e\u0e48\u0e17\u0e35\u0e25\u0e30\u0e43\u0e1a" : "Card by card"));
     var synth = el("div", "rc rtext", "");
     synth.addEventListener("click", function (e) {
