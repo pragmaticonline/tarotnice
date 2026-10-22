@@ -21,7 +21,10 @@ describe("GET / (draw screen)", () => {
     expect((html.match(/class="pip on"/g) || []).length).toBe(3);
     // Draw stage: three empty slots + Ngern with the idle hint.
     expect((html.match(/<span class="slot"><\/span>/g) || []).length).toBe(3);
-    expect(html).toContain("/mascot/ngern-sitting.svg");
+    // Ngern is inlined (animated .eyes/.head/.tail), not an <img>.
+    expect(html).toContain('class="ngern"');
+    expect(html).toContain('class="eyes"');
+    expect(html).toContain('class="tail"');
     expect(html).toContain("Hi, I&#39;m Ngern");
     // Header: Ngern mark, streak hook, Day/Night + TH/EN toggles.
     expect(html).toContain('data-logo="ngern"');

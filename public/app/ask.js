@@ -20,8 +20,8 @@
     if (b && msg) b.textContent = msg;
   }
   function sleepNgern() {
-    var img = document.querySelector("#guide img");
-    if (img) img.src = "/mascot/ngern-sleeping.svg";
+    var wrap = document.querySelector("#guide .ngern-wrap");
+    if (wrap) wrap.innerHTML = '<img src="/mascot/ngern-sleeping.svg" alt="Ngern the Korat cat" width="120" height="120">';
     setGuide("sleep");
   }
 

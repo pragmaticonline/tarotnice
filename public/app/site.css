@@ -24,8 +24,8 @@
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:linear-gradient(180deg,var(--bg-2),var(--bg) 40%);color:var(--ink);font-family:var(--f-body);min-height:100vh}
-.wrap{max-width:720px;margin:0 auto;padding:16px 16px 48px;display:flex;flex-direction:column;gap:14px}
-@media(min-width:720px){.wrap{padding:20px 32px 64px}}
+.wrap{max-width:720px;margin:0 auto;padding:20px 20px 56px;display:flex;flex-direction:column;gap:20px}
+@media(min-width:720px){.wrap{padding:28px 36px 72px}}
 
 h1,h2,.display{font-family:var(--f-display);color:var(--accent);font-weight:600;line-height:1.15;margin:0}
 .display{font-size:2rem}
@@ -44,7 +44,7 @@ a{color:var(--accent)}
 .lang-opt[aria-current="true"]{background:var(--accent);color:var(--on-accent)}
 
 /* Buttons, chips, form. */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;background:var(--accent);color:var(--on-accent);border:0;border-radius:14px;padding:.9rem 1.4rem;font-size:1.05rem;font-family:var(--f-body);font-weight:500;cursor:pointer;text-decoration:none;min-height:52px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;background:var(--accent);color:var(--on-accent);border:0;border-radius:14px;padding:1rem 1.5rem;font-size:1.05rem;font-family:var(--f-body);font-weight:500;cursor:pointer;text-decoration:none;min-height:52px}
 .btn-outline{background:transparent;color:var(--accent);border:2px solid var(--accent)}
 .btn-primary{font-size:1.15rem;width:100%}
 .quota{display:flex;align-items:center;gap:.6rem;color:var(--muted);margin:0}
@@ -52,9 +52,9 @@ a{color:var(--accent)}
 .pip{width:14px;height:20px;border-radius:3px;border:1.5px solid var(--gold-dim);display:inline-block}
 .pip.on{background:var(--gold);border-color:var(--gold)}
 .ask-label{font-family:var(--f-display);font-size:1.4rem;color:var(--accent);display:block;margin:.5rem 0}
-#ask-form textarea{width:100%;box-sizing:border-box;font-family:var(--f-body);font-size:1rem;color:var(--ink);background:var(--card-face);border:2px solid var(--gold-dim);border-radius:12px;padding:.8rem;resize:vertical}
+#ask-form textarea{width:100%;box-sizing:border-box;font-family:var(--f-body);font-size:1rem;color:var(--card-ink);background:var(--card-face);border:2px solid var(--gold-dim);border-radius:12px;padding:1rem;resize:vertical}
 #ask-form textarea.need{border-color:#b3261e;background:#fff}
-.topics{display:flex;flex-wrap:wrap;gap:.5rem;margin:.8rem 0}
+.topics{display:flex;flex-wrap:wrap;gap:.6rem;margin:1rem 0 1.1rem}
 .chip input{position:absolute;opacity:0;pointer-events:none}
 .chip span{display:inline-block;border:1.5px solid var(--gold-dim);border-radius:999px;padding:.45rem .95rem;cursor:pointer;min-height:44px;line-height:1.6}
 .chip input:checked+span{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
@@ -66,16 +66,16 @@ a{color:var(--accent)}
 .slot{width:72px;height:118px;border:2px dashed var(--gold-dim);border-radius:8px}
 
 /* Daily card block. */
-.daily-block{display:flex;flex-direction:column;gap:.7rem;background:var(--card-face);border:1.5px solid var(--gold);border-radius:16px;padding:1rem}
+.daily-block{display:flex;flex-direction:column;gap:.85rem;background:var(--card-face);color:var(--card-ink);border:1.5px solid var(--gold);border-radius:16px;padding:1.25rem}
 .daily-prompt{font-family:var(--f-display);font-size:1.25rem;color:var(--accent);margin:0}
-.daily-tap{display:flex;align-items:center;gap:.8rem;background:transparent;border:0;cursor:pointer;padding:0;font-family:var(--f-body);font-size:1rem;color:var(--ink);min-height:44px;text-align:left}
+.daily-tap{display:flex;align-items:center;gap:.8rem;background:transparent;border:0;cursor:pointer;padding:0;font-family:var(--f-body);font-size:1rem;color:inherit;min-height:44px;text-align:left}
 .card-back{width:64px;height:106px;flex:none;border-radius:8px;border:1.5px solid var(--gold-dim);background:radial-gradient(circle at 50% 38%,var(--gold) 0 8%,transparent 9%),repeating-conic-gradient(from 0deg,var(--back) 0 12deg,var(--gold-dim) 12deg 13deg);background-color:var(--back)}
 .daily-face{display:flex;gap:.9rem;align-items:flex-start}
 .daily-face img{width:96px;height:auto;border-radius:8px;border:1.5px solid var(--gold)}
 .daily-face img.rev{transform:rotate(180deg)}
 .daily-name{font-family:var(--f-display);font-size:1.2rem;color:var(--accent);margin:0 0 .3rem}
 .daily-msg{margin:.2rem 0;line-height:1.55}
-.daily-lucky{display:inline-block;margin:.4rem 0 0;padding:.2rem .7rem;border:1px solid var(--gold-dim);border-radius:999px;color:var(--muted);font-size:.9rem}
+.daily-lucky{display:inline-block;margin:.4rem 0 0;padding:.2rem .7rem;border:1px solid var(--gold-dim);border-radius:999px;color:var(--card-ink);font-size:.9rem}
 
 /* Draw stage: deck, fan, slots, flips. */
 .stage{position:relative;overflow:hidden;touch-action:manipulation;perspective:1200px}
@@ -133,12 +133,23 @@ a{color:var(--accent)}
 .land-summary{font-size:1.1rem;line-height:1.6;max-width:40ch;margin:0}
 
 /* Ngern guide + speech bubble. */
-.guide{display:flex;align-items:flex-end;gap:.7rem;margin-top:.5rem}
-.guide img{width:96px;height:auto;flex:none}
-.bubble{position:relative;background:var(--card-face);border:1.5px solid var(--gold);border-radius:14px;padding:.7rem .9rem;margin:0 0 1rem;max-width:46ch}
+.guide{display:flex;align-items:flex-end;gap:1rem;margin-top:1rem}
+.guide img,.guide .ngern{width:96px;height:auto;flex:none}
+.ngern-wrap{display:inline-flex;flex:none}
+.ngern .eyes,.ngern .head,.ngern .tail{transform-box:fill-box}
+.ngern .eyes{transform-origin:center;animation:blink 4.5s infinite}
+.ngern .tail{transform-origin:0% 100%;animation:swish 3s ease-in-out infinite}
+.ngern .head{transform-origin:50% 100%;transition:transform .4s}
+@keyframes blink{0%,91%,100%{transform:scaleY(1)}94%{transform:scaleY(.1)}}
+@keyframes swish{0%,100%{transform:rotate(0)}50%{transform:rotate(-12deg)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.guide.s-shuffling .ngern{animation:bob .45s ease-in-out infinite}
+.guide.s-shuffling .tail{animation-duration:.6s}
+.guide.s-reveal .ngern .eyes{animation:blink 1.1s infinite}
+.bubble{position:relative;background:var(--card-face);color:var(--card-ink);border:1.5px solid var(--gold);border-radius:14px;padding:.9rem 1.1rem;margin:0 0 1rem;max-width:46ch;line-height:1.55}
 .bubble::before{content:"";position:absolute;left:-9px;bottom:14px;width:14px;height:14px;background:var(--card-face);border-left:1.5px solid var(--gold);border-bottom:1.5px solid var(--gold);transform:rotate(45deg)}
-.guide.s-picking img{transform:rotate(-7deg)}
-.guide.s-done img{transform:rotate(5deg)}
+.guide.s-picking .ngern .head,.guide.s-picking img{transform:rotate(-7deg)}
+.guide.s-done .ngern .head,.guide.s-done img{transform:rotate(5deg)}
 
 /* Footer. */
 .site-foot{margin-top:2rem;border-top:1px solid var(--gold-dim);padding-top:1.2rem}
