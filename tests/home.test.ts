@@ -31,8 +31,8 @@ describe("GET / (draw screen)", () => {
     expect(html).toContain("data-streak");
     expect(html).toContain("data-theme-toggle");
     expect(html).toContain("?ui=th");
-    // Footer entertainment line + legal links.
-    expect(html).toContain("For reflection and entertainment.");
+    // Footer legal links (no entertainment line).
+    expect(html).not.toContain("For reflection and entertainment.");
     expect(html).toContain('href="/terms"');
     expect(html).toContain('href="/privacy"');
     expect(html).toContain('href="/contact"');

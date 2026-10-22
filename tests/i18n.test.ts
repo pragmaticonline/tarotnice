@@ -27,7 +27,7 @@ describe("UI language resolution", () => {
         "hintShuffling", "hintPick", "hintReveal", "hintDone", "hintSleep",
         "quota", "upright", "reversed", "again", "share", "shareTitle",
         "shareShowQ", "sharePrivate", "shareCta", "shareText",
-        "themeDay", "themeNight", "footerLine",
+        "themeDay", "themeNight",
       ] as const) {
         expect(d[key].length, `${lang}.${key}`).toBeGreaterThan(0);
       }
