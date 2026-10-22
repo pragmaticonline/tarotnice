@@ -22,7 +22,7 @@
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;overflow-y:scroll;scrollbar-gutter:stable}
 body{margin:0;background:linear-gradient(180deg,var(--bg-2),var(--bg) 40%);color:var(--ink);font-family:var(--f-body);min-height:100vh}
 .wrap{max-width:720px;margin:0 auto;padding:20px 20px 56px;display:flex;flex-direction:column;gap:20px}
 @media(min-width:720px){.wrap{padding:28px 36px 72px}}
