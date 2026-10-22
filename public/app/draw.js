@@ -80,6 +80,9 @@
     var G = geom(W);
     var cx = W / 2;
     stage.style.height = G.H + "px";
+    try {
+      stage.scrollIntoView({ block: "start", behavior: REDUCED ? "auto" : "smooth" });
+    } catch (e) {}
     stage.innerHTML = '<p class="sr" data-live aria-live="polite"></p>';
 
     var deckPos = function (c, i) {
@@ -164,18 +167,26 @@
 
     function fan() {
       state = "fan";
+      // Prototype geometry (designs/prototype.html): two arcs of 39,
+      // span 110°, edges normalised by sin(span/2) so the outermost
+      // cards stay inside the stage; back row sits 0.62*ch higher,
+      // both arcs sag by droop toward the edges.
       var span = 110 * (Math.PI / 180);
       var maxX = (W - G.cw * 1.75) / 2;
+      var smax = Math.sin(span / 2);
+      var droopDenom = 1 - Math.cos(span / 2);
       var n = deck.length;
+      var half = Math.ceil(n / 2);
       deck.forEach(function (card, i) {
-        var row = i < 39 ? 0 : 1;
-        var k = row === 0 ? i : i - 39;
-        var a = -span / 2 + (span * k) / 38;
-        var x = cx + Math.sin(a) * maxX * 2.2 - G.cw / 2;
-        var y = G.deckY - Math.cos(a) * G.ch * 0.32 + row * G.ch * 0.62 + G.droop * row;
+        var row = i < half ? 0 : 1;
+        var k = row === 0 ? i : i - half;
+        var m = row === 0 ? half : n - half;
+        var a = -span / 2 + (span * k) / (m - 1);
+        var x = cx - G.cw / 2 + (maxX * Math.sin(a)) / smax;
+        var y = G.deckY - (row === 0 ? G.ch * 0.62 : 0) + (G.droop * (1 - Math.cos(a))) / droopDenom;
         card._fan = { x: x, y: y, a: (a * 180) / Math.PI / 2 };
         if (!REDUCED) card.style.transitionDelay = i * 7 + "ms";
-        place(card, x, y, card._fan.a, 1, 20 + row * 40 + (k % 10));
+        place(card, x, y, card._fan.a, 1, row * 100 + k);
         card.classList.add("pickable");
         card.tabIndex = 0;
       });
