@@ -341,9 +341,9 @@
       // The Summary line moves up into At-a-glance as its lead.
       var summaryText = "";
       var sIdx = -1;
-      blocks.forEach(function (b, i) { if (/^(SUMMARY:|\u0e2a\u0e23\u0e38\u0e1b:)/.test(b)) sIdx = i; });
+      blocks.forEach(function (b, i) { if (/^(SUMMARY:|\u0e2a\u0e23\u0e38\u0e1b:)/i.test(b)) sIdx = i; });
       if (sIdx >= 0) {
-        summaryText = blocks[sIdx].replace(/^(SUMMARY:|\u0e2a\u0e23\u0e38\u0e1b:)\s*/, "");
+        summaryText = blocks[sIdx].replace(/^(SUMMARY:|\u0e2a\u0e23\u0e38\u0e1b:)\s*/i, "");
         blocks.splice(sIdx, 1);
       }
       var usedCard = {};
@@ -380,7 +380,7 @@
         if (/^(\*\*)?(\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22|\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33|What to do|Advice)/.test(b)) {
           var title = (b.match(/^\*\*([^*]+)\*\*/) || b.match(/^([^:\n]+):/) || [])[1] || "What to do";
           var bodyText = b.replace(/^\*\*[^*]+\*\*:?\s*/, "").replace(/^[^:\n]+:\s*/, "");
-          var items = bodyText.split(/\s\u00b7\s|\n-\s*/).map(function (x) { return x.trim(); }).filter(Boolean);
+          var items = bodyText.split(/\s\u00b7\s|\n-\s*/).map(function (x) { return x.trim().replace(/^-\s*/, ""); }).filter(Boolean);
           if (items.length > 1) {
             return '<div class="sec sec-advice"><h2 class="sec-title">' + esc(title) + "</h2><ol>" +
               items.map(function (x) { return "<li>" + esc(x).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>") + "</li>"; }).join("") + "</ol></div>";

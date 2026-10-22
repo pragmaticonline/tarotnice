@@ -361,5 +361,5 @@ a{color:var(--accent)}
 @media(max-width:480px){.card-thumb{width:52px}}
 .glance-lead{font-family:var(--f-display);font-size:1.18rem;line-height:1.5;margin:.2rem 0 .5rem}
 .rtext .sec-advice ol{margin:0;padding-left:1.35rem;display:flex;flex-direction:column;gap:.35rem;line-height:1.55}
-.reading .actions .btn{flex:1 1 0}
+.reading .actions .btn{flex:1 1 0;box-sizing:border-box}
 h1.read-q{font-weight:600}
