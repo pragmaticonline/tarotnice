@@ -1,0 +1,332 @@
+// The draw: 78-card shuffle, two-arc fan, pick 3, flip, stream.
+// Ported from designs/prototype.html (shuffle/pick/geom) with real
+// card art and server-drawn cards: visual picks map onto the server's
+// cards in pick order, so a refresh can never re-roll.
+//
+// window.TarotDraw.run(stage, opts) where opts =
+// { cards: [{image, image2x, name, reversed} x3], lang, readingId,
+//   onEvent(name, detail) } — events: picked(n), revealed, streamed,
+//   failed, done. Reduced-motion and screen-reader paths included.
+(function () {
+  "use strict";
+
+  var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function wait(ms) {
+    return new Promise(function (resolve) {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  function geom(W) {
+    var cw = Math.min(104, Math.max(60, W / 5.4));
+    var ch = cw * 1.75; // real art ratio (1537x2689)
+    var slotY = 10;
+    var deckY = slotY + ch + 18 + ch * 0.62;
+    var droop = ch * 0.18;
+    return {
+      cw: cw, ch: ch, slotY: slotY, deckY: deckY, droop: droop,
+      H: deckY + ch + droop + 16,
+      slotX: [W / 2 - cw * 1.75, W / 2, W / 2 + cw * 1.75],
+    };
+  }
+
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html != null) e.innerHTML = html;
+    return e;
+  }
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function place(card, x, y, r, s, z, instant) {
+    var inner = card.firstChild;
+    card.style.zIndex = z == null ? 10 : z;
+    var t = "translate(" + x + "px," + y + "px) rotate(" + (r || 0) + "deg) scale(" + (s || 1) + ")";
+    if (instant) {
+      var prev = inner.style.transition;
+      inner.style.transition = "none";
+      card.style.transform = t;
+      void card.offsetWidth;
+      inner.style.transition = prev;
+    } else {
+      card.style.transform = t;
+    }
+  }
+
+  function announce(stage, msg) {
+    var live = stage.querySelector("[data-live]");
+    if (live) live.textContent = msg;
+  }
+
+  function setGuide(state) {
+    var g = document.getElementById("guide");
+    if (g) g.className = "guide s-" + state;
+  }
+
+  function bubble(msg) {
+    var b = document.querySelector("#guide .bubble");
+    if (b && msg) b.textContent = msg;
+  }
+
+  async function run(stage, opts) {
+    var cards = opts.cards;
+    var lang = opts.lang === "th" ? "th" : "en";
+    var onEvent = opts.onEvent || function () {};
+    var W = stage.clientWidth || 360;
+    var G = geom(W);
+    var cx = W / 2;
+    stage.style.height = G.H + "px";
+    stage.innerHTML = '<p class="sr" data-live aria-live="polite"></p>';
+
+    var deckPos = function (c, i) {
+      return { x: cx - G.cw / 2 - i * 0.12, y: G.deckY, r: 0 };
+    };
+
+    // Build the 78-card deck (backs out; faces lazy until picked).
+    var deck = [];
+    for (var i = 0; i < 78; i++) {
+      (function (i) {
+        var card = el("button", "card", '<span class="inner"><span class="back"></span><span class="front"></span></span>');
+        card.type = "button";
+        card.style.width = G.cw + "px";
+        card.style.height = G.ch + "px";
+        card.setAttribute("aria-label", lang === "th" ? "ไพ่ใบที่ " + (i + 1) + " จาก 78" : "Card " + (i + 1) + " of 78");
+        var p = deckPos(card, i);
+        place(card, p.x, p.y, 0, 1, 10 + i, true);
+        card.addEventListener("click", function () {
+          pick(card);
+        });
+        stage.appendChild(card);
+        deck.push(card);
+      })(i);
+    }
+    // Slot frames.
+    for (var s = 0; s < 3; s++) {
+      var f = el("span", "slotframe");
+      f.style.cssText = "left:" + (G.slotX[s] - G.cw / 2) + "px;top:" + G.slotY + "px;width:" + G.cw + "px;height:" + G.ch + "px";
+      stage.appendChild(f);
+    }
+
+    var state = "idle";
+    var picked = [];
+    var serverIdx = 0;
+
+    function faceHtml(server) {
+      return '<span class="fx"><img src="' + esc(server.image) + '" srcset="' + esc(server.image2x || "") +
+        ' 2x" alt="' + esc(server.name) + '" loading="eager" draggable="false">' +
+        (server.reversed ? "" : "") + "</span>";
+    }
+
+    async function shuffle() {
+      state = "shuffling";
+      setGuide("shuffling");
+      bubble(lang === "th" ? "กำลังสับไพ่…" : "Shuffling…");
+      if (REDUCED) {
+        fan();
+        return;
+      }
+      for (var round = 0; round < 3; round++) {
+        var off = G.cw * 1.1;
+        deck.forEach(function (card, i) {
+          var half = i < 39 ? -1 : 1;
+          var p = deckPos(card, i);
+          place(card, p.x + half * off, p.y, half * 9, 1, 10 + i);
+        });
+        await wait(420);
+        deck.forEach(function (card, i) {
+          var p = deckPos(card, i);
+          card.style.transitionDelay = i * 7 + "ms";
+          place(card, p.x, p.y, 0, 1, 10 + i);
+        });
+        await wait(120);
+        deck.forEach(function (card) {
+          card.style.transitionDelay = "";
+        });
+      }
+      // Overhand cut: top half lifts and drops under.
+      var top = deck.slice(0, 39);
+      top.forEach(function (card, i) {
+        var p = deckPos(card, i);
+        place(card, p.x, p.y - G.ch * 0.55, 4, 1, 200 + i);
+      });
+      await wait(380);
+      deck.forEach(function (card, i) {
+        var p = deckPos(card, i);
+        place(card, p.x, p.y, 0, 1, 10 + i);
+      });
+      await wait(450);
+      fan();
+    }
+
+    function fan() {
+      state = "fan";
+      var span = 110 * (Math.PI / 180);
+      var maxX = (W - G.cw * 1.75) / 2;
+      var n = deck.length;
+      deck.forEach(function (card, i) {
+        var row = i < 39 ? 0 : 1;
+        var k = row === 0 ? i : i - 39;
+        var a = -span / 2 + (span * k) / 38;
+        var x = cx + Math.sin(a) * maxX * 2.2 - G.cw / 2;
+        var y = G.deckY - Math.cos(a) * G.ch * 0.32 + row * G.ch * 0.62 + G.droop * row;
+        card._fan = { x: x, y: y, a: (a * 180) / Math.PI / 2 };
+        if (!REDUCED) card.style.transitionDelay = i * 7 + "ms";
+        place(card, x, y, card._fan.a, 1, 20 + row * 40 + (k % 10));
+        card.classList.add("pickable");
+        card.tabIndex = 0;
+      });
+      var total = REDUCED ? 0 : 600 + n * 7;
+      setTimeout(function () {
+        deck.forEach(function (card) {
+          card.style.transitionDelay = "";
+        });
+        state = "picking";
+        setGuide("picking");
+        updatePickHint(3);
+      }, total);
+    }
+
+    function updatePickHint(left) {
+      var msg = lang === "th" ? "เลือกไพ่อีก " + left + " ใบ" : "Choose " + left + " more card" + (left === 1 ? "" : "s");
+      bubble(msg);
+      announce(stage, msg);
+    }
+
+    async function pick(card) {
+      if (state !== "picking" || card.classList.contains("picked")) return;
+      if (picked.length >= 3) return;
+      var slot = picked.length;
+      picked.push(card);
+      card.classList.add("picked");
+      card.classList.remove("pickable");
+      card.tabIndex = -1;
+      if (navigator.vibrate) {
+        try {
+          navigator.vibrate(8);
+        } catch (e) {}
+      }
+      // Map the visual pick onto the next server card.
+      var server = cards[serverIdx++];
+      card._server = server;
+      var front = card.querySelector(".front");
+      front.innerHTML = faceHtml(server);
+      if (server.reversed) front.classList.add("rev");
+      place(card, G.slotX[slot] - G.cw / 2, G.slotY, 0, 1, 200 + slot);
+      announce(stage, server.name);
+      onEvent("picked", { n: picked.length, name: server.name });
+      var left = 3 - picked.length;
+      if (left > 0) {
+        updatePickHint(left);
+      } else {
+        reveal();
+      }
+    }
+
+    async function reveal() {
+      state = "reveal";
+      setGuide("reveal");
+      bubble(lang === "th" ? "กำลังเปิดไพ่…" : "Turning the cards…");
+      deck.forEach(function (card, i) {
+        if (picked.indexOf(card) >= 0) return;
+        card.classList.remove("pickable");
+        card.tabIndex = -1;
+        if (!REDUCED) card.style.transitionDelay = i * 4 + "ms";
+        var p = deckPos(card, i);
+        place(card, p.x, p.y + G.H, 0, 0.6, 5);
+      });
+      await wait(REDUCED ? 60 : 700);
+      deck.forEach(function (card) {
+        card.style.transitionDelay = "";
+        if (picked.indexOf(card) < 0) card.style.display = "none";
+      });
+      for (var k = 0; k < picked.length; k++) {
+        if (!REDUCED) await wait(650);
+        picked[k].classList.add("flipped");
+        var name = picked[k]._server.name + (picked[k]._server.reversed ? (lang === "th" ? " (กลับหัว)" : " (reversed)") : "");
+        announce(stage, name);
+        onEvent("revealed", { n: k + 1, name: name });
+      }
+      state = "done";
+      setGuide("done");
+      onEvent("revealed-all", {});
+    }
+
+    // Touch lift before the pick lands.
+    stage.addEventListener("pointerdown", function (e) {
+      var card = e.target && e.target.closest ? e.target.closest(".card.pickable") : null;
+      if (card && state === "picking") card.classList.add("lift");
+    });
+    stage.addEventListener("pointerup", function (e) {
+      var cards2 = stage.querySelectorAll(".card.lift");
+      for (var i = 0; i < cards2.length; i++) cards2[i].classList.remove("lift");
+    });
+    stage.addEventListener("keydown", function (e) {
+      if ((e.key === "Enter" || e.key === " ") && document.activeElement && document.activeElement.classList.contains("pickable")) {
+        e.preventDefault();
+        pick(document.activeElement);
+      }
+    });
+
+    await wait(60);
+    await shuffle();
+    return {
+      picked: picked,
+      serverCards: cards,
+    };
+  }
+
+  // Render the three cards + stream the synthesis into mount.
+  function renderReading(mount, reading, lang, streamUrl, opts) {
+    opts = opts || {};
+    mount.innerHTML = "";
+    reading.cards.forEach(function (c, i) {
+      var block = el("div", "rc", "<b>" + esc(c.name) + (c.reversed ? (lang === "th" ? " (กลับหัว)" : " (reversed)") : "") + "</b>");
+      mount.appendChild(block);
+      setTimeout(function () {
+        block.classList.add("on");
+      }, 250 * (i + 1));
+    });
+    var synth = el("div", "rc rtext", "");
+    mount.appendChild(synth);
+    setTimeout(function () {
+      synth.classList.add("on");
+    }, 250 * 4);
+
+    var es = new EventSource(streamUrl);
+    var full = "";
+    es.addEventListener("delta", function (e) {
+      try {
+        full += JSON.parse(e.data);
+        synth.textContent = full;
+      } catch (err) {}
+    });
+    es.addEventListener("done", function (e) {
+      es.close();
+      var summary = "";
+      try {
+        summary = JSON.parse(e.data).summary || "";
+      } catch (err) {}
+      (opts.onDone || function () {})(summary, full);
+    });
+    es.addEventListener("error", function (e) {
+      try {
+        var err = JSON.parse(e.data || "{}");
+        if (err.error) {
+          es.close();
+          (opts.onError || function () {})(err.error);
+          return;
+        }
+      } catch (err2) {}
+      // Network drop mid-stream: close; partial text stays.
+      es.close();
+      (opts.onError || function () {})(full ? "interrupted" : "reading_failed");
+    });
+    return es;
+  }
+
+  window.TarotDraw = { run: run, renderReading: renderReading };
+})();

@@ -76,6 +76,39 @@ a{color:var(--accent)}
 .daily-msg{margin:.2rem 0;line-height:1.55}
 .daily-lucky{display:inline-block;margin:.4rem 0 0;padding:.2rem .7rem;border:1px solid var(--gold-dim);border-radius:999px;color:var(--muted);font-size:.9rem}
 
+/* Draw stage: deck, fan, slots, flips. */
+.stage{position:relative;overflow:hidden;touch-action:manipulation;perspective:1200px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.slotframe{position:absolute;border:2px dashed var(--gold-dim);border-radius:8px;pointer-events:none}
+.card{position:absolute;left:0;top:0;margin:0;padding:0;border:0;background:transparent;cursor:default}
+.card .inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.3,.7,.2,1)}
+.card{transition:transform .55s cubic-bezier(.2,.8,.2,1)}
+.card .back,.card .front{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:8px;overflow:hidden}
+.card .back{border:1.5px solid var(--gold-dim);background:radial-gradient(circle at 50% 38%,var(--gold) 0 8%,transparent 9%),repeating-conic-gradient(from 0deg,var(--back) 0 12deg,var(--gold-dim) 12deg 13deg);background-color:var(--back)}
+.card .front{background:var(--card-face);border:1.5px solid var(--gold);transform:rotateY(180deg)}
+.card .front .fx{display:block;width:100%;height:100%}
+.card .front img{width:100%;height:100%;object-fit:cover;display:block}
+.card .front.rev .fx{transform:rotate(180deg)}
+.card.flipped .inner{transform:rotateY(180deg)}
+.card.pickable{cursor:pointer}
+.card.pickable:hover,.card.pickable:focus-visible{filter:brightness(1.06)}
+.card.pickable.lift{filter:brightness(1.1)}
+.card:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* Asked question + reading. */
+.asked{margin:.5rem 0}
+.topic-chip{display:inline-block;font-size:.85rem;color:var(--muted);border:1px solid var(--gold-dim);border-radius:999px;padding:.15rem .7rem;margin:0 0 .4rem}
+.question{font-family:var(--f-display);font-style:italic;font-size:1.3rem;color:var(--accent);margin:0}
+.reading{display:flex;flex-direction:column;gap:.7rem;margin-top:.5rem}
+.rc{opacity:0;transform:translateY(6px);transition:opacity .5s,transform .5s;border-left:3px solid var(--gold-dim);padding:.4rem 0 .4rem .8rem}
+.rc.on{opacity:1;transform:none}
+.rc b{font-family:var(--f-display);color:var(--accent);font-size:1.15rem}
+.rc p{margin:.3rem 0;line-height:1.6;white-space:pre-wrap}
+.rtext p{white-space:pre-wrap}
+.actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.4rem}
+.reading-err{color:#b3261e}
+.countdown{color:var(--muted)}
+
 /* Ngern guide + speech bubble. */
 .guide{display:flex;align-items:flex-end;gap:.7rem;margin-top:.5rem}
 .guide img{width:96px;height:auto;flex:none}

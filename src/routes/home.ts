@@ -24,25 +24,6 @@ export const TOPICS: { code: Topic; labelKey: "topicLove" | "topicCareer" | "top
   { code: "general", labelKey: "topicGeneral" },
 ];
 
-const CLIENT = `<script>
-(function(){
-  var form=document.getElementById("ask-form");
-  if(!form)return;
-  var q=document.getElementById("q");
-  var bubble=document.querySelector("#guide .bubble");
-  var needMsg=form.getAttribute("data-need")||"";
-  form.addEventListener("submit",function(e){
-    var v=(q&&q.value||"").trim();
-    if(!v){
-      e.preventDefault();
-      if(q){q.classList.add("need");q.focus();}
-      if(bubble&&needMsg)bubble.textContent=needMsg;
-    }
-  });
-  if(q)q.addEventListener("input",function(){q.classList.remove("need");});
-})();
-</script>`;
-
 function quotaRow(ui: UiLang, remaining: number): string {
   const d = t(ui);
   const pips = [0, 1, 2]
@@ -91,8 +72,8 @@ ${topicChips(ui)}
     origin,
     canonicalPath: "/",
     description: d.homeLede,
-    extraHead: `<script src="/app/home.js" defer></script>`,
+    extraHead: `<script src="/app/home.js" defer></script><script src="/app/draw.js" defer></script><script src="/app/ask.js" defer></script>`,
     jsonLd,
-    body: `${head}${body}${siteFooterHtml(ui, "/")}${CLIENT}`,
+    body: `${head}${body}${siteFooterHtml(ui, "/")}`,
   });
 }

@@ -6,6 +6,20 @@ import { createAuth, isRegisteredUser, type AuthEnv } from "./lib/auth";
 import * as schema from "./db/schema";
 import { bangkokDay, nextBangkokMidnight } from "./lib/bangkok";
 import { dailyMessage, drawDailyCard, luckyColour } from "./lib/daily";
+import {
+  buildReadingPrompt,
+  cleanQuestion,
+  crisisMessage,
+  drawReadingCards,
+  isCrisisQuestion,
+  isLang,
+  isTopic,
+  parseSummary,
+  sseEvent,
+  streamDeltas,
+  toPromptCard,
+  type Topic,
+} from "./lib/reading";
 import { computeStreak } from "./lib/streaks";
 import { d1PrefsStore } from "./db/prefs-store";
 import { d1TarotStore } from "./db/tarot-store";
@@ -33,6 +47,7 @@ type Env = AuthEnv &
     AI: Ai;
     ASSETS?: Fetcher;
     MEDIA?: R2Bucket;
+    READING_LIMITER?: { limit: (opts: { key: string }) => Promise<{ success: boolean }> };
     DAILY_QUESTION_LIMIT?: string;
     REFERRAL_BONUS?: string;
     READING_MODEL?: string;
@@ -40,6 +55,24 @@ type Env = AuthEnv &
     TIMEZONE?: string;
     TURNSTILE_SECRET?: string;
   };
+
+function clientIp(c: { req: { raw: Request; header: (n: string) => string | undefined } }): string {
+  return c.req.header("cf-connecting-ip")?.trim() || "unknown";
+}
+
+async function verifyTurnstile(secret: string, token: string, ip: string): Promise<boolean> {
+  try {
+    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ secret, response: token, remoteip: ip }),
+    });
+    const data = (await res.json()) as { success?: boolean };
+    return data.success === true;
+  } catch {
+    return false;
+  }
+}
 
 type SessionUser = { id: string; email: string | null; isAnonymous: boolean | null };
 
@@ -183,6 +216,189 @@ app.get("/sitemap.xml", (c) => {
 app.get("/terms", (c) => c.html(termsPage(requestUiLang(c))));
 app.get("/privacy", (c) => c.html(privacyPage(requestUiLang(c))));
 app.get("/contact", (c) => c.html(contactPage(requestUiLang(c))));
+
+// Ask a question: quota + burst + Turnstile + IP-day backstops, then
+// the server draws 3 cards (stored as status='drawn' immediately, so a
+// refresh can never re-roll). The AI interpretation streams later via
+// GET /api/readings/:id/stream, which is what counts toward quota.
+app.post("/api/readings", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  let body: { question?: unknown; topic?: unknown; lang?: unknown; turnstileToken?: unknown };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "bad_request" }, 400);
+  }
+  const question = cleanQuestion(body.question);
+  const topic: Topic = isTopic(body.topic) ? body.topic : "general";
+  const lang = isLang(body.lang) ? body.lang : requestUiLang(c);
+  if (!question) return c.json({ error: "bad_question" }, 400);
+  // Crisis pre-check first: supportive reply, no reading, no quota cost.
+  if (isCrisisQuestion(question)) {
+    return c.json({ crisis: true, message: crisisMessage(lang) });
+  }
+  const store = d1TarotStore(c.env.DB);
+  const today = bangkokDay();
+  const limit = questionLimit(c.env);
+  const used = await store.countReadings(user.id, today);
+  if (used >= limit) {
+    recordEvent(c.env, { name: "limit_hit", lang, ...requestContext(c), userKind: userKind(user) });
+    return c.json({ error: "limit", remaining: 0, resetsAt: nextBangkokMidnight() }, 429);
+  }
+  const ip = clientIp(c);
+  try {
+    const burst = c.env.READING_LIMITER ? await c.env.READING_LIMITER.limit({ key: ip }) : { success: true };
+    if (!burst.success) throw new Error("burst");
+  } catch {
+    recordEvent(c.env, { name: "rate_limited", lang, detail: "burst", ...requestContext(c), userKind: userKind(user) });
+    return c.json({ error: "rate_limited" }, 429);
+  }
+  if (c.env.TURNSTILE_SECRET) {
+    const ok = typeof body.turnstileToken === "string" && body.turnstileToken.length > 0
+      && (await verifyTurnstile(c.env.TURNSTILE_SECRET, body.turnstileToken, ip));
+    if (!ok) return c.json({ error: "bad_turnstile" }, 403);
+  }
+  if ((await store.ipDayCount(ip, today)) >= 15) {
+    recordEvent(c.env, { name: "rate_limited", lang, detail: "ip_day", ...requestContext(c), userKind: userKind(user) });
+    return c.json({ error: "rate_limited" }, 429);
+  }
+  const drawn = drawReadingCards();
+  const id = crypto.randomUUID();
+  await store.insertReading({ id, userId: user.id, day: today, topic, question, lang, cards: drawn });
+  await store.ipDayBump(ip, today);
+  const cards = [];
+  for (const card of drawn) {
+    const view = await store.getCard(card.id, lang);
+    if (!view) return c.json({ error: "unknown_card" }, 500);
+    cards.push({
+      id: view.id, slug: view.slug, name: view.name,
+      image: `/static/${view.imageKey}.webp`,
+      image2x: `/static/${view.imageKey}@2x.webp`,
+      reversed: card.reversed,
+    });
+  }
+  const remaining = Math.max(0, limit - used);
+  return c.json({ id, cards, remaining });
+});
+
+// Stream the AI interpretation (SSE deltas, then done). Replays the
+// stored text for completed readings. A failure marks the row failed
+// (not counted) and the client offers "Try again" on the same cards.
+app.get("/api/readings/:id/stream", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  const store = d1TarotStore(c.env.DB);
+  const row = await store.getReading(c.req.param("id"));
+  if (!row || row.userId !== user.id) return c.json({ error: "not_found" }, 404);
+  const lang = row.lang === "th" ? "th" : "en";
+  const today = bangkokDay();
+  const limit = questionLimit(c.env);
+
+  const donePayload = async (summary: string) => {
+    const remaining = Math.max(0, limit - (await store.countReadings(user.id, today)));
+    return sseEvent("done", JSON.stringify({ summary, remaining }));
+  };
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (text: string) => controller.enqueue(new TextEncoder().encode(text));
+      try {
+        if (row.status === "complete" && row.aiText) {
+          // Replay in small chunks so the client paints progressively.
+          for (const chunk of row.aiText.match(/[\s\S]{1,120}/g) ?? []) {
+            send(sseEvent("delta", JSON.stringify(chunk)));
+          }
+          send(await donePayload(row.aiSummary ?? parseSummary(row.aiText)));
+          controller.close();
+          return;
+        }
+        const model = c.env.READING_MODEL?.trim() || null;
+        if (!model || !c.env.AI) {
+          send(sseEvent("error", JSON.stringify({ error: "model_unset" })));
+          controller.close();
+          return;
+        }
+        const views = [];
+        for (const card of row.cards) {
+          const view = await store.getCard(card.id, lang);
+          if (!view) throw new Error("unknown_card");
+          views.push(toPromptCard(view, card.reversed, isTopic(row.topic) ? row.topic : "general"));
+        }
+        const prev = (await store.prevReadings(user.id)).map((p) => ({
+          topic: p.topic,
+          cardNames: p.cards.map((card) => String(card.id)),
+          summary: p.summary,
+        }));
+        // Resolve previous card ids to names for continuity.
+        for (const p of prev) {
+          const names: string[] = [];
+          for (const id of p.cardNames) {
+            const view = await store.getCard(Number(id), lang);
+            names.push(view ? view.name : `#${id}`);
+          }
+          p.cardNames = names;
+        }
+        let nickname: string | null = null;
+        try {
+          nickname = (await d1PrefsStore(c.env.DB).get(user.id))?.nickname ?? null;
+        } catch {
+          nickname = null;
+        }
+        const { system, user: prompt } = buildReadingPrompt({
+          lang, topic: isTopic(row.topic) ? row.topic : "general",
+          question: row.question, cards: views, prev, nickname,
+        });
+        const aiRun = (m: string, input: unknown) => c.env.AI!.run(m as never, input as never) as Promise<unknown>;
+        let full = "";
+        for await (const delta of streamDeltas(aiRun, model, {
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: prompt },
+          ],
+          max_tokens: 1024,
+        })) {
+          full += delta;
+          send(sseEvent("delta", JSON.stringify(delta)));
+        }
+        full = full.trim();
+        if (!full) throw new Error("empty_response");
+        const summary = parseSummary(full);
+        await store.setReadingResult(row.id, { aiText: full, aiSummary: summary, model, status: "complete" });
+        recordEvent(c.env, {
+          name: "reading_completed", lang, topic: row.topic,
+          ...requestContext(c), userKind: userKind(user),
+        });
+        send(await donePayload(summary));
+        controller.close();
+      } catch (error) {
+        console.error(JSON.stringify({ message: "reading stream failed", error: error instanceof Error ? error.message : String(error) }));
+        try {
+          await store.setReadingResult(row.id, { aiText: "", aiSummary: "", model: "", status: "failed" });
+        } catch {
+          /* keep the drawn row for retry */
+        }
+        send(sseEvent("error", JSON.stringify({ error: "reading_failed" })));
+        controller.close();
+      }
+    },
+  });
+  return new Response(stream, {
+    headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" },
+  });
+});
+
+// Retry a failed reading on the same cards (failed rows cost no quota).
+app.post("/api/readings/:id/retry", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  const store = d1TarotStore(c.env.DB);
+  const row = await store.getReading(c.req.param("id"));
+  if (!row || row.userId !== user.id) return c.json({ error: "not_found" }, 404);
+  if (row.status !== "failed") return c.json({ error: "bad_state" }, 400);
+  await store.setReadingResult(row.id, { aiText: "", aiSummary: "", model: "", status: "drawn" });
+  return c.json({ ok: true });
+});
 
 // Account pages (free registration saves readings across devices).
 app.get("/register", (c) => c.html(registerPage(c.req.query("return"), new URL(c.req.url).origin, requestUiLang(c))));

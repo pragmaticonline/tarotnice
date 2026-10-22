@@ -125,11 +125,22 @@
     return data;
   }
 
-  summary()
-    .then(function (data) {
-      paintStreak(data.streak);
-      paintQuota(data.quota);
-      paintDaily(data.today && data.today.daily, (data.prefs && data.prefs.lang) || uiLang());
-    })
-    .catch(function () {});
+  function load() {
+    return summary()
+      .then(function (data) {
+        window.TarotHome.data = data;
+        paintStreak(data.streak);
+        paintQuota(data.quota);
+        paintDaily(data.today && data.today.daily, (data.prefs && data.prefs.lang) || uiLang());
+        try {
+          var e = new CustomEvent("tarot:summary", { detail: data });
+          document.dispatchEvent(e);
+        } catch (err) {}
+      })
+      .catch(function () {});
+  }
+
+  window.TarotHome = window.TarotHome || {};
+  window.TarotHome.refresh = load;
+  load();
 })();

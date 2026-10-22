@@ -28,7 +28,7 @@ dataset = "tarotnice_events"
 CF_ACCOUNT_ID = "30142eba9e53a37522d1c59b298db661"
 DAILY_QUESTION_LIMIT = "3"
 REFERRAL_BONUS = "0"
-READING_MODEL = ""
+READING_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
 DEFAULT_LANG = "th"
 TIMEZONE = "Asia/Bangkok"
 # secrets: BETTER_AUTH_SECRET, BETTER_AUTH_URL, GOOGLE_CLIENT_ID,
