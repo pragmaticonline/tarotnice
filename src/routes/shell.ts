@@ -90,7 +90,7 @@ ${opts.body}
 </div>
 ${THEME_TOGGLE}
 ${analyticsBeacon()}
-<script>(function(){try{if("serviceWorker" in navigator){addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){}})}}catch(e){}})();</script>
+<script>(function(){try{if("serviceWorker" in navigator){addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){});});}}catch(e){}})();</script>
 </body>
 </html>`;
 }

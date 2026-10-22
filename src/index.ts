@@ -552,6 +552,7 @@ app.delete("/api/share/:shareId", async (c) => {
     (await store.clearReadingShare(shareId, user.id)) ||
     (await store.clearDailyShare(shareId, user.id));
   if (!cleared) return c.json({ error: "not_found" }, 404);
+  await deleteShareImages(c.env, shareId);
   return c.json({ ok: true });
 });
 
@@ -898,6 +899,32 @@ app.get("/api/readings", async (c) => {
   });
 });
 
+/**
+ * Remove every rendered share image for a share id. Images live at
+ * share/{shareId}/{story|og}-{lang}-{mode}[-q].png (plus badge
+ * variants), so delete by prefix — story images can embed the
+ * user's question and must not outlive the share.
+ */
+async function deleteShareImages(env: Env, shareId: string): Promise<void> {
+  const media = env.MEDIA;
+  if (!media) return;
+  try {
+    let cursor: string | undefined;
+    for (let page = 0; page < 20; page++) {
+      const listed = await media.list({ prefix: `share/${shareId}/`, cursor });
+      for (const obj of listed.objects) {
+        try {
+          await media.delete(obj.key);
+        } catch { /* best-effort per object */ }
+      }
+      if (!listed.truncated) break;
+      cursor = listed.cursor;
+    }
+  } catch {
+    /* best-effort */
+  }
+}
+
 // Delete a reading (also clears its share rows + R2 images best-effort).
 app.delete("/api/readings/:id", async (c) => {
   const user = await authedUser(c);
@@ -906,14 +933,7 @@ app.delete("/api/readings/:id", async (c) => {
   const reading = await store.getReading(c.req.param("id"));
   if (!reading || reading.userId !== user.id) return c.json({ error: "not_found" }, 404);
   await store.deleteReading(reading.id, user.id);
-  if (reading.shareId && c.env?.MEDIA) {
-    try {
-      await c.env.MEDIA.delete(`share/${reading.shareId}/story.png`);
-      await c.env.MEDIA.delete(`share/${reading.shareId}/og.png`);
-    } catch {
-      /* best-effort */
-    }
-  }
+  if (reading.shareId) await deleteShareImages(c.env, reading.shareId);
   return c.body(null, 204);
 });
 
@@ -1242,6 +1262,14 @@ app.put("/api/me/prefs", async (c) => {
 app.delete("/api/me", async (c) => {
   const user = await authedUser(c);
   if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  // Share images first (they can embed the user's question); the
+  // user-row delete then cascades the DB side.
+  try {
+    const shareIds = await d1TarotStore(c.env.DB).userShareIds(user.id);
+    for (const shareId of shareIds) await deleteShareImages(c.env, shareId);
+  } catch {
+    /* best-effort */
+  }
   await drizzle(c.env.DB, { schema }).delete(schema.user).where(eq(schema.user.id, user.id));
   return c.json({ ok: true });
 });
