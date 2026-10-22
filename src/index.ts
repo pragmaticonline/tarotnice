@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { createAuth, isRegisteredUser, type AuthEnv } from "./lib/auth";
 import * as schema from "./db/schema";
-import { bangkokDay, nextBangkokMidnight } from "./lib/bangkok";
+import { bangkokDay, bangkokHour, nextBangkokMidnight } from "./lib/bangkok";
 import { luckyColour } from "./lib/daily";
 import {
   buildReadingPrompt,
@@ -314,14 +314,16 @@ app.post("/api/readings", async (c) => {
       && (await verifyTurnstile(c.env.TURNSTILE_SECRET, body.turnstileToken, ip));
     if (!ok) return c.json({ error: "bad_turnstile" }, 403);
   }
-  if ((await store.ipDayCount(ip, today)) >= 15) {
-    recordEvent(c.env, { name: "rate_limited", lang, detail: "ip_day", ...requestContext(c), userKind: userKind(user) });
-    return c.json({ error: "ip_day_limit", resetsAt: nextBangkokMidnight() }, 429);
+  // Per-IP hourly backstop: 30 draws/hour (no per-day IP limit).
+  const hourBucket = bangkokHour();
+  if ((await store.ipDayCount(ip, hourBucket)) >= 30) {
+    recordEvent(c.env, { name: "rate_limited", lang, detail: "ip_hour", ...requestContext(c), userKind: userKind(user) });
+    return c.json({ error: "rate_limited" }, 429);
   }
   const drawn = drawReadingCards();
   const id = crypto.randomUUID();
   await store.insertReading({ id, userId: user.id, day: today, topic, question, lang, cards: drawn });
-  await store.ipDayBump(ip, today);
+  await store.ipDayBump(ip, hourBucket);
   // SPEC §12: ids + orientations only. Names/images are library data
   // the client fetches separately; nothing to peek at before the flip.
   // `used` was counted before this insert, so this draw leaves

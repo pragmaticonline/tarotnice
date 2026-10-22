@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { bangkokDay, bangkokWeekday, nextBangkokMidnight } from "../src/lib/bangkok";
+import { bangkokDay, bangkokHour, bangkokWeekday, nextBangkokMidnight } from "../src/lib/bangkok";
+
+describe("bangkokHour", () => {
+  it("buckets by Bangkok hour", () => {
+    expect(bangkokHour(new Date("2026-10-14T16:59:00Z"))).toBe("2026-10-14T23");
+    expect(bangkokHour(new Date("2026-10-14T17:00:00Z"))).toBe("2026-10-15T00");
+  });
+});
 
 describe("bangkokDay", () => {
   it("uses Asia/Bangkok (UTC+7), not server time", () => {

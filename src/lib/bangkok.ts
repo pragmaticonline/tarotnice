@@ -18,6 +18,11 @@ export function bangkokWeekday(d = new Date()): number {
 }
 
 /** Epoch ms of the next Bangkok midnight (quota reset countdown). */
+/** Bangkok hour bucket "YYYY-MM-DDTHH" for per-IP hourly rate caps. */
+export function bangkokHour(d = new Date()): string {
+  return new Date(d.getTime() + 7 * 3600 * 1000).toISOString().slice(0, 13);
+}
+
 export function nextBangkokMidnight(d = new Date()): number {
   const shifted = d.getTime() + OFFSET_MS;
   return (Math.floor(shifted / DAY_MS) + 1) * DAY_MS - OFFSET_MS;

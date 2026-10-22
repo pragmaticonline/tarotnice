@@ -69,7 +69,7 @@
   var STR = {
     en: {
       need: "Type your question first, then shuffle.",
-      slowDown: "Too many questions in a row from this connection. Give it a minute, then try again.",
+      slowDown: "Too many questions from this connection right now. Wait a little while, then try again.",
       slowDay: "This connection has reached today's question limit. It resets at midnight (Bangkok time).",
       sleep: "Ngern is resting now. New questions tomorrow.",
       browse: "Browse the card library",
@@ -333,8 +333,8 @@
       // Two different 429s: the daily quota (cat sleeps) and the
       // per-connection rate backstop (just slow down). Only the
       // quota one means no tries remain.
-      if (res.data && (res.data.error === "rate_limited" || res.data.error === "ip_day_limit")) {
-        bubble(t(res.data.error === "ip_day_limit" ? "slowDay" : "slowDown"));
+      if (res.data && res.data.error === "rate_limited") {
+        bubble(t("slowDown"));
         if (btn) btn.disabled = false;
         return;
       }
