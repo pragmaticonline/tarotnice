@@ -1,4 +1,4 @@
-import { and, desc, eq, gte } from "drizzle-orm";
+import { and, desc, eq, gte, lt } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import * as schema from "./schema";
 
@@ -27,6 +27,7 @@ export type CardView = {
   career: string | null;
   money: string | null;
   health: string | null;
+  reviewed: boolean;
 };
 
 function parseKeywords(raw: string): string[] {
@@ -155,6 +156,7 @@ export function d1TarotStore(db: D1Database) {
           career: schema.cardMeanings.career,
           money: schema.cardMeanings.money,
           health: schema.cardMeanings.health,
+          reviewed: schema.cardMeanings.reviewed,
         })
         .from(schema.cards)
         .innerJoin(
@@ -171,7 +173,57 @@ export function d1TarotStore(db: D1Database) {
         ...row,
         keywordsUpright: parseKeywords(row.keywordsUpright),
         keywordsReversed: parseKeywords(row.keywordsReversed),
+        reviewed: row.reviewed === 1,
       };
+    },
+
+    /** All 78 cards with display names (library index), deck order. */
+    async listCards(lang: string): Promise<(CardView & { reviewed: boolean })[]> {
+      const rows = await orm
+        .select({
+          id: schema.cards.id,
+          slug: schema.cards.slug,
+          arcana: schema.cards.arcana,
+          suit: schema.cards.suit,
+          rank: schema.cards.rank,
+          imageKey: schema.cards.imageKey,
+          name: schema.cardMeanings.name,
+          keywordsUpright: schema.cardMeanings.keywordsUpright,
+          keywordsReversed: schema.cardMeanings.keywordsReversed,
+          upright: schema.cardMeanings.upright,
+          reversed: schema.cardMeanings.reversed,
+          love: schema.cardMeanings.love,
+          career: schema.cardMeanings.career,
+          money: schema.cardMeanings.money,
+          health: schema.cardMeanings.health,
+          reviewed: schema.cardMeanings.reviewed,
+        })
+        .from(schema.cards)
+        .innerJoin(
+          schema.cardMeanings,
+          and(
+            eq(schema.cardMeanings.cardId, schema.cards.id),
+            eq(schema.cardMeanings.lang, lang),
+          ),
+        )
+        .orderBy(schema.cards.id);
+      return rows.map((row) => ({
+        ...row,
+        keywordsUpright: parseKeywords(row.keywordsUpright),
+        keywordsReversed: parseKeywords(row.keywordsReversed),
+        reviewed: row.reviewed === 1,
+      }));
+    },
+
+    /** A card view by slug (library detail), or null. */
+    async getCardBySlug(slug: string, lang: string): Promise<(CardView & { reviewed: boolean }) | null> {
+      const rows = await orm
+        .select({ id: schema.cards.id })
+        .from(schema.cards)
+        .where(eq(schema.cards.slug, slug))
+        .limit(1);
+      if (!rows[0]) return null;
+      return this.getCard(rows[0].id, lang);
     },
 
     async insertReading(row: {
@@ -200,7 +252,7 @@ export function d1TarotStore(db: D1Database) {
       id: string; userId: string; day: string; topic: string; question: string;
       lang: string; cards: { id: number; reversed: boolean }[];
       aiText: string | null; aiSummary: string | null; status: string;
-      shareId: string | null;
+      shareId: string | null; journal: string | null; createdAt: number;
     } | null> {
       const rows = await orm
         .select()
@@ -219,7 +271,7 @@ export function d1TarotStore(db: D1Database) {
         id: row.id, userId: row.userId, day: row.bangkokDay, topic: row.topic,
         question: row.question, lang: row.lang, cards,
         aiText: row.aiText, aiSummary: row.aiSummary, status: row.status,
-        shareId: row.shareId,
+        shareId: row.shareId, journal: row.journal, createdAt: row.createdAt,
       };
     },
 
@@ -404,6 +456,121 @@ export function d1TarotStore(db: D1Database) {
         .values({ ip, day, count: next })
         .onConflictDoUpdate({ target: [schema.rateDays.ip, schema.rateDays.day], set: { count: next } });
       return next;
+    },
+
+    /** Reverse-chron readings page (cursor = created_at upper bound). */
+    async listReadings(userId: string, cursor: number | null, limit: number): Promise<{
+      id: string; day: string; topic: string; question: string; lang: string;
+      cards: { id: number; reversed: boolean }[]; aiSummary: string | null;
+      status: string; journal: string | null; shareId: string | null; createdAt: number;
+    }[]> {
+      const conds = [eq(schema.readings.userId, userId)];
+      if (cursor !== null) conds.push(lt(schema.readings.createdAt, cursor));
+      const rows = await orm
+        .select()
+        .from(schema.readings)
+        .where(and(...conds))
+        .orderBy(desc(schema.readings.createdAt))
+        .limit(Math.min(30, Math.max(1, limit)));
+      return rows.map((row) => {
+        let cards: { id: number; reversed: boolean }[] = [];
+        try {
+          const parsed: unknown = JSON.parse(row.cards);
+          if (Array.isArray(parsed)) cards = parsed as { id: number; reversed: boolean }[];
+        } catch {
+          cards = [];
+        }
+        return {
+          id: row.id, day: row.bangkokDay, topic: row.topic, question: row.question,
+          lang: row.lang, cards, aiSummary: row.aiSummary, status: row.status,
+          journal: row.journal, shareId: row.shareId, createdAt: row.createdAt,
+        };
+      });
+    },
+
+    async deleteReading(id: string, userId: string): Promise<boolean> {
+      const rows = await orm
+        .delete(schema.readings)
+        .where(and(eq(schema.readings.id, id), eq(schema.readings.userId, userId)))
+        .returning({ id: schema.readings.id });
+      return rows.length > 0;
+    },
+
+    async setJournal(id: string, userId: string, journal: string | null): Promise<boolean> {
+      const rows = await orm
+        .update(schema.readings)
+        .set({ journal })
+        .where(and(eq(schema.readings.id, id), eq(schema.readings.userId, userId)))
+        .returning({ id: schema.readings.id });
+      return rows.length > 0;
+    },
+
+    /** Totals for /progress: readings, distinct topics, daily count. */
+    async progressStats(userId: string): Promise<{ readings: number; topics: string[]; dailies: number }> {
+      const [all, draws] = await Promise.all([
+        orm
+          .select({ topic: schema.readings.topic, status: schema.readings.status })
+          .from(schema.readings)
+          .where(eq(schema.readings.userId, userId)),
+        orm
+          .select({ day: schema.dailyDraws.bangkokDay })
+          .from(schema.dailyDraws)
+          .where(eq(schema.dailyDraws.userId, userId)),
+      ]);
+      const complete = all.filter((r) => r.status === "complete");
+      return {
+        readings: complete.length,
+        topics: [...new Set(complete.map((r) => r.topic))],
+        dailies: draws.length,
+      };
+    },
+
+    /** Owned card ids across readings + daily draws (deck collection). */
+    async collection(userId: string): Promise<number[]> {
+      const [all, draws] = await Promise.all([
+        orm
+          .select({ cards: schema.readings.cards, status: schema.readings.status })
+          .from(schema.readings)
+          .where(eq(schema.readings.userId, userId)),
+        orm
+          .select({ cardId: schema.dailyDraws.cardId })
+          .from(schema.dailyDraws)
+          .where(eq(schema.dailyDraws.userId, userId)),
+      ]);
+      const owned = new Set<number>(draws.map((r) => r.cardId));
+      for (const row of all) {
+        if (row.status !== "complete") continue;
+        try {
+          const parsed: unknown = JSON.parse(row.cards);
+          if (Array.isArray(parsed)) {
+            for (const c of parsed as { id: number }[]) {
+              if (typeof c?.id === "number") owned.add(c.id);
+            }
+          }
+        } catch {
+          /* skip malformed rows */
+        }
+      }
+      return [...owned].sort((a, b) => a - b);
+    },
+
+    async countShares(userId: string): Promise<number> {
+      const rows = await orm
+        .select({ id: schema.shares.id })
+        .from(schema.shares)
+        .where(eq(schema.shares.userId, userId));
+      return rows.length;
+    },
+
+    async referralStats(userId: string): Promise<{ invited: number; converted: number }> {
+      const rows = await orm
+        .select({ at: schema.referrals.firstReadingAt })
+        .from(schema.referrals)
+        .where(eq(schema.referrals.referrerUserId, userId));
+      return {
+        invited: rows.length,
+        converted: rows.filter((r) => r.at !== null).length,
+      };
     },
 
     /** Completed readings for the user on a Bangkok day (quota). */

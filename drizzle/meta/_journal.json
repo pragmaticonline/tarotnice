@@ -15,6 +15,13 @@
       "when": 1792646641360,
       "tag": "0001_classy_madrox",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792648941241,
+      "tag": "0002_glorious_daimon_hellstrom",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+ALTER TABLE `card_meanings` ADD `reviewed` integer DEFAULT 0 NOT NULL;

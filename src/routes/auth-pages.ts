@@ -233,13 +233,31 @@ document.getElementById("reset-form").addEventListener("submit", async (e) => {
   return shell("Reset password \u00b7 TarotNice", origin, inner, { uiLang });
 }
 
-export function accountPage(origin = "", email = "", uiLang: UiLang = "en"): string {
+export function accountPage(
+  origin = "",
+  email = "",
+  uiLang: UiLang = "en",
+  prefs: { lang: string; theme: string | null; nickname: string | null } = { lang: "en", theme: null, nickname: null },
+): string {
   const d = t(uiLang);
   const inner = `<h1>${escapeHtml(d.yourAccount)}</h1>
 <p class="auth-note" id="who">${email ? escapeHtml(fmt_signedIn(d, email)) : ""}</p>
 <p class="auth-note">${escapeHtml(d.saveReadingsLine)}</p>
 <p><a class="btn btn-outline" href="/api/auth/sign-in/social?provider=google">${escapeHtml(d.continueWithGoogle)}</a></p>
+<h2>${escapeHtml(d.accountPrefs)}</h2>
+<form id="prefs-form">
+<label for="p-lang">${escapeHtml(d.appLanguage)}</label>
+<select id="p-lang"><option value="th"${prefs.lang === "th" ? " selected" : ""}>&#3652;&#3607;&#3618;</option><option value="en"${prefs.lang === "en" ? " selected" : ""}>English</option></select>
+<label for="p-theme">${escapeHtml(d.themeLabel)}</label>
+<select id="p-theme"><option value=""${!prefs.theme ? " selected" : ""}>${escapeHtml(d.themeAuto)}</option><option value="day"${prefs.theme === "day" ? " selected" : ""}>Day</option><option value="night"${prefs.theme === "night" ? " selected" : ""}>Night</option></select>
+<label for="p-nick">${escapeHtml(d.nicknameLabel)}</label>
+<input id="p-nick" maxlength="40" value="${escapeHtml(prefs.nickname ?? "")}">
+<p class="auth-err" id="p-err" role="alert"></p>
+<button class="btn" type="submit">${escapeHtml(d.savePrefs)}</button>
+</form>
 <button class="btn" id="signout" type="button">${escapeHtml(d.signOut)}</button>
+<hr>
+<button class="btn btn-danger" id="deldata" type="button">${escapeHtml(d.deleteData)}</button>
 <p><a class="btn btn-back" href="/">&larr; ${escapeHtml(d.backToHome)}</a></p>
 <script>
 (async () => {
@@ -253,6 +271,28 @@ export function accountPage(origin = "", email = "", uiLang: UiLang = "en"): str
   document.getElementById("signout").addEventListener("click", async () => {
     try { await fetch("/api/auth/sign-out", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: "{}" }); } catch {}
     location.href = "/";
+  });
+  document.getElementById("prefs-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const err = document.getElementById("p-err");
+    err.textContent = "";
+    const theme = document.getElementById("p-theme").value || null;
+    try {
+      const res = await fetch("/api/me/prefs", { method: "PUT", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lang: document.getElementById("p-lang").value, theme, nickname: document.getElementById("p-nick").value }) });
+      if (!res.ok) throw new Error("save failed");
+      err.style.color = "#146c2e";
+      err.textContent = ${JSON.stringify(d.prefsSaved)};
+      if (theme) { try { localStorage.setItem("tarotnice:mode", theme); document.documentElement.setAttribute("data-mode", theme); } catch {} }
+      setTimeout(() => location.reload(), 600);
+    } catch { err.textContent = "Could not save. Please try again."; }
+  });
+  document.getElementById("deldata").addEventListener("click", async () => {
+    if (!confirm(${JSON.stringify(d.deleteDataConfirm)})) return;
+    try { await fetch("/api/me", { method: "DELETE", credentials: "include" }); } catch {}
+    try {
+      for (const k of ["tarotnice:days","tarotnice:quota","tarotnice:pending","tarotnice:mode","tarotnice_ref"]) localStorage.removeItem(k);
+    } catch {}
+    document.body.innerHTML = "<main class='auth-card'><p>" + ${JSON.stringify(d.deleteDataDone)} + "</p><p><a href='/'>TarotNice</a></p></main>";
   });
 })();
 </script>`;

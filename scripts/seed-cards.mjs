@@ -22,8 +22,9 @@ for (const c of cards) {
   for (const [lang, table] of [["en", en], ["th", th]]) {
     const m = table[String(c.id)];
     if (!m) throw new Error(`missing ${lang} meaning for card ${c.id}`);
+    const reviewed = m.reviewed === true ? 1 : 0;
     lines.push(
-      `INSERT INTO card_meanings (card_id, lang, name, keywords_upright, keywords_reversed, upright, reversed, love, career, money, health) VALUES (${c.id}, '${lang}', '${esc(m.name)}', '${esc(JSON.stringify(m.keywords_upright))}', '${esc(JSON.stringify(m.keywords_reversed))}', '${esc(m.upright)}', '${esc(m.reversed)}', '${esc(m.love)}', '${esc(m.career)}', '${esc(m.money)}', '${esc(m.health)}') ON CONFLICT (card_id, lang) DO UPDATE SET name=excluded.name, keywords_upright=excluded.keywords_upright, keywords_reversed=excluded.keywords_reversed, upright=excluded.upright, reversed=excluded.reversed, love=excluded.love, career=excluded.career, money=excluded.money, health=excluded.health;`,
+      `INSERT INTO card_meanings (card_id, lang, name, keywords_upright, keywords_reversed, upright, reversed, love, career, money, health, reviewed) VALUES (${c.id}, '${lang}', '${esc(m.name)}', '${esc(JSON.stringify(m.keywords_upright))}', '${esc(JSON.stringify(m.keywords_reversed))}', '${esc(m.upright)}', '${esc(m.reversed)}', '${esc(m.love)}', '${esc(m.career)}', '${esc(m.money)}', '${esc(m.health)}', ${reviewed}) ON CONFLICT (card_id, lang) DO UPDATE SET name=excluded.name, keywords_upright=excluded.keywords_upright, keywords_reversed=excluded.keywords_reversed, upright=excluded.upright, reversed=excluded.reversed, love=excluded.love, career=excluded.career, money=excluded.money, health=excluded.health, reviewed=excluded.reviewed;`,
     );
   }
 }

@@ -83,6 +83,7 @@ export const cardMeanings = sqliteTable(
     career: text("career"),
     money: text("money"),
     health: text("health"),
+    reviewed: integer("reviewed").notNull().default(0), // owner-approved copy (1) vs draft (0, noindex)
   },
   (t) => ({
     pk: uniqueIndex("card_meanings_card_lang").on(t.cardId, t.lang),

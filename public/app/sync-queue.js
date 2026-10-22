@@ -2,7 +2,7 @@
 // (localStorage in the browser, in-memory stand-in in tests) and flushed
 // in order when the network returns. Zero dependencies.
 
-const KEY = "nicelingo:pending";
+const KEY = "tarotnice:pending";
 
 export function createQueue(storage) {
   function pending() {

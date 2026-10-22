@@ -34,6 +34,9 @@ import {
 } from "./lib/analytics";
 import { contactPage, privacyPage, termsPage } from "./routes/legal";
 import { homePage } from "./routes/home";
+import { historyDetailPage, historyPage } from "./routes/history";
+import { progressPage } from "./routes/progress";
+import { cardDetailPage, cardsPage } from "./routes/library";
 import {
   accountPage,
   forgotPasswordPage,
@@ -42,7 +45,7 @@ import {
   signInPage,
 } from "./routes/auth-pages";
 import { countryOfRequest } from "./lib/geo";
-import { isUiLang, uiLangFor, type UiLang } from "./lib/i18n";
+import { isUiLang, t, uiLangFor, type UiLang } from "./lib/i18n";
 
 type Env = AuthEnv &
   AnalyticsEnv & {
@@ -212,9 +215,22 @@ app.get("/robots.txt", (c) => {
   });
 });
 
-app.get("/sitemap.xml", (c) => {
+app.get("/sitemap.xml", async (c) => {
   const origin = new URL(c.req.url).origin;
+  // Indexable pages only: home + library index + reviewed card details.
+  // Draft (unreviewed) cards, history, progress, account, and share
+  // landings stay out (drafts also carry noindex).
   const urls = ["/", "/cards"];
+  if (c.env?.DB) {
+    try {
+      const cards = await d1TarotStore(c.env.DB).listCards("en");
+      for (const card of cards) {
+        if (card.reviewed) urls.push(`/cards/${card.slug}`);
+      }
+    } catch {
+      /* sitemap degrades to the static entries */
+    }
+  }
   return c.text(
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
       urls.map((u) => `<url><loc>${origin}${u}</loc></url>`).join("\n") +
@@ -662,10 +678,332 @@ app.get("/account", async (c) => {
   // page (a cached copy survives sign-out via back/bfcache).
   c.header("Cache-Control", "private, no-store");
   const user = await currentUser(c);
-  if (!isRegisteredUser(user)) {
+  if (!user || !isRegisteredUser(user)) {
     return c.redirect(`/sign-in?return=${encodeURIComponent("/account")}`, 302);
   }
-  return c.html(accountPage(new URL(c.req.url).origin, user?.email ?? "", requestUiLang(c)));
+  const prefs = c.env?.DB ? await d1PrefsStore(c.env.DB).get(user.id) : null;
+  return c.html(
+    accountPage(new URL(c.req.url).origin, user?.email ?? "", requestUiLang(c), {
+      lang: prefs?.lang ?? "en",
+      theme: prefs?.theme ?? null,
+      nickname: prefs?.nickname ?? null,
+    }),
+  );
+});
+
+/** Streak for pages (signed-in users only; guests see zeros). */
+async function pageStreak(db: D1Database | undefined, userId: string | null) {
+  if (!db || !userId) return { current: 0, longest: 0, activeToday: false };
+  try {
+    return computeStreak(await d1TarotStore(db).activityDays(userId), bangkokDay());
+  } catch {
+    return { current: 0, longest: 0, activeToday: false };
+  }
+}
+
+function signInReturn(c: { req: { path: string } }) {
+  return `/sign-in?return=${encodeURIComponent(c.req.path)}`;
+}
+
+/** Localized topic chip label. */
+function topicLabel(ui: UiLang, topic: string): string {
+  const d = t(ui);
+  return topic === "love" ? d.topicLove
+    : topic === "career" ? d.topicCareer
+    : topic === "money" ? d.topicMoney
+    : topic === "health" ? d.topicHealth
+    : d.topicGeneral;
+}
+
+// Reading history (signed-in area, noindex): reverse-chron list of 30
+// with ?cursor= paging. Card names/images come from one listCards call
+// so the page costs 2 queries, not 1 + 3 per reading.
+app.get("/history", async (c) => {
+  c.header("Cache-Control", "private, no-store");
+  const user = await currentUser(c);
+  if (!user || !c.env?.DB) return c.redirect(signInReturn(c), 302);
+  const ui = requestUiLang(c);
+  const lang = ui === "th" ? "th" : "en";
+  const rawCursor = c.req.query("cursor");
+  const cursor = rawCursor ? Number(rawCursor) : null;
+  const store = d1TarotStore(c.env.DB);
+  const [items, cards] = await Promise.all([
+    store.listReadings(user.id, cursor !== null && Number.isFinite(cursor) ? cursor : null, 30),
+    store.listCards(lang),
+  ]);
+  const byId = new Map(cards.map((card) => [card.id, card]));
+  const revLabel = t(ui).reversed;
+  return c.html(
+    historyPage({
+      ui,
+      origin: new URL(c.req.url).origin,
+      streak: await pageStreak(c.env.DB, user.id),
+      items: items.map((r) => ({
+        id: r.id,
+        day: r.day,
+        topic: r.topic,
+        topicLabel: topicLabel(ui, r.topic),
+        question: r.question,
+        cards: r.cards.map((card) => {
+          const view = byId.get(card.id);
+          return {
+            name: view?.name ?? `#${card.id}`,
+            reversed: card.reversed,
+            image: view ? `/static/${view.imageKey}.webp` : "",
+            reversedLabel: revLabel,
+          };
+        }),
+        summary: r.aiSummary,
+        status: r.status,
+        createdAt: r.createdAt,
+      })),
+      nextCursor: items.length === 30 ? items[items.length - 1].createdAt : null,
+    }),
+  );
+});
+
+// One reading: full interpretation, cards, journal, share + delete.
+app.get("/history/:id", async (c) => {
+  c.header("Cache-Control", "private, no-store");
+  const user = await currentUser(c);
+  if (!user || !c.env?.DB) return c.redirect(signInReturn(c), 302);
+  const ui = requestUiLang(c);
+  const store = d1TarotStore(c.env.DB);
+  const reading = await store.getReading(c.req.param("id"));
+  if (!reading || reading.userId !== user.id) return c.text("Not found", 404);
+  const lang = reading.lang === "th" ? "th" : "en";
+  const revLabel = t(ui).reversed;
+  const cards = [];
+  for (const card of reading.cards) {
+    const view = await store.getCard(card.id, lang);
+    if (view) {
+      cards.push({
+        name: view.name,
+        image: `/static/${view.imageKey}.webp`,
+        image2x: `/static/${view.imageKey}@2x.webp`,
+        reversed: card.reversed,
+        reversedLabel: revLabel,
+      });
+    }
+  }
+  return c.html(
+    historyDetailPage({
+      ui,
+      origin: new URL(c.req.url).origin,
+      streak: await pageStreak(c.env.DB, user.id),
+      reading: {
+        id: reading.id,
+        topicLabel: topicLabel(ui, reading.topic),
+        question: reading.question,
+        cards,
+        aiText: reading.aiText,
+        journal: reading.journal,
+        status: reading.status,
+      },
+    }),
+  );
+});
+
+// Paginated history for infinite scroll (newest first).
+app.get("/api/readings", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  const rawCursor = c.req.query("cursor");
+  const cursor = rawCursor ? Number(rawCursor) : null;
+  if (rawCursor && (!Number.isFinite(cursor) || (cursor as number) <= 0)) {
+    return c.json({ error: "bad_cursor" }, 400);
+  }
+  const rawLimit = Number(c.req.query("limit") ?? "20");
+  const limit = Number.isFinite(rawLimit) ? Math.min(30, Math.max(1, Math.floor(rawLimit))) : 20;
+  const items = await d1TarotStore(c.env.DB).listReadings(user.id, cursor, limit);
+  const nextCursor = items.length === limit ? items[items.length - 1].createdAt : null;
+  return c.json({
+    items: items.map((r) => ({
+      id: r.id, day: r.day, topic: r.topic, question: r.question, lang: r.lang,
+      aiSummary: r.aiSummary, status: r.status, journal: r.journal,
+      shared: r.shareId !== null, createdAt: r.createdAt,
+    })),
+    nextCursor,
+  });
+});
+
+// Delete a reading (also clears its share rows + R2 images best-effort).
+app.delete("/api/readings/:id", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  const store = d1TarotStore(c.env.DB);
+  const reading = await store.getReading(c.req.param("id"));
+  if (!reading || reading.userId !== user.id) return c.json({ error: "not_found" }, 404);
+  await store.deleteReading(reading.id, user.id);
+  if (reading.shareId && c.env?.MEDIA) {
+    try {
+      await c.env.MEDIA.delete(`share/${reading.shareId}/story.png`);
+      await c.env.MEDIA.delete(`share/${reading.shareId}/og.png`);
+    } catch {
+      /* best-effort */
+    }
+  }
+  return c.body(null, 204);
+});
+
+// Save / clear the private journal note (500 chars, matches the form).
+app.put("/api/readings/:id/journal", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  let body: { journal?: unknown };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "bad_request" }, 400);
+  }
+  if (body.journal !== null && typeof body.journal !== "string") {
+    return c.json({ error: "bad_request" }, 400);
+  }
+  const journal = typeof body.journal === "string" ? body.journal.trim() : null;
+  if (journal && [...journal].length > 500) return c.json({ error: "too_long" }, 400);
+  const ok = await d1TarotStore(c.env.DB).setJournal(c.req.param("id"), user.id, journal || null);
+  if (!ok) return c.json({ error: "not_found" }, 404);
+  return c.json({ ok: true, journal: journal || null });
+});
+
+// Progress: streak, 14-day grid, personal best, 78-card collection,
+// referrals, milestones.
+app.get("/progress", async (c) => {
+  c.header("Cache-Control", "private, no-store");
+  const user = await currentUser(c);
+  if (!user || !c.env?.DB) return c.redirect(signInReturn(c), 302);
+  const ui = requestUiLang(c);
+  const lang = ui === "th" ? "th" : "en";
+  const store = d1TarotStore(c.env.DB);
+  const [stats, days, owned, shares, referrals, cards] = await Promise.all([
+    store.progressStats(user.id),
+    store.activityDays(user.id),
+    store.collection(user.id),
+    store.countShares(user.id),
+    store.referralStats(user.id),
+    store.listCards(lang),
+  ]);
+  const d = t(ui);
+  const streak = computeStreak(days, bangkokDay());
+  const cardNames: Record<number, string> = {};
+  for (const card of cards) cardNames[card.id] = card.name;
+  return c.html(
+    progressPage({
+      ui,
+      origin: new URL(c.req.url).origin,
+      streak,
+      days: last14Days(days),
+      owned,
+      cardNames,
+      referrals,
+      bonusOn: c.env.REFERRAL_BONUS === "1",
+      milestones: [
+        { key: "first", label: d.msFirst, achieved: stats.readings >= 1 },
+        { key: "streak7", label: d.msStreak7, achieved: streak.longest >= 7 },
+        { key: "readings10", label: d.msReadings10, achieved: stats.readings >= 10 },
+        { key: "all-topics", label: d.msAllTopics, achieved: stats.topics.length >= 5 },
+        { key: "daily7", label: d.msDaily7, achieved: stats.dailies >= 7 },
+        { key: "sharer", label: d.msSharer, achieved: shares >= 1 },
+      ],
+      readings: stats.readings,
+    }),
+  );
+});
+
+/** Last 14 Bangkok days ending today, oldest first. */
+function last14Days(days: string[]): { date: string; active: boolean }[] {
+  const active = new Set(days);
+  // Bangkok "today": UTC + 7h, floored to a UTC day.
+  const todayMs = Date.now() + 7 * 3600 * 1000;
+  const today = new Date(todayMs);
+  today.setUTCHours(0, 0, 0, 0);
+  const out: { date: string; active: boolean }[] = [];
+  for (let back = 13; back >= 0; back--) {
+    const key = new Date(today.getTime() - back * 24 * 3600 * 1000).toISOString().slice(0, 10);
+    out.push({ date: key, active: active.has(key) });
+  }
+  return out;
+}
+
+// Card library index: major arcana first, then the four suits.
+app.get("/cards", async (c) => {
+  const ui = requestUiLang(c);
+  const lang = ui === "th" ? "th" : "en";
+  const cards = c.env?.DB ? await d1TarotStore(c.env.DB).listCards(lang) : [];
+  const toCard = (card: (typeof cards)[number]) => ({
+    id: card.id,
+    slug: card.slug,
+    name: card.name,
+    image: `/static/${card.imageKey}.webp`,
+    image2x: `/static/${card.imageKey}@2x.webp`,
+    reviewed: card.reviewed,
+  });
+  const d = t(ui);
+  const groups = [
+    { title: d.majorArcana, cards: cards.filter((x) => x.arcana === "major").map(toCard) },
+  ];
+  const suitTitles: Record<string, string> = {
+    wands: d.suitWands,
+    cups: d.suitCups,
+    swords: d.suitSwords,
+    pentacles: d.suitPentacles,
+  };
+  for (const suit of ["wands", "cups", "swords", "pentacles"]) {
+    groups.push({
+      title: suitTitles[suit],
+      cards: cards.filter((x) => x.suit === suit).map(toCard),
+    });
+  }
+  return c.html(
+    cardsPage({
+      ui,
+      origin: new URL(c.req.url).origin,
+      streak: await pageStreak(c.env?.DB, (await currentUser(c))?.id ?? null),
+      groups,
+    }),
+  );
+});
+
+// Card detail: meanings by topic + prev/next; drafts carry noindex.
+app.get("/cards/:slug", async (c) => {
+  const ui = requestUiLang(c);
+  const lang = ui === "th" ? "th" : "en";
+  if (!c.env?.DB) return c.text("Not found", 404);
+  const store = d1TarotStore(c.env.DB);
+  const card = await store.getCardBySlug(c.req.param("slug"), lang);
+  if (!card) return c.text("Not found", 404);
+  const all = await store.listCards(lang);
+  const idx = all.findIndex((x) => x.id === card.id);
+  const dd = t(ui);
+  const topicNote = (label: string, text: string | null) =>
+    text ? { label, text } : null;
+  const notes = [
+    topicNote(dd.topicLove, card.love),
+    topicNote(dd.topicCareer, card.career),
+    topicNote(dd.topicMoney, card.money),
+    topicNote(dd.topicHealth, card.health),
+  ].filter((n): n is { label: string; text: string } => n !== null);
+  return c.html(
+    cardDetailPage({
+      ui,
+      origin: new URL(c.req.url).origin,
+      streak: await pageStreak(c.env.DB, (await currentUser(c))?.id ?? null),
+      card: {
+        slug: card.slug,
+        name: card.name,
+        image: `/static/${card.imageKey}.webp`,
+        image2x: `/static/${card.imageKey}@2x.webp`,
+        reviewed: card.reviewed,
+        keywordsUpright: card.keywordsUpright,
+        keywordsReversed: card.keywordsReversed,
+        upright: card.upright,
+        reversed: card.reversed,
+        notes,
+        prev: idx > 0 ? { slug: all[idx - 1].slug, name: all[idx - 1].name } : null,
+        next: idx >= 0 && idx < all.length - 1 ? { slug: all[idx + 1].slug, name: all[idx + 1].name } : null,
+      },
+    }),
+  );
 });
 
 // Better Auth handler (social callbacks, anonymous sign-in, session, ...).
