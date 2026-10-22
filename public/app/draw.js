@@ -218,7 +218,10 @@
     }
 
     function updatePickHint(left) {
-      var msg = lang === "th" ? "\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e1e\u0e48\u0e2d\u0e35\u0e01 " + left + " \u0e43\u0e1a" : "Choose " + left + " more card" + (left === 1 ? "" : "s");
+      var first = left === 3;
+      var msg = lang === "th"
+        ? (first ? "\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e1e\u0e48 " + left + " \u0e43\u0e1a" : "\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e1e\u0e48\u0e2d\u0e35\u0e01 " + left + " \u0e43\u0e1a")
+        : (first ? "Choose 3 cards" : "Choose " + left + " more card" + (left === 1 ? "" : "s"));
       bubble(msg);
       announce(stage, msg);
     }
