@@ -295,6 +295,8 @@
   function init() {
     var form = document.getElementById("ask-form");
     if (!form || !window.TarotDraw) return;
+    var idleStage = document.getElementById("draw-stage");
+    if (idleStage && window.TarotDraw.idle) window.TarotDraw.idle(idleStage, uiLang());
     // Sleep state from the start when no questions remain.
     var data = window.TarotHome && window.TarotHome.data;
     if (data && data.quota && data.quota.used >= (data.quota.limit || 3)) {

@@ -352,5 +352,32 @@
     return es;
   }
 
-  window.TarotDraw = { run: run, renderReading: renderReading };
+  // Idle stage: the stacked 78-card deck and slot frames are visible
+  // from page load (prototype build()), before any question is asked.
+  // run() rebuilds the identical stack when a reading starts.
+  function idle(stage, lang) {
+    if (!stage || stage.querySelector(".card")) return;
+    var W = stage.clientWidth || 360;
+    var G = geom(W);
+    var cx = W / 2;
+    stage.style.height = G.H + "px";
+    stage.innerHTML = '<p class="sr" data-live aria-live="polite"></p>';
+    for (var s = 0; s < 3; s++) {
+      var f = el("span", "slotframe");
+      f.style.cssText = "left:" + (G.slotX[s] - G.cw / 2) + "px;top:" + G.slotY + "px;width:" + G.cw + "px;height:" + G.ch + "px";
+      stage.appendChild(f);
+    }
+    for (var i = 0; i < 78; i++) {
+      var card = el("button", "card", '<span class="inner"><span class="back"></span><span class="front"></span></span>');
+      card.type = "button";
+      card.tabIndex = -1;
+      card.style.width = G.cw + "px";
+      card.style.height = G.ch + "px";
+      card.setAttribute("aria-hidden", "true");
+      place(card, cx - G.cw / 2 - i * 0.12, G.deckY, 0, 1, 10 + i, true);
+      stage.appendChild(card);
+    }
+  }
+
+  window.TarotDraw = { run: run, renderReading: renderReading, idle: idle };
 })();
