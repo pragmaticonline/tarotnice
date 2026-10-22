@@ -63,7 +63,7 @@ ${quotaRow(ui, 3)}
 <section id="step-draw" data-step="2" hidden>
 <div class="draw-top"><button type="button" class="draw-back" id="draw-back" aria-label="Back">\u2190</button><p class="draw-q" id="draw-q"></p></div>
 <div id="draw-stage" class="stage" aria-live="polite"><div class="slots"><span class="slot"></span><span class="slot"></span><span class="slot"></span></div><div class="deck" id="deck"></div></div>
-<div id="guide" class="guide s-idle"><span class="ngern-wrap">${NGERN_SITTING_SVG}</span><p class="bubble">${escapeHtml(d.hintIdle)}</p></div>
+<div id="guide" class="guide s-idle"><span class="ngern-wrap">${NGERN_SITTING_SVG.replaceAll("ngFur", "ngFurD").replaceAll("ngEye", "ngEyeD")}</span><p class="bubble">${escapeHtml(d.hintIdle)}</p></div>
 </section>
 <section id="step-read" data-step="3" hidden>
 <p class="draw-q read-q" id="read-q"></p>
