@@ -1,0 +1,1752 @@
+{
+  "0": {
+    "slug": "the-fool",
+    "reviewed": false,
+    "name": "The Fool",
+    "keywords_upright": [
+      "beginnings",
+      "spontaneity",
+      "leap of faith"
+    ],
+    "keywords_reversed": [
+      "recklessness",
+      "hesitation",
+      "poor timing"
+    ],
+    "upright": "A fresh start is asking for your yes. Pack light, stay curious, and take the first step even if the path ahead is still foggy.",
+    "reversed": "Pause before you leap. You may be holding back from a start you are ready for, or rushing into one you have not thought through.",
+    "love": "New romance or a playful reset \u2014 stay open, not naive.",
+    "career": "A new role or venture favors the bold beginner.",
+    "money": "Small brave bets beat big blind ones.",
+    "health": "Move your body; watch for careless knocks."
+  },
+  "1": {
+    "slug": "the-magician",
+    "reviewed": false,
+    "name": "The Magician",
+    "keywords_upright": [
+      "skill",
+      "focus",
+      "making it happen"
+    ],
+    "keywords_reversed": [
+      "scattered energy",
+      "untapped talent",
+      "trickery"
+    ],
+    "upright": "You already have every tool this needs. Pick one goal, focus your skill on it, and act \u2014 this is a week for doing, not doubting.",
+    "reversed": "Your talent is leaking into too many directions, or someone is selling confidence they do not have. Narrow down and verify.",
+    "love": "Charm is high \u2014 use it honestly, not to impress.",
+    "career": "A skill you underrate is exactly what the task needs.",
+    "money": "Negotiate; you have more leverage than you think.",
+    "health": "Channel restless energy into one healthy routine."
+  },
+  "2": {
+    "slug": "the-high-priestess",
+    "reviewed": false,
+    "name": "The High Priestess",
+    "keywords_upright": [
+      "intuition",
+      "mystery",
+      "quiet knowing"
+    ],
+    "keywords_reversed": [
+      "ignoring your gut",
+      "secrets",
+      "noise over signal"
+    ],
+    "upright": "The answer is already in you. Get quiet, notice what you keep circling back to, and trust the pull before you can explain it.",
+    "reversed": "You are overriding your own knowing \u2014 with other people's opinions, or with busyness. Secrets (kept or kept from you) need daylight.",
+    "love": "Pay attention to what is unsaid between you.",
+    "career": "Wait one beat before committing; information is still surfacing.",
+    "money": "Read the fine print; something is unstated.",
+    "health": "Your body is signaling \u2014 sleep, rest, listen."
+  },
+  "3": {
+    "slug": "the-empress",
+    "reviewed": false,
+    "name": "The Empress",
+    "keywords_upright": [
+      "nurture",
+      "abundance",
+      "creativity"
+    ],
+    "keywords_reversed": [
+      "neglect",
+      "smothering",
+      "blocked creativity"
+    ],
+    "upright": "Tend what you want to grow \u2014 a project, a relationship, yourself. Comfort, beauty, and patience compound into abundance.",
+    "reversed": "You are pouring out with nothing coming back in, or gripping too tightly. Refill your own cup first; loosen the grip.",
+    "love": "Warmth and care deepen the bond; let yourself receive too.",
+    "career": "Mentor, create, make things beautiful \u2014 it pays.",
+    "money": "Steady nurturing grows savings; avoid comfort overspending.",
+    "health": "Rest, good food, nature \u2014 indulge the senses kindly."
+  },
+  "4": {
+    "slug": "the-emperor",
+    "reviewed": false,
+    "name": "The Emperor",
+    "keywords_upright": [
+      "structure",
+      "authority",
+      "steady control"
+    ],
+    "keywords_reversed": [
+      "rigidity",
+      "control issues",
+      "weak boundaries"
+    ],
+    "upright": "Build the frame and the picture will hold. Set clear rules, budgets, and boundaries \u2014 order now buys freedom later.",
+    "reversed": "Too rigid or too loose: either control is choking the life out, or nothing is holding. Adjust the structure, not the goal.",
+    "love": "Commitment needs clear agreements, not assumptions.",
+    "career": "Process, hierarchy, and follow-through win the day.",
+    "money": "Budget like an emperor: every baht has a post.",
+    "health": "Routine and discipline beat motivation."
+  },
+  "5": {
+    "slug": "the-hierophant",
+    "reviewed": false,
+    "name": "The Hierophant",
+    "keywords_upright": [
+      "tradition",
+      "guidance",
+      "belonging"
+    ],
+    "keywords_reversed": [
+      "empty rules",
+      "rebellion",
+      "bad advice"
+    ],
+    "upright": "Tried paths and wise guides have something for you. Learn the tradition first \u2014 then decide what to keep and what to reshape.",
+    "reversed": "Rules for rules' sake are in the way. Question the doctrine, the guru, the 'we have always done it this way'.",
+    "love": "Shared values and rituals hold you together.",
+    "career": "A mentor, course, or institution opens the next door.",
+    "money": "Conventional advice fits now; skip exotic schemes.",
+    "health": "Trust established care; get a second opinion if uneasy."
+  },
+  "6": {
+    "slug": "the-lovers",
+    "reviewed": false,
+    "name": "The Lovers",
+    "keywords_upright": [
+      "union",
+      "choice",
+      "alignment"
+    ],
+    "keywords_reversed": [
+      "misalignment",
+      "temptation",
+      "avoided choice"
+    ],
+    "upright": "A union \u2014 of people or of values \u2014 is the heart of this. Choose what you truly align with, and let the choice be wholehearted.",
+    "reversed": "Something is off-key: values clashing, a third pull, or a decision postponed. Name the misalignment before it names you.",
+    "love": "Deep bond, real choice. Choose each other daily.",
+    "career": "Partnership and shared vision beat solo grinding.",
+    "money": "Align spending with what you actually value.",
+    "health": "Balance caring for others with caring for yourself."
+  },
+  "7": {
+    "slug": "the-chariot",
+    "reviewed": false,
+    "name": "The Chariot",
+    "keywords_upright": [
+      "drive",
+      "victory",
+      "direction"
+    ],
+    "keywords_reversed": [
+      "scattered drive",
+      "force without steering",
+      "delays"
+    ],
+    "upright": "Grip the reins and move. Opposing pulls resolve when you commit to one direction \u2014 victory comes through focused will.",
+    "reversed": "You are revving with no steering, or pushing a wall. Re-aim, drop a competing goal, then drive again.",
+    "love": "Steer the relationship somewhere on purpose; drift kills it.",
+    "career": "Ambitious push now \u2014 keep every horse facing one way.",
+    "money": "Drive toward one money goal; stop splitting fuel.",
+    "health": "Directed effort (training plan, sleep hours) works."
+  },
+  "8": {
+    "slug": "strength",
+    "reviewed": false,
+    "name": "Strength",
+    "keywords_upright": [
+      "courage",
+      "patience",
+      "gentle power"
+    ],
+    "keywords_reversed": [
+      "force",
+      "self-doubt",
+      "burnout"
+    ],
+    "upright": "Real strength is gentle: patience with yourself, courage without noise. Tame the lion with calm persistence, not the whip.",
+    "reversed": "You are muscling through on fumes, or doubting a strength you actually have. Soften the grip; rest is part of power.",
+    "love": "Patience and softness tame tensions; no ultimatums.",
+    "career": "Quiet competence outlasts loud pressure.",
+    "money": "Steady hands; avoid panic moves.",
+    "health": "Gentle consistency heals more than heroic bursts."
+  },
+  "9": {
+    "slug": "the-hermit",
+    "reviewed": false,
+    "name": "The Hermit",
+    "keywords_upright": [
+      "solitude",
+      "reflection",
+      "inner light"
+    ],
+    "keywords_reversed": [
+      "isolation",
+      "avoidance",
+      "lost light"
+    ],
+    "upright": "Step back and go inward for a while. Fewer voices, one lantern: your own experience will show the next step.",
+    "reversed": "Solitude has curdled into isolation, or you are dodging the quiet work. Reconnect \u2014 with one person, or with yourself.",
+    "love": "A little space clarifies; too much starves. Say what you need.",
+    "career": "Deep work beats meetings this week; document as you go.",
+    "money": "Review alone before any joint decision.",
+    "health": "Restorative solitude: sleep, walks, less screen."
+  },
+  "10": {
+    "slug": "wheel-of-fortune",
+    "reviewed": false,
+    "name": "Wheel of Fortune",
+    "keywords_upright": [
+      "turning point",
+      "luck",
+      "cycles"
+    ],
+    "keywords_reversed": [
+      "bad timing",
+      "resisting change",
+      "stuck wheel"
+    ],
+    "upright": "The wheel is turning in your favor. Ride the upswing: say yes to the opening, and remember luck favors the ready.",
+    "reversed": "Timing is off or change feels forced. Do not fight the cycle \u2014 stabilize what you can and wait for the turn.",
+    "love": "A turning point: ride it together, not against each other.",
+    "career": "Fortune shifts \u2014 position yourself where it lands.",
+    "money": "Upswing favors action; downswing favors saving.",
+    "health": "Cycles pass; support the body through the low part."
+  },
+  "11": {
+    "slug": "justice",
+    "reviewed": false,
+    "name": "Justice",
+    "keywords_upright": [
+      "fairness",
+      "truth",
+      "consequences"
+    ],
+    "keywords_reversed": [
+      "bias",
+      "unfairness",
+      "avoided reckoning"
+    ],
+    "upright": "Weigh it honestly and call it fairly. Truth, contracts, and consequences are in focus \u2014 act so your side stays clean.",
+    "reversed": "Something is tilted: bias (yours or theirs), blame-shifting, or a bill coming due. Rebalance before it compounds.",
+    "love": "Fair give-and-take; name imbalances kindly.",
+    "career": "Contracts, reviews, credit where due \u2014 document everything.",
+    "money": "Debts, taxes, fairness in splits: settle cleanly.",
+    "health": "Honest accounting of habits; adjust without shame."
+  },
+  "12": {
+    "slug": "the-hanged-man",
+    "reviewed": false,
+    "name": "The Hanged Man",
+    "keywords_upright": [
+      "pause",
+      "new angle",
+      "surrender"
+    ],
+    "keywords_reversed": [
+      "stalling",
+      "martyrdom",
+      "forced sacrifice"
+    ],
+    "upright": "Hang loose on purpose. Flip the viewpoint \u2014 the answer looks different upside down \u2014 and let timing do its half.",
+    "reversed": "The pause has expired into a stall, or you are suffering for show. Either move or admit you are choosing to wait.",
+    "love": "Stop pushing; see it from their angle for a week.",
+    "career": "Delay is data. Use the waiting productively.",
+    "money": "Hold position; no heroics in fog.",
+    "health": "Rest is the treatment; stop negotiating with it."
+  },
+  "13": {
+    "slug": "death",
+    "reviewed": false,
+    "name": "Death",
+    "keywords_upright": [
+      "endings",
+      "release",
+      "transformation"
+    ],
+    "keywords_reversed": [
+      "clinging",
+      "stuck grief",
+      "refused ending"
+    ],
+    "upright": "Something is over so something can begin. Grieve it, thank it, lay it down \u2014 the transformation needs the empty hands.",
+    "reversed": "You are dragging what already ended. The longer the grip, the heavier the cost; release is overdue, not optional.",
+    "love": "An old pattern must die for love to live.",
+    "career": "End the dead project; free the energy.",
+    "money": "Cut the losing line; mourn the sunk cost once.",
+    "health": "Release one habit that belongs to an older you."
+  },
+  "14": {
+    "slug": "temperance",
+    "reviewed": false,
+    "name": "Temperance",
+    "keywords_upright": [
+      "balance",
+      "moderation",
+      "alchemy"
+    ],
+    "keywords_reversed": [
+      "excess",
+      "imbalance",
+      "forced mix"
+    ],
+    "upright": "Mix, don't swing. Small steady blends \u2014 work and rest, give and take \u2014 turn ordinary days into quiet gold.",
+    "reversed": "Too much of something (or someone) has tipped the scales. Cut back to the middle path; extremes are billing you.",
+    "love": "Blend, don't merge. Keep your own flavor.",
+    "career": "Sustainable pace; mix deep work with recovery.",
+    "money": "Middle path: save some, enjoy some.",
+    "health": "Moderation heals; extremes bill later."
+  },
+  "15": {
+    "slug": "the-devil",
+    "reviewed": false,
+    "name": "The Devil",
+    "keywords_upright": [
+      "patterns",
+      "temptation",
+      "shadow"
+    ],
+    "keywords_reversed": [
+      "breaking free",
+      "facing shadow",
+      "looser chains"
+    ],
+    "upright": "Look honestly at the chain: the habit, the story, the comfort you chose. Naming it loosens it \u2014 shame tightens it.",
+    "reversed": "The chains are loosening. Keep walking out: one honest day at a time, and do not romanticize the cage.",
+    "love": "Obsession or control dressed as passion \u2014 call it out.",
+    "career": "Golden handcuffs? Price your freedom honestly.",
+    "money": "Spending loops and shiny traps \u2014 freeze one card.",
+    "health": "Face the coping habit; replace, don't just remove."
+  },
+  "16": {
+    "slug": "the-tower",
+    "reviewed": false,
+    "name": "The Tower",
+    "keywords_upright": [
+      "upheaval",
+      "revelation",
+      "sudden change"
+    ],
+    "keywords_reversed": [
+      "resisted collapse",
+      "slow leak",
+      "rebuilding"
+    ],
+    "upright": "What was shaky is falling \u2014 let it. Towers fall so truer ones rise; save what matters, release the rest to the lightning.",
+    "reversed": "You are holding up what already cracked, or rebuilding quietly after the bang. Either way: smaller, truer, on rock this time.",
+    "love": "A shock clears the air \u2014 rebuild honest or release.",
+    "career": "Structures change; be the one who adapts first.",
+    "money": "Expect the jolt; keep a buffer for falling bricks.",
+    "health": "Sudden signals need attention now, not later."
+  },
+  "17": {
+    "slug": "the-star",
+    "reviewed": false,
+    "name": "The Star",
+    "keywords_upright": [
+      "hope",
+      "healing",
+      "quiet faith"
+    ],
+    "keywords_reversed": [
+      "dimmed hope",
+      "healing slowly",
+      "faith wobbling"
+    ],
+    "upright": "After the storm, stars. Hope is realistic now: heal gently, wish concretely, and let small steady lights guide you.",
+    "reversed": "Hope feels far, but it is dimmed, not dead. Tend one small light \u2014 a routine, a person, a page \u2014 until it steadies.",
+    "love": "Healing love: honesty under starlight.",
+    "career": "Share your vision; hope attracts help.",
+    "money": "Calm recovery; wish with a plan attached.",
+    "health": "Healing is underway; support it gently."
+  },
+  "18": {
+    "slug": "the-moon",
+    "reviewed": false,
+    "name": "The Moon",
+    "keywords_upright": [
+      "dreams",
+      "uncertainty",
+      "the unseen"
+    ],
+    "keywords_reversed": [
+      "clarity returning",
+      "named fears",
+      "lifting fog"
+    ],
+    "upright": "Things glimmer but do not resolve yet. Trust dreams and hunches, double-check facts, and do not sign in moonlight.",
+    "reversed": "Fog is lifting: fears named shrink, confusion untangles. Keep going \u2014 daylight is a decision away.",
+    "love": "Illusions dissolve; see the person, not the projection.",
+    "career": "Verify before you commit; rumors are loud now.",
+    "money": "Hidden costs surface \u2014 look twice.",
+    "health": "Sleep and dreams carry messages; rest more."
+  },
+  "19": {
+    "slug": "the-sun",
+    "reviewed": false,
+    "name": "The Sun",
+    "keywords_upright": [
+      "joy",
+      "clarity",
+      "vitality"
+    ],
+    "keywords_reversed": [
+      "clouded joy",
+      "delayed success",
+      "forced cheer"
+    ],
+    "upright": "Yes \u2014 bright, simple yes. Joy, clarity, and energy are yours: celebrate openly and share the warmth around.",
+    "reversed": "Clouds, not night: joy delayed or dimmed, success still coming. Do not fake the smile \u2014 tend the small good things.",
+    "love": "Warm, honest, playful \u2014 let it show.",
+    "career": "Visibility and wins; take the bow.",
+    "money": "Sunny outlook; still budget the picnic.",
+    "health": "Vitality returns; sunlight, movement, laughter."
+  },
+  "20": {
+    "slug": "judgement",
+    "reviewed": false,
+    "name": "Judgement",
+    "keywords_upright": [
+      "awakening",
+      "calling",
+      "forgiveness"
+    ],
+    "keywords_reversed": [
+      "self-criticism",
+      "missed call",
+      "unfinished past"
+    ],
+    "upright": "A calling is sounding \u2014 rise to the bigger version of you. Forgive the old chapters; answer with changed action.",
+    "reversed": "The inner judge is too loud, or you keep missing the call. Turn criticism into instruction; tie up one old thread.",
+    "love": "Forgive and choose fresh \u2014 or admit it is over.",
+    "career": "Your calling is knocking; answer with a move.",
+    "money": "Review past money lessons; apply one now.",
+    "health": "Forgive the body; start the new regimen kindly."
+  },
+  "21": {
+    "slug": "the-world",
+    "reviewed": false,
+    "name": "The World",
+    "keywords_upright": [
+      "completion",
+      "wholeness",
+      "arrival"
+    ],
+    "keywords_reversed": [
+      "loose ends",
+      "almost there",
+      "unclosed circle"
+    ],
+    "upright": "The circle closes beautifully. Complete it, celebrate it, carry the lesson \u2014 a bigger circle is already forming.",
+    "reversed": "Nearly there: one loose end keeps the circle open. Tie it, and the completion (and the celebration) unlocks.",
+    "love": "Wholeness together \u2014 or whole on your own. Both count.",
+    "career": "Finish strong; the credential is the completion.",
+    "money": "A cycle completes; harvest, then plan the next.",
+    "health": "Integration: body, mind, and rhythm aligned."
+  },
+  "22": {
+    "slug": "ace-of-wands",
+    "reviewed": false,
+    "name": "Ace of Wands",
+    "keywords_upright": [
+      "seed",
+      "gift",
+      "pure potential",
+      "drive"
+    ],
+    "keywords_reversed": [
+      "blocked seed",
+      "missed gift",
+      "hollow start",
+      "burnout"
+    ],
+    "upright": "A new seed in this suit's domain \u2014 raw, bright potential. Fire moves it: energy, courage, and momentum.",
+    "reversed": "The seed cannot sprout yet: wrong soil, wrong season, or a gift refused. Fire unchecked: haste, burnout, or pride running the show.",
+    "love": "Passion and playfulness \u2014 keep it kind, not competitive.",
+    "career": "Ambition and initiative open doors; finish what you start.",
+    "money": "Bold moves need budgets; fund the spark, not the blaze.",
+    "health": "Move, sweat, discharge \u2014 then rest deliberately."
+  },
+  "23": {
+    "slug": "two-of-wands",
+    "reviewed": false,
+    "name": "Two of Wands",
+    "keywords_upright": [
+      "balance",
+      "partnership",
+      "first choice",
+      "drive"
+    ],
+    "keywords_reversed": [
+      "imbalance",
+      "stalemate",
+      "avoided choice",
+      "burnout"
+    ],
+    "upright": "Two forces meet: partnership, balance, or the first real choice. Fire moves it: energy, courage, and momentum.",
+    "reversed": "The pair is off-balance: stalemate, tension, or a choice dodged. Fire unchecked: haste, burnout, or pride running the show.",
+    "love": "Passion and playfulness \u2014 keep it kind, not competitive.",
+    "career": "Ambition and initiative open doors; finish what you start.",
+    "money": "Bold moves need budgets; fund the spark, not the blaze.",
+    "health": "Move, sweat, discharge \u2014 then rest deliberately."
+  },
+  "24": {
+    "slug": "three-of-wands",
+    "reviewed": false,
+    "name": "Three of Wands",
+    "keywords_upright": [
+      "first fruits",
+      "togetherness",
+      "expression",
+      "drive"
+    ],
+    "keywords_reversed": [
+      "scattered trio",
+      "gossip",
+      "delayed fruits",
+      "burnout"
+    ],
+    "upright": "First fruits: growth shows, people gather, expression flows. Fire moves it: energy, courage, and momentum.",
+    "reversed": "The trio frays: miscommunication, gossip, or fruits that need more season. Fire unchecked: haste, burnout, or pride running the show.",
+    "love": "Passion and playfulness \u2014 keep it kind, not competitive.",
+    "career": "Ambition and initiative open doors; finish what you start.",
+    "money": "Bold moves need budgets; fund the spark, not the blaze.",
+    "health": "Move, sweat, discharge \u2014 then rest deliberately."
+  },
+  "25": {
+    "slug": "four-of-wands",
+    "reviewed": false,
+    "name": "Four of Wands",
+    "keywords_upright": [
+      "rest",
+      "foundation",
+      "pause to hold",
+      "drive"
+    ],
+    "keywords_reversed": [
+      "stagnation",
+      "rigid hold",
+      "rest refused",
+      "burnout"
+    ],
+    "upright": "Four walls: rest, consolidate, hold what you built. Fire moves it: energy, courage, and momentum.",
+    "reversed": "Rest curdled into rut: clinging to the walls instead of living in the house. Fire unchecked: haste, burnout, or pride running the show.",
+    "love": "Passion and playfulness \u2014 keep it kind, not competitive.",
+    "career": "Ambition and initiative open doors; finish what you start.",
+    "money": "Bold moves need budgets; fund the spark, not the blaze.",
+    "health": "Move, sweat, discharge \u2014 then rest deliberately."
+  },
+  "26": {
+    "slug": "five-of-wands",
+    "reviewed": false,
+    "name": "Five of Wands",
+    "keywords_upright": [
+      "friction",
+      "loss felt",
+      "shake-up",
+      "drive"
+    ],
+    "keywords_reversed": [
+      "longer conflict",
+      "blame",
+      "slow recovery",
+      "burnout"
+    ],
+    "upright": "Friction with a lesson: loss, conflict, or a shake-up that reveals what stands. Fire moves it: energy, courage, and momentum.",
+    "reversed": "The fight drags on or blame spreads; recovery is slow but possible \u2014 stop feeding it. Fire unchecked: haste, burnout, or pride running the show.",
+    "love": "Passion and playfulness \u2014 keep it kind, not competitive.",
+    "career": "Ambition and initiative open doors; finish what you start.",
+    "money": "Bold moves need budgets; fund the spark, not the blaze.",
+    "health": "Move, sweat, discharge \u2014 then rest deliberately."
+  },
+  "27": {
+    "slug": "six-of-wands",
+    "reviewed": false,
+    "name": "Six of Wands",
+    "keywords_upright": [
+      "ease after strain",
+      "giving",
+      "nostalgia",
+      "drive"
+    ],
+    "keywords_reversed": [
+      "strings attached",
+      "stuck past",
+      "unequal give",
+      "burnout"
+    ],
+    "upright": "Breathing room: help given or received, sweetness from the past, smoother water. Fire moves it: energy, courage, and momentum.",
+    "reversed": "Giving with strings, or living in the rearview: accept help cleanly, visit the past \u2014 do not move back in. Fire unchecked: haste, burnout, or pride running the show.",
+    "love": "Passion and playfulness \u2014 keep it kind, not competitive.",
+    "career": "Ambition and initiative open doors; finish what you start.",
+    "money": "Bold moves need budgets; fund the spark, not the blaze.",
+    "health": "Move, sweat, discharge \u2014 then rest deliberately."
+  },
+  "28": {
+    "slug": "seven-of-wands",
+    "reviewed": false,
+    "name": "Seven of Wands",
+    "keywords_upright": [
+      "assessment",
+      "many options",
+      "stand your ground",
+      "drive"
+    ],
+    "keywords_reversed": [
+      "overwhelm",
+      "illusion of choice",
+      "defensive crouch",
+      "burnout"
+    ],
+    "upright": "Step back and assess: many options, one position to defend, patience before the next move. Fire moves it: energy, courage, and momentum.",
+    "reversed": "Too many threads or a defensive crouch: narrow the field, then stand \u2014 or strategically yield. Fire unchecked: haste, burnout, or pride running the show.",
+    "love": "Passion and playfulness \u2014 keep it kind, not competitive.",
+    "career": "Ambition and initiative open doors; finish what you start.",
+    "money": "Bold moves need budgets; fund the spark, not the blaze.",
+    "health": "Move, sweat, discharge \u2014 then rest deliberately."
+  },
+  "29": {
+    "slug": "eight-of-wands",
+    "reviewed": false,
+    "name": "Eight of Wands",
+    "keywords_upright": [
+      "mastery in motion",
+      "focused work",
+      "swift change",
+      "drive"
+    ],
+    "keywords_reversed": [
+      "scattered effort",
+      "perfectionism",
+      "too fast",
+      "burnout"
+    ],
+    "upright": "Skilled motion: focused work compounds, or change arrives fast \u2014 meet it prepared. Fire moves it: energy, courage, and momentum.",
+    "reversed": "Effort scattered or perfectionism stalling the line; slow one thing down to speed the whole up. Fire unchecked: haste, burnout, or pride running the show.",
+    "love": "Passion and playfulness \u2014 keep it kind, not competitive.",
+    "career": "Ambition and initiative open doors; finish what you start.",
+    "money": "Bold moves need budgets; fund the spark, not the blaze.",
+    "health": "Move, sweat, discharge \u2014 then rest deliberately."
+  },
+  "30": {
+    "slug": "nine-of-wands",
+    "reviewed": false,
+    "name": "Nine of Wands",
+    "keywords_upright": [
+      "near-complete",
+      "wishes",
+      "resilience",
+      "drive"
+    ],
+    "keywords_reversed": [
+      "nearly-but-stuck",
+      "anxiety nights",
+      "walled garden",
+      "burnout"
+    ],
+    "upright": "Almost whole: wishes close, resilience proven \u2014 guard the last stretch with care. Fire moves it: energy, courage, and momentum.",
+    "reversed": "So close yet stuck: worry loops or a comfort zone fenced too high. Name the fear, take the final step. Fire unchecked: haste, burnout, or pride running the show.",
+    "love": "Passion and playfulness \u2014 keep it kind, not competitive.",
+    "career": "Ambition and initiative open doors; finish what you start.",
+    "money": "Bold moves need budgets; fund the spark, not the blaze.",
+    "health": "Move, sweat, discharge \u2014 then rest deliberately."
+  },
+  "31": {
+    "slug": "ten-of-wands",
+    "reviewed": false,
+    "name": "Ten of Wands",
+    "keywords_upright": [
+      "completion",
+      "full circle",
+      "legacy",
+      "drive"
+    ],
+    "keywords_reversed": [
+      "overfull",
+      "crashing end",
+      "burden shared badly",
+      "burnout"
+    ],
+    "upright": "The full arc of the suit: completion, culmination, what carries forward. Fire moves it: energy, courage, and momentum.",
+    "reversed": "Overfull or ending hard: too much carried, or a cycle closing messily \u2014 set down, sort out, close clean. Fire unchecked: haste, burnout, or pride running the show.",
+    "love": "Passion and playfulness \u2014 keep it kind, not competitive.",
+    "career": "Ambition and initiative open doors; finish what you start.",
+    "money": "Bold moves need budgets; fund the spark, not the blaze.",
+    "health": "Move, sweat, discharge \u2014 then rest deliberately."
+  },
+  "32": {
+    "slug": "page-of-wands",
+    "reviewed": false,
+    "name": "Page of Wands",
+    "keywords_upright": [
+      "student",
+      "message",
+      "fresh curiosity",
+      "drive"
+    ],
+    "keywords_reversed": [
+      "gossip",
+      "distraction",
+      "study skipped",
+      "burnout"
+    ],
+    "upright": "The eager student: a message, a new study, curiosity first \u2014 beginner's mind, open notebook. Fire moves it: energy, courage, and momentum.",
+    "reversed": "Distracted student: gossip over study, shiny hopping. Pick one page and actually read it. Fire unchecked: haste, burnout, or pride running the show.",
+    "love": "Passion and playfulness \u2014 keep it kind, not competitive.",
+    "career": "Ambition and initiative open doors; finish what you start.",
+    "money": "Bold moves need budgets; fund the spark, not the blaze.",
+    "health": "Move, sweat, discharge \u2014 then rest deliberately."
+  },
+  "33": {
+    "slug": "knight-of-wands",
+    "reviewed": false,
+    "name": "Knight of Wands",
+    "keywords_upright": [
+      "charge",
+      "quest",
+      "momentum",
+      "drive"
+    ],
+    "keywords_reversed": [
+      "reckless charge",
+      "hot-cold",
+      "quest drift",
+      "burnout"
+    ],
+    "upright": "The charger: full momentum toward the quest \u2014 brave, fast, all-in. Fire moves it: energy, courage, and momentum.",
+    "reversed": "Charging past the target or blowing hot and cold: rein in, re-aim, then ride. Fire unchecked: haste, burnout, or pride running the show.",
+    "love": "Passion and playfulness \u2014 keep it kind, not competitive.",
+    "career": "Ambition and initiative open doors; finish what you start.",
+    "money": "Bold moves need budgets; fund the spark, not the blaze.",
+    "health": "Move, sweat, discharge \u2014 then rest deliberately."
+  },
+  "34": {
+    "slug": "queen-of-wands",
+    "reviewed": false,
+    "name": "Queen of Wands",
+    "keywords_upright": [
+      "mastery within",
+      "nurturing command",
+      "trusted counsel",
+      "drive"
+    ],
+    "keywords_reversed": [
+      "smothering",
+      "inner drought",
+      "manipulation",
+      "burnout"
+    ],
+    "upright": "Mastery turned inward: calm command, deep care, counsel others trust. Fire moves it: energy, courage, and momentum.",
+    "reversed": "Care curdled: smothering, martyrdom, or counsel with hooks. Refill, then lead. Fire unchecked: haste, burnout, or pride running the show.",
+    "love": "Passion and playfulness \u2014 keep it kind, not competitive.",
+    "career": "Ambition and initiative open doors; finish what you start.",
+    "money": "Bold moves need budgets; fund the spark, not the blaze.",
+    "health": "Move, sweat, discharge \u2014 then rest deliberately."
+  },
+  "35": {
+    "slug": "king-of-wands",
+    "reviewed": false,
+    "name": "King of Wands",
+    "keywords_upright": [
+      "mastery without",
+      "steady authority",
+      "legacy lead",
+      "drive"
+    ],
+    "keywords_reversed": [
+      "domineering",
+      "abdication",
+      "hollow crown",
+      "burnout"
+    ],
+    "upright": "Mastery turned outward: steady authority, long view, leadership that lasts. Fire moves it: energy, courage, and momentum.",
+    "reversed": "Authority warped: domineering, checked-out, or a crown with no kingdom. Re-earn it. Fire unchecked: haste, burnout, or pride running the show.",
+    "love": "Passion and playfulness \u2014 keep it kind, not competitive.",
+    "career": "Ambition and initiative open doors; finish what you start.",
+    "money": "Bold moves need budgets; fund the spark, not the blaze.",
+    "health": "Move, sweat, discharge \u2014 then rest deliberately."
+  },
+  "36": {
+    "slug": "ace-of-cups",
+    "reviewed": false,
+    "name": "Ace of Cups",
+    "keywords_upright": [
+      "seed",
+      "gift",
+      "pure potential",
+      "feelings"
+    ],
+    "keywords_reversed": [
+      "blocked seed",
+      "missed gift",
+      "hollow start",
+      "emotional fog"
+    ],
+    "upright": "A new seed in this suit's domain \u2014 raw, bright potential. Water carries it: feelings, intuition, and closeness.",
+    "reversed": "The seed cannot sprout yet: wrong soil, wrong season, or a gift refused. Water stagnates: moodiness, clinging, or feelings running the meeting.",
+    "love": "The heart of the matter \u2014 tenderness, honesty, flow.",
+    "career": "Empathy and teamwork; watch emotional decisions.",
+    "money": "Spend from values, not moods; let income flow, then hold some.",
+    "health": "Feelings live in the body; hydrate, rest, name them."
+  },
+  "37": {
+    "slug": "two-of-cups",
+    "reviewed": false,
+    "name": "Two of Cups",
+    "keywords_upright": [
+      "balance",
+      "partnership",
+      "first choice",
+      "feelings"
+    ],
+    "keywords_reversed": [
+      "imbalance",
+      "stalemate",
+      "avoided choice",
+      "emotional fog"
+    ],
+    "upright": "Two forces meet: partnership, balance, or the first real choice. Water carries it: feelings, intuition, and closeness.",
+    "reversed": "The pair is off-balance: stalemate, tension, or a choice dodged. Water stagnates: moodiness, clinging, or feelings running the meeting.",
+    "love": "The heart of the matter \u2014 tenderness, honesty, flow.",
+    "career": "Empathy and teamwork; watch emotional decisions.",
+    "money": "Spend from values, not moods; let income flow, then hold some.",
+    "health": "Feelings live in the body; hydrate, rest, name them."
+  },
+  "38": {
+    "slug": "three-of-cups",
+    "reviewed": false,
+    "name": "Three of Cups",
+    "keywords_upright": [
+      "first fruits",
+      "togetherness",
+      "expression",
+      "feelings"
+    ],
+    "keywords_reversed": [
+      "scattered trio",
+      "gossip",
+      "delayed fruits",
+      "emotional fog"
+    ],
+    "upright": "First fruits: growth shows, people gather, expression flows. Water carries it: feelings, intuition, and closeness.",
+    "reversed": "The trio frays: miscommunication, gossip, or fruits that need more season. Water stagnates: moodiness, clinging, or feelings running the meeting.",
+    "love": "The heart of the matter \u2014 tenderness, honesty, flow.",
+    "career": "Empathy and teamwork; watch emotional decisions.",
+    "money": "Spend from values, not moods; let income flow, then hold some.",
+    "health": "Feelings live in the body; hydrate, rest, name them."
+  },
+  "39": {
+    "slug": "four-of-cups",
+    "reviewed": false,
+    "name": "Four of Cups",
+    "keywords_upright": [
+      "rest",
+      "foundation",
+      "pause to hold",
+      "feelings"
+    ],
+    "keywords_reversed": [
+      "stagnation",
+      "rigid hold",
+      "rest refused",
+      "emotional fog"
+    ],
+    "upright": "Four walls: rest, consolidate, hold what you built. Water carries it: feelings, intuition, and closeness.",
+    "reversed": "Rest curdled into rut: clinging to the walls instead of living in the house. Water stagnates: moodiness, clinging, or feelings running the meeting.",
+    "love": "The heart of the matter \u2014 tenderness, honesty, flow.",
+    "career": "Empathy and teamwork; watch emotional decisions.",
+    "money": "Spend from values, not moods; let income flow, then hold some.",
+    "health": "Feelings live in the body; hydrate, rest, name them."
+  },
+  "40": {
+    "slug": "five-of-cups",
+    "reviewed": false,
+    "name": "Five of Cups",
+    "keywords_upright": [
+      "friction",
+      "loss felt",
+      "shake-up",
+      "feelings"
+    ],
+    "keywords_reversed": [
+      "longer conflict",
+      "blame",
+      "slow recovery",
+      "emotional fog"
+    ],
+    "upright": "Friction with a lesson: loss, conflict, or a shake-up that reveals what stands. Water carries it: feelings, intuition, and closeness.",
+    "reversed": "The fight drags on or blame spreads; recovery is slow but possible \u2014 stop feeding it. Water stagnates: moodiness, clinging, or feelings running the meeting.",
+    "love": "The heart of the matter \u2014 tenderness, honesty, flow.",
+    "career": "Empathy and teamwork; watch emotional decisions.",
+    "money": "Spend from values, not moods; let income flow, then hold some.",
+    "health": "Feelings live in the body; hydrate, rest, name them."
+  },
+  "41": {
+    "slug": "six-of-cups",
+    "reviewed": false,
+    "name": "Six of Cups",
+    "keywords_upright": [
+      "ease after strain",
+      "giving",
+      "nostalgia",
+      "feelings"
+    ],
+    "keywords_reversed": [
+      "strings attached",
+      "stuck past",
+      "unequal give",
+      "emotional fog"
+    ],
+    "upright": "Breathing room: help given or received, sweetness from the past, smoother water. Water carries it: feelings, intuition, and closeness.",
+    "reversed": "Giving with strings, or living in the rearview: accept help cleanly, visit the past \u2014 do not move back in. Water stagnates: moodiness, clinging, or feelings running the meeting.",
+    "love": "The heart of the matter \u2014 tenderness, honesty, flow.",
+    "career": "Empathy and teamwork; watch emotional decisions.",
+    "money": "Spend from values, not moods; let income flow, then hold some.",
+    "health": "Feelings live in the body; hydrate, rest, name them."
+  },
+  "42": {
+    "slug": "seven-of-cups",
+    "reviewed": false,
+    "name": "Seven of Cups",
+    "keywords_upright": [
+      "assessment",
+      "many options",
+      "stand your ground",
+      "feelings"
+    ],
+    "keywords_reversed": [
+      "overwhelm",
+      "illusion of choice",
+      "defensive crouch",
+      "emotional fog"
+    ],
+    "upright": "Step back and assess: many options, one position to defend, patience before the next move. Water carries it: feelings, intuition, and closeness.",
+    "reversed": "Too many threads or a defensive crouch: narrow the field, then stand \u2014 or strategically yield. Water stagnates: moodiness, clinging, or feelings running the meeting.",
+    "love": "The heart of the matter \u2014 tenderness, honesty, flow.",
+    "career": "Empathy and teamwork; watch emotional decisions.",
+    "money": "Spend from values, not moods; let income flow, then hold some.",
+    "health": "Feelings live in the body; hydrate, rest, name them."
+  },
+  "43": {
+    "slug": "eight-of-cups",
+    "reviewed": false,
+    "name": "Eight of Cups",
+    "keywords_upright": [
+      "mastery in motion",
+      "focused work",
+      "swift change",
+      "feelings"
+    ],
+    "keywords_reversed": [
+      "scattered effort",
+      "perfectionism",
+      "too fast",
+      "emotional fog"
+    ],
+    "upright": "Skilled motion: focused work compounds, or change arrives fast \u2014 meet it prepared. Water carries it: feelings, intuition, and closeness.",
+    "reversed": "Effort scattered or perfectionism stalling the line; slow one thing down to speed the whole up. Water stagnates: moodiness, clinging, or feelings running the meeting.",
+    "love": "The heart of the matter \u2014 tenderness, honesty, flow.",
+    "career": "Empathy and teamwork; watch emotional decisions.",
+    "money": "Spend from values, not moods; let income flow, then hold some.",
+    "health": "Feelings live in the body; hydrate, rest, name them."
+  },
+  "44": {
+    "slug": "nine-of-cups",
+    "reviewed": false,
+    "name": "Nine of Cups",
+    "keywords_upright": [
+      "near-complete",
+      "wishes",
+      "resilience",
+      "feelings"
+    ],
+    "keywords_reversed": [
+      "nearly-but-stuck",
+      "anxiety nights",
+      "walled garden",
+      "emotional fog"
+    ],
+    "upright": "Almost whole: wishes close, resilience proven \u2014 guard the last stretch with care. Water carries it: feelings, intuition, and closeness.",
+    "reversed": "So close yet stuck: worry loops or a comfort zone fenced too high. Name the fear, take the final step. Water stagnates: moodiness, clinging, or feelings running the meeting.",
+    "love": "The heart of the matter \u2014 tenderness, honesty, flow.",
+    "career": "Empathy and teamwork; watch emotional decisions.",
+    "money": "Spend from values, not moods; let income flow, then hold some.",
+    "health": "Feelings live in the body; hydrate, rest, name them."
+  },
+  "45": {
+    "slug": "ten-of-cups",
+    "reviewed": false,
+    "name": "Ten of Cups",
+    "keywords_upright": [
+      "completion",
+      "full circle",
+      "legacy",
+      "feelings"
+    ],
+    "keywords_reversed": [
+      "overfull",
+      "crashing end",
+      "burden shared badly",
+      "emotional fog"
+    ],
+    "upright": "The full arc of the suit: completion, culmination, what carries forward. Water carries it: feelings, intuition, and closeness.",
+    "reversed": "Overfull or ending hard: too much carried, or a cycle closing messily \u2014 set down, sort out, close clean. Water stagnates: moodiness, clinging, or feelings running the meeting.",
+    "love": "The heart of the matter \u2014 tenderness, honesty, flow.",
+    "career": "Empathy and teamwork; watch emotional decisions.",
+    "money": "Spend from values, not moods; let income flow, then hold some.",
+    "health": "Feelings live in the body; hydrate, rest, name them."
+  },
+  "46": {
+    "slug": "page-of-cups",
+    "reviewed": false,
+    "name": "Page of Cups",
+    "keywords_upright": [
+      "student",
+      "message",
+      "fresh curiosity",
+      "feelings"
+    ],
+    "keywords_reversed": [
+      "gossip",
+      "distraction",
+      "study skipped",
+      "emotional fog"
+    ],
+    "upright": "The eager student: a message, a new study, curiosity first \u2014 beginner's mind, open notebook. Water carries it: feelings, intuition, and closeness.",
+    "reversed": "Distracted student: gossip over study, shiny hopping. Pick one page and actually read it. Water stagnates: moodiness, clinging, or feelings running the meeting.",
+    "love": "The heart of the matter \u2014 tenderness, honesty, flow.",
+    "career": "Empathy and teamwork; watch emotional decisions.",
+    "money": "Spend from values, not moods; let income flow, then hold some.",
+    "health": "Feelings live in the body; hydrate, rest, name them."
+  },
+  "47": {
+    "slug": "knight-of-cups",
+    "reviewed": false,
+    "name": "Knight of Cups",
+    "keywords_upright": [
+      "charge",
+      "quest",
+      "momentum",
+      "feelings"
+    ],
+    "keywords_reversed": [
+      "reckless charge",
+      "hot-cold",
+      "quest drift",
+      "emotional fog"
+    ],
+    "upright": "The charger: full momentum toward the quest \u2014 brave, fast, all-in. Water carries it: feelings, intuition, and closeness.",
+    "reversed": "Charging past the target or blowing hot and cold: rein in, re-aim, then ride. Water stagnates: moodiness, clinging, or feelings running the meeting.",
+    "love": "The heart of the matter \u2014 tenderness, honesty, flow.",
+    "career": "Empathy and teamwork; watch emotional decisions.",
+    "money": "Spend from values, not moods; let income flow, then hold some.",
+    "health": "Feelings live in the body; hydrate, rest, name them."
+  },
+  "48": {
+    "slug": "queen-of-cups",
+    "reviewed": false,
+    "name": "Queen of Cups",
+    "keywords_upright": [
+      "mastery within",
+      "nurturing command",
+      "trusted counsel",
+      "feelings"
+    ],
+    "keywords_reversed": [
+      "smothering",
+      "inner drought",
+      "manipulation",
+      "emotional fog"
+    ],
+    "upright": "Mastery turned inward: calm command, deep care, counsel others trust. Water carries it: feelings, intuition, and closeness.",
+    "reversed": "Care curdled: smothering, martyrdom, or counsel with hooks. Refill, then lead. Water stagnates: moodiness, clinging, or feelings running the meeting.",
+    "love": "The heart of the matter \u2014 tenderness, honesty, flow.",
+    "career": "Empathy and teamwork; watch emotional decisions.",
+    "money": "Spend from values, not moods; let income flow, then hold some.",
+    "health": "Feelings live in the body; hydrate, rest, name them."
+  },
+  "49": {
+    "slug": "king-of-cups",
+    "reviewed": false,
+    "name": "King of Cups",
+    "keywords_upright": [
+      "mastery without",
+      "steady authority",
+      "legacy lead",
+      "feelings"
+    ],
+    "keywords_reversed": [
+      "domineering",
+      "abdication",
+      "hollow crown",
+      "emotional fog"
+    ],
+    "upright": "Mastery turned outward: steady authority, long view, leadership that lasts. Water carries it: feelings, intuition, and closeness.",
+    "reversed": "Authority warped: domineering, checked-out, or a crown with no kingdom. Re-earn it. Water stagnates: moodiness, clinging, or feelings running the meeting.",
+    "love": "The heart of the matter \u2014 tenderness, honesty, flow.",
+    "career": "Empathy and teamwork; watch emotional decisions.",
+    "money": "Spend from values, not moods; let income flow, then hold some.",
+    "health": "Feelings live in the body; hydrate, rest, name them."
+  },
+  "50": {
+    "slug": "ace-of-swords",
+    "reviewed": false,
+    "name": "Ace of Swords",
+    "keywords_upright": [
+      "seed",
+      "gift",
+      "pure potential",
+      "mind"
+    ],
+    "keywords_reversed": [
+      "blocked seed",
+      "missed gift",
+      "hollow start",
+      "overthinking"
+    ],
+    "upright": "A new seed in this suit's domain \u2014 raw, bright potential. Air cuts through: thought, truth, and clear words.",
+    "reversed": "The seed cannot sprout yet: wrong soil, wrong season, or a gift refused. Air turned blade inward: overthinking, harsh self-talk, or words you cannot unsay.",
+    "love": "Say the true thing kindly; clarity is kindness here.",
+    "career": "Analysis, contracts, strategy \u2014 think it through fully.",
+    "money": "Decide with numbers, not nerves; cut one cost.",
+    "health": "Quiet the mind: sleep, less input, one worry at a time."
+  },
+  "51": {
+    "slug": "two-of-swords",
+    "reviewed": false,
+    "name": "Two of Swords",
+    "keywords_upright": [
+      "balance",
+      "partnership",
+      "first choice",
+      "mind"
+    ],
+    "keywords_reversed": [
+      "imbalance",
+      "stalemate",
+      "avoided choice",
+      "overthinking"
+    ],
+    "upright": "Two forces meet: partnership, balance, or the first real choice. Air cuts through: thought, truth, and clear words.",
+    "reversed": "The pair is off-balance: stalemate, tension, or a choice dodged. Air turned blade inward: overthinking, harsh self-talk, or words you cannot unsay.",
+    "love": "Say the true thing kindly; clarity is kindness here.",
+    "career": "Analysis, contracts, strategy \u2014 think it through fully.",
+    "money": "Decide with numbers, not nerves; cut one cost.",
+    "health": "Quiet the mind: sleep, less input, one worry at a time."
+  },
+  "52": {
+    "slug": "three-of-swords",
+    "reviewed": false,
+    "name": "Three of Swords",
+    "keywords_upright": [
+      "first fruits",
+      "togetherness",
+      "expression",
+      "mind"
+    ],
+    "keywords_reversed": [
+      "scattered trio",
+      "gossip",
+      "delayed fruits",
+      "overthinking"
+    ],
+    "upright": "First fruits: growth shows, people gather, expression flows. Air cuts through: thought, truth, and clear words.",
+    "reversed": "The trio frays: miscommunication, gossip, or fruits that need more season. Air turned blade inward: overthinking, harsh self-talk, or words you cannot unsay.",
+    "love": "Say the true thing kindly; clarity is kindness here.",
+    "career": "Analysis, contracts, strategy \u2014 think it through fully.",
+    "money": "Decide with numbers, not nerves; cut one cost.",
+    "health": "Quiet the mind: sleep, less input, one worry at a time."
+  },
+  "53": {
+    "slug": "four-of-swords",
+    "reviewed": false,
+    "name": "Four of Swords",
+    "keywords_upright": [
+      "rest",
+      "foundation",
+      "pause to hold",
+      "mind"
+    ],
+    "keywords_reversed": [
+      "stagnation",
+      "rigid hold",
+      "rest refused",
+      "overthinking"
+    ],
+    "upright": "Four walls: rest, consolidate, hold what you built. Air cuts through: thought, truth, and clear words.",
+    "reversed": "Rest curdled into rut: clinging to the walls instead of living in the house. Air turned blade inward: overthinking, harsh self-talk, or words you cannot unsay.",
+    "love": "Say the true thing kindly; clarity is kindness here.",
+    "career": "Analysis, contracts, strategy \u2014 think it through fully.",
+    "money": "Decide with numbers, not nerves; cut one cost.",
+    "health": "Quiet the mind: sleep, less input, one worry at a time."
+  },
+  "54": {
+    "slug": "five-of-swords",
+    "reviewed": false,
+    "name": "Five of Swords",
+    "keywords_upright": [
+      "friction",
+      "loss felt",
+      "shake-up",
+      "mind"
+    ],
+    "keywords_reversed": [
+      "longer conflict",
+      "blame",
+      "slow recovery",
+      "overthinking"
+    ],
+    "upright": "Friction with a lesson: loss, conflict, or a shake-up that reveals what stands. Air cuts through: thought, truth, and clear words.",
+    "reversed": "The fight drags on or blame spreads; recovery is slow but possible \u2014 stop feeding it. Air turned blade inward: overthinking, harsh self-talk, or words you cannot unsay.",
+    "love": "Say the true thing kindly; clarity is kindness here.",
+    "career": "Analysis, contracts, strategy \u2014 think it through fully.",
+    "money": "Decide with numbers, not nerves; cut one cost.",
+    "health": "Quiet the mind: sleep, less input, one worry at a time."
+  },
+  "55": {
+    "slug": "six-of-swords",
+    "reviewed": false,
+    "name": "Six of Swords",
+    "keywords_upright": [
+      "ease after strain",
+      "giving",
+      "nostalgia",
+      "mind"
+    ],
+    "keywords_reversed": [
+      "strings attached",
+      "stuck past",
+      "unequal give",
+      "overthinking"
+    ],
+    "upright": "Breathing room: help given or received, sweetness from the past, smoother water. Air cuts through: thought, truth, and clear words.",
+    "reversed": "Giving with strings, or living in the rearview: accept help cleanly, visit the past \u2014 do not move back in. Air turned blade inward: overthinking, harsh self-talk, or words you cannot unsay.",
+    "love": "Say the true thing kindly; clarity is kindness here.",
+    "career": "Analysis, contracts, strategy \u2014 think it through fully.",
+    "money": "Decide with numbers, not nerves; cut one cost.",
+    "health": "Quiet the mind: sleep, less input, one worry at a time."
+  },
+  "56": {
+    "slug": "seven-of-swords",
+    "reviewed": false,
+    "name": "Seven of Swords",
+    "keywords_upright": [
+      "assessment",
+      "many options",
+      "stand your ground",
+      "mind"
+    ],
+    "keywords_reversed": [
+      "overwhelm",
+      "illusion of choice",
+      "defensive crouch",
+      "overthinking"
+    ],
+    "upright": "Step back and assess: many options, one position to defend, patience before the next move. Air cuts through: thought, truth, and clear words.",
+    "reversed": "Too many threads or a defensive crouch: narrow the field, then stand \u2014 or strategically yield. Air turned blade inward: overthinking, harsh self-talk, or words you cannot unsay.",
+    "love": "Say the true thing kindly; clarity is kindness here.",
+    "career": "Analysis, contracts, strategy \u2014 think it through fully.",
+    "money": "Decide with numbers, not nerves; cut one cost.",
+    "health": "Quiet the mind: sleep, less input, one worry at a time."
+  },
+  "57": {
+    "slug": "eight-of-swords",
+    "reviewed": false,
+    "name": "Eight of Swords",
+    "keywords_upright": [
+      "mastery in motion",
+      "focused work",
+      "swift change",
+      "mind"
+    ],
+    "keywords_reversed": [
+      "scattered effort",
+      "perfectionism",
+      "too fast",
+      "overthinking"
+    ],
+    "upright": "Skilled motion: focused work compounds, or change arrives fast \u2014 meet it prepared. Air cuts through: thought, truth, and clear words.",
+    "reversed": "Effort scattered or perfectionism stalling the line; slow one thing down to speed the whole up. Air turned blade inward: overthinking, harsh self-talk, or words you cannot unsay.",
+    "love": "Say the true thing kindly; clarity is kindness here.",
+    "career": "Analysis, contracts, strategy \u2014 think it through fully.",
+    "money": "Decide with numbers, not nerves; cut one cost.",
+    "health": "Quiet the mind: sleep, less input, one worry at a time."
+  },
+  "58": {
+    "slug": "nine-of-swords",
+    "reviewed": false,
+    "name": "Nine of Swords",
+    "keywords_upright": [
+      "near-complete",
+      "wishes",
+      "resilience",
+      "mind"
+    ],
+    "keywords_reversed": [
+      "nearly-but-stuck",
+      "anxiety nights",
+      "walled garden",
+      "overthinking"
+    ],
+    "upright": "Almost whole: wishes close, resilience proven \u2014 guard the last stretch with care. Air cuts through: thought, truth, and clear words.",
+    "reversed": "So close yet stuck: worry loops or a comfort zone fenced too high. Name the fear, take the final step. Air turned blade inward: overthinking, harsh self-talk, or words you cannot unsay.",
+    "love": "Say the true thing kindly; clarity is kindness here.",
+    "career": "Analysis, contracts, strategy \u2014 think it through fully.",
+    "money": "Decide with numbers, not nerves; cut one cost.",
+    "health": "Quiet the mind: sleep, less input, one worry at a time."
+  },
+  "59": {
+    "slug": "ten-of-swords",
+    "reviewed": false,
+    "name": "Ten of Swords",
+    "keywords_upright": [
+      "completion",
+      "full circle",
+      "legacy",
+      "mind"
+    ],
+    "keywords_reversed": [
+      "overfull",
+      "crashing end",
+      "burden shared badly",
+      "overthinking"
+    ],
+    "upright": "The full arc of the suit: completion, culmination, what carries forward. Air cuts through: thought, truth, and clear words.",
+    "reversed": "Overfull or ending hard: too much carried, or a cycle closing messily \u2014 set down, sort out, close clean. Air turned blade inward: overthinking, harsh self-talk, or words you cannot unsay.",
+    "love": "Say the true thing kindly; clarity is kindness here.",
+    "career": "Analysis, contracts, strategy \u2014 think it through fully.",
+    "money": "Decide with numbers, not nerves; cut one cost.",
+    "health": "Quiet the mind: sleep, less input, one worry at a time."
+  },
+  "60": {
+    "slug": "page-of-swords",
+    "reviewed": false,
+    "name": "Page of Swords",
+    "keywords_upright": [
+      "student",
+      "message",
+      "fresh curiosity",
+      "mind"
+    ],
+    "keywords_reversed": [
+      "gossip",
+      "distraction",
+      "study skipped",
+      "overthinking"
+    ],
+    "upright": "The eager student: a message, a new study, curiosity first \u2014 beginner's mind, open notebook. Air cuts through: thought, truth, and clear words.",
+    "reversed": "Distracted student: gossip over study, shiny hopping. Pick one page and actually read it. Air turned blade inward: overthinking, harsh self-talk, or words you cannot unsay.",
+    "love": "Say the true thing kindly; clarity is kindness here.",
+    "career": "Analysis, contracts, strategy \u2014 think it through fully.",
+    "money": "Decide with numbers, not nerves; cut one cost.",
+    "health": "Quiet the mind: sleep, less input, one worry at a time."
+  },
+  "61": {
+    "slug": "knight-of-swords",
+    "reviewed": false,
+    "name": "Knight of Swords",
+    "keywords_upright": [
+      "charge",
+      "quest",
+      "momentum",
+      "mind"
+    ],
+    "keywords_reversed": [
+      "reckless charge",
+      "hot-cold",
+      "quest drift",
+      "overthinking"
+    ],
+    "upright": "The charger: full momentum toward the quest \u2014 brave, fast, all-in. Air cuts through: thought, truth, and clear words.",
+    "reversed": "Charging past the target or blowing hot and cold: rein in, re-aim, then ride. Air turned blade inward: overthinking, harsh self-talk, or words you cannot unsay.",
+    "love": "Say the true thing kindly; clarity is kindness here.",
+    "career": "Analysis, contracts, strategy \u2014 think it through fully.",
+    "money": "Decide with numbers, not nerves; cut one cost.",
+    "health": "Quiet the mind: sleep, less input, one worry at a time."
+  },
+  "62": {
+    "slug": "queen-of-swords",
+    "reviewed": false,
+    "name": "Queen of Swords",
+    "keywords_upright": [
+      "mastery within",
+      "nurturing command",
+      "trusted counsel",
+      "mind"
+    ],
+    "keywords_reversed": [
+      "smothering",
+      "inner drought",
+      "manipulation",
+      "overthinking"
+    ],
+    "upright": "Mastery turned inward: calm command, deep care, counsel others trust. Air cuts through: thought, truth, and clear words.",
+    "reversed": "Care curdled: smothering, martyrdom, or counsel with hooks. Refill, then lead. Air turned blade inward: overthinking, harsh self-talk, or words you cannot unsay.",
+    "love": "Say the true thing kindly; clarity is kindness here.",
+    "career": "Analysis, contracts, strategy \u2014 think it through fully.",
+    "money": "Decide with numbers, not nerves; cut one cost.",
+    "health": "Quiet the mind: sleep, less input, one worry at a time."
+  },
+  "63": {
+    "slug": "king-of-swords",
+    "reviewed": false,
+    "name": "King of Swords",
+    "keywords_upright": [
+      "mastery without",
+      "steady authority",
+      "legacy lead",
+      "mind"
+    ],
+    "keywords_reversed": [
+      "domineering",
+      "abdication",
+      "hollow crown",
+      "overthinking"
+    ],
+    "upright": "Mastery turned outward: steady authority, long view, leadership that lasts. Air cuts through: thought, truth, and clear words.",
+    "reversed": "Authority warped: domineering, checked-out, or a crown with no kingdom. Re-earn it. Air turned blade inward: overthinking, harsh self-talk, or words you cannot unsay.",
+    "love": "Say the true thing kindly; clarity is kindness here.",
+    "career": "Analysis, contracts, strategy \u2014 think it through fully.",
+    "money": "Decide with numbers, not nerves; cut one cost.",
+    "health": "Quiet the mind: sleep, less input, one worry at a time."
+  },
+  "64": {
+    "slug": "ace-of-pentacles",
+    "reviewed": false,
+    "name": "Ace of Pentacles",
+    "keywords_upright": [
+      "seed",
+      "gift",
+      "pure potential",
+      "craft"
+    ],
+    "keywords_reversed": [
+      "blocked seed",
+      "missed gift",
+      "hollow start",
+      "stuck resources"
+    ],
+    "upright": "A new seed in this suit's domain \u2014 raw, bright potential. Earth builds it: craft, patience, and tangible results.",
+    "reversed": "The seed cannot sprout yet: wrong soil, wrong season, or a gift refused. Earth hardened: stuck money, grind without rest, or health traded for hustle.",
+    "love": "Show love tangibly: time kept, promises funded.",
+    "career": "Craft and consistency compound; apprentice mindset.",
+    "money": "The money suit: budget, save, invest boringly.",
+    "health": "The body is the first asset; maintain it."
+  },
+  "65": {
+    "slug": "two-of-pentacles",
+    "reviewed": false,
+    "name": "Two of Pentacles",
+    "keywords_upright": [
+      "balance",
+      "partnership",
+      "first choice",
+      "craft"
+    ],
+    "keywords_reversed": [
+      "imbalance",
+      "stalemate",
+      "avoided choice",
+      "stuck resources"
+    ],
+    "upright": "Two forces meet: partnership, balance, or the first real choice. Earth builds it: craft, patience, and tangible results.",
+    "reversed": "The pair is off-balance: stalemate, tension, or a choice dodged. Earth hardened: stuck money, grind without rest, or health traded for hustle.",
+    "love": "Show love tangibly: time kept, promises funded.",
+    "career": "Craft and consistency compound; apprentice mindset.",
+    "money": "The money suit: budget, save, invest boringly.",
+    "health": "The body is the first asset; maintain it."
+  },
+  "66": {
+    "slug": "three-of-pentacles",
+    "reviewed": false,
+    "name": "Three of Pentacles",
+    "keywords_upright": [
+      "first fruits",
+      "togetherness",
+      "expression",
+      "craft"
+    ],
+    "keywords_reversed": [
+      "scattered trio",
+      "gossip",
+      "delayed fruits",
+      "stuck resources"
+    ],
+    "upright": "First fruits: growth shows, people gather, expression flows. Earth builds it: craft, patience, and tangible results.",
+    "reversed": "The trio frays: miscommunication, gossip, or fruits that need more season. Earth hardened: stuck money, grind without rest, or health traded for hustle.",
+    "love": "Show love tangibly: time kept, promises funded.",
+    "career": "Craft and consistency compound; apprentice mindset.",
+    "money": "The money suit: budget, save, invest boringly.",
+    "health": "The body is the first asset; maintain it."
+  },
+  "67": {
+    "slug": "four-of-pentacles",
+    "reviewed": false,
+    "name": "Four of Pentacles",
+    "keywords_upright": [
+      "rest",
+      "foundation",
+      "pause to hold",
+      "craft"
+    ],
+    "keywords_reversed": [
+      "stagnation",
+      "rigid hold",
+      "rest refused",
+      "stuck resources"
+    ],
+    "upright": "Four walls: rest, consolidate, hold what you built. Earth builds it: craft, patience, and tangible results.",
+    "reversed": "Rest curdled into rut: clinging to the walls instead of living in the house. Earth hardened: stuck money, grind without rest, or health traded for hustle.",
+    "love": "Show love tangibly: time kept, promises funded.",
+    "career": "Craft and consistency compound; apprentice mindset.",
+    "money": "The money suit: budget, save, invest boringly.",
+    "health": "The body is the first asset; maintain it."
+  },
+  "68": {
+    "slug": "five-of-pentacles",
+    "reviewed": false,
+    "name": "Five of Pentacles",
+    "keywords_upright": [
+      "friction",
+      "loss felt",
+      "shake-up",
+      "craft"
+    ],
+    "keywords_reversed": [
+      "longer conflict",
+      "blame",
+      "slow recovery",
+      "stuck resources"
+    ],
+    "upright": "Friction with a lesson: loss, conflict, or a shake-up that reveals what stands. Earth builds it: craft, patience, and tangible results.",
+    "reversed": "The fight drags on or blame spreads; recovery is slow but possible \u2014 stop feeding it. Earth hardened: stuck money, grind without rest, or health traded for hustle.",
+    "love": "Show love tangibly: time kept, promises funded.",
+    "career": "Craft and consistency compound; apprentice mindset.",
+    "money": "The money suit: budget, save, invest boringly.",
+    "health": "The body is the first asset; maintain it."
+  },
+  "69": {
+    "slug": "six-of-pentacles",
+    "reviewed": false,
+    "name": "Six of Pentacles",
+    "keywords_upright": [
+      "ease after strain",
+      "giving",
+      "nostalgia",
+      "craft"
+    ],
+    "keywords_reversed": [
+      "strings attached",
+      "stuck past",
+      "unequal give",
+      "stuck resources"
+    ],
+    "upright": "Breathing room: help given or received, sweetness from the past, smoother water. Earth builds it: craft, patience, and tangible results.",
+    "reversed": "Giving with strings, or living in the rearview: accept help cleanly, visit the past \u2014 do not move back in. Earth hardened: stuck money, grind without rest, or health traded for hustle.",
+    "love": "Show love tangibly: time kept, promises funded.",
+    "career": "Craft and consistency compound; apprentice mindset.",
+    "money": "The money suit: budget, save, invest boringly.",
+    "health": "The body is the first asset; maintain it."
+  },
+  "70": {
+    "slug": "seven-of-pentacles",
+    "reviewed": false,
+    "name": "Seven of Pentacles",
+    "keywords_upright": [
+      "assessment",
+      "many options",
+      "stand your ground",
+      "craft"
+    ],
+    "keywords_reversed": [
+      "overwhelm",
+      "illusion of choice",
+      "defensive crouch",
+      "stuck resources"
+    ],
+    "upright": "Step back and assess: many options, one position to defend, patience before the next move. Earth builds it: craft, patience, and tangible results.",
+    "reversed": "Too many threads or a defensive crouch: narrow the field, then stand \u2014 or strategically yield. Earth hardened: stuck money, grind without rest, or health traded for hustle.",
+    "love": "Show love tangibly: time kept, promises funded.",
+    "career": "Craft and consistency compound; apprentice mindset.",
+    "money": "The money suit: budget, save, invest boringly.",
+    "health": "The body is the first asset; maintain it."
+  },
+  "71": {
+    "slug": "eight-of-pentacles",
+    "reviewed": false,
+    "name": "Eight of Pentacles",
+    "keywords_upright": [
+      "mastery in motion",
+      "focused work",
+      "swift change",
+      "craft"
+    ],
+    "keywords_reversed": [
+      "scattered effort",
+      "perfectionism",
+      "too fast",
+      "stuck resources"
+    ],
+    "upright": "Skilled motion: focused work compounds, or change arrives fast \u2014 meet it prepared. Earth builds it: craft, patience, and tangible results.",
+    "reversed": "Effort scattered or perfectionism stalling the line; slow one thing down to speed the whole up. Earth hardened: stuck money, grind without rest, or health traded for hustle.",
+    "love": "Show love tangibly: time kept, promises funded.",
+    "career": "Craft and consistency compound; apprentice mindset.",
+    "money": "The money suit: budget, save, invest boringly.",
+    "health": "The body is the first asset; maintain it."
+  },
+  "72": {
+    "slug": "nine-of-pentacles",
+    "reviewed": false,
+    "name": "Nine of Pentacles",
+    "keywords_upright": [
+      "near-complete",
+      "wishes",
+      "resilience",
+      "craft"
+    ],
+    "keywords_reversed": [
+      "nearly-but-stuck",
+      "anxiety nights",
+      "walled garden",
+      "stuck resources"
+    ],
+    "upright": "Almost whole: wishes close, resilience proven \u2014 guard the last stretch with care. Earth builds it: craft, patience, and tangible results.",
+    "reversed": "So close yet stuck: worry loops or a comfort zone fenced too high. Name the fear, take the final step. Earth hardened: stuck money, grind without rest, or health traded for hustle.",
+    "love": "Show love tangibly: time kept, promises funded.",
+    "career": "Craft and consistency compound; apprentice mindset.",
+    "money": "The money suit: budget, save, invest boringly.",
+    "health": "The body is the first asset; maintain it."
+  },
+  "73": {
+    "slug": "ten-of-pentacles",
+    "reviewed": false,
+    "name": "Ten of Pentacles",
+    "keywords_upright": [
+      "completion",
+      "full circle",
+      "legacy",
+      "craft"
+    ],
+    "keywords_reversed": [
+      "overfull",
+      "crashing end",
+      "burden shared badly",
+      "stuck resources"
+    ],
+    "upright": "The full arc of the suit: completion, culmination, what carries forward. Earth builds it: craft, patience, and tangible results.",
+    "reversed": "Overfull or ending hard: too much carried, or a cycle closing messily \u2014 set down, sort out, close clean. Earth hardened: stuck money, grind without rest, or health traded for hustle.",
+    "love": "Show love tangibly: time kept, promises funded.",
+    "career": "Craft and consistency compound; apprentice mindset.",
+    "money": "The money suit: budget, save, invest boringly.",
+    "health": "The body is the first asset; maintain it."
+  },
+  "74": {
+    "slug": "page-of-pentacles",
+    "reviewed": false,
+    "name": "Page of Pentacles",
+    "keywords_upright": [
+      "student",
+      "message",
+      "fresh curiosity",
+      "craft"
+    ],
+    "keywords_reversed": [
+      "gossip",
+      "distraction",
+      "study skipped",
+      "stuck resources"
+    ],
+    "upright": "The eager student: a message, a new study, curiosity first \u2014 beginner's mind, open notebook. Earth builds it: craft, patience, and tangible results.",
+    "reversed": "Distracted student: gossip over study, shiny hopping. Pick one page and actually read it. Earth hardened: stuck money, grind without rest, or health traded for hustle.",
+    "love": "Show love tangibly: time kept, promises funded.",
+    "career": "Craft and consistency compound; apprentice mindset.",
+    "money": "The money suit: budget, save, invest boringly.",
+    "health": "The body is the first asset; maintain it."
+  },
+  "75": {
+    "slug": "knight-of-pentacles",
+    "reviewed": false,
+    "name": "Knight of Pentacles",
+    "keywords_upright": [
+      "charge",
+      "quest",
+      "momentum",
+      "craft"
+    ],
+    "keywords_reversed": [
+      "reckless charge",
+      "hot-cold",
+      "quest drift",
+      "stuck resources"
+    ],
+    "upright": "The charger: full momentum toward the quest \u2014 brave, fast, all-in. Earth builds it: craft, patience, and tangible results.",
+    "reversed": "Charging past the target or blowing hot and cold: rein in, re-aim, then ride. Earth hardened: stuck money, grind without rest, or health traded for hustle.",
+    "love": "Show love tangibly: time kept, promises funded.",
+    "career": "Craft and consistency compound; apprentice mindset.",
+    "money": "The money suit: budget, save, invest boringly.",
+    "health": "The body is the first asset; maintain it."
+  },
+  "76": {
+    "slug": "queen-of-pentacles",
+    "reviewed": false,
+    "name": "Queen of Pentacles",
+    "keywords_upright": [
+      "mastery within",
+      "nurturing command",
+      "trusted counsel",
+      "craft"
+    ],
+    "keywords_reversed": [
+      "smothering",
+      "inner drought",
+      "manipulation",
+      "stuck resources"
+    ],
+    "upright": "Mastery turned inward: calm command, deep care, counsel others trust. Earth builds it: craft, patience, and tangible results.",
+    "reversed": "Care curdled: smothering, martyrdom, or counsel with hooks. Refill, then lead. Earth hardened: stuck money, grind without rest, or health traded for hustle.",
+    "love": "Show love tangibly: time kept, promises funded.",
+    "career": "Craft and consistency compound; apprentice mindset.",
+    "money": "The money suit: budget, save, invest boringly.",
+    "health": "The body is the first asset; maintain it."
+  },
+  "77": {
+    "slug": "king-of-pentacles",
+    "reviewed": false,
+    "name": "King of Pentacles",
+    "keywords_upright": [
+      "mastery without",
+      "steady authority",
+      "legacy lead",
+      "craft"
+    ],
+    "keywords_reversed": [
+      "domineering",
+      "abdication",
+      "hollow crown",
+      "stuck resources"
+    ],
+    "upright": "Mastery turned outward: steady authority, long view, leadership that lasts. Earth builds it: craft, patience, and tangible results.",
+    "reversed": "Authority warped: domineering, checked-out, or a crown with no kingdom. Re-earn it. Earth hardened: stuck money, grind without rest, or health traded for hustle.",
+    "love": "Show love tangibly: time kept, promises funded.",
+    "career": "Craft and consistency compound; apprentice mindset.",
+    "money": "The money suit: budget, save, invest boringly.",
+    "health": "The body is the first asset; maintain it."
+  }
+}
