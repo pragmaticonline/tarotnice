@@ -340,6 +340,24 @@
       }
       synth.innerHTML = blocks.map(function (b) {
         var html = esc(b).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+        // Section the answer visually: summary as a quote card,
+        // advice as a checklist card, the card warning as a callout.
+        if (/^(SUMMARY:|\u0e2a\u0e23\u0e38\u0e1b:)/.test(b)) {
+          return '<p class="sec sec-summary">' + html.replace(/^(SUMMARY:|\u0e2a\u0e23\u0e38\u0e1b:)\s*/, "") + "</p>";
+        }
+        if (/^\*\*(\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22|What to do)/.test(b)) {
+          var title = (b.match(/^\*\*([^*]+)\*\*/) || [])[1] || "What to do";
+          var items = b.replace(/^\*\*[^*]+\*\*:?\s*/, "").split(/\s\u00b7\s/).map(function (x) { return x.trim(); }).filter(Boolean);
+          if (items.length > 1) {
+            return '<div class="sec sec-advice"><p class="sec-title">' + esc(title) + "</p><ul>" +
+              items.map(function (x) { return "<li>" + esc(x).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>") + "</li>"; }).join("") + "</ul></div>";
+          }
+          return '<div class="sec sec-advice"><p class="sec-title">' + esc(title) + "</p><p>" +
+            esc(b.replace(/^\*\*[^*]+\*\*:?\s*/, "")).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>") + "</p></div>";
+        }
+        if (/^\*\*(\u0e04\u0e33\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e08\u0e32\u0e01\u0e44\u0e1e\u0e48|Warning)/.test(b)) {
+          return '<p class="sec sec-warning">' + html + "</p>";
+        }
         return "<p>" + html + "</p>";
       }).join("");
     }

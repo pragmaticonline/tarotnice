@@ -315,3 +315,11 @@ a{color:var(--accent)}
 .rw-lines span:nth-child(2){width:82%;animation-delay:.15s}
 .rw-lines span:nth-child(3){width:64%;animation-delay:.3s}
 @keyframes rwpulse{0%,100%{opacity:.2}50%{opacity:.5}}
+
+/* Sectioned reading answer. */
+.rtext .sec{margin:.9rem 0}
+.rtext .sec-summary{background:var(--card-face);color:var(--card-ink);border:1.5px solid var(--gold);border-radius:14px;padding:.9rem 1.05rem;font-family:var(--f-display);font-size:1.08rem;line-height:1.5}
+.rtext .sec-advice{background:var(--card-face);color:var(--card-ink);border:1.5px solid var(--gold);border-radius:14px;padding:.9rem 1.05rem}
+.rtext .sec-advice .sec-title{font-family:var(--f-display);font-size:1.08rem;color:#4a3d78;margin:0 0 .45rem}
+.rtext .sec-advice ul{margin:0;padding-left:1.15rem;display:flex;flex-direction:column;gap:.35rem;line-height:1.55}
+.rtext .sec-warning{border-left:4px solid var(--gold);background:color-mix(in srgb,var(--gold) 12%,transparent);border-radius:0 12px 12px 0;padding:.7rem .95rem;line-height:1.55}
