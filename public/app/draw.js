@@ -21,12 +21,14 @@
   function geom(W) {
     var cw = Math.min(104, Math.max(60, W / 5.4));
     var ch = cw * 1.75; // real art ratio (1537x2689)
-    var slotY = 10;
-    var deckY = slotY + ch + 18 + ch * 0.62;
     var droop = ch * 0.18;
+    // Deck/fan at the top; the three placeholders sit below it and
+    // picked cards are dealt down into them.
+    var deckY = 10 + ch * 0.62;
+    var slotY = deckY + ch + droop + 24;
     return {
       cw: cw, ch: ch, slotY: slotY, deckY: deckY, droop: droop,
-      H: deckY + ch + droop + 16,
+      H: slotY + ch + 16,
       slotX: [W / 2 - cw * 1.75, W / 2, W / 2 + cw * 1.75],
     };
   }
@@ -262,7 +264,7 @@
         card.tabIndex = -1;
         if (!REDUCED) card.style.transitionDelay = i * 4 + "ms";
         var p = deckPos(card, i);
-        place(card, p.x, p.y + G.H, 0, 0.6, 5);
+        place(card, p.x, p.y - G.H, 0, 0.6, 5);
       });
       await wait(REDUCED ? 60 : 700);
       deck.forEach(function (card) {

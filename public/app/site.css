@@ -66,7 +66,8 @@ a{color:var(--accent)}
 .slot{width:72px;height:118px;border:2px dashed var(--gold-dim);border-radius:8px}
 
 /* Daily card block. */
-.daily-block{background:var(--card-face);color:var(--card-ink);border:1.5px solid var(--gold);border-radius:16px;padding:.55rem .8rem}
+.daily-block{padding:0}
+.daily-open-btn{width:100%}
 .daily-bar{display:flex;align-items:center;gap:.8rem;width:100%;background:transparent;border:0;cursor:pointer;padding:.25rem;font-family:var(--f-body);font-size:1rem;color:inherit;min-height:52px;text-align:left}
 .daily-thumb{width:34px;height:auto;border-radius:4px;border:1px solid var(--gold);flex:none}
 .daily-thumb.rev{transform:rotate(180deg)}

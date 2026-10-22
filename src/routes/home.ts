@@ -52,6 +52,7 @@ export function homePage(opts: HomeOpts = {}): string {
   const head = headerHtml({ ui, streak, path: "/" });
   const body = `<main>
 ${quotaRow(ui, 3)}
+<div id="draw-stage" class="stage" aria-live="polite"><div class="slots"><span class="slot"></span><span class="slot"></span><span class="slot"></span></div><div class="deck" id="deck"></div></div>
 <section class="daily-block" id="daily" aria-label="Daily card" aria-live="polite">
 <p class="daily-prompt">${escapeHtml(ui === "th" ? "\u0e44\u0e1e\u0e48\u0e1b\u0e23\u0e30\u0e08\u0e33\u0e27\u0e31\u0e19\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13" : "Your card for today")}</p>
 </section>
@@ -62,7 +63,6 @@ ${topicChips(ui)}
 ${opts.turnstileSiteKey ? `<div class="cf-turnstile" data-sitekey="${escapeHtml(opts.turnstileSiteKey)}" data-size="invisible"></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>` : ""}
 <button class="btn btn-primary" type="submit">${escapeHtml(d.shuffle)}</button>
 </form>
-<div id="draw-stage" class="stage" aria-live="polite"><div class="slots"><span class="slot"></span><span class="slot"></span><span class="slot"></span></div><div class="deck" id="deck"></div></div>
 <div id="guide" class="guide s-idle"><span class="ngern-wrap">${NGERN_SITTING_SVG}</span><p class="bubble">${escapeHtml(d.hintIdle)}</p></div>
 </main>`;
   const jsonLd = JSON.stringify({

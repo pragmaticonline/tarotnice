@@ -155,19 +155,10 @@
     if (!box) return;
     var lang = uiLang();
     var prompt = lang === "th" ? "\u0e44\u0e1e\u0e48\u0e1b\u0e23\u0e30\u0e08\u0e33\u0e27\u0e31\u0e19\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13" : "Your card for today";
-    if (dailyState && dailyState.card) {
-      box.innerHTML =
-        '<button type="button" class="daily-bar" id="daily-open"><img class="daily-thumb' + (dailyState.card.reversed ? " rev" : "") + '" src="' +
-        esc(dailyState.card.image) + '" alt="">' +
-        '<span class="daily-bar-text"><span class="daily-bar-label">' + esc(prompt) + "</span>" +
-        '<span class="daily-bar-name">' + esc(dailyState.card.name) + "</span></span>" +
-        '<span class="daily-bar-cta">' + (lang === "th" ? "\u0e14\u0e39\u0e44\u0e1e\u0e48" : "View") + "</span></button>";
-    } else {
-      box.innerHTML =
-        '<button type="button" class="daily-bar" id="daily-open"><span class="card-back daily-thumb-back" aria-hidden="true"></span>' +
-        '<span class="daily-bar-text"><span class="daily-bar-label">' + esc(prompt) + "</span></span>" +
-        '<span class="daily-bar-cta">' + (lang === "th" ? "\u0e40\u0e1b\u0e34\u0e14\u0e44\u0e1e\u0e48" : "Reveal") + "</span></button>";
-    }
+    // Just a button; the card itself opens entirely in the modal.
+    var label = prompt + (dailyState && dailyState.card ? " \u00b7 " + dailyState.card.name : "");
+    box.innerHTML =
+      '<button type="button" class="btn btn-outline daily-open-btn" id="daily-open">' + esc(label) + "</button>";
     var open = document.getElementById("daily-open");
     if (open) open.addEventListener("click", openDaily);
   }
