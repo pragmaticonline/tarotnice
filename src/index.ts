@@ -5,7 +5,7 @@ import { drizzle } from "drizzle-orm/d1";
 import { createAuth, isRegisteredUser, type AuthEnv } from "./lib/auth";
 import * as schema from "./db/schema";
 import { bangkokDay, nextBangkokMidnight } from "./lib/bangkok";
-import { dailyMessage, drawDailyCard, luckyColour } from "./lib/daily";
+import { luckyColour } from "./lib/daily";
 import {
   buildReadingPrompt,
   classifyCrisis,
@@ -1319,7 +1319,7 @@ function authedUser(c: { env: AuthEnv; req: { raw: { headers: Headers } } }) {
 }
 
 // Everything the client needs on load: user, prefs, streak, quota,
-// and today's daily card. Server wins over localStorage.
+// Server wins over localStorage.
 app.get("/api/me/summary", async (c) => {
   const ui = requestUiLang(c);
   const user = await authedUser(c);
@@ -1329,51 +1329,20 @@ app.get("/api/me/summary", async (c) => {
       prefs: { lang: ui, theme: null, nickname: null },
       streak: { current: 0, longest: 0, activeToday: false },
       quota: { used: 0, limit: questionLimit(c.env), resetsAt: nextBangkokMidnight() },
-      today: { daily: null },
     });
   }
   const store = d1TarotStore(c.env.DB);
   const today = bangkokDay();
-  const [prefs, used, days, daily] = await Promise.all([
+  const [prefs, used, days] = await Promise.all([
     d1PrefsStore(c.env.DB).get(user.id),
     store.countReadings(user.id, today),
     store.activityDays(user.id),
-    store.getDaily(user.id, today),
   ]);
-  let dailyView = null;
-  if (daily) {
-    const card = await store.getCard(daily.cardId, ui);
-    if (card) {
-      // Name + message in the UI language: fall back to the drawn
-      // message only when no cached translation exists yet (the
-      // daily endpoint generates + caches it on demand).
-      let message = daily.message;
-      if (daily.lang !== ui) {
-        const translated = await store.getCachedMessage(today, daily.cardId, daily.reversed, ui);
-        if (translated) message = translated;
-      }
-      dailyView = {
-        card: {
-          id: card.id,
-          slug: card.slug,
-          name: card.name,
-          image: `/static/${card.imageKey}.webp`,
-          image2x: `/static/${card.imageKey}@2x.webp`,
-          reversed: daily.reversed,
-        },
-        message,
-        luckyColour: luckyColour(),
-        shareId: daily.shareId,
-        lang: ui,
-      };
-    }
-  }
   return c.json({
     user: { id: user.id, email: user.email, isAnonymous: user.isAnonymous },
     prefs: prefs ?? { lang: ui, theme: null, nickname: null },
     streak: computeStreak(days, today),
     quota: { used, limit: questionLimit(c.env), resetsAt: nextBangkokMidnight() },
-    today: { daily: dailyView },
   });
 });
 
@@ -1419,80 +1388,6 @@ app.delete("/api/me", async (c) => {
 // Daily card: one per Bangkok day, idempotent. Does not count toward
 // the question quota. 401 when there is no session yet \u2014 the client
 // creates the anonymous session first, then retries.
-app.post("/api/daily", async (c) => {
-  const user = await authedUser(c);
-  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
-  let body: { lang?: unknown };
-  try {
-    body = await c.req.json().catch(() => ({}));
-  } catch {
-    body = {};
-  }
-  const lang = body.lang === "en" || body.lang === "th" ? body.lang : requestUiLang(c);
-  const store = d1TarotStore(c.env.DB);
-  await attributeReferral(c, store, user.id);
-  const today = bangkokDay();
-  const respond = async (draw: { cardId: number; reversed: boolean; message: string; lang: string; shareId: string | null }, fresh: boolean) => {
-    const card = await store.getCard(draw.cardId, lang);
-    if (!card) return c.json({ error: "unknown_card" }, 500);
-    const days = await store.activityDays(user.id);
-    recordEvent(c.env, {
-      name: "daily_drawn",
-      lang,
-      country: countryOf(c.req.raw),
-      ...clientCategory(c.req.raw),
-      userKind: userKind(user),
-    });
-    return c.json({
-      card: {
-        id: card.id,
-        slug: card.slug,
-        name: card.name,
-        image: `/static/${card.imageKey}.webp`,
-        image2x: `/static/${card.imageKey}@2x.webp`,
-        reversed: draw.reversed,
-      },
-      message: draw.message,
-      luckyColour: luckyColour(),
-      streak: computeStreak(days, today),
-      lang,
-      fresh,
-    });
-  };
-  const existing = await store.getDaily(user.id, today);
-  if (existing) {
-    if (existing.lang === lang) return respond(existing, false);
-    // Drawn earlier in another language: serve name + message in the
-    // language being asked for now (the per-language message cache
-    // makes this one AI call per card/day at most).
-    const view = await store.getCard(existing.cardId, lang);
-    if (!view) return c.json({ error: "unknown_card" }, 500);
-    const cachedMsg = await store.getCachedMessage(today, existing.cardId, existing.reversed, lang);
-    const msg = cachedMsg ?? (await dailyMessage(c.env, view, existing.reversed, lang)).text;
-    if (!cachedMsg) {
-      try {
-        await store.setCachedMessage(today, existing.cardId, existing.reversed, lang, msg);
-      } catch { /* cache is best-effort */ }
-    }
-    return respond({ ...existing, message: msg, lang }, false);
-  }
-  const { id, reversed } = drawDailyCard();
-  const card = await store.getCard(id, lang);
-  if (!card) return c.json({ error: "unknown_card" }, 500);
-  const cached = await store.getCachedMessage(today, id, reversed, lang);
-  const message =
-    cached ?? (await dailyMessage(c.env, card, reversed, lang)).text;
-  if (!cached) {
-    try {
-      await store.setCachedMessage(today, id, reversed, lang, message);
-    } catch {
-      /* cache is best-effort */
-    }
-  }
-  const draw = await store.insertDaily(user.id, today, { cardId: id, reversed, message, lang });
-  return respond(draw, true);
-});
-
 // Public static files: R2 (bucket tarotnice-media) first, static assets
 // as fallback, 404 when neither has the file. Card art is public (no
 // gate); share pages are gated by unguessable share ids, not by this.

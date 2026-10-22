@@ -59,10 +59,6 @@
     }
   }
 
-  function paintDaily(daily) {
-    if (window.TarotDaily) window.TarotDaily.setState(daily);
-  }
-
   async function summary() {
     var res = await fetch("/api/me/summary", { credentials: "include" });
     var data = await res.json();
@@ -85,7 +81,6 @@
         window.TarotHome.data = data;
         paintStreak(data.streak);
         paintQuota(data.quota);
-        paintDaily(data.today && data.today.daily, (data.prefs && data.prefs.lang) || uiLang());
         try {
           var e = new CustomEvent("tarot:summary", { detail: data });
           document.dispatchEvent(e);

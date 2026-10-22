@@ -90,7 +90,7 @@ ${opts.body}
 </div>
 ${THEME_TOGGLE}
 ${analyticsBeacon()}
-<script src="/app/share.js" defer></script><script src="/app/daily.js" defer></script>
+<script src="/app/share.js" defer></script>
 <script>(function(){try{if("serviceWorker" in navigator){addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){});});}}catch(e){}})();</script>
 </body>
 </html>`;
@@ -131,12 +131,6 @@ export function langToggleHtml(ui: UiLang, path: string): string {
 
 /** Site header: wordmark, streak chip, Day/Night + \u0e44\u0e17\u0e22/EN toggles.
  *  On narrow screens the toggles wrap under the wordmark. */
-/** Daily-card header pill: card-back icon + Today; gold dot until drawn. */
-export function dailyButtonHtml(ui: UiLang): string {
-  const d = t(ui);
-  return `<button type="button" class="daily-btn" data-daily-btn aria-label="${escapeHtml(d.dailyTitle)}"><span class="daily-btn-back" aria-hidden="true"></span><span>${escapeHtml(d.today)}</span><span class="daily-dot" data-daily-dot aria-hidden="true"></span></button>`;
-}
-
 /** Compact single language button for the header (full choice in footer). */
 export function langButtonHtml(ui: UiLang, path: string): string {
   const other = UI_LANGS.find((l) => l.code !== ui) || UI_LANGS[0];
@@ -150,7 +144,7 @@ export function headerHtml(opts: {
   path?: string;
 }): string {
   const path = opts.path ?? "/";
-  return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${streakChipHtml(opts.streak, opts.ui, "/progress")}${dailyButtonHtml(opts.ui)}${themeToggleHtml(opts.ui)}${langButtonHtml(opts.ui, path)}</header>`;
+  return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${streakChipHtml(opts.streak, opts.ui, "/progress")}${themeToggleHtml(opts.ui)}${langButtonHtml(opts.ui, path)}</header>`;
 }
 
 /** Shared footer: tagline, entertainment line, legal links, one
