@@ -324,7 +324,7 @@
       var view = byId[drawn.id] || {};
       return {
         id: drawn.id,
-        name: view.name || "",
+        name: view.nameEn || view.name || "",
         image: view.image || "",
         image2x: view.image2x || "",
         reversed: !!drawn.reversed,

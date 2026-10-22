@@ -945,6 +945,7 @@ app.get("/api/cards", async (c) => {
       id: card.id,
       slug: card.slug,
       name: card.name,
+      nameEn: card.nameEn ?? card.name,
       image: `/static/${card.imageKey}.webp`,
       image2x: `/static/${card.imageKey}@2x.webp`,
       arcana: card.arcana,
@@ -962,7 +963,7 @@ app.get("/api/cards/:slug", async (c) => {
   const card = await d1TarotStore(c.env.DB).getCardBySlug(c.req.param("slug"), lang);
   if (!card) return c.json({ error: "not_found" }, 404);
   return c.json({
-    id: card.id, slug: card.slug, name: card.name,
+    id: card.id, slug: card.slug, name: card.name, nameEn: card.nameEn ?? card.name,
     image: `/static/${card.imageKey}.webp`,
     image2x: `/static/${card.imageKey}@2x.webp`,
     arcana: card.arcana, suit: card.suit, rank: card.rank,

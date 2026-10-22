@@ -19,6 +19,8 @@ export type CardView = {
   rank: number | null;
   imageKey: string;
   name: string;
+  /** English card name (readings always use English card names). */
+  nameEn?: string;
   keywordsUpright: string[];
   keywordsReversed: string[];
   upright: string;
@@ -105,6 +107,15 @@ export function d1TarotStore(db: D1Database) {
       };
     },
 
+    /** English names for all cards (lang='en' meaning rows). */
+    async enNames(): Promise<Map<number, string>> {
+      const rows = await orm
+        .select({ cardId: schema.cardMeanings.cardId, name: schema.cardMeanings.name })
+        .from(schema.cardMeanings)
+        .where(eq(schema.cardMeanings.lang, "en"));
+      return new Map(rows.map((r) => [r.cardId, r.name]));
+    },
+
     async getCachedMessage(
       day: string,
       cardId: number,
@@ -169,8 +180,10 @@ export function d1TarotStore(db: D1Database) {
         .where(eq(schema.cards.id, cardId));
       const row = rows[0];
       if (!row) return null;
+      const en = await this.enNames();
       return {
         ...row,
+        nameEn: en.get(row.id),
         keywordsUpright: parseKeywords(row.keywordsUpright),
         keywordsReversed: parseKeywords(row.keywordsReversed),
         reviewed: row.reviewed === 1,
@@ -207,8 +220,10 @@ export function d1TarotStore(db: D1Database) {
           ),
         )
         .orderBy(schema.cards.id);
+      const en = await this.enNames();
       return rows.map((row) => ({
         ...row,
+        nameEn: en.get(row.id),
         keywordsUpright: parseKeywords(row.keywordsUpright),
         keywordsReversed: parseKeywords(row.keywordsReversed),
         reviewed: row.reviewed === 1,

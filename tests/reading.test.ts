@@ -112,6 +112,18 @@ describe("prompt builder", () => {
     love: "Love note.", career: null, money: null, health: null,
   };
 
+  it("uses the English card name in prompts even for Thai readings", () => {
+    const thCard = { ...card, name: "\u0e04\u0e39\u0e48\u0e23\u0e31\u0e01", nameEn: "The Lovers" };
+    expect(toPromptCard(thCard, false, "general").name).toBe("The Lovers");
+    const { system, user } = buildReadingPrompt({
+      lang: "th", topic: "general", question: "?",
+      cards: [toPromptCard(thCard, false, "general")],
+      prev: [], nickname: null,
+    });
+    expect(user).toContain("The Lovers");
+    expect(system).toContain("The Star");
+  });
+
   it("builds server-side prompts with topic notes and continuity", () => {
     const pc = toPromptCard(card, false, "love");
     expect(pc.topicNote).toBe("Love note.");
