@@ -84,21 +84,47 @@
     }
   });
 
-  function paintDaily(daily, lang) {
-    var box = document.getElementById("daily");
-    if (!box) return;
-    if (daily && daily.card) {
-      box.innerHTML = dailyCardHtml(daily, lang);
-      return;
-    }
-    var prompt = lang === "th" ? "\u0e44\u0e1e\u0e48\u0e1b\u0e23\u0e30\u0e08\u0e33\u0e27\u0e31\u0e19\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13" : "Your card for today";
-    var tap = lang === "th" ? "\u0e41\u0e15\u0e30\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e40\u0e1b\u0e34\u0e14\u0e44\u0e1e\u0e48" : "Tap to reveal";
-    box.innerHTML =
-      '<p class="daily-prompt">' + esc(prompt) + "</p>" +
-      '<button type="button" class="daily-tap" id="daily-tap"><span class="card-back" aria-hidden="true"></span><span>' +
-      esc(tap) + "</span></button>";
-    var btn = document.getElementById("daily-tap");
-    if (btn) {
+  // Daily card lives in a compact bar; the full card opens in a modal.
+  var dailyState = null;
+
+  function dailyModal() {
+    var sheet = document.getElementById("daily-sheet");
+    if (sheet) return sheet;
+    sheet = document.createElement("div");
+    sheet.id = "daily-sheet";
+    sheet.className = "sheet";
+    sheet.hidden = true;
+    sheet.innerHTML =
+      '<div class="panel daily-panel" role="dialog" aria-modal="true" aria-label="Daily card">' +
+      '<button type="button" class="btn btn-outline daily-close"></button>' +
+      '<div class="daily-modal-body"></div></div>';
+    document.body.appendChild(sheet);
+    sheet.querySelector(".daily-close").textContent = uiLang() === "th" ? "\u0e1b\u0e34\u0e14" : "Close";
+    sheet.querySelector(".daily-close").addEventListener("click", closeDaily);
+    sheet.addEventListener("click", function (e) { if (e.target === sheet) closeDaily(); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !sheet.hidden) closeDaily(); });
+    return sheet;
+  }
+
+  function closeDaily() {
+    var sheet = document.getElementById("daily-sheet");
+    if (sheet) sheet.hidden = true;
+  }
+
+  function openDaily() {
+    var sheet = dailyModal();
+    var body = sheet.querySelector(".daily-modal-body");
+    var lang = uiLang();
+    if (dailyState && dailyState.card) {
+      body.innerHTML = dailyCardHtml(dailyState, lang);
+    } else {
+      var prompt = lang === "th" ? "\u0e44\u0e1e\u0e48\u0e1b\u0e23\u0e30\u0e08\u0e33\u0e27\u0e31\u0e19\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13" : "Your card for today";
+      var tap = lang === "th" ? "\u0e41\u0e15\u0e30\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e40\u0e1b\u0e34\u0e14\u0e44\u0e1e\u0e48" : "Tap to reveal";
+      body.innerHTML =
+        '<p class="daily-prompt">' + esc(prompt) + "</p>" +
+        '<button type="button" class="daily-tap" id="daily-reveal"><span class="card-back" aria-hidden="true"></span><span>' +
+        esc(tap) + "</span></button>";
+      var btn = document.getElementById("daily-reveal");
       btn.addEventListener("click", async function () {
         btn.disabled = true;
         try {
@@ -110,13 +136,47 @@
           });
           if (!res.ok) throw new Error("draw failed");
           var data = await res.json();
-          box.innerHTML = dailyCardHtml(data, data.lang || uiLang());
+          dailyState = data;
+          body.innerHTML = dailyCardHtml(data, data.lang || uiLang());
           if (data.streak) paintStreak(data.streak);
+          paintDailyBar();
         } catch (e) {
           btn.disabled = false;
         }
       });
     }
+    sheet.hidden = false;
+    var close = sheet.querySelector(".daily-close");
+    if (close) close.focus();
+  }
+
+  function paintDailyBar() {
+    var box = document.getElementById("daily");
+    if (!box) return;
+    var lang = uiLang();
+    var prompt = lang === "th" ? "\u0e44\u0e1e\u0e48\u0e1b\u0e23\u0e30\u0e08\u0e33\u0e27\u0e31\u0e19\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13" : "Your card for today";
+    if (dailyState && dailyState.card) {
+      box.innerHTML =
+        '<button type="button" class="daily-bar" id="daily-open"><img class="daily-thumb' + (dailyState.card.reversed ? " rev" : "") + '" src="' +
+        esc(dailyState.card.image) + '" alt="">' +
+        '<span class="daily-bar-text"><span class="daily-bar-label">' + esc(prompt) + "</span>" +
+        '<span class="daily-bar-name">' + esc(dailyState.card.name) + "</span></span>" +
+        '<span class="daily-bar-cta">' + (lang === "th" ? "\u0e14\u0e39\u0e44\u0e1e\u0e48" : "View") + "</span></button>";
+    } else {
+      box.innerHTML =
+        '<button type="button" class="daily-bar" id="daily-open"><span class="card-back daily-thumb-back" aria-hidden="true"></span>' +
+        '<span class="daily-bar-text"><span class="daily-bar-label">' + esc(prompt) + "</span></span>" +
+        '<span class="daily-bar-cta">' + (lang === "th" ? "\u0e40\u0e1b\u0e34\u0e14\u0e44\u0e1e\u0e48" : "Reveal") + "</span></button>";
+    }
+    var open = document.getElementById("daily-open");
+    if (open) open.addEventListener("click", openDaily);
+  }
+
+  function paintDaily(daily, lang) {
+    var box = document.getElementById("daily");
+    if (!box) return;
+    dailyState = daily && daily.card ? daily : null;
+    paintDailyBar();
   }
 
   async function summary() {
