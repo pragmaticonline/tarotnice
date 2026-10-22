@@ -316,7 +316,7 @@ app.post("/api/readings", async (c) => {
   }
   if ((await store.ipDayCount(ip, today)) >= 15) {
     recordEvent(c.env, { name: "rate_limited", lang, detail: "ip_day", ...requestContext(c), userKind: userKind(user) });
-    return c.json({ error: "rate_limited" }, 429);
+    return c.json({ error: "ip_day_limit", resetsAt: nextBangkokMidnight() }, 429);
   }
   const drawn = drawReadingCards();
   const id = crypto.randomUUID();
