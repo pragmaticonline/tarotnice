@@ -280,3 +280,14 @@ a{color:var(--accent)}
 .daily-modal-actions{display:flex;gap:.6rem;margin-top:.9rem}
 .daily-modal-actions .btn{flex:1}
 .daily-panel .daily-tap{margin:.4rem auto}
+
+/* Smooth step transitions (reading step especially). */
+.step-out{opacity:0;transform:translateY(-10px);transition:opacity .28s ease,transform .28s ease}
+.step-in{animation:stepIn .45s ease both}
+@keyframes stepIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.read-cards img{animation:cardIn .5s ease both}
+.read-cards img:nth-child(2){animation-delay:.09s}
+.read-cards img:nth-child(3){animation-delay:.18s}
+@keyframes cardIn{from{opacity:0;transform:rotateY(70deg) translateY(8px)}to{opacity:1;transform:none}}
+.read-cards img.rev{animation-name:cardInRev}
+@keyframes cardInRev{from{opacity:0;transform:rotateY(70deg) translateY(8px) rotate(180deg)}to{opacity:1;transform:rotate(180deg)}}

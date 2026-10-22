@@ -220,6 +220,23 @@
   }
 
   function enterRead(question, topicText, cards) {
+    // Smooth handoff: fade/slide the current step out, then the
+    // reading step in (cards stagger in below).
+    var current = document.querySelector("[data-step]:not([hidden])");
+    if (current && !current.hidden && current.getAttribute("data-step") !== "3") {
+      current.classList.add("step-out");
+      setTimeout(function () {
+        current.classList.remove("step-out");
+        showStep(3, true);
+        var readSec = document.getElementById("step-read");
+        if (readSec) {
+          readSec.classList.add("step-in");
+          setTimeout(function () { readSec.classList.remove("step-in"); }, 500);
+        }
+      }, 280);
+    } else {
+      showStep(3, true);
+    }
     var rq = document.getElementById("read-q");
     if (rq) rq.textContent = "\u201c" + question + "\u201d";
     var row = document.getElementById("read-cards");
@@ -229,7 +246,6 @@
           (c.reversed ? ' class="rev"' : "") + ">";
       }).join("");
     }
-    showStep(3, true);
   }
 
   async function submit(form) {
