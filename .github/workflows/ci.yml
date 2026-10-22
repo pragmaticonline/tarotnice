@@ -1,0 +1,27 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx vitest run
+      - name: leak test (no CJK script in code, no raw non-ASCII)
+        run: |
+          # Thai IS a TarotNice UI language but stays \u-escaped in code
+          # by convention (never commit raw Thai or Han script in code).
+          if grep -rnP '[\x{0E00}-\x{0E7F}\x{4E00}-\x{9FFF}]' --include='*.ts' --include='*.mjs' --include='*.js' src scripts tests content public/app; then
+            echo 'LEAK: non-Latin script in code'; exit 1;
+          fi
+          test ! -e public/static || { echo 'LEAK: public/static present'; exit 1; }
+          test ! -e src/lessons || { echo 'LEAK: src/lessons present'; exit 1; }

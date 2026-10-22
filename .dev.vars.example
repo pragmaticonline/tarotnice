@@ -1,0 +1,43 @@
+# Used by Wrangler in local development. Copy to .dev.vars and fill in.
+# In production, set these as Cloudflare Worker secrets instead.
+BETTER_AUTH_URL=http://localhost:8787
+BETTER_AUTH_SECRET=replace-with-32-plus-random-chars-for-local-dev
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+# Local QA only: open lessons beyond Unit 1 + scoring on localhost
+# (qa-audio.mjs needs this), skipping the subscription gate.
+# Never set in production.
+# PAYWALL_DISABLED=1
+# Stripe billing (Lesson 5+ paywall: $3/month or $29/year). Create the
+# two recurring Prices in Stripe, then set all four values. In
+# production use `wrangler secret put` for the two keys; the Price IDs
+# are not secret but are kept here for parity. Point the Stripe webhook
+# at https://nicelingo.com/api/billing/webhook for
+# checkout.session.completed, customer.subscription.* and
+# invoice.payment_failed. Without these, /billing shows plans but
+# checkout, portal, and status return 503/401 as appropriate.
+# STRIPE_SECRET_KEY=
+# STRIPE_WEBHOOK_SECRET=
+# STRIPE_MONTHLY_PRICE_ID=
+# STRIPE_YEARLY_PRICE_ID=
+# One-time THB PromptPay pass prices (THB 99 / 30 days, THB 990 / 365
+# days, no recurring interval). Thailand-only on the billing page.
+# STRIPE_PROMPTPAY_MONTHLY_PRICE_ID=
+# STRIPE_PROMPTPAY_YEARLY_PRICE_ID=
+# Recurring THB card prices for Thai visitors, mirroring PromptPay
+# (THB 99/month, THB 990/year). Non-Thai checkouts keep the USD prices.
+# STRIPE_THB_MONTHLY_PRICE_ID=
+# STRIPE_THB_YEARLY_PRICE_ID=
+# Optional: a Nicelingo-specific Customer Portal configuration (plan
+# switching between the two prices above). Without it Stripe's default
+# portal configuration for the account is used.
+# STRIPE_PORTAL_CONFIGURATION_ID=
+# MailNice (transactional email for verification + password reset, via
+# api.mailnice.net like Blognice). When both are set, email verification
+# becomes required at sign-up; until then accounts activate immediately
+# and no mail is sent.
+# MAILNICE_API_KEY=
+# EMAIL_FROM=Nicelingo <support@mailer.nicelingo.com>
+# Optional, only for reading analytics back (usageReport): a Cloudflare
+# token with Account Analytics Read. Event writes need no token.
+# CF_ANALYTICS_TOKEN=

@@ -1,0 +1,64 @@
+name = "tarotnice"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Primary domain. www.tarotnice.com is intentionally NOT listed: it is
+# attached to a separate redirect Worker, which 301s to apex.
+routes = [
+  { pattern = "tarotnice.com", custom_domain = true },
+]
+
+# Local dev (`wrangler dev`) emulates D1 automatically.
+[[d1_databases]]
+binding = "DB"
+database_name = "tarotnice"
+database_id = "f9f1502a-a15d-447c-84a3-a39c51440d01"
+migrations_dir = "drizzle"
+
+# Analytics Engine usage events (src/lib/analytics.ts). The dataset is
+# created on first write; writes need no token. Read-back reports also
+# need CF_ACCOUNT_ID (var, below) and CF_ANALYTICS_TOKEN (secret:
+# `wrangler secret put CF_ANALYTICS_TOKEN`, Account Analytics Read).
+[[analytics_engine_datasets]]
+binding = "EVENTS"
+dataset = "tarotnice_events"
+
+[vars]
+CF_ACCOUNT_ID = "30142eba9e53a37522d1c59b298db661"
+DAILY_QUESTION_LIMIT = "3"
+REFERRAL_BONUS = "0"
+READING_MODEL = ""
+DEFAULT_LANG = "th"
+TIMEZONE = "Asia/Bangkok"
+# secrets: BETTER_AUTH_SECRET, BETTER_AUTH_URL, GOOGLE_CLIENT_ID,
+# GOOGLE_CLIENT_SECRET, TURNSTILE_SECRET, MAILNICE_API_KEY, EMAIL_FROM
+# (later) LINE_CHANNEL_ID / LINE_CHANNEL_SECRET
+
+[ai]
+binding = "AI"
+
+# Abuse backstop for anonymous readings: burst guard here (15/min;
+# this wrangler only allows 10s/60s windows). The 15 readings/IP/day
+# cap from SPEC §5.3 is enforced in D1 by POST /api/readings (M5), so
+# Thai mobile carriers sharing IPs stay unblocked. Tighten only on
+# measured abuse.
+[[unsafe.bindings]]
+name = "READING_LIMITER"
+type = "ratelimit"
+namespace_id = "1001"
+simple = { limit = 15, period = 60 }
+
+# Card art + share images live in R2, not in git. The /static/:rest
+# route serves from this bucket first with static assets as fallback.
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "tarotnice-media"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+# Card/share images must be served by the worker (R2 first, long cache
+# headers), so every request runs through it; the catch-all route below
+# serves non-claimed assets from the binding.
+run_worker_first = true

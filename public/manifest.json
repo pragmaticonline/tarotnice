@@ -1,0 +1,13 @@
+{
+  "name": "TarotNice",
+  "short_name": "TarotNice",
+  "description": "Free tarot readings, every day. Draw your daily card and ask up to 3 questions.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#15122b",
+  "theme_color": "#4a3d78",
+  "icons": [
+    { "src": "/mascot/ngern-head-mark.png", "sizes": "136x140", "type": "image/png" }
+  ]
+}
