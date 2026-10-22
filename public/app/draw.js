@@ -319,6 +319,12 @@
       }, 250 * (i + 1));
     });
     var synth = el("div", "rc rtext", "");
+    // Waiting state until the first streamed words arrive.
+    synth.innerHTML =
+      '<div class="reading-wait" role="status"><span class="spinner" aria-hidden="true"></span>' +
+      "<span>" + (lang === "th" ? "\u0e40\u0e07\u0e34\u0e19\u0e01\u0e33\u0e25\u0e31\u0e07\u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e43\u0e2b\u0e49\u0e04\u0e38\u0e13" : "Ngern is reading your cards") +
+      '<span class="wdots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span></span></div>' +
+      '<div class="rw-lines" aria-hidden="true"><span></span><span></span><span></span></div>';
     mount.appendChild(synth);
     setTimeout(function () {
       synth.classList.add("on");

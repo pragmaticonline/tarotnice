@@ -302,3 +302,16 @@ a{color:var(--accent)}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 .guide.s-sleep .ngern-wrap{cursor:pointer}
+
+/* Reading-is-coming waiting state. */
+.reading-wait{display:flex;align-items:center;gap:.7rem;color:var(--muted)}
+.reading-wait .spinner{width:26px;height:26px;border-width:3px;flex:none}
+.wdots i{font-style:normal;animation:wdot 1.2s infinite}
+.wdots i:nth-child(2){animation-delay:.2s}
+.wdots i:nth-child(3){animation-delay:.4s}
+@keyframes wdot{0%,60%,100%{opacity:.2}30%{opacity:1}}
+.rw-lines{margin-top:.8rem;display:flex;flex-direction:column;gap:.5rem}
+.rw-lines span{display:block;height:.8rem;border-radius:6px;background:var(--gold-dim);opacity:.35;animation:rwpulse 1.3s ease-in-out infinite}
+.rw-lines span:nth-child(2){width:82%;animation-delay:.15s}
+.rw-lines span:nth-child(3){width:64%;animation-delay:.3s}
+@keyframes rwpulse{0%,100%{opacity:.2}50%{opacity:.5}}
