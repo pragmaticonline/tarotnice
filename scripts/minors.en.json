@@ -1,0 +1,1130 @@
+{
+  "wands": [
+    {
+      "r": 1,
+      "name": "Ace of Wands",
+      "ku": [
+        "inspiration",
+        "new spark",
+        "bold start"
+      ],
+      "kr": [
+        "false start",
+        "delays",
+        "dampened fire"
+      ],
+      "up": "A spark lands: an idea, an invitation, a surge of wanting that feels alive. Say yes to the first small step while the fire is warm.",
+      "rv": "The spark struggles to catch: delays, mixed signals, or energy spent in the wrong direction. Wait for real heat rather than forcing smoke.",
+      "love": "Attraction with momentum; let it be playful before it is serious.",
+      "career": "Pitch it, start it, volunteer; raw initiative beats polish today.",
+      "money": "A bright idea is not a budget; seed it small and watch it.",
+      "health": "Energy returns when you move; start gently, then build."
+    },
+    {
+      "r": 2,
+      "name": "Two of Wands",
+      "ku": [
+        "planning",
+        "two paths",
+        "bold outlook"
+      ],
+      "kr": [
+        "indecision",
+        "fear of change",
+        "narrow view"
+      ],
+      "up": "You hold the world loosely and look outward: two real paths, both viable. Plan past the horizon, then commit your weight to one.",
+      "rv": "The map stays folded: indecision, fear of the bigger life, or planning as a hiding place. Choose the path you can grow on.",
+      "love": "Deciding what you actually want precedes asking for it.",
+      "career": "Strategy day: compare the two roads with numbers, not moods.",
+      "money": "Long-view planning pays; avoid scattering small bets.",
+      "health": "A plan you can repeat beats a heroic one-day effort."
+    },
+    {
+      "r": 3,
+      "name": "Three of Wands",
+      "ku": [
+        "expansion",
+        "progress",
+        "ships coming in"
+      ],
+      "kr": [
+        "delays",
+        "frustration",
+        "small thinking"
+      ],
+      "up": "What you launched is moving: early results, wider horizons, help from afar. Keep your eyes on the harbour and your hand steady.",
+      "rv": "Ships delayed and tempers short. Check what is actually blocked before blaming the wind; some of it is small thinking.",
+      "love": "Growth together, or love at a distance handled with patience.",
+      "career": "Expansion works; prepare the next stage before it lands.",
+      "money": "Returns are en route; do not spend the cargo before docking.",
+      "health": "Steady progress; widen the routine rather than intensifying it."
+    },
+    {
+      "r": 4,
+      "name": "Four of Wands",
+      "ku": [
+        "celebration",
+        "harmony",
+        "homecoming"
+      ],
+      "kr": [
+        "restlessness",
+        "tension at home",
+        "unfinished welcome"
+      ],
+      "up": "A milestone worth marking: people gather, the roof holds, joy is communal. Celebrate properly; harmony is also an achievement.",
+      "rv": "The party feels off: restlessness at home or celebration postponed. Fix the small friction instead of faking the toast.",
+      "love": "Public joy as a couple, or welcoming someone into your circle.",
+      "career": "Team milestones count; thank people out loud.",
+      "money": "Spend on shared joy within limits; home costs stay planned.",
+      "health": "Rest inside community; celebration is recovery too."
+    },
+    {
+      "r": 5,
+      "name": "Five of Wands",
+      "ku": [
+        "competition",
+        "clashing egos",
+        "friction"
+      ],
+      "kr": [
+        "avoidance",
+        "tension releasing",
+        "conflict dodged"
+      ],
+      "up": "Sparks fly where ambitions collide: sparring, rivalry, everyone talking at once. Treat it as training, not war; the best idea can win.",
+      "rv": "The fight drains or dissolves: conflict avoided too long, or tension finally spent. Name the real disagreement while it is small.",
+      "love": "Sparring can be chemistry or combat; keep it kind and it stays play.",
+      "career": "Compete on merit; do not make rivals of teammates.",
+      "money": "Too many hands on one pot; agree the split before spending.",
+      "health": "Burn the static off with movement, not arguments."
+    },
+    {
+      "r": 6,
+      "name": "Six of Wands",
+      "ku": [
+        "victory",
+        "recognition",
+        "riding high"
+      ],
+      "kr": [
+        "delayed success",
+        "ego bruise",
+        "fall from grace"
+      ],
+      "up": "The crowd sees it: a win, praise, the ride through town. Accept recognition graciously; it fuels the next campaign.",
+      "rv": "Applause delayed or pride bruised: a win that feels hollow, or credit going elsewhere. Let results argue for you.",
+      "love": "Being chosen and shown off a little; enjoy being proud together.",
+      "career": "Visibility is high; document the win, share credit.",
+      "money": "A bonus or lift is possible; do not inflate lifestyle overnight.",
+      "health": "Confidence helps the body; avoid victory laps that injure."
+    },
+    {
+      "r": 7,
+      "name": "Seven of Wands",
+      "ku": [
+        "stand your ground",
+        "conviction",
+        "holding the high ground"
+      ],
+      "kr": [
+        "overwhelmed",
+        "giving up",
+        "defensive crouch"
+      ],
+      "up": "You hold the hill: others want the spot, the budget, the say. Stand for what you built; conviction is a resource, spend it well.",
+      "rv": "Too many challengers, or the crouch becomes the position. Pick which ground is truly yours and let the rest go.",
+      "love": "Defend the relationship's boundaries, not your ego.",
+      "career": "Justify your call with calm facts; do not fight every critic.",
+      "money": "Guard the core budget; say no to raids dressed as favours.",
+      "health": "Sustainable effort beats heroic defence; rest is strategy."
+    },
+    {
+      "r": 8,
+      "name": "Eight of Wands",
+      "ku": [
+        "swift action",
+        "news",
+        "momentum"
+      ],
+      "kr": [
+        "delays",
+        "mixed signals",
+        "scattered arrows"
+      ],
+      "up": "Everything moves at once: messages, decisions, travel, momentum. Aim before the volley lands and ride the clear air.",
+      "rv": "Arrows scatter: delays, crossed wires, haste making waste. Slow the send button; one clear message beats eight fast ones.",
+      "love": "Fast developments; enjoy the rush, confirm the meaning.",
+      "career": "Green lights across the board; prioritise before pouncing.",
+      "money": "Quick moves possible; read the small print at speed, twice.",
+      "health": "Momentum is medicine; protect sleep while life accelerates."
+    },
+    {
+      "r": 9,
+      "name": "Nine of Wands",
+      "ku": [
+        "resilience",
+        "last push",
+        "guarded strength"
+      ],
+      "kr": [
+        "exhaustion",
+        "defensiveness",
+        "paranoia"
+      ],
+      "up": "Bandaged but standing: you are closer than you feel. One more honest push, with your guard up and your lesson learned.",
+      "rv": "The guard never lowers: exhaustion posing as vigilance. Rest is not surrender; let someone trusted hold the wall.",
+      "love": "Old wounds set the watch; let present kindness update the guard.",
+      "career": "Finish the campaign; document so the next push is lighter.",
+      "money": "Protect reserves; this is not the week for lending strength away.",
+      "health": "Recovery is the training now; sleep like it matters, it does."
+    },
+    {
+      "r": 10,
+      "name": "Ten of Wands",
+      "ku": [
+        "burden",
+        "overcommitment",
+        "carrying it all"
+      ],
+      "kr": [
+        "release",
+        "delegation",
+        "setting it down"
+      ],
+      "up": "The bundle is heavy because you picked up every stick. The work matters; the carrying style does not. Put some down before the last steps.",
+      "rv": "Release begins: delegating, dropping, saying the overdue no. Let the pile shrink to what is actually yours.",
+      "love": "Care shown as labour still needs words; share the load early.",
+      "career": "Delegate or renegotiate scope before burnout negotiates for you.",
+      "money": "Cut one recurring weight; effort is also a currency.",
+      "health": "The back keeps the score; lighten before it invoices you."
+    },
+    {
+      "r": 11,
+      "name": "Page of Wands",
+      "ku": [
+        "enthusiastic messenger",
+        "exploration",
+        "good news"
+      ],
+      "kr": [
+        "scattered energy",
+        "hasty words",
+        "false alarms"
+      ],
+      "up": "A bright messenger: news that excites, a new interest, beginner's fire. Explore loudly, commit later.",
+      "rv": "Static on the line: hasty words, false alarms, enthusiasm without aim. Verify before you volley the news onward.",
+      "love": "Flirtation and spark; keep it light until it proves depth.",
+      "career": "Volunteer for the interesting task; curiosity is visible.",
+      "money": "Small exciting bets only; novelty is not due diligence.",
+      "health": "Try the new class, route, or recipe; play counts as training."
+    },
+    {
+      "r": 12,
+      "name": "Knight of Wands",
+      "ku": [
+        "adventure",
+        "bold charge",
+        "restless drive"
+      ],
+      "kr": [
+        "recklessness",
+        "hot and cold",
+        "travel snags"
+      ],
+      "up": "The charger arrives: adventure, travel, a bold move made at speed. Ride it where it counts; aim the horse before the gallop.",
+      "rv": "Hot hooves, cold hearth: reckless starts, restless exits, snags on the road. Slow down enough to actually arrive.",
+      "love": "Whirlwind energy; thrilling, and needs one honest conversation.",
+      "career": "Pitch boldly, chase the opening; follow-through sells it.",
+      "money": "Fast money tempts; speed is not a strategy.",
+      "health": "Channel the charge into sport before it becomes friction."
+    },
+    {
+      "r": 13,
+      "name": "Queen of Wands",
+      "ku": [
+        "confident warmth",
+        "magnetism",
+        "creative command"
+      ],
+      "kr": [
+        "jealousy",
+        "insecurity",
+        "demanding streak"
+      ],
+      "up": "Warm authority: confidence that rooms can feel, creativity with a spine. Lead by lighting other candles, not dimming them.",
+      "rv": "The fire turns inward: jealousy, insecurity, or warmth with conditions. Refill your own cup before directing the room.",
+      "love": "Magnetic and generous; ask for admiration honestly, not by test.",
+      "career": "Visible leadership lands; mentor someone visibly too.",
+      "money": "Invest in presentation and people; both compound.",
+      "health": "Vitality loves rhythm: sun, movement, colour, company."
+    },
+    {
+      "r": 14,
+      "name": "King of Wands",
+      "ku": [
+        "visionary leader",
+        "big picture",
+        "entrepreneurial fire"
+      ],
+      "kr": [
+        "impulsiveness",
+        "domineering",
+        "overreach"
+      ],
+      "up": "The long view with fire behind it: vision people can follow, risks taken on purpose. Lead the campaign, not every skirmish.",
+      "rv": "Vision curdles into overreach: impulsive calls, a court that only cheers. Invite one honest dissent before deciding.",
+      "love": "Generous leadership at home; make room for another throne.",
+      "career": "Set the direction publicly; hire or delegate the how.",
+      "money": "Big-picture bets need boring safeguards; pair them.",
+      "health": "Sustainable pace is the real flex; protect the engine."
+    }
+  ],
+  "cups": [
+    {
+      "r": 1,
+      "name": "Ace of Cups",
+      "ku": [
+        "new love",
+        "emotional awakening",
+        "overflowing joy"
+      ],
+      "kr": [
+        "blocked feelings",
+        "emptiness",
+        "love withheld"
+      ],
+      "up": "The cup fills from inside: new love, friendship, faith, or simply feeling again. Let it overflow toward someone.",
+      "rv": "The cup is covered: feelings blocked, numb, or poured where they are not met. Name the feeling before filling anything.",
+      "love": "A genuine opening; say the soft thing first.",
+      "career": "Work with heart in it appears; follow meaning, then money.",
+      "money": "Generosity flows; give from surplus, not from guilt.",
+      "health": "Emotional rest is physical rest; cry, laugh, hydrate."
+    },
+    {
+      "r": 2,
+      "name": "Two of Cups",
+      "ku": [
+        "partnership",
+        "union",
+        "mutual respect"
+      ],
+      "kr": [
+        "imbalance",
+        "broken bond",
+        "one-sided effort"
+      ],
+      "up": "Two cups, raised level: partnership with mutual respect, a bond that pours both ways. Meet them halfway, exactly halfway.",
+      "rv": "One cup pours, the other watches: imbalance, a truce cooling, or a bond needing repair. Check the levels honestly.",
+      "love": "The real thing has reciprocity; look for effort that matches yours.",
+      "career": "A 1:1 alliance strengthens; put the understanding in writing.",
+      "money": "Shared finances need shared rules; agree them kindly.",
+      "health": "Heal in company; ask for the specific help you need."
+    },
+    {
+      "r": 3,
+      "name": "Three of Cups",
+      "ku": [
+        "friendship",
+        "celebration",
+        "community"
+      ],
+      "kr": [
+        "gossip",
+        "third wheel",
+        "overindulgence"
+      ],
+      "up": "Raise it with your people: friendship, reunion, shared joy multiplied. Community is the blessing here, not background.",
+      "rv": "The toast sours slightly: gossip, a third wheel, or one toast too many. Keep the circle kind and the cup moderate.",
+      "love": "Love inside a happy circle; friends are part of the romance.",
+      "career": "Celebrate the team win; networks quietly open doors.",
+      "money": "Group spending is joyful and slippery; set the kitty rules.",
+      "health": "Joy is contagious medicine; schedule your people."
+    },
+    {
+      "r": 4,
+      "name": "Four of Cups",
+      "ku": [
+        "apathy",
+        "contemplation",
+        "missed offer"
+      ],
+      "kr": [
+        "renewed interest",
+        "acceptance",
+        "saying yes"
+      ],
+      "up": "Arms crossed under the tree: boredom, apathy, an offer unnoticed at your elbow. Look up before concluding life is flat.",
+      "rv": "The fog lifts: interest returns, the offered cup finally seen. Say yes to one small thing and watch appetite follow.",
+      "love": "Emotional flatness is information, not verdict; say what is missing.",
+      "career": "A dull patch hides an opening; review the unnoticed offer.",
+      "money": "Avoid apathy spending; check the account you have been ignoring.",
+      "health": "Low mood is a signal; light, air, and one person help."
+    },
+    {
+      "r": 5,
+      "name": "Five of Cups",
+      "ku": [
+        "loss",
+        "regret",
+        "spilled cups"
+      ],
+      "kr": [
+        "acceptance",
+        "moving on",
+        "bridge back"
+      ],
+      "up": "Three cups down, and grief is honest work. Two still stand behind you: grieve what spilled, then turn around; the bridge is there.",
+      "rv": "The turn begins: regret loosening, help accepted, the walk back over the bridge. Let the past be a place you visited.",
+      "love": "Sorrow needs witnessing, not fixing; stay or be stayed with.",
+      "career": "A setback is not the whole portfolio; salvage what stands.",
+      "money": "Count what remains before mourning what left; rebuild from the two cups.",
+      "health": "Grief lives in the body; gentle routines carry it."
+    },
+    {
+      "r": 6,
+      "name": "Six of Cups",
+      "ku": [
+        "nostalgia",
+        "reunion",
+        "childhood sweetness"
+      ],
+      "kr": [
+        "stuck in the past",
+        "rose-tinted trap",
+        "letting go"
+      ],
+      "up": "Sweet water from an old well: nostalgia, old friends, places that knew you young. Visit warmly; bring something back.",
+      "rv": "The past will not move out: rose-tinted traps or an old story driving. Thank it, then return to the present tense.",
+      "love": "An old flame or an old softness in a current love; check which.",
+      "career": "Past skills and contacts resurface usefully; call them.",
+      "money": "Old debts or gifts resurface; settle them cleanly.",
+      "health": "Comfort rituals from childhood still work; use them kindly."
+    },
+    {
+      "r": 7,
+      "name": "Seven of Cups",
+      "ku": [
+        "choices",
+        "dreams",
+        "shimmering options"
+      ],
+      "kr": [
+        "clarity",
+        "one true wish",
+        "cutting illusion"
+      ],
+      "up": "Seven cups shimmer with dragons and jewels alike: many options, not all real. Choose by the life you want, not the sparkle.",
+      "rv": "The mist thins: one wish proves true, the rest were weather. Commit to the real cup and let fantasies retire.",
+      "love": "Projecting is easy now; ask who they are, not who they gleam as.",
+      "career": "Too many shiny paths; score them against one clear goal.",
+      "money": "Avoid glittering schemes; boring and real wins.",
+      "health": "Decision fatigue is real; fewer choices, deeper rest."
+    },
+    {
+      "r": 8,
+      "name": "Eight of Cups",
+      "ku": [
+        "walking away",
+        "deeper meaning",
+        "leaving the almost"
+      ],
+      "kr": [
+        "fear of change",
+        "drifting back",
+        "unfinished leaving"
+      ],
+      "up": "Eight cups stacked neatly, and still you walk: leaving the almost-right for the true thing. The moonlit road is the honest one.",
+      "rv": "Half out the door: fear of change or drifting back to the familiar cups. Decide what would make staying different, or go kindly.",
+      "love": "Leaving what almost worked takes more love, not less.",
+      "career": "A role that no longer feeds you; plan the exit with grace.",
+      "money": "Walk from sunk costs; the moon is not an expense line.",
+      "health": "Restlessness is data; the body wants a truer routine."
+    },
+    {
+      "r": 9,
+      "name": "Nine of Cups",
+      "ku": [
+        "wish granted",
+        "contentment",
+        "emotional wealth"
+      ],
+      "kr": [
+        "dissatisfaction",
+        "greed",
+        "hollow treat"
+      ],
+      "up": "The wish card: contentment you can taste, pride in what fills your table. Ask clearly; gratitude seasons it.",
+      "rv": "Full cup, flat taste: getting it did not feed you, or wanting crowds out having. Revisit what the wish was for.",
+      "love": "Emotional generosity attracts; enjoy being delighted in.",
+      "career": "A goal lands; savour before sprinting to the next.",
+      "money": "Comfort is real now; keep one wish funded, not five.",
+      "health": "Pleasure is part of health; schedule it without apology."
+    },
+    {
+      "r": 10,
+      "name": "Ten of Cups",
+      "ku": [
+        "family harmony",
+        "lasting joy",
+        "home under a rainbow"
+      ],
+      "kr": [
+        "values clash",
+        "broken harmony",
+        "rain at home"
+      ],
+      "up": "Rainbow over the house: lasting joy, chosen family, love that includes the ordinary days. Build the home scenes you keep picturing.",
+      "rv": "Weather inside the house: values clashing or harmony performed for show. Real repair starts with one honest table conversation.",
+      "love": "The long-game card: tend the daily, not just the milestone.",
+      "career": "Success that includes home life is the brief; protect both.",
+      "money": "Household alignment on money creates the actual wealth.",
+      "health": "Belonging is a health metric; invest in your people."
+    },
+    {
+      "r": 11,
+      "name": "Page of Cups",
+      "ku": [
+        "gentle messenger",
+        "intuition",
+        "creative beginning"
+      ],
+      "kr": [
+        "emotional static",
+        "blocked intuition",
+        "moody news"
+      ],
+      "up": "A tender message surfaces: an apology, an idea, a feeling with a fish in it. Stay curious; sensitivity is the instrument.",
+      "rv": "Static on the heart line: moody news, feelings performed or blocked. Wait for the sincere version before reacting.",
+      "love": "Sweet, shy openings; gentleness lands better than grand gestures.",
+      "career": "Creative hunches deserve one small test, not a launch.",
+      "money": "Do not lend on a feeling; check the facts with love.",
+      "health": "Name the feeling in one sentence; the body relaxes."
+    },
+    {
+      "r": 12,
+      "name": "Knight of Cups",
+      "ku": [
+        "romantic offer",
+        "following the heart",
+        "graceful quest"
+      ],
+      "kr": [
+        "moody offers",
+        "unrealistic romance",
+        "emotional weather"
+      ],
+      "up": "The romantic rider: an offer, invitation, or quest of the heart, delivered gracefully. Let feeling propose; let sense sign.",
+      "rv": "The tide brings foam: moody offers, grand words, weather instead of climate. Judge by follow-through, not poetry.",
+      "love": "Someone leads with their heart; meet sincerity with sincerity.",
+      "career": "Pitch with story and grace; charm opens, craft closes.",
+      "money": "Beware beautiful pitches; romance is not due diligence.",
+      "health": "Moods move like weather; routines are the climate you control."
+    },
+    {
+      "r": 13,
+      "name": "Queen of Cups",
+      "ku": [
+        "compassion",
+        "deep intuition",
+        "calm counsel"
+      ],
+      "kr": [
+        "codependence",
+        "emotional overwhelm",
+        "blurred boundaries"
+      ],
+      "up": "The sea-queen: compassion with depth perception, intuition you can steer by. Listen below the words; counsel gently.",
+      "rv": "The tide comes inside: overwhelm, codependence, boundaries dissolved. Your feelings are data, not duties.",
+      "love": "Deep attunement is your gift; do not disappear into their weather.",
+      "career": "Emotional intelligence is the strategy; use it openly.",
+      "money": "Generosity with boundaries keeps the well full.",
+      "health": "Solitude refills what empathy spends; book it."
+    },
+    {
+      "r": 14,
+      "name": "King of Cups",
+      "ku": [
+        "emotional mastery",
+        "calm diplomacy",
+        "steady heart"
+      ],
+      "kr": [
+        "cold control",
+        "suppressed feelings",
+        "mood as lever"
+      ],
+      "up": "The calm king: feelings mastered, not muted; diplomacy with a pulse. Steer the room by steadiness, not volume.",
+      "rv": "The lid sits tight: feelings suppressed or used as leverage. Thaw one honest conversation before deciding anything big.",
+      "love": "Steady devotion wins; say the warm thing out loud too.",
+      "career": "Negotiate from calm; your steadiness is the offer.",
+      "money": "Unemotional money decisions, reviewed on schedule.",
+      "health": "What is swallowed sits somewhere; give it words and water."
+    }
+  ],
+  "swords": [
+    {
+      "r": 1,
+      "name": "Ace of Swords",
+      "ku": [
+        "clarity",
+        "breakthrough",
+        "truth"
+      ],
+      "kr": [
+        "confusion",
+        "misinformation",
+        "harsh start"
+      ],
+      "up": "One clean cut: clarity, a truth named, a mind made up. Use the sword for surgery, not war; the first honest sentence changes everything.",
+      "rv": "The blade is fogged: confusion, mixed facts, or a truth landing badly. Gather real information before swinging.",
+      "love": "One honest conversation clears months of weather.",
+      "career": "Decide, document, communicate once and clearly.",
+      "money": "Read the contract; the truth is in clause three.",
+      "health": "Name the worry precisely; vague dread shrinks when written."
+    },
+    {
+      "r": 2,
+      "name": "Two of Swords",
+      "ku": [
+        "stalemate",
+        "truce",
+        "blocked choice"
+      ],
+      "kr": [
+        "release",
+        "information overload",
+        "truth faced"
+      ],
+      "up": "Blindfold on, blades crossed: a truce that is really a postponed choice. Peace kept by not-looking has an expiry date; choose your timing, then look.",
+      "rv": "The blindfold slips: too much information, or the choice finally made. Breathe; deciding badly beats starving between doors.",
+      "love": "An unspoken thing guards the peace; it costs more each week.",
+      "career": "Two options, one deadline; use criteria, not comfort.",
+      "money": "Avoiding the statement is still a decision; open it.",
+      "health": "Mental rest needs the loop closed; decide or schedule the deciding."
+    },
+    {
+      "r": 3,
+      "name": "Three of Swords",
+      "ku": [
+        "heartbreak",
+        "sorrow",
+        "painful truth"
+      ],
+      "kr": [
+        "healing",
+        "forgiveness",
+        "release of pain"
+      ],
+      "up": "The heart-piercing card: sorrow, betrayal, or a truth that hurts to hear. Rain is part of it; grief is not a malfunction, and it does move through.",
+      "rv": "The swords come out one by one: healing, forgiveness offered or accepted, pain leaving the body. Let the scar be a seam, not a vault.",
+      "love": "Heartbreak needs honesty and time; do not rush the stitching.",
+      "career": "Painful feedback may be accurate; extract the useful third.",
+      "money": "A loss hurts; count it once, learn it once, stop re-paying it.",
+      "health": "Grief and stress are physical; rest like it is treatment."
+    },
+    {
+      "r": 4,
+      "name": "Four of Swords",
+      "ku": [
+        "rest",
+        "recovery",
+        "retreat"
+      ],
+      "kr": [
+        "restlessness",
+        "burnout",
+        "unfinished rest"
+      ],
+      "up": "The knight lies down on purpose: rest, recovery, a mind stood down. Retreat is the strategy; the sword hangs within reach, not in hand.",
+      "rv": "Rest refused or interrupted: the mind keeps fencing in bed. Protect the recovery window like an appointment with yourself.",
+      "love": "Quiet togetherness heals more than processing everything tonight.",
+      "career": "Strategic pause before the next campaign; sharpen offline.",
+      "money": "No big decisions from exhaustion; sleep on every signature.",
+      "health": "Actual rest: horizontal, unhurried, screens elsewhere."
+    },
+    {
+      "r": 5,
+      "name": "Five of Swords",
+      "ku": [
+        "hollow victory",
+        "conflict cost",
+        "winning ugly"
+      ],
+      "kr": [
+        "lingering resentment",
+        "reconciliation",
+        "walking the field"
+      ],
+      "up": "Won, and the field looks like that: a victory whose price was people. Pick up only the swords that are yours; some wins to decline next time.",
+      "rv": "Smoke after the fight: resentment lingering, or a genuine attempt to reconcile. Bury the weapons you keep tripping over.",
+      "love": "Being right at that volume costs the relationship; choose the us.",
+      "career": "Win the point, keep the room; you will need these people.",
+      "money": "Do not win a refund and lose a relationship worth more.",
+      "health": "Conflict hormones are expensive; discharge them kindly."
+    },
+    {
+      "r": 6,
+      "name": "Six of Swords",
+      "ku": [
+        "transition",
+        "calmer waters",
+        "quiet progress"
+      ],
+      "kr": [
+        "unfinished business",
+        "resistance to change",
+        "rough crossing"
+      ],
+      "up": "A quiet boat to calmer water: transition, recovery, leaving turbulence without a scene. Healing is often just steady rowing.",
+      "rv": "The boat circles: unfinished business, baggage riding along, or resisting the crossing you chose. Name what is still aboard.",
+      "love": "Moving on together, or apart, with dignity intact.",
+      "career": "A gradual move beats a dramatic quit; row, do not leap.",
+      "money": "Slow improvement is real improvement; keep the route boring.",
+      "health": "Recovery is a crossing, not a switch; pace the oars."
+    },
+    {
+      "r": 7,
+      "name": "Seven of Swords",
+      "ku": [
+        "strategy",
+        "stealth",
+        "lone approach"
+      ],
+      "kr": [
+        "truth revealed",
+        "conscience",
+        "plan exposed"
+      ],
+      "up": "The quiet exit with armfuls of swords: strategy, discretion, solving it your own way. Clever is fine; keep it honest with yourself about why solo.",
+      "rv": "The plan surfaces: conscience, exposure, or a shortcut repriced. Coming clean early is cheaper than being found out.",
+      "love": "Something unsaid is tiptoeing; bring it into the room kindly.",
+      "career": "Work the angle, document your part; lone-wolf has limits.",
+      "money": "Check the quiet leak; small print and small print only.",
+      "health": "Avoiding the check-up is also a strategy; pick a better one."
+    },
+    {
+      "r": 8,
+      "name": "Eight of Swords",
+      "ku": [
+        "restriction",
+        "self-imposed prison",
+        "waiting"
+      ],
+      "kr": [
+        "liberation",
+        "new perspective",
+        "first step out"
+      ],
+      "up": "Bound and blindfolded among swords that are not even planted deep: restriction that feels total and is mostly perspective. One small step proves the ropes are loose.",
+      "rv": "The blindfold comes off by your own hand: liberation, a door noticed, help accepted. Walk; the swords stay behind.",
+      "love": "Feeling trapped deserves a witness; say it before it hardens.",
+      "career": "The constraint is real but partial; find the unguarded degree of freedom.",
+      "money": "Feeling stuck is not a spreadsheet; list actual options.",
+      "health": "Small agency is medicine; one doable change today."
+    },
+    {
+      "r": 9,
+      "name": "Nine of Swords",
+      "ku": [
+        "anxiety",
+        "sleepless nights",
+        "worry loop"
+      ],
+      "kr": [
+        "release of worry",
+        "dawn",
+        "help accepted"
+      ],
+      "up": "3 a.m. with every worst case queued: anxiety, guilt, the loop that feels like fact. It is a feeling with good stamina, not a prophecy; morning edits it.",
+      "rv": "The night loosens: worry named, help accepted, dawn doing its work. Tell one person the actual fear; it shrinks in daylight.",
+      "love": "Do not sentence the relationship at 3 a.m.; revisit at breakfast.",
+      "career": "Write the worst case and its plan; the loop hates paper.",
+      "money": "Night arithmetic lies; check balances in daylight only.",
+      "health": "Sleep hygiene is the treatment plan; screens down, worry journal out."
+    },
+    {
+      "r": 10,
+      "name": "Ten of Swords",
+      "ku": [
+        "rock bottom",
+        "painful ending",
+        "dawn after"
+      ],
+      "kr": [
+        "recovery",
+        "survival",
+        "new day"
+      ],
+      "up": "Face down at the bottom, and the sky is already lightening: a painful ending that is, mercifully, an ending. What is finished cannot keep happening to you; rise slowly.",
+      "rv": "Getting up with swords still being removed: survival mode, recovery in progress. You do not have to be inspiring yet; standing is enough.",
+      "love": "An ending can be mercy; let it end all the way.",
+      "career": "The collapsed thing frees your hands; inventory what you learned.",
+      "money": "Rock bottom is a floor, not a home; rebuild one brick of routine.",
+      "health": "Rest like recovery, not defeat; the body believes in dawn."
+    },
+    {
+      "r": 11,
+      "name": "Page of Swords",
+      "ku": [
+        "curious mind",
+        "truth-seeking",
+        "vigilance"
+      ],
+      "kr": [
+        "gossip",
+        "cynicism",
+        "sharp tongue"
+      ],
+      "up": "The watchful student: questions, research, a mind testing the wind. Curiosity with a notebook beats opinion with a megaphone.",
+      "rv": "The blade is all edge: gossip, cynicism, surveillance dressed as care. Aim the sharp mind at ideas, not people.",
+      "love": "Ask the real question instead of testing them.",
+      "career": "Research first, speak second; your draft improves.",
+      "money": "Investigate before investing; forums are not advisors.",
+      "health": "Dr. Internet says rest first; then verify with a human."
+    },
+    {
+      "r": 12,
+      "name": "Knight of Swords",
+      "ku": [
+        "swift charge",
+        "direct words",
+        "fast thinking"
+      ],
+      "kr": [
+        "reckless words",
+        "scattered haste",
+        "arguments"
+      ],
+      "up": "Charging with the sword up: fast decisions, direct speech, a debate won at gallop. Aim carefully; at this speed, words land as actions.",
+      "rv": "All charge, no map: reckless words, arguments for sport, haste scattering the plan. Rein in for one breath before the next sentence.",
+      "love": "Bluntness is not honesty; land the truth with its parachute.",
+      "career": "Move fast on the decision, slow on the announcement.",
+      "money": "Impulse trades and purchases both charge interest.",
+      "health": "Adrenaline is a loan; repay with downshift time."
+    },
+    {
+      "r": 13,
+      "name": "Queen of Swords",
+      "ku": [
+        "clear-eyed independence",
+        "honest counsel",
+        "perception"
+      ],
+      "kr": [
+        "bitterness",
+        "cold judgment",
+        "walls as wit"
+      ],
+      "up": "Clear eyes, kind blade: independence earned through experience, counsel that cuts cleanly. Your perception is the gift; deliver it warm.",
+      "rv": "The wit grows walls: bitterness, cold judgment, honesty as armour. Soften the delivery without dulling the truth.",
+      "love": "Directness is attractive; add one degree of warmth.",
+      "career": "Your review saves projects; phrase the cut as care.",
+      "money": "Sentiment-free review of the numbers, once a month.",
+      "health": "Grief unspoken becomes sharpness; give it words privately."
+    },
+    {
+      "r": 14,
+      "name": "King of Swords",
+      "ku": [
+        "reason",
+        "fair judgment",
+        "mental authority"
+      ],
+      "kr": [
+        "cold misuse of intellect",
+        "manipulation",
+        "rigidity"
+      ],
+      "up": "The judge-king: reason with authority, decisions that hold because they are fair. Think it through, state it once, stand by the standard.",
+      "rv": "Intellect as armour or lever: cold control, rules bent by cleverness. Fairness includes the cases you dislike.",
+      "love": "Lead with logic, stay for the feeling underneath it.",
+      "career": "Your call sets precedent; document the principle.",
+      "money": "Systems over impulses; let the policy decide at 3 a.m.",
+      "health": "The mind's verdicts are not the body's; listen downstairs too."
+    }
+  ],
+  "pentacles": [
+    {
+      "r": 1,
+      "name": "Ace of Pentacles",
+      "ku": [
+        "new opportunity",
+        "seed money",
+        "prosperous start"
+      ],
+      "kr": [
+        "missed chance",
+        "poor planning",
+        "unstable start"
+      ],
+      "up": "A solid coin in an open hand: a job, offer, or resource with real weight. Plant it properly; this seed likes good soil and patience.",
+      "rv": "The coin slips or the soil is wrong: missed chance, shaky plan, money promised loosely. Nail the terms before the handshake fades.",
+      "love": "Love with building plans; small reliabilities are romantic.",
+      "career": "A tangible opening; take it and do the paperwork beautifully.",
+      "money": "Seed money rules: start, automate, do not admire it daily.",
+      "health": "One sustainable habit started today outweighs a overhaul."
+    },
+    {
+      "r": 2,
+      "name": "Two of Pentacles",
+      "ku": [
+        "juggling resources",
+        "adaptability",
+        "busy balance"
+      ],
+      "kr": [
+        "overwhelm",
+        "imbalance",
+        "dropped balls"
+      ],
+      "up": "Two coins, one infinity loop: juggling money, time, and tides with a grin. Keep the rhythm; drop nothing by adding slowly.",
+      "rv": "A ball bounces away: too much, too uneven, the loop wobbling. Set one coin down on purpose before gravity chooses.",
+      "love": "Make room on the actual calendar; love is also logistics.",
+      "career": "Prioritise in pencil; everything is not a ball, some are stones.",
+      "money": "Cash-flow juggling needs a buffer, not better reflexes.",
+      "health": "Energy is a resource; budget it like money."
+    },
+    {
+      "r": 3,
+      "name": "Three of Pentacles",
+      "ku": [
+        "teamwork",
+        "craft building",
+        "collaboration"
+      ],
+      "kr": [
+        "friction",
+        "poor teamwork",
+        "unvalued skill"
+      ],
+      "up": "Blueprints out, craftspeople talking: skill meeting teamwork, work that will outlast moods. Build with people who respect the plan.",
+      "rv": "The build site bickers: roles unclear, skill unvalued, plans ignored. Re-draw who does what, in writing, kindly.",
+      "love": "Build something together; shared projects are glue.",
+      "career": "Your craft plus their structure; ask for the brief in writing.",
+      "money": "Collaborative income needs clear splits from day one.",
+      "health": "Train with others; accountability is a structure too."
+    },
+    {
+      "r": 4,
+      "name": "Four of Pentacles",
+      "ku": [
+        "holding on",
+        "security",
+        "possessiveness"
+      ],
+      "kr": [
+        "generosity",
+        "release of control",
+        "softened grip"
+      ],
+      "up": "Coins clutched to chest, head, and feet: security guarded hard, control mistaken for safety. What you own should not own your posture.",
+      "rv": "The grip softens: generosity, spending on purpose, control released where it was only fear. Open one hand and watch nothing fall.",
+      "love": "Possessiveness is fear in a crown; trust is the braver hold.",
+      "career": "Guard the core, delegate the edges; hoarded work stalls growth.",
+      "money": "Saving is wise; squeezing is different. Fund one joy line.",
+      "health": "Tension is a full-body budget item; unclench deliberately."
+    },
+    {
+      "r": 5,
+      "name": "Five of Pentacles",
+      "ku": [
+        "hardship",
+        "insecurity",
+        "left out in the cold"
+      ],
+      "kr": [
+        "recovery",
+        "improvement",
+        "help found"
+      ],
+      "up": "Snow outside the warm window: hardship, money worry, feeling left out. The lighted window is the point; help exists and asking is allowed.",
+      "rv": "The thaw begins: improvement, help accepted, a door opening from inside. Walk toward the warmth without apologising for the cold.",
+      "love": "Hard times are a we-thing; say which part is heaviest.",
+      "career": "Ask for the reference, the intro, the ramp; pride is expensive.",
+      "money": "Hardship maths first: essentials, then one call to negotiate.",
+      "health": "Do not skip care for cost alone; ask what options exist."
+    },
+    {
+      "r": 6,
+      "name": "Six of Pentacles",
+      "ku": [
+        "generosity",
+        "fair exchange",
+        "resources shared"
+      ],
+      "kr": [
+        "strings attached",
+        "imbalance",
+        "debt"
+      ],
+      "up": "Coins weighed and shared: generosity, patronage, fair exchange flowing the right way. Give cleanly or receive cleanly; both are skills.",
+      "rv": "The scales tilt: strings attached, debt with interest of the soul, giving to control. Rebalance the exchange or decline it kindly.",
+      "love": "Care should circulate, not accumulate as debt.",
+      "career": "Mentorship and fair pay both appear; be the scale, not the thumb.",
+      "money": "Lend what you can gift; gift what you can forget.",
+      "health": "Accept help as maintenance, not defeat."
+    },
+    {
+      "r": 7,
+      "name": "Seven of Pentacles",
+      "ku": [
+        "patience",
+        "long-term investment",
+        "assessment"
+      ],
+      "kr": [
+        "impatience",
+        "sunk-cost worry",
+        "slow returns"
+      ],
+      "up": "Leaning on the hoe, reading the garden: pause, assess, let compounding work. Not every quiet field is failing; some are rooting.",
+      "rv": "Staring at the plants will not hurry them: impatience, sunk-cost fretting, tending what should be replanted. Review honestly, then commit or compost.",
+      "love": "Long games need small waterings; check what is actually growing.",
+      "career": "Quarterly honesty: keep, fix, or stop; do not just hover.",
+      "money": "Investments need seasons; check the soil, not the hour.",
+      "health": "Fitness compounds quietly; the mirror is a lagging indicator."
+    },
+    {
+      "r": 8,
+      "name": "Eight of Pentacles",
+      "ku": [
+        "apprenticeship",
+        "skill mastery",
+        "diligent work"
+      ],
+      "kr": [
+        "perfectionism",
+        "shortcuts",
+        "uninspired grind"
+      ],
+      "up": "Coin after coin, each better: apprenticeship, repetition, craft compounding. Mastery is a pile of ordinary days done carefully.",
+      "rv": "The chisel slips: perfectionism, shortcuts, or grind without pride. Return to the standard you respect, one coin at a time.",
+      "love": "Love is also a practice; small repeated kindnesses are the craft.",
+      "career": "Ship the reps; skill is visibly compounding, keep going.",
+      "money": "Earn the raise with documented craft, then ask.",
+      "health": "Technique before intensity; the body loves correct reps."
+    },
+    {
+      "r": 9,
+      "name": "Nine of Pentacles",
+      "ku": [
+        "earned abundance",
+        "self-reliance",
+        "quiet luxury"
+      ],
+      "kr": [
+        "overwork",
+        "materialism",
+        "setback to comforts"
+      ],
+      "up": "In the garden, robed in what she built: abundance earned, self-reliance with good taste. Enjoy it without explaining it.",
+      "rv": "The garden needs the gardener less weary: overwork, comfort bought at body prices, or a setback to luxuries. Reinvest in rest.",
+      "love": "Whole on your own, generous in company; standards are kind.",
+      "career": "Your track record is the pitch; let it speak first.",
+      "money": "Comfort is funded; keep the boring system that built it.",
+      "health": "Pleasure and rest are part of the portfolio now."
+    },
+    {
+      "r": 10,
+      "name": "Ten of Pentacles",
+      "ku": [
+        "wealth",
+        "family legacy",
+        "lasting security"
+      ],
+      "kr": [
+        "family money friction",
+        "legacy burden",
+        "unstable foundations"
+      ],
+      "up": "Three generations under one arch: wealth that means security shared, legacy being built in ordinary kindnesses. Think in decades, act today.",
+      "rv": "The arch strains: family money friction, inheritance of stress rather than ease. Clarity and kindness, in writing, early.",
+      "love": "Building a household is a long poem; write it together.",
+      "career": "Build the thing that outlasts your role in it.",
+      "money": "Family money talks go better before they are urgent.",
+      "health": "Health is the first inheritance; model it at home."
+    },
+    {
+      "r": 11,
+      "name": "Page of Pentacles",
+      "ku": [
+        "studious start",
+        "practical offer",
+        "new skill"
+      ],
+      "kr": [
+        "procrastination",
+        "unfocused plans",
+        "skipped homework"
+      ],
+      "up": "The student with a coin held like a question: a course, an offer, a practical beginning. Do the homework; this one rewards diligence.",
+      "rv": "The notebook stays shut: procrastination, plans admired instead of started. Open to page one and do the smallest assignment.",
+      "love": "Show interest in their actual world; reliability is attractive.",
+      "career": "Apply, enrol, submit; the form is the first exam.",
+      "money": "Learn the instrument before buying it; one lesson first.",
+      "health": "Track one metric for two weeks; studentship beats intensity."
+    },
+    {
+      "r": 12,
+      "name": "Knight of Pentacles",
+      "ku": [
+        "reliable",
+        "methodical",
+        "steady work"
+      ],
+      "kr": [
+        "stubbornness",
+        "stagnation",
+        "workaholism"
+      ],
+      "up": "The slowest knight, the surest arrival: method, routine, promises kept in weather. Boring on paper, bankable in life.",
+      "rv": "The plough will not turn: stubbornness, stagnation, or work eating every other field. Same effort, one new furrow.",
+      "love": "Show up again; steadiness is a love language.",
+      "career": "Your reliability is promotable; make it visible, not just real.",
+      "money": "Automatic beats heroic; raise the transfer by a little.",
+      "health": "Consistency over intensity, every ordinary day."
+    },
+    {
+      "r": 13,
+      "name": "Queen of Pentacles",
+      "ku": [
+        "practical nurturing",
+        "resourceful care",
+        "grounded warmth"
+      ],
+      "kr": [
+        "work-home imbalance",
+        "care as control",
+        "self-neglect"
+      ],
+      "up": "The garden-queen: care made tangible, resources made warm, a home that runs on competence and kindness. Nourish, including yourself in the list.",
+      "rv": "The garden eats the gardener: care as control, work-home blur, self last on the list. Your name goes on the watering rota too.",
+      "love": "Feed people well, then sit down and be fed too.",
+      "career": "Operational kindness scales; systemise the care you give.",
+      "money": "A budget with warmth in it survives contact with life.",
+      "health": "Caregiver, care for the caregiver; book your own check-up."
+    },
+    {
+      "r": 14,
+      "name": "King of Pentacles",
+      "ku": [
+        "prosperity",
+        "steady provider",
+        "disciplined success"
+      ],
+      "kr": [
+        "greed",
+        "work obsession",
+        "rigid provider"
+      ],
+      "up": "The builder-king among vines and ledgers: prosperity through discipline, success that feeds people. Security is a craft; you practice it daily.",
+      "rv": "The ledger eats the kingdom: greed, work obsession, providing things instead of presence. Audit what the success is for.",
+      "love": "Provide presence first; the rest is garnish.",
+      "career": "Your systems create safety; teach them, do not hoard them.",
+      "money": "Wealth with a purpose clause outlives wealth with a scoreboard.",
+      "health": "The body is the founding asset; board meetings can wait."
+    }
+  ]
+}

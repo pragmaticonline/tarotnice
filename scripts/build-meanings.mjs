@@ -1,9 +1,13 @@
 // Builds content/meanings.en.json + content/meanings.th.json (drafts,
 // every entry "reviewed": false) plus content/REVIEW.md for the owner.
-// Majors are hand-drafted below; minors are composed from the suit and
-// rank essence tables (suits carry the domain flavour, ranks the arc).
+// Majors are hand-drafted below; minors are individually authored in
+// scripts/minors.en.json and scripts/minors.th.json (standard RWS
+// meanings, one entry per card — never composed from suit x rank tables).
 // Usage: node scripts/build-meanings.mjs
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
+
+const MINORS_EN = JSON.parse(readFileSync("scripts/minors.en.json", "utf8"));
+const MINORS_TH = JSON.parse(readFileSync("scripts/minors.th.json", "utf8"));
 
 const MAJORS = [
   { n: 0, en: "The Fool", th: "\u0e04\u0e19\u0e42\u0e07\u0e48",
@@ -382,9 +386,8 @@ const MAJORS = [
     thealth: "\u0e01\u0e32\u0e23\u0e1b\u0e23\u0e30\u0e2a\u0e32\u0e19 \u0e01\u0e32\u0e22 \u0e43\u0e08 \u0e41\u0e25\u0e30\u0e08\u0e31\u0e07\u0e2b\u0e27\u0e30\u0e15\u0e23\u0e07\u0e01\u0e31\u0e19" },
 ];
 
-// Suit essence (domain flavour) \u00d7 rank essence (story arc). Minors are
-// composed: keywords join, texts concatenate, topic notes come from the
-// suit (they already live in that suit's domain).
+// Suit/rank name tables only (card names, slugs, images). Minor
+// meanings are NOT composed from these; see minors.en/th.json.
 const SUITS = {
   wands: { en: "Wands", th: "\u0e44\u0e21\u0e49\u0e40\u0e17\u0e49\u0e32",
     ku: ["drive", "spark", "ambition"], kr: ["burnout", "scattered fire", "ego battles"],
@@ -569,7 +572,8 @@ for (const m of MAJORS) {
   thMeanings[m.n] = { slug, reviewed: false, name: m.th, keywords_upright: m.tku, keywords_reversed: m.tkr, upright: m.tup, reversed: m.trv, love: m.tlove, career: m.tcareer, money: m.tmoney, health: m.thealth };
 }
 
-// Minors: ids 22-77, suit blocks of 14.
+// Minors: ids 22-77, suit blocks of 14. Meanings come from the authored
+// per-card entries in scripts/minors.{en,th}.json (matched by suit+rank).
 for (const [si, suitKey] of SUIT_ORDER.entries()) {
   const suit = SUITS[suitKey];
   for (const rank of RANKS) {
@@ -579,28 +583,29 @@ for (const [si, suitKey] of SUIT_ORDER.entries()) {
     const slug = `${RANK_WORD[rank.r]}-of-${suitKey}`;
     const imageKey = `cards/${suitKey}-${String(rank.r).padStart(2, "0")}`;
     cards.push({ id, slug, arcana: "minor", suit: suitKey, rank: rank.r, name_en: enName, name_th: thName, image: imageKey });
+    const en = (MINORS_EN[suitKey] || []).find((e) => e.r === rank.r);
+    const th = (MINORS_TH[suitKey] || []).find((e) => e.r === rank.r);
+    if (!en || !th) throw new Error(`missing authored minor meaning: ${slug}`);
     enMeanings[id] = {
       slug, reviewed: false, name: enName,
-      keywords_upright: [...rank.ku, ...suit.ku].slice(0, 4),
-      keywords_reversed: [...rank.kr, ...suit.kr].slice(0, 4),
-      upright: `${rank.up} ${suit.up}`,
-      reversed: `${rank.rv} ${suit.rv}`,
-      love: suit.love, career: suit.career, money: suit.money, health: suit.health,
+      keywords_upright: en.ku, keywords_reversed: en.kr,
+      upright: en.up, reversed: en.rv,
+      love: en.love, career: en.career, money: en.money, health: en.health,
     };
     thMeanings[id] = {
       slug, reviewed: false, name: thName,
-      keywords_upright: [...rank.tku, ...suit.tku].slice(0, 4),
-      keywords_reversed: [...rank.tkr, ...suit.tkr].slice(0, 4),
-      upright: `${rank.tup} ${suit.tup}`,
-      reversed: `${rank.trv} ${suit.trv}`,
-      love: suit.tlove, career: suit.tcareer, money: suit.tmoney, health: suit.thealth,
+      keywords_upright: th.ku, keywords_reversed: th.kr,
+      upright: th.up, reversed: th.rv,
+      love: th.love, career: th.career, money: th.money, health: th.health,
     };
   }
 }
 
-writeFileSync("content/cards.json", JSON.stringify({ generated_by: "scripts/build-meanings.mjs (draft)", cards }, null, 2) + "\n");
-writeFileSync("content/meanings.en.json", JSON.stringify(enMeanings, null, 2) + "\n");
-writeFileSync("content/meanings.th.json", JSON.stringify(thMeanings, null, 2) + "\n");
+// Keep non-ASCII as \\uXXXX escapes in generated JSON (repo convention).
+const esc = (v) => JSON.stringify(v, null, 2).replace(/[\u0080-\uffff]/g, (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0")) + "\n";
+writeFileSync("content/cards.json", esc({ generated_by: "scripts/build-meanings.mjs (draft)", cards }));
+writeFileSync("content/meanings.en.json", esc(enMeanings));
+writeFileSync("content/meanings.th.json", esc(thMeanings));
 
 const review = `# Card meanings \u2014 owner review (Thai native speaker)
 
@@ -614,8 +619,9 @@ naturalness, then set \`"reviewed": true\`.
 Priority order:
 1. Major arcana (ids 0-21) \u2014 most-drawn cards.
 2. Court cards (ranks 11-14) \u2014 Thai court names (${["\u0e40\u0e1e\u0e08", "\u0e2d\u0e31\u0e28\u0e27\u0e34\u0e19", "\u0e23\u0e32\u0e0a\u0e34\u0e19\u0e35", "\u0e23\u0e32\u0e0a\u0e32"].join("/")}) need a native check.
-3. Minors composed from suit \u00d7 rank tables in
-   \`scripts/build-meanings.mjs\` \u2014 fix the tables, re-run the script.
+3. Minors are individually authored in
+   \`scripts/minors.en.json\` / \`scripts/minors.th.json\` \u2014 edit those
+   files, then re-run \`node scripts/build-meanings.mjs\`.
 
 Back art: \`cards/back.webp\` is still missing (owner to supply).
 `;

@@ -59,4 +59,29 @@ describe("meanings drafts", () => {
       }
     }
   });
+
+  // C2 regression: minors are individually authored, never generated from
+  // suit x rank tables. No two cards share a topic-note set, and the
+  // review-named cards carry standard RWS meanings.
+  it("gives every minor its own topic notes (no shared suit-level sets)", () => {
+    for (const [lang, table] of [["en", en], ["th", th]] as const) {
+      const minors = cards.filter((c) => c.arcana === "minor");
+      const sets = minors.map((c) => {
+        const m = (table as Record<string, Record<string, unknown>>)[String(c.id)];
+        return [m.love, m.career, m.money, m.health].join("|");
+      });
+      expect(new Set(sets).size, lang).toBe(minors.length);
+      const ups = minors.map((c) => (table as Record<string, Record<string, unknown>>)[String(c.id)].upright);
+      expect(new Set(ups).size, lang).toBe(minors.length);
+    }
+  });
+
+  it("matches standard RWS meanings for the review-named minors", () => {
+    const bySlug = (table: unknown) =>
+      Object.fromEntries(Object.values(table as Record<string, { slug: string; keywords_upright: string[] }>).map((m) => [m.slug, m]));
+    const enBy = bySlug(en);
+    expect(enBy["three-of-swords"].keywords_upright).toContain("heartbreak");
+    expect(enBy["ten-of-swords"].keywords_upright).toContain("rock bottom");
+    expect(enBy["four-of-pentacles"].keywords_upright).toContain("holding on");
+  });
 });
