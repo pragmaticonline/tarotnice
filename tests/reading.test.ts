@@ -168,6 +168,28 @@ describe("streamDeltas", () => {
     expect(out).toEqual(["full text"]);
   });
 
+  it("times out a stalled stream (SPEC 10.6: 25 s budget)", async () => {
+    const stall = new ReadableStream({ start() { /* never yields */ } });
+    await expect(async () => {
+      for await (const d of streamDeltas(async () => stall, "m", [], 60)) void d;
+    }).rejects.toThrow("timeout");
+  });
+
+  it("lets a slow drip finish inside the budget", async () => {
+    const drip = new ReadableStream({
+      async start(c) {
+        const enc = new TextEncoder();
+        c.enqueue(enc.encode('data: {"response":"a"}\n\n'));
+        await new Promise((r) => setTimeout(r, 20));
+        c.enqueue(enc.encode('data: {"response":"ab"}\n\n'));
+        c.close();
+      },
+    });
+    const out: string[] = [];
+    for await (const d of streamDeltas(async () => drip, "m", [], 2_000)) out.push(d);
+    expect(out.join("")).toBe("ab");
+  });
+
   it("dedupes cumulative and double-carried chunks", async () => {
     const sse =
       'data: {"response":"Hello","choices":[{"delta":{"content":"Hello"}}]}\n\n' +

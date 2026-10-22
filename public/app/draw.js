@@ -76,6 +76,11 @@
     var cards = opts.cards;
     var lang = opts.lang === "th" ? "th" : "en";
     var onEvent = opts.onEvent || function () {};
+    // Resolved at the end of reveal(): callers must not stream the
+    // reading (or show any card name) before the user has picked
+    // three cards and watched them flip (SPEC §8.2 steps 4-6).
+    var finishRun = function () {};
+    var finished = new Promise(function (resolve) { finishRun = resolve; });
     var W = stage.clientWidth || 360;
     var G = geom(W);
     var cx = W / 2;
@@ -140,12 +145,22 @@
           place(card, p.x + half * off, p.y, half * 9, 1, 10 + i);
         });
         await wait(420);
-        deck.forEach(function (card, i) {
+        // Riffle: interleave the two halves back, bottom-up,
+        // alternating sides (prototype shuffle()).
+        var first = deck.slice(0, 39);
+        var second = deck.slice(39);
+        var merged = [];
+        for (var k = 0; k < 39; k++) {
+          if (first[k]) merged.push(first[k]);
+          if (second[k]) merged.push(second[k]);
+        }
+        merged.forEach(function (card, i) {
           var p = deckPos(card, i);
           card.style.transitionDelay = i * 7 + "ms";
           place(card, p.x, p.y, 0, 1, 10 + i);
         });
-        await wait(120);
+        deck = merged;
+        await wait(420 + deck.length * 7);
         deck.forEach(function (card) {
           card.style.transitionDelay = "";
         });
@@ -264,6 +279,7 @@
       state = "done";
       setGuide("done");
       onEvent("revealed-all", {});
+      finishRun({ picked: picked, serverCards: cards });
     }
 
     // Touch lift before the pick lands.
@@ -284,10 +300,7 @@
 
     await wait(60);
     await shuffle();
-    return {
-      picked: picked,
-      serverCards: cards,
-    };
+    return finished;
   }
 
   // Render the three cards + stream the synthesis into mount.

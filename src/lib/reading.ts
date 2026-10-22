@@ -180,8 +180,24 @@ export function appendUnique(full: string, chunk: string): string {
   return chunk;
 }
 
-export async function* streamDeltas(aiRun: AiRun, model: string, params: unknown): AsyncGenerator<string> {
-  const res = await aiRun(model, { ...(params as Record<string, unknown>), stream: true });
+export async function* streamDeltas(
+  aiRun: AiRun,
+  model: string,
+  params: unknown,
+  timeoutMs = 0,
+): AsyncGenerator<string> {
+  // Hard deadline for the whole generation (SPEC §10.6: 25 s). Each
+  // read races the remaining budget; expiry cancels the stream.
+  const deadline = timeoutMs > 0 ? Date.now() + timeoutMs : Infinity;
+  const call = aiRun(model, { ...(params as Record<string, unknown>), stream: true });
+  const res = deadline === Infinity
+    ? await call
+    : await Promise.race([
+        call,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("timeout")), Math.max(1, deadline - Date.now())),
+        ),
+      ]);
   // Workers AI returns a raw ReadableStream for stream:true; accept a
   // Response wrapping one too.
   const stream =
@@ -196,7 +212,26 @@ export async function* streamDeltas(aiRun: AiRun, model: string, params: unknown
     let buf = "";
     let seen = "";
     for (;;) {
-      const { done, value } = await reader.read();
+      let chunk: { done: boolean; value?: Uint8Array };
+      if (deadline === Infinity) {
+        chunk = await reader.read();
+      } else {
+        const left = deadline - Date.now();
+        if (left <= 0) {
+          try { await reader.cancel(); } catch { /* already closed */ }
+          throw new Error("timeout");
+        }
+        chunk = await Promise.race([
+          reader.read(),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("timeout")), left),
+          ),
+        ]).catch(async (err) => {
+          try { await reader.cancel(); } catch { /* already closed */ }
+          throw err;
+        });
+      }
+      const { done, value } = chunk;
       if (done) break;
       buf += decoder.decode(value, { stream: true });
       const parts = buf.split("\n\n");

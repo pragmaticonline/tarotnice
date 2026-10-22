@@ -33,6 +33,7 @@
       crisis: "Support",
       retry: "Try again",
       again: "Ask again",
+      blocked: "Please try again in a moment.",
       failed: "Ngern couldn't read the cards right now. Try again \u2014 your question is saved on the same cards.",
       noModel: "Readings are warming up. Your cards are drawn \u2014 please try again in a bit.",
       newIn: "New questions in ",
@@ -45,6 +46,7 @@
       crisis: "\u0e01\u0e33\u0e25\u0e31\u0e07\u0e43\u0e08",
       retry: "\u0e25\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07",
       again: "\u0e16\u0e32\u0e21\u0e43\u0e2b\u0e21\u0e48",
+      blocked: "\u0e02\u0e2d\u0e2d\u0e20\u0e31\u0e22 \u0e25\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07\u0e43\u0e19\u0e2d\u0e35\u0e01\u0e2a\u0e31\u0e01\u0e04\u0e23\u0e39\u0e48",
       failed: "\u0e40\u0e07\u0e34\u0e19\u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49 \u0e25\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e2d\u0e22\u0e39\u0e48\u0e01\u0e31\u0e1a\u0e44\u0e1e\u0e48\u0e0a\u0e38\u0e14\u0e40\u0e14\u0e34\u0e21",
       noModel: "\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e01\u0e33\u0e25\u0e31\u0e07\u0e40\u0e15\u0e23\u0e35\u0e22\u0e21\u0e15\u0e31\u0e27 \u0e44\u0e1e\u0e48\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e08\u0e31\u0e48\u0e27\u0e41\u0e25\u0e49\u0e27 \u0e25\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07\u0e43\u0e19\u0e2d\u0e35\u0e01\u0e2a\u0e31\u0e01\u0e04\u0e23\u0e39\u0e48",
       newIn: "\u0e04\u0e33\u0e16\u0e32\u0e21\u0e43\u0e2b\u0e21\u0e48\u0e43\u0e19\u0e2d\u0e35\u0e01 ",
@@ -214,12 +216,18 @@
       if (btn) btn.disabled = false;
       return;
     }
-    if (res.status === 400 || res.status === 403) {
+    if (res.status === 400) {
       if (q) {
         q.classList.add("need");
         q.focus();
       }
       bubble(t("need"));
+      if (btn) btn.disabled = false;
+      return;
+    }
+    if (res.status === 403) {
+      // Bot check / forbidden: not a question problem, say so.
+      bubble(t("blocked"));
       if (btn) btn.disabled = false;
       return;
     }
@@ -241,8 +249,28 @@
       if (btn) btn.disabled = false;
       return;
     }
-    var reading = { id: res.data.id, cards: res.data.cards };
-    collapseForm(question, topicLabel(topic));
+    // The draw response carries ids only (SPEC §12): map them onto
+    // library data now; faces render one by one as cards flip.
+    var byId = {};
+    try {
+      var listRes = await fetch("/api/cards?lang=" + lang, { credentials: "include" });
+      var list = await listRes.json();
+      (list.cards || []).forEach(function (card) { byId[card.id] = card; });
+    } catch (e) {}
+    var enriched = (res.data.cards || []).map(function (drawn) {
+      var view = byId[drawn.id] || {};
+      return {
+        id: drawn.id,
+        name: view.name || "",
+        image: view.image || "",
+        image2x: view.image2x || "",
+        reversed: !!drawn.reversed,
+      };
+    });
+    var reading = { id: res.data.id, cards: enriched };
+    // A resumed draw keeps its original question on screen.
+    collapseForm(res.data.resumed && res.data.question ? res.data.question : question,
+      topicLabel(res.data.resumed && res.data.topic ? res.data.topic : topic));
     var stage = document.getElementById("draw-stage");
     var mount2 = readingMount();
     try {

@@ -245,9 +245,12 @@ app.get("/privacy", (c) => c.html(privacyPage(requestUiLang(c))));
 app.get("/contact", (c) => c.html(contactPage(requestUiLang(c))));
 
 // Ask a question: quota + burst + Turnstile + IP-day backstops, then
-// the server draws 3 cards (stored as status='drawn' immediately, so a
-// refresh can never re-roll). The AI interpretation streams later via
-// GET /api/readings/:id/stream, which is what counts toward quota.
+// the server draws 3 cards (stored as status='drawn' immediately).
+// A draw counts toward the quota right away and a refresh can never
+// re-roll: at most one open drawn reading per user per day — a second
+// POST returns it instead of drawing again. Card names stay out of
+// the response (SPEC §12); the client maps ids to library data and
+// only shows a name when its card flips.
 app.post("/api/readings", async (c) => {
   const user = await authedUser(c);
   if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
@@ -269,6 +272,20 @@ app.post("/api/readings", async (c) => {
   await attributeReferral(c, store, user.id);
   const today = bangkokDay();
   const limit = await effectiveLimit(c.env, store, user.id);
+  // One open draw per user: hand back the cards already drawn today
+  // (with their original question) instead of dealing new ones.
+  const open = await store.openDrawn(user.id, today);
+  if (open) {
+    const usedNow = await store.countReadings(user.id, today);
+    return c.json({
+      id: open.id,
+      cards: open.cards,
+      remaining: Math.max(0, limit - usedNow + 1),
+      resumed: true,
+      question: open.question,
+      topic: open.topic,
+    });
+  }
   const used = await store.countReadings(user.id, today);
   if (used >= limit) {
     recordEvent(c.env, { name: "limit_hit", lang, ...requestContext(c), userKind: userKind(user) });
@@ -295,19 +312,10 @@ app.post("/api/readings", async (c) => {
   const id = crypto.randomUUID();
   await store.insertReading({ id, userId: user.id, day: today, topic, question, lang, cards: drawn });
   await store.ipDayBump(ip, today);
-  const cards = [];
-  for (const card of drawn) {
-    const view = await store.getCard(card.id, lang);
-    if (!view) return c.json({ error: "unknown_card" }, 500);
-    cards.push({
-      id: view.id, slug: view.slug, name: view.name,
-      image: `/static/${view.imageKey}.webp`,
-      image2x: `/static/${view.imageKey}@2x.webp`,
-      reversed: card.reversed,
-    });
-  }
+  // SPEC §12: ids + orientations only. Names/images are library data
+  // the client fetches separately; nothing to peek at before the flip.
   const remaining = Math.max(0, limit - used);
-  return c.json({ id, cards, remaining });
+  return c.json({ id, cards: drawn, remaining });
 });
 
 // Stream the AI interpretation (SSE deltas, then done). Replays the
@@ -323,8 +331,26 @@ app.get("/api/readings/:id/stream", async (c) => {
   const today = bangkokDay();
   const limit = questionLimit(c.env);
 
+  // Fresh generations only: re-check the day's quota (draws count
+  // from POST time now, so this also stops pre-fix bypass rows) and
+  // atomically claim the reading — a second opener gets a 409, not a
+  // second model call. Completed readings replay below.
+  if (row.status !== "complete") {
+    if (row.status === "failed") return c.json({ error: "reading_failed" }, 409);
+    if (row.status === "streaming") return c.json({ error: "already_streaming" }, 409);
+    const others = await store.countReadings(user.id, row.day, row.id);
+    if (others >= limit) {
+      recordEvent(c.env, { name: "limit_hit", lang, ...requestContext(c), userKind: userKind(user) });
+      return c.json({ error: "limit", remaining: 0, resetsAt: nextBangkokMidnight() }, 429);
+    }
+    if (!(await store.claimForStreaming(row.id, user.id))) {
+      return c.json({ error: "already_streaming" }, 409);
+    }
+    row.status = "streaming";
+  }
+
   const donePayload = async (summary: string) => {
-    const remaining = Math.max(0, limit - (await store.countReadings(user.id, today)));
+    const remaining = Math.max(0, limit - (await store.countReadings(user.id, row.day)));
     return sseEvent("done", JSON.stringify({ summary, remaining }));
   };
 
@@ -343,6 +369,10 @@ app.get("/api/readings/:id/stream", async (c) => {
         }
         const model = c.env.READING_MODEL?.trim() || null;
         if (!model || !c.env.AI) {
+          // Hand the claim back so the reading stays retryable.
+          try {
+            await store.setReadingResult(row.id, { aiText: "", aiSummary: "", model: "", status: "drawn" });
+          } catch { /* best-effort */ }
           send(sseEvent("error", JSON.stringify({ error: "model_unset" })));
           controller.close();
           return;
@@ -385,7 +415,7 @@ app.get("/api/readings/:id/stream", async (c) => {
             { role: "user", content: prompt },
           ],
           max_tokens: 1024,
-        })) {
+        }, 25_000)) {
           full += delta;
           send(sseEvent("delta", JSON.stringify(delta)));
         }
@@ -802,6 +832,47 @@ app.get("/history/:id", async (c) => {
       },
     }),
   );
+});
+
+// Public card data (SPEC §12): the library as JSON. The draw client
+// maps the ids from POST /api/readings onto these at pick time, so
+// names never travel with the draw itself.
+app.get("/api/cards", async (c) => {
+  const qLang = c.req.query("lang");
+  const lang: "th" | "en" = isLang(qLang) ? qLang : requestUiLang(c);
+  const cards = c.env?.DB ? await d1TarotStore(c.env.DB).listCards(lang) : [];
+  return c.json({
+    cards: cards.map((card) => ({
+      id: card.id,
+      slug: card.slug,
+      name: card.name,
+      image: `/static/${card.imageKey}.webp`,
+      image2x: `/static/${card.imageKey}@2x.webp`,
+      arcana: card.arcana,
+      suit: card.suit,
+      rank: card.rank,
+      reviewed: card.reviewed,
+    })),
+  });
+});
+
+app.get("/api/cards/:slug", async (c) => {
+  if (!c.env?.DB) return c.json({ error: "not_found" }, 404);
+  const qLang = c.req.query("lang");
+  const lang: "th" | "en" = isLang(qLang) ? qLang : requestUiLang(c);
+  const card = await d1TarotStore(c.env.DB).getCardBySlug(c.req.param("slug"), lang);
+  if (!card) return c.json({ error: "not_found" }, 404);
+  return c.json({
+    id: card.id, slug: card.slug, name: card.name,
+    image: `/static/${card.imageKey}.webp`,
+    image2x: `/static/${card.imageKey}@2x.webp`,
+    arcana: card.arcana, suit: card.suit, rank: card.rank,
+    reviewed: card.reviewed,
+    keywordsUpright: card.keywordsUpright,
+    keywordsReversed: card.keywordsReversed,
+    upright: card.upright, reversed: card.reversed,
+    love: card.love, career: card.career, money: card.money, health: card.health,
+  });
 });
 
 // Paginated history for infinite scroll (newest first).

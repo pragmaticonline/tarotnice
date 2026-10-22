@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lt } from "drizzle-orm";
+import { and, desc, eq, gte, lt, ne } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import * as schema from "./schema";
 
@@ -277,7 +277,7 @@ export function d1TarotStore(db: D1Database) {
 
     async setReadingResult(
       id: string,
-      result: { aiText: string; aiSummary: string; model: string; status: "complete" | "failed" | "drawn" },
+      result: { aiText: string; aiSummary: string; model: string; status: "complete" | "failed" | "drawn" | "streaming" },
     ): Promise<void> {
       await orm
         .update(schema.readings)
@@ -573,19 +573,100 @@ export function d1TarotStore(db: D1Database) {
       };
     },
 
-    /** Completed readings for the user on a Bangkok day (quota). */
-    async countReadings(userId: string, day: string): Promise<number> {
+    /**
+     * Quota count for a Bangkok day: drawn, streaming, and complete
+     * readings all count (a draw is a commitment — no re-rolls);
+     * only failed readings are free. `excludeId` lets the stream
+     * endpoint re-check the quota without counting itself.
+     */
+    async countReadings(userId: string, day: string, excludeId?: string): Promise<number> {
+      const conds = [
+        eq(schema.readings.userId, userId),
+        eq(schema.readings.bangkokDay, day),
+        ne(schema.readings.status, "failed"),
+      ];
+      if (excludeId) conds.push(ne(schema.readings.id, excludeId));
       const rows = await orm
         .select({ id: schema.readings.id })
+        .from(schema.readings)
+        .where(and(...conds));
+      return rows.length;
+    },
+
+    /** The user's one open (drawn, not yet streamed) reading today. */
+    async openDrawn(userId: string, day: string): Promise<{
+      id: string; topic: string; question: string; lang: string;
+      cards: { id: number; reversed: boolean }[];
+    } | null> {
+      const rows = await orm
+        .select()
         .from(schema.readings)
         .where(
           and(
             eq(schema.readings.userId, userId),
             eq(schema.readings.bangkokDay, day),
-            eq(schema.readings.status, "complete"),
+            eq(schema.readings.status, "drawn"),
           ),
-        );
-      return rows.length;
+        )
+        .orderBy(desc(schema.readings.createdAt))
+        .limit(1);
+      const row = rows[0];
+      if (!row) return null;
+      let cards: { id: number; reversed: boolean }[] = [];
+      try {
+        const parsed: unknown = JSON.parse(row.cards);
+        if (Array.isArray(parsed)) cards = parsed as { id: number; reversed: boolean }[];
+      } catch {
+        cards = [];
+      }
+      return { id: row.id, topic: row.topic, question: row.question, lang: row.lang, cards };
+    },
+
+    /** Atomically claim a drawn reading for streaming (one opener). */
+    async claimForStreaming(id: string, userId: string): Promise<boolean> {
+      const rows = await orm
+        .update(schema.readings)
+        .set({ status: "streaming" })
+        .where(
+          and(
+            eq(schema.readings.id, id),
+            eq(schema.readings.userId, userId),
+            eq(schema.readings.status, "drawn"),
+          ),
+        )
+        .returning({ id: schema.readings.id });
+      return rows.length > 0;
+    },
+
+    /** Distinct card ids drawn as DAILY cards (spec §5.4 collection). */
+    async collectionDaily(userId: string): Promise<number[]> {
+      const rows = await orm
+        .select({ cardId: schema.dailyDraws.cardId })
+        .from(schema.dailyDraws)
+        .where(eq(schema.dailyDraws.userId, userId));
+      return [...new Set(rows.map((r) => r.cardId))].sort((a, b) => a - b);
+    },
+
+    /** Most recent daily draws (progress strip), newest first. */
+    async recentDailies(userId: string, limit: number): Promise<{ cardId: number; day: string; reversed: boolean }[]> {
+      const rows = await orm
+        .select({ cardId: schema.dailyDraws.cardId, day: schema.dailyDraws.bangkokDay, reversed: schema.dailyDraws.reversed })
+        .from(schema.dailyDraws)
+        .where(eq(schema.dailyDraws.userId, userId))
+        .orderBy(desc(schema.dailyDraws.bangkokDay))
+        .limit(Math.max(1, Math.min(30, limit)));
+      return rows.map((r) => ({ cardId: r.cardId, day: r.day, reversed: r.reversed === 1 }));
+    },
+
+    /** All public share ids owned by the user (for data deletion). */
+    async userShareIds(userId: string): Promise<string[]> {
+      const [readings, dailies] = await Promise.all([
+        orm.select({ shareId: schema.readings.shareId }).from(schema.readings).where(eq(schema.readings.userId, userId)),
+        orm.select({ shareId: schema.dailyDraws.shareId }).from(schema.dailyDraws).where(eq(schema.dailyDraws.userId, userId)),
+      ]);
+      const ids = new Set<string>();
+      for (const r of [...readings, ...dailies]) if (r.shareId) ids.add(r.shareId);
+      return [...ids];
     },
 
     /** Distinct active days: daily draws \u222a completed readings. */

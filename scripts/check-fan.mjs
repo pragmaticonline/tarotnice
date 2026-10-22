@@ -99,6 +99,15 @@ async function main() {
   }
   chk("fan reaches picking state", /Choose|more card|เลือก/.test(bubble), bubble);
 
+  // C1: nothing of the reading may exist before the picks — no card
+  // name blocks rendered, no stream opened yet.
+  const prePick = JSON.parse(await ev(`JSON.stringify({
+    rcBlocks: document.querySelectorAll('#reading .rc').length,
+    flipped: document.querySelectorAll('#draw-stage .card.flipped').length
+  })`));
+  chk("no reading rendered before picks", prePick.rcBlocks === 0 && prePick.flipped === 0,
+    `rc=${prePick.rcBlocks} flipped=${prePick.flipped}`);
+
   const geo = JSON.parse(await ev(`JSON.stringify((function(){
     var stage = document.getElementById('draw-stage');
     var sr = stage.getBoundingClientRect();
