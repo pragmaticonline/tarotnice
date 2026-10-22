@@ -146,7 +146,9 @@ async function main() {
 
   ws.close();
   proc.kill();
-  rmSync(profile, { recursive: true, force: true });
+  try {
+    rmSync(profile, { recursive: true, force: true });
+  } catch { /* browser may still hold the profile; /tmp is disposable */ }
   if (fails.length) { console.error(`\nCHECK FAILED: ${fails.join(", ")}`); process.exit(1); }
   console.log("\nFAN CHECK PASSED");
 }
