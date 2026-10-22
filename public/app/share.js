@@ -16,13 +16,13 @@
 
   var STR = {
     en: {
-      title: "Share your reading", showQ: "Show my question", private: "Question kept private",
+      title: "Share your reading", loading: "Preparing your image\u2026",
       save: "Save image", copy: "Copy link", copied: "Copied!", native: "More\u2026",
       igNote: "Instagram: save the image, then post it as a Story or post.",
       inapp: "You are in an in-app browser: Save the image or Copy the link, then share from your browser app.",
     },
     th: {
-      title: "\u0e41\u0e0a\u0e23\u0e4c\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22", showQ: "\u0e41\u0e2a\u0e14\u0e07\u0e04\u0e33\u0e16\u0e32\u0e21\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19", private: "\u0e04\u0e33\u0e16\u0e32\u0e21\u0e16\u0e39\u0e01\u0e0b\u0e48\u0e2d\u0e19\u0e44\u0e27\u0e49",
+      title: "\u0e41\u0e0a\u0e23\u0e4c\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22", loading: "\u0e01\u0e33\u0e25\u0e31\u0e07\u0e40\u0e15\u0e23\u0e35\u0e22\u0e21\u0e20\u0e32\u0e1e\u0e43\u0e2b\u0e49\u0e04\u0e38\u0e13\u2026",
       save: "\u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01\u0e20\u0e32\u0e1e", copy: "\u0e04\u0e31\u0e14\u0e25\u0e2d\u0e01\u0e25\u0e34\u0e07\u0e01\u0e4c", copied: "\u0e04\u0e31\u0e14\u0e25\u0e2d\u0e01\u0e41\u0e25\u0e49\u0e27!", native: "\u0e40\u0e1e\u0e34\u0e48\u0e21\u0e40\u0e15\u0e34\u0e21\u2026",
       igNote: "Instagram: \u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01\u0e20\u0e32\u0e1e \u0e41\u0e25\u0e49\u0e27\u0e42\u0e1e\u0e2a\u0e15\u0e4c\u0e40\u0e1b\u0e47\u0e19\u0e2a\u0e15\u0e2d\u0e23\u0e35\u0e48\u0e2b\u0e23\u0e37\u0e2d\u0e42\u0e1e\u0e2a\u0e15\u0e4c",
       inapp: "\u0e04\u0e38\u0e13\u0e2d\u0e22\u0e39\u0e48\u0e43\u0e19\u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e02\u0e2d\u0e07\u0e41\u0e2d\u0e1b: \u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01\u0e20\u0e32\u0e1e\u0e2b\u0e23\u0e37\u0e2d\u0e04\u0e31\u0e14\u0e25\u0e2d\u0e01\u0e25\u0e34\u0e07\u0e01\u0e4c \u0e41\u0e25\u0e49\u0e27\u0e44\u0e1b\u0e41\u0e0a\u0e23\u0e4c\u0e08\u0e32\u0e01\u0e41\u0e2d\u0e1b\u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c",
@@ -96,9 +96,7 @@
     sheet.innerHTML =
       '<div class="panel" role="dialog" aria-modal="true" aria-label="' + esc(t("title")) + '">' +
       '<h2>' + esc(t("title")) + "</h2>" +
-      '<div class="story-wrap"><img class="story" alt=""></div>' +
-      '<label class="showq"><input type="checkbox" id="share-showq"> ' + esc(t("showQ")) + "</label>" +
-      '<p class="share-private-note">' + esc(t("private")) + "</p>" +
+      '<div class="story-wrap"><div class="story-loading" role="status"><span class="spinner" aria-hidden="true"></span><span>' + esc(t("loading")) + '</span></div><img class="story" alt=""></div>' +
       '<div class="targets"></div>' +
       (inAppBrowser() ? '<p class="inapp-note">' + esc(t("inapp")) + "</p>" : "") +
       '<p class="ig-note">' + esc(t("igNote")) + "</p>" +
@@ -106,13 +104,17 @@
     document.body.appendChild(sheet);
 
     var share = null;
-    var showQ = false;
     var img = sheet.querySelector(".story");
+    var loader = sheet.querySelector(".story-loading");
     var targets = sheet.querySelector(".targets");
+    img.addEventListener("load", function () {
+      img.classList.add("loaded");
+      if (loader) loader.hidden = true;
+    });
 
     async function load() {
       try {
-        share = await createShare(kind, ref, showQ);
+        share = await createShare(kind, ref, true);
       } catch (e) {
         sheet.remove();
         return;
@@ -183,10 +185,6 @@
       targets.appendChild(copy);
     }
 
-    sheet.querySelector("#share-showq").addEventListener("change", function (e) {
-      showQ = !!e.target.checked;
-      load();
-    });
     sheet.addEventListener("click", function (e) {
       if (e.target === sheet) close();
     });

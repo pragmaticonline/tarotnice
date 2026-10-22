@@ -291,3 +291,12 @@ a{color:var(--accent)}
 @keyframes cardIn{from{opacity:0;transform:rotateY(70deg) translateY(8px)}to{opacity:1;transform:none}}
 .read-cards img.rev{animation-name:cardInRev}
 @keyframes cardInRev{from{opacity:0;transform:rotateY(70deg) translateY(8px) rotate(180deg)}to{opacity:1;transform:rotate(180deg)}}
+
+/* Share image loading state. */
+.story-wrap{position:relative;min-height:320px}
+.story{opacity:0;transition:opacity .45s ease}
+.story.loaded{opacity:1}
+.story-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;color:var(--muted)}
+.story-loading[hidden]{display:none}
+.spinner{width:52px;height:52px;border-radius:50%;border:4px solid var(--gold-dim);border-top-color:var(--gold);animation:spin 0.9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}

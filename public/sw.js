@@ -1,6 +1,6 @@
 // TarotNice offline cache. Precache the app shell + fonts + mascot;
 // serve static assets cache-first, pages network-first with fallback.
-const CACHE = "tarotnice-v18";
+const CACHE = "tarotnice-v19";
 
 const CORE = [
   "/",

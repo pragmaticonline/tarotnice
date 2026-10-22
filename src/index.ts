@@ -501,8 +501,8 @@ async function badgeAchieved(
   return computeStreak(await store.activityDays(userId), bangkokDay()).longest >= Number(m[1]);
 }
 
-// {kind:'reading'|'daily'|'badge', ref, showQuestion, mode} -> share URLs.
-// The question stays private unless showQuestion is explicitly true.
+// {kind:'reading'|'daily'|'badge', ref, mode} -> share URLs.
+// Shares always include the question asked (owner decision).
 app.post("/api/share", async (c) => {
   const user = await authedUser(c);
   if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
@@ -512,7 +512,7 @@ app.post("/api/share", async (c) => {
   } catch {
     return c.json({ error: "bad_request" }, 400);
   }
-  const showQuestion = body.showQuestion === true || body.showQuestion === 1;
+  const showQuestion = true;
   const mode = body.mode === "night" ? "night" : "day";
   const store = d1TarotStore(c.env.DB);
   let shareId: string | null = null;
