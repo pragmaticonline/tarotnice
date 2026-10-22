@@ -27,11 +27,11 @@ for (const c of cards) {
     );
   }
 }
-writeFileSync("drizzle/seed-cards.sql", lines.join("\n") + "\n");
+writeFileSync("build/seed-cards.sql", lines.join("\n") + "\n");
 console.log(`seed SQL: ${cards.length} cards, ${lines.length} statements`);
 
 const only = process.argv[2];
 const targets = only === "--local-only" ? ["--local"] : only === "--remote-only" ? ["--remote"] : ["--local", "--remote"];
 for (const target of targets) {
-  execFileSync("npx", ["wrangler", "d1", "execute", "tarotnice", target, "--file", "drizzle/seed-cards.sql"], { stdio: "inherit" });
+  execFileSync("npx", ["wrangler", "d1", "execute", "tarotnice", target, "--file", "build/seed-cards.sql"], { stdio: "inherit" });
 }

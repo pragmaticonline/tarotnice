@@ -172,6 +172,20 @@ export const shares = sqliteTable("shares", {
   createdAt: integer("created_at").notNull(),
 });
 
+// Per-IP daily draw counts for the SPEC §5.3 abuse backstop (the
+// Rate Limiting binding only does burst windows on this wrangler).
+export const rateDays = sqliteTable(
+  "rate_days",
+  {
+    ip: text("ip").notNull(),
+    day: text("day").notNull(),
+    count: integer("count").notNull().default(0),
+  },
+  (t) => ({
+    pk: uniqueIndex("rate_days_ip_day").on(t.ip, t.day),
+  }),
+);
+
 // Who arrived via whose share.
 export const referrals = sqliteTable("referrals", {
   visitorUserId: text("visitor_user_id").primaryKey(),

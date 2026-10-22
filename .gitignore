@@ -4,7 +4,7 @@ dist/
 .env
 .wrangler/
 worker-configuration.d.ts
-# Regenerable curriculum dumps (contain lesson sentences; never commit).
-scripts/manifests/*.json
-# Private content checkout (see specs/content-split.md).
-.content/
+# Regenerable build outputs (card art lives in R2, not in git).
+build/
+# Generated seed SQL (rebuild with node scripts/seed-cards.mjs).
+drizzle/seed-cards.sql
