@@ -106,7 +106,7 @@ export function brandHtml(): string {
  *  merged local + server days. */
 export function streakChipHtml(streak: StreakInfo, ui: UiLang, href?: string): string {
   if (streak.current < 1) return `<span class="streak-chip" data-streak hidden></span>`;
-  const inner = `\U0001f319 <b>${streak.current}</b>`;
+  const inner = `🌙 <b>${streak.current}</b>`;
   const title = fmt(t(ui).dayStreak, { n: streak.current });
   return href
     ? `<a class="streak-chip" data-streak href="${href}" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}">${inner}</a>`

@@ -8,8 +8,8 @@ import { COUNTRY_TO_LANG } from "./geo";
 export type UiLang = "en" | "th";
 
 export const UI_LANGS: { code: UiLang; name: string; ownName: string; flag: string }[] = [
-  { code: "en", name: "English", ownName: "English", flag: "\U0001f1ec\U0001f1e7" },
-  { code: "th", name: "Thai", ownName: "\u0e44\u0e17\u0e22", flag: "\U0001f1f9\U0001f1ed" },
+  { code: "en", name: "English", ownName: "English", flag: "🇬🇧" },
+  { code: "th", name: "Thai", ownName: "\u0e44\u0e17\u0e22", flag: "🇹🇭" },
 ];
 
 export function isUiLang(code: string | null | undefined): code is UiLang {
