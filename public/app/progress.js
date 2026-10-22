@@ -8,6 +8,12 @@
   }
 
   async function shareBadge(key, label) {
+    // Preferred path: the in-app share sheet (badge story/OG images
+    // via kind:'badge'). Text share is the fallback.
+    if (window.TarotShare && typeof window.TarotShare.open === "function") {
+      window.TarotShare.open("badge", key);
+      return;
+    }
     var text = "TarotNice \u2014 " + label + " \u2713 https://tarotnice.com";
     try {
       if (navigator.share) {

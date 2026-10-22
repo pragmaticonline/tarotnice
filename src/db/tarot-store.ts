@@ -660,13 +660,45 @@ export function d1TarotStore(db: D1Database) {
 
     /** All public share ids owned by the user (for data deletion). */
     async userShareIds(userId: string): Promise<string[]> {
-      const [readings, dailies] = await Promise.all([
+      const [readings, dailies, badges] = await Promise.all([
         orm.select({ shareId: schema.readings.shareId }).from(schema.readings).where(eq(schema.readings.userId, userId)),
         orm.select({ shareId: schema.dailyDraws.shareId }).from(schema.dailyDraws).where(eq(schema.dailyDraws.userId, userId)),
+        orm.select({ shareId: schema.badgeShares.shareId }).from(schema.badgeShares).where(eq(schema.badgeShares.userId, userId)),
       ]);
       const ids = new Set<string>();
       for (const r of [...readings, ...dailies]) if (r.shareId) ids.add(r.shareId);
+      for (const b of badges) ids.add(b.shareId);
       return [...ids];
+    },
+
+    /** Reuse-or-create the public link for an earned badge. */
+    async getOrCreateBadgeShare(userId: string, milestoneKey: string, makeId: () => string): Promise<string> {
+      const rows = await orm
+        .select({ shareId: schema.badgeShares.shareId })
+        .from(schema.badgeShares)
+        .where(and(eq(schema.badgeShares.userId, userId), eq(schema.badgeShares.milestoneKey, milestoneKey)))
+        .limit(1);
+      if (rows[0]) return rows[0].shareId;
+      const shareId = makeId();
+      await orm.insert(schema.badgeShares).values({ shareId, userId, milestoneKey, createdAt: Date.now() });
+      return shareId;
+    },
+
+    async getBadgeShare(shareId: string): Promise<{ userId: string; milestoneKey: string } | null> {
+      const rows = await orm
+        .select({ userId: schema.badgeShares.userId, milestoneKey: schema.badgeShares.milestoneKey })
+        .from(schema.badgeShares)
+        .where(eq(schema.badgeShares.shareId, shareId))
+        .limit(1);
+      return rows[0] ?? null;
+    },
+
+    async clearBadgeShare(shareId: string, userId: string): Promise<boolean> {
+      const rows = await orm
+        .delete(schema.badgeShares)
+        .where(and(eq(schema.badgeShares.shareId, shareId), eq(schema.badgeShares.userId, userId)))
+        .returning({ shareId: schema.badgeShares.shareId });
+      return rows.length > 0;
     },
 
     /** Distinct active days: daily draws \u222a completed readings. */

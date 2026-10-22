@@ -50,6 +50,34 @@ export function shareLandingPage(opts: {
   });
 }
 
+/** Milestone badge landing (/b/:shareId): label + Ngern + CTA. */
+export function badgeLandingPage(opts: {
+  origin: string;
+  shareId: string;
+  ui: UiLang;
+  label: string;
+  ogImage: string;
+}): string {
+  const d = t(opts.ui);
+  const cta = `/?ref=${encodeURIComponent(opts.shareId)}`;
+  return pageShell({
+    title: `TarotNice — ${opts.label}`,
+    lang: opts.ui,
+    origin: opts.origin,
+    noindex: true,
+    description: opts.label,
+    ogImage: opts.ogImage,
+    ogLocale: opts.ui === "th" ? "th_TH" : "en_US",
+    body:
+      `<header class="site-head">${brandHtml()}</header>` +
+      `<main class="landing"><p class="land-badge">★</p>` +
+      `<h1 class="display">${escapeHtml(opts.label)}</h1>` +
+      `<p class="land-summary">${escapeHtml(d.badgeEarned)}</p>` +
+      `<div class="land-ngern"><img src="/mascot/ngern-sitting.svg" alt="Ngern the Korat cat" width="96" height="96"></div>` +
+      `<a class="btn btn-primary" href="${cta}" data-share-cta>${escapeHtml(d.shareCta)}</a></main>`,
+  });
+}
+
 /** Friendly 410 for unshared/unknown share links. */
 export function unsharedPage(origin: string, ui: UiLang): string {
   const msg =

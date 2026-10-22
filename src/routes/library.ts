@@ -22,9 +22,12 @@ export function cardsPage(opts: {
   origin: string;
   streak: StreakInfo;
   groups: LibraryGroup[];
+  /** "" for /cards, "/th" for the Thai URL tree. */
+  prefix?: string;
 }): string {
   const d = t(opts.ui);
-  const head = headerHtml({ ui: opts.ui, streak: opts.streak, path: "/cards" });
+  const prefix = opts.prefix ?? "";
+  const head = headerHtml({ ui: opts.ui, streak: opts.streak, path: `${prefix}/cards` });
   const groups = opts.groups
     .map(
       (g) =>
@@ -32,7 +35,7 @@ export function cardsPage(opts: {
         g.cards
           .map(
             (card) =>
-              `<a class="lib-card" href="/cards/${escapeHtml(card.slug)}"><img src="${escapeHtml(card.image)}" loading="lazy" alt="${escapeHtml(card.name)}"><span>${escapeHtml(card.name)}</span>${card.reviewed ? "" : ` <em class="draft">${escapeHtml(d.draftNote)}</em>`}</a>`,
+              `<a class="lib-card" href="${prefix}/cards/${escapeHtml(card.slug)}"><img src="${escapeHtml(card.image)}" loading="lazy" alt="${escapeHtml(card.name)}"><span>${escapeHtml(card.name)}</span>${card.reviewed ? "" : ` <em class="draft">${escapeHtml(d.draftNote)}</em>`}</a>`,
           )
           .join("") +
         `</div></section>`,
@@ -42,9 +45,9 @@ export function cardsPage(opts: {
     title: `${d.cardsTitle} · TarotNice`,
     lang: opts.ui,
     origin: opts.origin,
-    canonicalPath: "/cards",
+    canonicalPath: `${prefix}/cards`,
     description: d.cardsLede,
-    body: `${head}<main><h1 class="display">${escapeHtml(d.cardsTitle)}</h1><p class="muted">${escapeHtml(d.cardsLede)}</p>${groups}</main>${siteFooterHtml(opts.ui, "/cards")}`,
+    body: `${head}<main><h1 class="display">${escapeHtml(d.cardsTitle)}</h1><p class="muted">${escapeHtml(d.cardsLede)}</p>${groups}</main>${siteFooterHtml(opts.ui, `${prefix}/cards`)}`,
   });
 }
 
@@ -68,17 +71,20 @@ export function cardDetailPage(opts: {
   origin: string;
   streak: StreakInfo;
   card: LibraryDetail;
+  /** "" for /cards, "/th" for the Thai URL tree. */
+  prefix?: string;
 }): string {
   const d = t(opts.ui);
   const card = opts.card;
-  const head = headerHtml({ ui: opts.ui, streak: opts.streak, path: "/cards" });
+  const prefix = opts.prefix ?? "";
+  const head = headerHtml({ ui: opts.ui, streak: opts.streak, path: `${prefix}/cards` });
   const notes = card.notes
     .map((n) => `<section class="meaning-note"><h2>${escapeHtml(n.label)}</h2><p>${escapeHtml(n.text)}</p></section>`)
     .join("");
   const nav =
     `<nav class="card-nav">` +
-    (card.prev ? `<a href="/cards/${escapeHtml(card.prev.slug)}">&larr; ${escapeHtml(card.prev.name)}</a>` : `<span></span>`) +
-    (card.next ? `<a href="/cards/${escapeHtml(card.next.slug)}">${escapeHtml(card.next.name)} &rarr;</a>` : `<span></span>`) +
+    (card.prev ? `<a href="${prefix}/cards/${escapeHtml(card.prev.slug)}">&larr; ${escapeHtml(card.prev.name)}</a>` : `<span></span>`) +
+    (card.next ? `<a href="${prefix}/cards/${escapeHtml(card.next.slug)}">${escapeHtml(card.next.name)} &rarr;</a>` : `<span></span>`) +
     `</nav>`;
   const jsonLd = JSON.stringify({
     "@context": "https://schema.org",
@@ -91,12 +97,12 @@ export function cardDetailPage(opts: {
     title: `${card.name} · TarotNice`,
     lang: opts.ui,
     origin: opts.origin,
-    canonicalPath: `/cards/${card.slug}`,
+    canonicalPath: `${prefix}/cards/${card.slug}`,
     description: card.upright.slice(0, 160),
     noindex: !card.reviewed,
     jsonLd,
     body:
-      `${head}<main class="card-detail"><p><a class="btn-outline btn" href="/cards">&larr; ${escapeHtml(d.cardsTitle)}</a></p>` +
+      `${head}<main class="card-detail"><p><a class="btn-outline btn" href="${prefix}/cards">&larr; ${escapeHtml(d.cardsTitle)}</a></p>` +
       `<h1 class="display">${escapeHtml(card.name)}</h1>` +
       (card.reviewed ? "" : `<p class="draft-line">${escapeHtml(d.draftNote)}</p>`) +
       `<img class="detail-art" src="${escapeHtml(card.image)}" srcset="${escapeHtml(card.image2x)} 2x" alt="${escapeHtml(card.name)}">` +
@@ -104,6 +110,6 @@ export function cardDetailPage(opts: {
       `<section class="meaning-note"><h2>${escapeHtml(d.reversed)}</h2><p>${escapeHtml(card.reversed)}</p><p class="keywords">${escapeHtml(card.keywordsReversed.join(" · "))}</p></section>` +
       notes +
       nav +
-      `</main>${siteFooterHtml(opts.ui, "/cards")}`,
+      `</main>${siteFooterHtml(opts.ui, `${prefix}/cards`)}`,
   });
 }

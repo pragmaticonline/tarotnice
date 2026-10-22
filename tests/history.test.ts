@@ -3,6 +3,7 @@ import app from "../src/index";
 import { historyDetailPage, historyPage } from "../src/routes/history";
 import { progressPage } from "../src/routes/progress";
 import { cardDetailPage, cardsPage } from "../src/routes/library";
+import { badgeLandingPage } from "../src/routes/share";
 
 const STREAK = { current: 3, longest: 9, activeToday: true };
 
@@ -160,6 +161,69 @@ describe("library pages", () => {
     const live = cardDetailPage({ ui: "en", origin: "https://tarotnice.com", streak: STREAK, card: { ...base, reviewed: true } });
     expect(live).not.toContain("noindex");
     expect(live).toContain('rel="canonical"');
+  });
+});
+
+describe("spec milestones + badge shares (M2)", () => {
+  it("renders streak-tier badges with share buttons only when achieved", () => {
+    const html = progressPage({
+      ui: "en", origin: "https://tarotnice.com",
+      streak: { current: 5, longest: 9, activeToday: true },
+      days: [], owned: [0], cardNames: { 0: "The Fool" },
+      referrals: { invited: 0, converted: 0 }, bonusOn: false,
+      milestones: [
+        { key: "streak-3", label: "3-day streak", achieved: true },
+        { key: "streak-14", label: "14-day streak", achieved: false },
+        { key: "collection", label: "All 78 daily cards", achieved: false },
+      ],
+      readings: 3,
+      recentDaily: [{ name: "The Fool", image: "/static/cards/major-00.webp", day: "2026-10-22" }],
+    });
+    expect(html).toContain('data-share-badge="streak-3"');
+    expect(html).not.toContain('data-share-badge="streak-14"');
+    expect(html).not.toContain('data-share-badge="collection"');
+    expect(html).toContain("Recent daily cards");
+    expect(html).toContain("/static/cards/major-00.webp");
+  });
+
+  it("badge landing renders label + CTA and 404s unknown ids at the route", async () => {
+    const html = badgeLandingPage({
+      origin: "https://tarotnice.com", shareId: "AbC123XyZ9", ui: "en",
+      label: "7-day streak", ogImage: "https://tarotnice.com/b/AbC123XyZ9/og.png",
+    });
+    expect(html).toContain("7-day streak");
+    expect(html).toContain("noindex");
+    expect(html).toContain("/?ref=AbC123XyZ9");
+    expect((await app.request("/b/ZZZZZZZZZZ")).status).toBe(410);
+    expect((await app.request("/api/share", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ kind: "badge", ref: "streak-7" }),
+    })).status).toBe(401);
+  });
+});
+
+describe("Thai card URLs (M3)", () => {
+  it("serves /th/cards in Thai with a /th canonical", async () => {
+    const idx = await app.request("/th/cards");
+    expect(idx.status).toBe(200);
+    const idxHtml = await idx.text();
+    expect(idxHtml).toContain('lang="th"');
+    expect(idxHtml).toContain('rel="canonical" href="http://localhost/th/cards"');
+    const page = cardsPage({
+      ui: "th", origin: "https://tarotnice.com",
+      streak: { current: 0, longest: 0, activeToday: false },
+      groups: [{ title: "Major", cards: [{ id: 0, slug: "the-fool", name: "X", image: "/i.webp", image2x: "/i2.webp", reviewed: false }] }],
+      prefix: "/th",
+    });
+    expect(page).toContain('href="/th/cards/the-fool"');
+    // Without a DB the detail route 404s, same as /cards/:slug.
+    expect((await app.request("/th/cards/nope-nope")).status).toBe(404);
+  });
+
+  it("sitemap carries both language trees", async () => {
+    const xml = await (await app.request("/sitemap.xml")).text();
+    expect(xml).toContain("/th/cards");
+    expect(xml).toContain("/cards");
   });
 });
 

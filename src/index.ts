@@ -25,8 +25,8 @@ import {
 import { computeStreak } from "./lib/streaks";
 import { d1PrefsStore } from "./db/prefs-store";
 import { d1TarotStore } from "./db/tarot-store";
-import { renderShareImage, type ShareCard } from "./lib/share-images";
-import { shareLandingPage, unsharedPage } from "./routes/share";
+import { renderBadgeImage, renderShareImage, type ShareCard } from "./lib/share-images";
+import { badgeLandingPage, shareLandingPage, unsharedPage } from "./routes/share";
 import {
   clientCategory,
   countryOf,
@@ -223,12 +223,12 @@ app.get("/sitemap.xml", async (c) => {
   // Indexable pages only: home + library index + reviewed card details.
   // Draft (unreviewed) cards, history, progress, account, and share
   // landings stay out (drafts also carry noindex).
-  const urls = ["/", "/cards"];
+  const urls = ["/", "/cards", "/th/cards"];
   if (c.env?.DB) {
     try {
       const cards = await d1TarotStore(c.env.DB).listCards("en");
       for (const card of cards) {
-        if (card.reviewed) urls.push(`/cards/${card.slug}`);
+        if (card.reviewed) urls.push(`/cards/${card.slug}`, `/th/cards/${card.slug}`);
       }
     } catch {
       /* sitemap degrades to the static entries */
@@ -476,7 +476,29 @@ app.post("/api/readings/:id/retry", async (c) => {
 });
 
 // Create (lazily) a share link for a reading or daily card.
-// {kind:'reading'|'daily', ref, showQuestion, mode} -> share URLs.
+/** SPEC §5.4 milestone keys: streak tiers + the 78-card daily deck. */
+const STREAK_TIERS = [3, 7, 14, 30, 78, 100];
+
+function milestoneLabel(ui: UiLang, key: string): string | null {
+  const d = t(ui);
+  if (key === "collection") return d.msCollection;
+  const m = /^streak-(\d+)$/.exec(key);
+  if (m && STREAK_TIERS.includes(Number(m[1]))) return d.msStreakDays.replace("{n}", m[1]);
+  return null;
+}
+
+async function badgeAchieved(
+  store: ReturnType<typeof d1TarotStore>,
+  userId: string,
+  key: string,
+): Promise<boolean> {
+  if (key === "collection") return (await store.collectionDaily(userId)).length >= 78;
+  const m = /^streak-(\d+)$/.exec(key);
+  if (!m || !STREAK_TIERS.includes(Number(m[1]))) return false;
+  return computeStreak(await store.activityDays(userId), bangkokDay()).longest >= Number(m[1]);
+}
+
+// {kind:'reading'|'daily'|'badge', ref, showQuestion, mode} -> share URLs.
 // The question stays private unless showQuestion is explicitly true.
 app.post("/api/share", async (c) => {
   const user = await authedUser(c);
@@ -516,8 +538,17 @@ app.post("/api/share", async (c) => {
       await store.setDailyShare(user.id, bangkokDay(), shareId);
     }
     base = `/d/${shareId}`;
+  } else if (body.kind === "badge") {
+    // Milestone badges (SPEC §5.4): the ref is a milestone key, and
+    // the server re-checks the achievement before minting the link.
+    const key = typeof body.ref === "string" ? body.ref : "";
+    if (!(await badgeAchieved(store, user.id, key))) {
+      return c.json({ error: "not_achieved" }, 400);
+    }
+    lang = requestUiLang(c);
+    shareId = await store.getOrCreateBadgeShare(user.id, key, () => newShareId());
+    base = `/b/${shareId}`;
   } else {
-    // Badge/milestone shares arrive with /progress (M8).
     return c.json({ error: "bad_kind" }, 400);
   }
   const origin = new URL(c.req.url).origin;
@@ -559,7 +590,8 @@ app.delete("/api/share/:shareId", async (c) => {
   const store = d1TarotStore(c.env.DB);
   const cleared =
     (await store.clearReadingShare(shareId, user.id)) ||
-    (await store.clearDailyShare(shareId, user.id));
+    (await store.clearDailyShare(shareId, user.id)) ||
+    (await store.clearBadgeShare(shareId, user.id));
   if (!cleared) return c.json({ error: "not_found" }, 404);
   await deleteShareImages(c.env, shareId);
   return c.json({ ok: true });
@@ -632,6 +664,63 @@ app.get("/d/:shareId", async (c) => {
     }),
   );
 });
+
+app.get("/b/:shareId", async (c) => {
+  const ui = requestUiLang(c);
+  const origin = new URL(c.req.url).origin;
+  const shareId = c.req.param("shareId");
+  if (!isShareId(shareId) || !c.env?.DB) return c.html(unsharedPage(origin, ui), 410);
+  const store = d1TarotStore(c.env.DB);
+  const badge = await store.getBadgeShare(shareId);
+  const label = badge ? milestoneLabel(ui, badge.milestoneKey) : null;
+  if (!badge || !label) return c.html(unsharedPage(origin, ui), 410);
+  recordEvent(c.env, { name: "share_landing", kind: "badge", ...requestContext(c), userKind: "guest" });
+  return c.html(
+    badgeLandingPage({ origin, shareId, ui, label, ogImage: `${origin}/b/${shareId}/og.png` }),
+  );
+});
+
+async function badgeImageResponse(
+  c: { env: Env; req: { query: (n: string) => string | undefined } },
+  shareId: string,
+  img: "story" | "og",
+): Promise<Response> {
+  if (!c.env?.DB || !c.env.MEDIA || !c.env.ASSETS) {
+    return new Response("Share images unavailable", { status: 503 });
+  }
+  const qLang = c.req.query("lang");
+  const qMode = c.req.query("mode");
+  const mode = qMode === "night" ? "night" : "day";
+  const lang: "th" | "en" = qLang === "en" || qLang === "th" ? qLang : "th";
+  const badge = await d1TarotStore(c.env.DB).getBadgeShare(shareId);
+  const label = badge ? milestoneLabel(lang, badge.milestoneKey) : null;
+  if (!badge || !label) return new Response("Not found", { status: 404 });
+  const key = `share/${shareId}/badge-${img}-${lang}-${mode}.png`;
+  const hit = await c.env.MEDIA.get(key);
+  if (hit) {
+    return new Response(await hit.arrayBuffer(), {
+      headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=31536000, immutable" },
+    });
+  }
+  try {
+    const bytes = await renderBadgeImage(
+      { MEDIA: c.env.MEDIA, ASSETS: c.env.ASSETS },
+      { kind: img, label, lang, mode },
+    );
+    try {
+      await c.env.MEDIA.put(key, bytes);
+    } catch { /* cache write is best-effort */ }
+    return new Response(bytes as unknown as BodyInit, {
+      headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=31536000, immutable" },
+    });
+  } catch (err) {
+    console.error("badge image render failed", err);
+    return new Response("Render failed", { status: 503 });
+  }
+}
+
+app.get("/b/:shareId/story.png", (c) => badgeImageResponse(c, c.req.param("shareId"), "story"));
+app.get("/b/:shareId/og.png", (c) => badgeImageResponse(c, c.req.param("shareId"), "og"));
 
 async function shareImageResponse(
   c: { env: Env; req: { query: (n: string) => string | undefined } },
@@ -977,37 +1066,49 @@ app.get("/progress", async (c) => {
   const ui = requestUiLang(c);
   const lang = ui === "th" ? "th" : "en";
   const store = d1TarotStore(c.env.DB);
-  const [stats, days, owned, shares, referrals, cards] = await Promise.all([
+  const [stats, days, ownedDaily, referrals, cards, recent] = await Promise.all([
     store.progressStats(user.id),
     store.activityDays(user.id),
-    store.collection(user.id),
-    store.countShares(user.id),
+    store.collectionDaily(user.id),
     store.referralStats(user.id),
     store.listCards(lang),
+    store.recentDailies(user.id, 7),
   ]);
   const d = t(ui);
   const streak = computeStreak(days, bangkokDay());
+  const byId = new Map(cards.map((card) => [card.id, card]));
   const cardNames: Record<number, string> = {};
   for (const card of cards) cardNames[card.id] = card.name;
+  // SPEC §5.4: streak badges at 3/7/14/30/78/100 (shareable via
+  // kind:'badge'), deck = cards drawn as DAILY cards only.
+  const milestones = [
+    ...STREAK_TIERS.map((tier) => ({
+      key: `streak-${tier}`,
+      label: d.msStreakDays.replace("{n}", String(tier)),
+      achieved: streak.longest >= tier,
+    })),
+    { key: "collection", label: d.msCollection, achieved: ownedDaily.length >= 78 },
+  ];
   return c.html(
     progressPage({
       ui,
       origin: new URL(c.req.url).origin,
       streak,
       days: last14Days(days),
-      owned,
+      owned: ownedDaily,
       cardNames,
       referrals,
       bonusOn: c.env.REFERRAL_BONUS === "1",
-      milestones: [
-        { key: "first", label: d.msFirst, achieved: stats.readings >= 1 },
-        { key: "streak7", label: d.msStreak7, achieved: streak.longest >= 7 },
-        { key: "readings10", label: d.msReadings10, achieved: stats.readings >= 10 },
-        { key: "all-topics", label: d.msAllTopics, achieved: stats.topics.length >= 5 },
-        { key: "daily7", label: d.msDaily7, achieved: stats.dailies >= 7 },
-        { key: "sharer", label: d.msSharer, achieved: shares >= 1 },
-      ],
+      milestones,
       readings: stats.readings,
+      recentDaily: recent.map((r) => {
+        const view = byId.get(r.cardId);
+        return {
+          name: view?.name ?? `#${r.cardId}`,
+          image: view ? `/static/${view.imageKey}.webp` : "",
+          day: r.day,
+        };
+      }),
     }),
   );
 });
@@ -1028,8 +1129,14 @@ function last14Days(days: string[]): { date: string; active: boolean }[] {
 }
 
 // Card library index: major arcana first, then the four suits.
-app.get("/cards", async (c) => {
-  const ui = requestUiLang(c);
+// Served at /cards (UI language) and /th/cards (always Thai).
+type PageCtx = {
+  env?: Env;
+  html: (html: string) => Response | Promise<Response>;
+  req: { url: string };
+};
+
+async function cardsIndex(c: PageCtx, ui: UiLang, prefix: string, userId: string | null) {
   const lang = ui === "th" ? "th" : "en";
   const cards = c.env?.DB ? await d1TarotStore(c.env.DB).listCards(lang) : [];
   const toCard = (card: (typeof cards)[number]) => ({
@@ -1060,19 +1167,29 @@ app.get("/cards", async (c) => {
     cardsPage({
       ui,
       origin: new URL(c.req.url).origin,
-      streak: await pageStreak(c.env?.DB, (await currentUser(c))?.id ?? null),
+      streak: await pageStreak(c.env?.DB, userId),
       groups,
+      prefix,
     }),
   );
-});
+}
+
+app.get("/cards", async (c) => cardsIndex(c, requestUiLang(c), "", (await currentUser(c))?.id ?? null));
+app.get("/th/cards", async (c) => cardsIndex(c, "th", "/th", (await currentUser(c))?.id ?? null));
 
 // Card detail: meanings by topic + prev/next; drafts carry noindex.
-app.get("/cards/:slug", async (c) => {
-  const ui = requestUiLang(c);
+// Served at /cards/:slug (UI language) and /th/cards/:slug (Thai).
+async function cardDetail(
+  c: PageCtx & { text: (text: string, status: 404) => Response },
+  ui: UiLang,
+  prefix: string,
+  slug: string,
+  userId: string | null,
+) {
   const lang = ui === "th" ? "th" : "en";
   if (!c.env?.DB) return c.text("Not found", 404);
   const store = d1TarotStore(c.env.DB);
-  const card = await store.getCardBySlug(c.req.param("slug"), lang);
+  const card = await store.getCardBySlug(slug, lang);
   if (!card) return c.text("Not found", 404);
   const all = await store.listCards(lang);
   const idx = all.findIndex((x) => x.id === card.id);
@@ -1089,7 +1206,8 @@ app.get("/cards/:slug", async (c) => {
     cardDetailPage({
       ui,
       origin: new URL(c.req.url).origin,
-      streak: await pageStreak(c.env.DB, (await currentUser(c))?.id ?? null),
+      streak: await pageStreak(c.env.DB, userId),
+      prefix,
       card: {
         slug: card.slug,
         name: card.name,
@@ -1106,7 +1224,12 @@ app.get("/cards/:slug", async (c) => {
       },
     }),
   );
-});
+}
+
+app.get("/cards/:slug", async (c) =>
+  cardDetail(c, requestUiLang(c), "", c.req.param("slug"), (await currentUser(c))?.id ?? null));
+app.get("/th/cards/:slug", async (c) =>
+  cardDetail(c, "th", "/th", c.req.param("slug"), (await currentUser(c))?.id ?? null));
 
 // Better Auth handler (social callbacks, anonymous sign-in, session, ...).
 app.on(["GET", "POST"], "/api/auth/*", (c) => {

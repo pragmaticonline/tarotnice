@@ -165,6 +165,17 @@ export const readings = sqliteTable(
 );
 
 // One row per share action, for virality metrics.
+// Milestone badge shares (SPEC §5.4): one public link per earned
+// badge, served at /b/:shareId with its own story/OG images.
+export const badgeShares = sqliteTable("badge_shares", {
+  shareId: text("share_id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  milestoneKey: text("milestone_key").notNull(), // 'streak-7' | 'collection'
+  createdAt: integer("created_at").notNull(),
+});
+
 export const shares = sqliteTable("shares", {
   id: text("id").primaryKey(),
   shareId: text("share_id").notNull(), // readings.share_id or daily_draws.share_id or 'badge:...'

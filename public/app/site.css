@@ -215,3 +215,8 @@ a{color:var(--accent)}
 #prefs-form{margin-top:.5rem}
 #prefs-form label{display:block;margin-top:.6rem;font-weight:500}
 #prefs-form select,#prefs-form input{width:100%;box-sizing:border-box;padding:.6rem;border-radius:12px;border:2px solid var(--gold-dim);background:var(--card-face);color:var(--ink);font:inherit}
+.recent-strip{display:flex;gap:.5rem;flex-wrap:wrap}
+.recent-card{margin:0;text-align:center}
+.recent-card img{width:56px;border-radius:5px;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.recent-card figcaption{font-size:.7rem;color:var(--muted);max-width:64px}
+.land-badge{font-size:2.2rem;color:var(--gold);text-align:center;margin:.4rem 0 0}

@@ -199,6 +199,47 @@ function ogSvg(p: ShareSpec & { uris: string[] }): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${c.bg0}"/><stop offset="1" stop-color="${c.bg1}"/></linearGradient></defs><rect width="1200" height="630" fill="url(#bg)"/>${cards}<text x="${tx}" y="130" font-family="Cormorant Garamond, IBM Plex Sans Thai" font-size="72" font-weight="600" fill="${c.accent}">TarotNice</text>${summary}${ogLine}<text x="${tx}" y="600" font-family="IBM Plex Sans Thai" font-size="28" fill="${c.muted}">tarotnice.com</text></svg>`;
 }
 
+function badgeSvg(opts: {
+  kind: "story" | "og";
+  label: string;
+  lang: "th" | "en";
+  mode: "day" | "night";
+}): string {
+  const c = opts.mode === "night" ? NIGHT : DAY;
+  const lines = wrapText(opts.label, opts.kind === "story" ? 16 : 22);
+  const title = lines
+    .slice(0, 3)
+    .map(
+      (line, i) =>
+        `<text x="50%" y="${opts.kind === "story" ? 880 + i * 110 : 300 + i * 88}" text-anchor="middle" font-family="Cormorant Garamond, IBM Plex Sans Thai" font-size="${opts.kind === "story" ? 96 : 76}" font-weight="600" fill="${c.accent}">${escXml(line)}</text>`,
+    )
+    .join("");
+  // Sun-disc motif drawn as shapes (the embedded fonts have no
+  // star glyph; text stars rendered as tofu in share images before).
+  const sun = (cx: number, cy: number, r: number) =>
+    `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c.accent}" stroke-width="${Math.max(3, r / 9)}"/><circle cx="${cx}" cy="${cy}" r="${r * 0.32}" fill="${c.accent}"/>`;
+  if (opts.kind === "story") {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920"><defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.bg0}"/><stop offset="1" stop-color="${c.bg1}"/></linearGradient></defs><rect width="1080" height="1920" fill="url(#bg)"/>${sun(540, 700, 90)}${title}<text x="50%" y="1780" text-anchor="middle" font-family="IBM Plex Sans Thai" font-size="34" fill="${c.muted}">tarotnice.com</text></svg>`;
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${c.bg0}"/><stop offset="1" stop-color="${c.bg1}"/></linearGradient></defs><rect width="1200" height="630" fill="url(#bg)"/>${sun(180, 315, 70)}${title.replaceAll('x="50%"', 'x="660"')}<text x="660" y="560" font-family="IBM Plex Sans Thai" font-size="28" fill="${c.muted}" text-anchor="middle">tarotnice.com</text></svg>`;
+}
+
+/** Render a milestone badge image (story 1080x1920 / og 1200x630). */
+export async function renderBadgeImage(
+  env: ShareEnv,
+  opts: { kind: "story" | "og"; label: string; lang: "th" | "en"; mode: "day" | "night" },
+): Promise<Uint8Array> {
+  await ensureWasm();
+  const fontBuffers = await fonts(env);
+  const svg = badgeSvg(opts);
+  const width = opts.kind === "story" ? 1080 : 1200;
+  const resvg = new Resvg(svg, {
+    font: { fontFiles: [], loadSystemFonts: false, fontBuffers },
+    fitTo: { mode: "width", value: width },
+  });
+  return resvg.render().asPng();
+}
+
 /** Render a share image to PNG bytes (throws when assets are missing). */
 export async function renderShareImage(env: ShareEnv, spec: ShareSpec): Promise<Uint8Array> {
   await ensureWasm();

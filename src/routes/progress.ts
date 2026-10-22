@@ -19,6 +19,8 @@ export function progressPage(opts: {
   bonusOn: boolean;
   milestones: Milestone[];
   readings: number;
+  /** Last 7 daily-card thumbnails (SPEC §5.4), newest first. */
+  recentDaily?: { name: string; image: string; day: string }[];
 }): string {
   const d = t(opts.ui);
   const head = headerHtml({ ui: opts.ui, streak: opts.streak, path: "/progress" });
@@ -55,6 +57,16 @@ export function progressPage(opts: {
       `<p class="muted">${escapeHtml(d.freezeNote)}</p>` +
       `<div class="cal" role="img" aria-label="${escapeHtml(d.calendarTitle)}">${cells}</div>` +
       `<p class="muted">${escapeHtml(d.bestTitle)}: <b>${opts.streak.longest}</b> · ${escapeHtml(d.historyTitle)}: <b>${opts.readings}</b></p></section>` +
+      (opts.recentDaily && opts.recentDaily.length
+        ? `<section class="panel-card"><h2>${escapeHtml(d.recentDailyTitle)}</h2><div class="recent-strip">` +
+          opts.recentDaily
+            .map(
+              (r) =>
+                `<figure class="recent-card"><img src="${escapeHtml(r.image)}" alt="${escapeHtml(r.name)}" loading="lazy"><figcaption>${escapeHtml(r.name)}</figcaption></figure>`,
+            )
+            .join("") +
+          `</div></section>`
+        : "") +
       `<section class="panel-card"><h2>${escapeHtml(d.collectionTitle)}</h2>` +
       `<p class="muted">${owned.size} / 78</p><div class="deck" role="list">${deck}</div></section>` +
       `<section class="panel-card"><h2>${escapeHtml(d.referralTitle)}</h2>` +
