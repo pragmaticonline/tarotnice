@@ -48,7 +48,7 @@ function quotaRow(ui: UiLang, remaining: number): string {
   const pips = [0, 1, 2]
     .map((i) => `<span class="pip${i < remaining ? " on" : ""}" aria-hidden="true"></span>`)
     .join("");
-  return `<p class="quota" role="status"><span class="pips">${pips}</span> ${escapeHtml(fmt(d.quota, { n: remaining }))}</p>`;
+  return `<p class="quota" role="status"><span class="pips">${pips}</span> <span data-quota-label>${escapeHtml(fmt(d.quota, { n: remaining }))}</span></p>`;
 }
 
 function topicChips(ui: UiLang): string {
@@ -66,7 +66,7 @@ export function homePage(opts: HomeOpts = {}): string {
   const head = headerHtml({ ui, streak, path: "/" });
   const body = `<main>
 ${quotaRow(ui, 3)}
-<section class="daily-block" aria-label="Daily card">
+<section class="daily-block" id="daily" aria-label="Daily card" aria-live="polite">
 <p class="daily-prompt">${escapeHtml(ui === "th" ? "\u0e44\u0e1e\u0e48\u0e1b\u0e23\u0e30\u0e08\u0e33\u0e27\u0e31\u0e19\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13" : "Your card for today")}</p>
 </section>
 <form id="ask-form" action="/api/readings" method="post" data-need="${escapeHtml(d.hintNeed)}">
@@ -91,6 +91,7 @@ ${topicChips(ui)}
     origin,
     canonicalPath: "/",
     description: d.homeLede,
+    extraHead: `<script src="/app/home.js" defer></script>`,
     jsonLd,
     body: `${head}${body}${siteFooterHtml(ui, "/")}${CLIENT}`,
   });

@@ -1,6 +1,14 @@
 import { Hono } from "hono";
 import { setCookie } from "hono/cookie";
+import { eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
 import { createAuth, isRegisteredUser, type AuthEnv } from "./lib/auth";
+import * as schema from "./db/schema";
+import { bangkokDay, nextBangkokMidnight } from "./lib/bangkok";
+import { dailyMessage, drawDailyCard, luckyColour } from "./lib/daily";
+import { computeStreak } from "./lib/streaks";
+import { d1PrefsStore } from "./db/prefs-store";
+import { d1TarotStore } from "./db/tarot-store";
 import {
   clientCategory,
   countryOf,
@@ -25,6 +33,12 @@ type Env = AuthEnv &
     AI: Ai;
     ASSETS?: Fetcher;
     MEDIA?: R2Bucket;
+    DAILY_QUESTION_LIMIT?: string;
+    REFERRAL_BONUS?: string;
+    READING_MODEL?: string;
+    DEFAULT_LANG?: string;
+    TIMEZONE?: string;
+    TURNSTILE_SECRET?: string;
   };
 
 type SessionUser = { id: string; email: string | null; isAnonymous: boolean | null };
@@ -201,6 +215,158 @@ app.get("/api/me", async (c) => {
   });
   if (!session) return c.json({ error: "unauthorized" }, 401);
   return c.json({ user: session.user, userKind: userKind(session.user as SessionUser) });
+});
+
+function questionLimit(env: Env | undefined): number {
+  const n = Number(env?.DAILY_QUESTION_LIMIT ?? "3");
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 3;
+}
+
+function authedUser(c: { env: AuthEnv; req: { raw: { headers: Headers } } }) {
+  return currentUser(c);
+}
+
+// Everything the client needs on load: user, prefs, streak, quota,
+// and today's daily card. Server wins over localStorage.
+app.get("/api/me/summary", async (c) => {
+  const ui = requestUiLang(c);
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) {
+    return c.json({
+      user: null,
+      prefs: { lang: ui, theme: null, nickname: null },
+      streak: { current: 0, longest: 0, activeToday: false },
+      quota: { used: 0, limit: questionLimit(c.env), resetsAt: nextBangkokMidnight() },
+      today: { daily: null },
+    });
+  }
+  const store = d1TarotStore(c.env.DB);
+  const today = bangkokDay();
+  const [prefs, used, days, daily] = await Promise.all([
+    d1PrefsStore(c.env.DB).get(user.id),
+    store.countReadings(user.id, today),
+    store.activityDays(user.id),
+    store.getDaily(user.id, today),
+  ]);
+  let dailyView = null;
+  if (daily) {
+    const card = await store.getCard(daily.cardId, daily.lang === "th" ? "th" : "en");
+    if (card) {
+      dailyView = {
+        card: {
+          id: card.id,
+          slug: card.slug,
+          name: card.name,
+          image: `/static/${card.imageKey}.webp`,
+          image2x: `/static/${card.imageKey}@2x.webp`,
+          reversed: daily.reversed,
+        },
+        message: daily.message,
+        luckyColour: luckyColour(),
+        shareId: daily.shareId,
+        lang: daily.lang,
+      };
+    }
+  }
+  return c.json({
+    user: { id: user.id, email: user.email, isAnonymous: user.isAnonymous },
+    prefs: prefs ?? { lang: ui, theme: null, nickname: null },
+    streak: computeStreak(days, today),
+    quota: { used, limit: questionLimit(c.env), resetsAt: nextBangkokMidnight() },
+    today: { daily: dailyView },
+  });
+});
+
+// Interface prefs: UI language, Day/Night theme (NULL = auto), nickname.
+app.put("/api/me/prefs", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  let body: { lang?: unknown; theme?: unknown; nickname?: unknown };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "bad_request" }, 400);
+  }
+  const prefs: { lang?: string; theme?: string | null; nickname?: string | null } = {};
+  if (body.lang === "th" || body.lang === "en") prefs.lang = body.lang;
+  if (body.theme === "day" || body.theme === "night") prefs.theme = body.theme;
+  if (body.theme === null) prefs.theme = null;
+  if (typeof body.nickname === "string") {
+    const nickname = body.nickname.trim().slice(0, 40);
+    prefs.nickname = nickname || null;
+  }
+  if (Object.keys(prefs).length === 0) return c.json({ error: "bad_request" }, 400);
+  return c.json(await d1PrefsStore(c.env.DB).set(user.id, prefs));
+});
+
+// Delete everything: the user row cascades to prefs, draws, readings,
+// shares, and referrals. The client clears localStorage on success.
+app.delete("/api/me", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  await drizzle(c.env.DB, { schema }).delete(schema.user).where(eq(schema.user.id, user.id));
+  return c.json({ ok: true });
+});
+
+// Daily card: one per Bangkok day, idempotent. Does not count toward
+// the question quota. 401 when there is no session yet — the client
+// creates the anonymous session first, then retries.
+app.post("/api/daily", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  let body: { lang?: unknown };
+  try {
+    body = await c.req.json().catch(() => ({}));
+  } catch {
+    body = {};
+  }
+  const lang = body.lang === "en" || body.lang === "th" ? body.lang : requestUiLang(c);
+  const store = d1TarotStore(c.env.DB);
+  const today = bangkokDay();
+  const respond = async (draw: { cardId: number; reversed: boolean; message: string; lang: string; shareId: string | null }, fresh: boolean) => {
+    const card = await store.getCard(draw.cardId, lang);
+    if (!card) return c.json({ error: "unknown_card" }, 500);
+    const days = await store.activityDays(user.id);
+    recordEvent(c.env, {
+      name: "daily_drawn",
+      lang,
+      country: countryOf(c.req.raw),
+      ...clientCategory(c.req.raw),
+      userKind: userKind(user),
+    });
+    return c.json({
+      card: {
+        id: card.id,
+        slug: card.slug,
+        name: card.name,
+        image: `/static/${card.imageKey}.webp`,
+        image2x: `/static/${card.imageKey}@2x.webp`,
+        reversed: draw.reversed,
+      },
+      message: draw.message,
+      luckyColour: luckyColour(),
+      streak: computeStreak(days, today),
+      lang,
+      fresh,
+    });
+  };
+  const existing = await store.getDaily(user.id, today);
+  if (existing) return respond(existing, false);
+  const { id, reversed } = drawDailyCard();
+  const card = await store.getCard(id, lang);
+  if (!card) return c.json({ error: "unknown_card" }, 500);
+  const cached = await store.getCachedMessage(today, id, reversed, lang);
+  const message =
+    cached ?? (await dailyMessage(c.env, card, reversed, lang)).text;
+  if (!cached) {
+    try {
+      await store.setCachedMessage(today, id, reversed, lang, message);
+    } catch {
+      /* cache is best-effort */
+    }
+  }
+  const draw = await store.insertDaily(user.id, today, { cardId: id, reversed, message, lang });
+  return respond(draw, true);
 });
 
 // Public static files: R2 (bucket tarotnice-media) first, static assets

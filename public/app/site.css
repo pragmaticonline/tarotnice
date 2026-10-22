@@ -64,6 +64,18 @@ a{color:var(--accent)}
 .slots{display:flex;justify-content:center;gap:1rem}
 .slot{width:72px;height:118px;border:2px dashed var(--gold-dim);border-radius:8px}
 
+/* Daily card block. */
+.daily-block{display:flex;flex-direction:column;gap:.7rem;background:var(--card-face);border:1.5px solid var(--gold);border-radius:16px;padding:1rem}
+.daily-prompt{font-family:var(--f-display);font-size:1.25rem;color:var(--accent);margin:0}
+.daily-tap{display:flex;align-items:center;gap:.8rem;background:transparent;border:0;cursor:pointer;padding:0;font-family:var(--f-body);font-size:1rem;color:var(--ink);min-height:44px;text-align:left}
+.card-back{width:64px;height:106px;flex:none;border-radius:8px;border:1.5px solid var(--gold-dim);background:radial-gradient(circle at 50% 38%,var(--gold) 0 8%,transparent 9%),repeating-conic-gradient(from 0deg,var(--back) 0 12deg,var(--gold-dim) 12deg 13deg);background-color:var(--back)}
+.daily-face{display:flex;gap:.9rem;align-items:flex-start}
+.daily-face img{width:96px;height:auto;border-radius:8px;border:1.5px solid var(--gold)}
+.daily-face img.rev{transform:rotate(180deg)}
+.daily-name{font-family:var(--f-display);font-size:1.2rem;color:var(--accent);margin:0 0 .3rem}
+.daily-msg{margin:.2rem 0;line-height:1.55}
+.daily-lucky{display:inline-block;margin:.4rem 0 0;padding:.2rem .7rem;border:1px solid var(--gold-dim);border-radius:999px;color:var(--muted);font-size:.9rem}
+
 /* Ngern guide + speech bubble. */
 .guide{display:flex;align-items:flex-end;gap:.7rem;margin-top:.5rem}
 .guide img{width:96px;height:auto;flex:none}
