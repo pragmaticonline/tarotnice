@@ -50,20 +50,34 @@ export function homePage(opts: HomeOpts = {}): string {
   const origin = opts.origin ?? "";
   const streak = computeStreak(opts.streakDays ?? [], localDayString());
   const head = headerHtml({ ui, streak, path: "/" });
+  const steps = `<ol class="steps" aria-label="Steps">
+<li class="step on" data-step-ind="1"><span class="step-bar"></span><span class="step-label">1 ${escapeHtml(d.stepAsk)}</span></li>
+<li class="step" data-step-ind="2"><span class="step-bar"></span><span class="step-label">2 ${escapeHtml(d.stepDraw)}</span></li>
+<li class="step" data-step-ind="3"><span class="step-bar"></span><span class="step-label">3 ${escapeHtml(d.stepRead)}</span></li>
+</ol>`;
   const body = `<main>
-${quotaRow(ui, 3)}
-<div id="draw-stage" class="stage" aria-live="polite"><div class="slots"><span class="slot"></span><span class="slot"></span><span class="slot"></span></div><div class="deck" id="deck"></div></div>
-<section class="daily-block" id="daily" aria-label="Daily card" aria-live="polite">
-<p class="daily-prompt">${escapeHtml(ui === "th" ? "\u0e44\u0e1e\u0e48\u0e1b\u0e23\u0e30\u0e08\u0e33\u0e27\u0e31\u0e19\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13" : "Your card for today")}</p>
-</section>
+${steps}
+<section id="step-ask" data-step="1">
+<div class="guide guide-ask s-idle" id="guide-ask"><span class="ngern-wrap">${NGERN_SITTING_SVG}</span><p class="bubble">${escapeHtml(d.hintIdle)}</p></div>
 <form id="ask-form" action="/api/readings" method="post" data-need="${escapeHtml(d.hintNeed)}">
 <label class="ask-label" for="q">${escapeHtml(d.ask)}</label>
-<textarea id="q" name="question" rows="2" maxlength="200" placeholder="${escapeHtml(d.placeholder)}"></textarea>
+<textarea id="q" name="question" rows="3" maxlength="200" placeholder="${escapeHtml(d.placeholder)}"></textarea>
 ${topicChips(ui)}
 ${opts.turnstileSiteKey ? `<div class="cf-turnstile" data-sitekey="${escapeHtml(opts.turnstileSiteKey)}" data-size="invisible"></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>` : ""}
-<button class="btn btn-primary" type="submit">${escapeHtml(d.shuffle)}</button>
+<button class="btn btn-primary" type="submit">${escapeHtml(d.shuffleCards)}</button>
 </form>
+${quotaRow(ui, 3)}
+</section>
+<section id="step-draw" data-step="2" hidden>
+<div class="draw-top"><button type="button" class="draw-back" id="draw-back" aria-label="Back">\u2190</button><span class="topic-chip" id="draw-topic"></span><p class="draw-q" id="draw-q"></p></div>
+<div id="draw-stage" class="stage" aria-live="polite"><div class="slots"><span class="slot"></span><span class="slot"></span><span class="slot"></span></div><div class="deck" id="deck"></div></div>
 <div id="guide" class="guide s-idle"><span class="ngern-wrap">${NGERN_SITTING_SVG}</span><p class="bubble">${escapeHtml(d.hintIdle)}</p></div>
+</section>
+<section id="step-read" data-step="3" hidden>
+<p class="draw-q read-q" id="read-q"></p>
+<div class="read-cards" id="read-cards"></div>
+<div id="reading" class="reading"></div>
+</section>
 </main>`;
   const jsonLd = JSON.stringify({
     "@context": "https://schema.org",

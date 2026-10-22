@@ -245,3 +245,38 @@ a{color:var(--accent)}
 .recent-card img{width:56px;border-radius:5px;box-shadow:0 2px 6px rgba(0,0,0,.25)}
 .recent-card figcaption{font-size:.7rem;color:var(--muted);max-width:64px}
 .land-badge{font-size:2.2rem;color:var(--gold);text-align:center;margin:.4rem 0 0}
+
+/* One-row compact header (52px) + header daily pill. */
+.site-head{flex-wrap:nowrap;min-height:52px;gap:.45rem}
+.brand{font-size:1.25rem}
+.brand svg{width:32px;height:32px}
+.theme-toggle{min-height:40px;padding:.35rem .6rem;font-size:1rem}
+.lang-btn{display:inline-flex;align-items:center;min-height:40px;padding:.35rem .7rem;border:1px solid var(--gold-dim);border-radius:999px;color:var(--ink);text-decoration:none;font-size:.9rem}
+.daily-btn{position:relative;display:inline-flex;align-items:center;gap:.4rem;min-height:40px;padding:.35rem .7rem;border:1px solid var(--gold-dim);border-radius:999px;background:transparent;color:var(--ink);font-family:var(--f-body);font-size:.9rem;cursor:pointer}
+.daily-btn-back{width:16px;height:26px;border-radius:3px;border:1px solid var(--gold-dim);background:radial-gradient(circle at 50% 38%,var(--gold) 0 12%,transparent 13%),repeating-conic-gradient(from 0deg,var(--back) 0 12deg,var(--gold-dim) 12deg 13deg);background-color:var(--back);flex:none}
+.daily-dot{position:absolute;top:2px;right:4px;width:9px;height:9px;border-radius:50%;background:var(--gold);border:1px solid var(--bg)}
+.streak-chip{min-height:40px}
+
+/* Wizard steps. */
+.steps{display:flex;gap:.6rem;list-style:none;margin:0;padding:0}
+.step{flex:1;display:flex;flex-direction:column;gap:.25rem}
+.step-bar{height:4px;border-radius:2px;background:var(--gold-dim);opacity:.45}
+.step.on .step-bar{background:var(--accent);opacity:1}
+.step-label{font-size:.8rem;color:var(--muted)}
+.step.on .step-label{color:var(--ink)}
+.draw-top{display:flex;align-items:center;gap:.6rem;margin-bottom:.4rem}
+.draw-back{background:transparent;border:1px solid var(--gold-dim);border-radius:999px;width:44px;height:44px;font-size:1.1rem;color:var(--ink);cursor:pointer;flex:none}
+.draw-q{font-family:var(--f-display);font-style:italic;font-size:1.1rem;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.read-cards{display:flex;gap:.6rem;margin:.6rem 0}
+.read-cards img{width:84px;height:auto;border-radius:6px;border:1.5px solid var(--gold)}
+.read-cards img.rev{transform:rotate(180deg)}
+.guide-ask{margin-top:0}
+.guide-ask .ngern,.guide-ask img{width:84px}
+
+/* Daily modal (centred, all pages). */
+.daily-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.6rem;margin-bottom:.6rem}
+.daily-modal-title{font-size:1.3rem;margin:0}
+.daily-x{background:transparent;border:1px solid var(--gold-dim);border-radius:999px;width:40px;height:40px;font-size:1.3rem;line-height:1;color:var(--card-ink);cursor:pointer;flex:none}
+.daily-modal-actions{display:flex;gap:.6rem;margin-top:.9rem}
+.daily-modal-actions .btn{flex:1}
+.daily-panel .daily-tap{margin:.4rem auto}

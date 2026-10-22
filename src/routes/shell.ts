@@ -18,7 +18,7 @@ const THEME_INIT = `<script>(function(){try{var m=null;try{m=localStorage.getIte
 
 // Toggles data-mode + localStorage; signed-in visitors also persist it
 // to user_prefs via PUT /api/me/prefs (best-effort, M3).
-const THEME_TOGGLE = `<script>(function(){function paint(){try{var night=document.documentElement.getAttribute("data-mode")==="night";var btns=document.querySelectorAll("[data-theme-toggle]");for(var i=0;i<btns.length;i++){var b=btns[i];var d=b.querySelector("[data-theme-label]");if(d)d.textContent=night?"\u263e "+(b.getAttribute("data-night")||"Night"):"\u2600 "+(b.getAttribute("data-day")||"Day")}}catch(x){}}paint();document.addEventListener("click",function(e){var b=e.target&&e.target.closest?e.target.closest("[data-theme-toggle]"):null;if(!b)return;try{var cur=document.documentElement.getAttribute("data-mode")==="night"?"night":"day";var next=cur==="night"?"day":"night";document.documentElement.setAttribute("data-mode",next);try{localStorage.setItem("tarotnice:mode",next)}catch(x){}paint();fetch("/api/me/prefs",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify({theme:next}),credentials:"include"}).catch(function(){})}catch(x){}});})();</script>`;
+const THEME_TOGGLE = `<script>(function(){function paint(){try{var night=document.documentElement.getAttribute("data-mode")==="night";var btns=document.querySelectorAll("[data-theme-toggle]");for(var i=0;i<btns.length;i++){var b=btns[i];var d=b.querySelector("[data-theme-label]");if(d)d.textContent=night?"\u263e":"\u2600"}}catch(x){}}paint();document.addEventListener("click",function(e){var b=e.target&&e.target.closest?e.target.closest("[data-theme-toggle]"):null;if(!b)return;try{var cur=document.documentElement.getAttribute("data-mode")==="night"?"night":"day";var next=cur==="night"?"day":"night";document.documentElement.setAttribute("data-mode",next);try{localStorage.setItem("tarotnice:mode",next)}catch(x){}paint();fetch("/api/me/prefs",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify({theme:next}),credentials:"include"}).catch(function(){})}catch(x){}});})();</script>`;
 
 const DESCRIPTION = "Free tarot readings, every day. Draw your daily card and ask up to 3 questions.";
 
@@ -90,6 +90,7 @@ ${opts.body}
 </div>
 ${THEME_TOGGLE}
 ${analyticsBeacon()}
+<script src="/app/share.js" defer></script><script src="/app/daily.js" defer></script>
 <script>(function(){try{if("serviceWorker" in navigator){addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){});});}}catch(e){}})();</script>
 </body>
 </html>`;
@@ -130,13 +131,26 @@ export function langToggleHtml(ui: UiLang, path: string): string {
 
 /** Site header: wordmark, streak chip, Day/Night + \u0e44\u0e17\u0e22/EN toggles.
  *  On narrow screens the toggles wrap under the wordmark. */
+/** Daily-card header pill: card-back icon + Today; gold dot until drawn. */
+export function dailyButtonHtml(ui: UiLang): string {
+  const d = t(ui);
+  return `<button type="button" class="daily-btn" data-daily-btn aria-label="${escapeHtml(d.dailyTitle)}"><span class="daily-btn-back" aria-hidden="true"></span><span>${escapeHtml(d.today)}</span><span class="daily-dot" data-daily-dot aria-hidden="true"></span></button>`;
+}
+
+/** Compact single language button for the header (full choice in footer). */
+export function langButtonHtml(ui: UiLang, path: string): string {
+  const other = UI_LANGS.find((l) => l.code !== ui) || UI_LANGS[0];
+  const sep = path.includes("?") ? "&" : "?";
+  return `<a class="lang-btn" lang="${other.code}" href="${escapeHtml(path)}${sep}ui=${other.code}" aria-label="${escapeHtml(t(ui).interfaceLanguage)}">${other.code.toUpperCase()}</a>`;
+}
+
 export function headerHtml(opts: {
   ui: UiLang;
   streak: StreakInfo;
   path?: string;
 }): string {
   const path = opts.path ?? "/";
-  return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${streakChipHtml(opts.streak, opts.ui, "/progress")}${themeToggleHtml(opts.ui)}${langToggleHtml(opts.ui, path)}</header>`;
+  return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${streakChipHtml(opts.streak, opts.ui, "/progress")}${dailyButtonHtml(opts.ui)}${themeToggleHtml(opts.ui)}${langButtonHtml(opts.ui, path)}</header>`;
 }
 
 /** Shared footer: tagline, entertainment line, legal links, one

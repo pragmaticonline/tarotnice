@@ -87,6 +87,9 @@ async function main() {
   await S({ method: "Runtime.enable" });
   await S({ method: "Page.navigate", params: { url: URL_TO_TEST } });
   await sleep(5000);
+  // Dismiss the once-a-day daily modal if it auto-opened.
+  await ev(`(function(){ var s=document.getElementById('daily-sheet'); if(s && !s.hidden){ var x=s.querySelector('.daily-x'); if(x) x.click(); } return true; })()`);
+  await sleep(400);
 
   await ev(`(function(){ var q=document.getElementById('q'); q.value='How will the new job go?'; q.dispatchEvent(new Event('input',{bubbles:true})); (document.querySelector('#ask-form button[type=submit]')||document.querySelector('#ask-form .btn-primary')).click(); return true; })()`);
 

@@ -16,13 +16,31 @@
     if (g) g.className = "guide s-" + state;
   }
   function bubble(msg) {
-    var b = document.querySelector("#guide .bubble");
+    var askVisible = !document.getElementById("step-draw") || document.getElementById("step-draw").hidden;
+    var b = document.querySelector(askVisible ? "#guide-ask .bubble" : "#guide .bubble");
     if (b && msg) b.textContent = msg;
   }
+
+  // Wizard navigation: 1 ask -> 2 draw -> 3 reading, same URL.
+  function showStep(n, push) {
+    [1, 2, 3].forEach(function (k) {
+      var sec = document.querySelector('[data-step="' + k + '"]');
+      if (sec) sec.hidden = k !== n;
+      var ind = document.querySelector('[data-step-ind="' + k + '"]');
+      if (ind) ind.classList.toggle("on", k <= n);
+    });
+    if (push) {
+      try { history.pushState({ step: n }, ""); } catch (e) {}
+    }
+    window.scrollTo(0, 0);
+  }
   function sleepNgern() {
-    var wrap = document.querySelector("#guide .ngern-wrap");
-    if (wrap) wrap.innerHTML = '<img src="/mascot/ngern-sleeping.svg" alt="Ngern the Korat cat" width="120" height="120">';
+    document.querySelectorAll("#guide .ngern-wrap, #guide-ask .ngern-wrap").forEach(function (wrap) {
+      wrap.innerHTML = '<img src="/mascot/ngern-sleeping.svg" alt="Ngern the Korat cat" width="120" height="120">';
+    });
     setGuide("sleep");
+    var ga = document.getElementById("guide-ask");
+    if (ga) ga.className = "guide guide-ask s-sleep";
   }
 
   var STR = {
@@ -72,7 +90,8 @@
       });
     }
     sleepNgern();
-    var mount = document.getElementById("reading");
+    bubble(t("sleep"));
+    var mount = null; // sleep state stays on step 1 now
     var html = "<p>" + esc(t("sleep")) + "</p>";
     if (resetsAt) html += '<p class="countdown">' + esc(t("newIn")) + esc(countdown(resetsAt)) + "</p>";
     html += '<p><a class="btn btn-outline" href="/cards">' + esc(t("browse")) + "</a></p>";
@@ -146,9 +165,16 @@
     var btn = document.createElement("button");
     btn.type = "button";
     btn.className = "btn btn-outline";
-    btn.textContent = t("again");
+    btn.textContent = t("again") + " (" + remaining + ")";
     btn.addEventListener("click", function () {
-      location.reload();
+      var q = document.getElementById("q");
+      if (q) q.value = "";
+      var form = document.getElementById("ask-form");
+      var submitBtn = form && form.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.disabled = false;
+      showStep(1);
+      if (window.TarotHome) window.TarotHome.refresh();
+      if (q) q.focus();
     });
     row.appendChild(btn);
     mount.appendChild(row);
@@ -183,6 +209,27 @@
         mount.appendChild(btn);
       },
     });
+  }
+
+  function enterDraw(question, topicText) {
+    var chip = document.getElementById("draw-topic");
+    if (chip) chip.textContent = topicText;
+    var dq = document.getElementById("draw-q");
+    if (dq) dq.textContent = "\u201c" + question + "\u201d";
+    showStep(2, true);
+  }
+
+  function enterRead(question, topicText, cards) {
+    var rq = document.getElementById("read-q");
+    if (rq) rq.textContent = "\u201c" + question + "\u201d";
+    var row = document.getElementById("read-cards");
+    if (row) {
+      row.innerHTML = (cards || []).map(function (c) {
+        return '<img src="' + esc(c.image) + '" srcset="' + esc(c.image2x || "") + ' 2x" alt="' + esc(c.name) + '"' +
+          (c.reversed ? ' class="rev"' : "") + ">";
+      }).join("");
+    }
+    showStep(3, true);
   }
 
   async function submit(form) {
@@ -232,8 +279,8 @@
       return;
     }
     if (res.data && res.data.crisis) {
-      collapseForm(question, topicLabel(topic));
       setGuide("done");
+      enterRead(question, topicLabel(topic), []);
       var mount = readingMount();
       mount.innerHTML = '<div class="rc on"><b>' + esc(t("crisis")) + "</b><p>" + esc(res.data.message) + "</p></div>";
       if (btn) btn.disabled = false;
@@ -269,10 +316,10 @@
     });
     var reading = { id: res.data.id, cards: enriched };
     // A resumed draw keeps its original question on screen.
-    collapseForm(res.data.resumed && res.data.question ? res.data.question : question,
-      topicLabel(res.data.resumed && res.data.topic ? res.data.topic : topic));
+    var shownQ = res.data.resumed && res.data.question ? res.data.question : question;
+    var shownTopic = topicLabel(res.data.resumed && res.data.topic ? res.data.topic : topic);
+    enterDraw(shownQ, shownTopic);
     var stage = document.getElementById("draw-stage");
-    var mount2 = readingMount();
     try {
       await window.TarotDraw.run(stage, {
         cards: reading.cards,
@@ -284,6 +331,8 @@
       if (btn) btn.disabled = false;
       return;
     }
+    enterRead(shownQ, shownTopic, reading.cards);
+    var mount2 = readingMount();
     bubble(lang === "th" ? "\u0e19\u0e35\u0e48\u0e04\u0e37\u0e2d\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13" : "Here is your reading");
     streamInto(mount2, reading, lang, function () {
       if (window.TarotHome) window.TarotHome.refresh();
@@ -295,8 +344,16 @@
   function init() {
     var form = document.getElementById("ask-form");
     if (!form || !window.TarotDraw) return;
-    var idleStage = document.getElementById("draw-stage");
-    if (idleStage && window.TarotDraw.idle) window.TarotDraw.idle(idleStage, uiLang());
+    var back = document.getElementById("draw-back");
+    if (back) back.addEventListener("click", function () {
+      if (history.state && history.state.step) history.back();
+      else showStep(1);
+    });
+    window.addEventListener("popstate", function () { showStep(1); });
+    if (/[?&]focus=q/.test(location.search)) {
+      var q0 = document.getElementById("q");
+      if (q0) q0.focus();
+    }
     // Sleep state from the start when no questions remain.
     var data = window.TarotHome && window.TarotHome.data;
     if (data && data.quota && data.quota.used >= (data.quota.limit || 3)) {
