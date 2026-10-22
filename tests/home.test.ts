@@ -3,19 +3,16 @@ import app from "../src/index";
 import { homePage } from "../src/routes/home";
 
 describe("GET / (draw screen)", () => {
-  it("serves the ask form with topics, quota, Ngern, and header", async () => {
+  it("serves the ask form with quota, Ngern, and header", async () => {
     const res = await app.request("/");
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toContain("text/html");
     const html = await res.text();
-    // Ask form: label, 200-char textarea, topic chips (General default), Shuffle.
+    // Ask form: label, 200-char textarea, Shuffle. No topic chips.
     expect(html).toContain("What would you like to ask today?");
     expect(html).toContain('maxlength="200"');
-    expect(html).toContain('value="general" checked');
+    expect(html).not.toContain('name="topic"');
     expect(html).toContain("Shuffle");
-    for (const topic of ["love", "career", "money", "health", "general"]) {
-      expect(html).toContain(`value="${topic}"`);
-    }
     // Quota row: three pips + remaining text.
     expect(html).toContain("3 of 3 questions left today");
     expect((html.match(/class="pip on"/g) || []).length).toBe(3);

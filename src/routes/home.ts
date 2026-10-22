@@ -37,13 +37,6 @@ function quotaRow(ui: UiLang, remaining: number): string {
   return `<p class="quota" role="status"><span class="pips">${pips}</span> <span data-quota-label>${escapeHtml(fmt(d.quota, { n: remaining }))}</span></p>`;
 }
 
-function topicChips(ui: UiLang): string {
-  const d = t(ui);
-  return `<div class="topics" role="radiogroup" aria-label="Topic">${TOPICS.map((topic) =>
-    `<label class="chip"><input type="radio" name="topic" value="${topic.code}"${topic.code === "general" ? " checked" : ""}><span>${escapeHtml(d[topic.labelKey])}</span></label>`,
-  ).join("")}</div>`;
-}
-
 export function homePage(opts: HomeOpts = {}): string {
   const ui = opts.uiLang ?? "en";
   const d = t(ui);
@@ -62,14 +55,13 @@ ${steps}
 <form id="ask-form" action="/api/readings" method="post" data-need="${escapeHtml(d.hintNeed)}">
 <label class="ask-label" for="q">${escapeHtml(d.ask)}</label>
 <textarea id="q" name="question" rows="3" maxlength="200" placeholder="${escapeHtml(d.placeholder)}"></textarea>
-${topicChips(ui)}
 ${opts.turnstileSiteKey ? `<div class="cf-turnstile" data-sitekey="${escapeHtml(opts.turnstileSiteKey)}" data-size="invisible"></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>` : ""}
 <button class="btn btn-primary" type="submit">${escapeHtml(d.shuffleCards)}</button>
 </form>
 ${quotaRow(ui, 3)}
 </section>
 <section id="step-draw" data-step="2" hidden>
-<div class="draw-top"><button type="button" class="draw-back" id="draw-back" aria-label="Back">\u2190</button><span class="topic-chip" id="draw-topic"></span><p class="draw-q" id="draw-q"></p></div>
+<div class="draw-top"><button type="button" class="draw-back" id="draw-back" aria-label="Back">\u2190</button><p class="draw-q" id="draw-q"></p></div>
 <div id="draw-stage" class="stage" aria-live="polite"><div class="slots"><span class="slot"></span><span class="slot"></span><span class="slot"></span></div><div class="deck" id="deck"></div></div>
 <div id="guide" class="guide s-idle"><span class="ngern-wrap">${NGERN_SITTING_SVG}</span><p class="bubble">${escapeHtml(d.hintIdle)}</p></div>
 </section>
