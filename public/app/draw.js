@@ -324,12 +324,26 @@
       synth.classList.add("on");
     }, 250 * 4);
 
+    // Render the streamed answer as paragraphs: blank-line separated
+    // blocks become <p>, **bold** markers become <b>. Falls back to
+    // single-newline splits when the model forgets the blank lines.
+    function renderSynth() {
+      var blocks = full.split(/\n\s*\n/).map(function (b) { return b.trim(); }).filter(Boolean);
+      if (blocks.length <= 1) {
+        blocks = full.split(/\n/).map(function (b) { return b.trim(); }).filter(Boolean);
+      }
+      synth.innerHTML = blocks.map(function (b) {
+        var html = esc(b).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+        return "<p>" + html + "</p>";
+      }).join("");
+    }
+
     var es = new EventSource(streamUrl);
     var full = "";
     es.addEventListener("delta", function (e) {
       try {
         full += JSON.parse(e.data);
-        synth.textContent = full;
+        renderSynth();
       } catch (err) {}
     });
     es.addEventListener("done", function (e) {
