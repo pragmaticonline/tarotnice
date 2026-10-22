@@ -13,8 +13,8 @@ describe("wrapText", () => {
   });
 
   it("wraps Thai by graphemes without splitting marks", () => {
-    const lines = wrapText("สวัสดีชาวโลก", 5);
-    expect(lines.join("")).toBe("สวัสดีชาวโลก");
+    const lines = wrapText("\u0e2a\u0e27\u0e31\u0e2a\u0e14\u0e35\u0e0a\u0e32\u0e27\u0e42\u0e25\u0e01", 5);
+    expect(lines.join("")).toBe("\u0e2a\u0e27\u0e31\u0e2a\u0e14\u0e35\u0e0a\u0e32\u0e27\u0e42\u0e25\u0e01");
     expect(lines.length).toBeGreaterThan(1);
     // No combining mark (Thai vowel/tone signs) may start a line.
     for (const line of lines) {
@@ -58,7 +58,7 @@ describe("share landing pages", () => {
   it("escapes question HTML and never leaks the full reading", () => {
     const html = shareLandingPage({
       kind: "reading", origin: "https://tarotnice.com", shareId: "AbC123XyZ9",
-      ui: "th", cards, summary: "ใจเย็นๆ",
+      ui: "th", cards, summary: "\u0e43\u0e08\u0e40\u0e22\u0e47\u0e19\u0e46",
       question: "<script>alert(1)</script>",
       ogImage: "https://tarotnice.com/r/AbC123XyZ9/og.png",
     });

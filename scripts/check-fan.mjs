@@ -95,9 +95,9 @@ async function main() {
   for (let i = 0; i < 40; i++) {
     await sleep(500);
     bubble = await ev(`(document.querySelector('#guide .bubble')||{}).textContent || ''`);
-    if (/Choose|more card|เลือก/.test(bubble)) break;
+    if (/Choose|more card|\u0e40\u0e25\u0e37\u0e2d\u0e01/.test(bubble)) break;
   }
-  chk("fan reaches picking state", /Choose|more card|เลือก/.test(bubble), bubble);
+  chk("fan reaches picking state", /Choose|more card|\u0e40\u0e25\u0e37\u0e2d\u0e01/.test(bubble), bubble);
 
   // C1: nothing of the reading may exist before the picks — no card
   // name blocks rendered, no stream opened yet.
