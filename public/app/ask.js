@@ -234,6 +234,11 @@
           q.value = question;
           q.focus();
         }
+        // The finished reading left the submit button disabled
+        // (submit() disables it; only Ask again re-enabled it).
+        var form = document.getElementById("ask-form");
+        var submitBtn = form && form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = false;
         if (window.TarotHome) window.TarotHome.refresh();
       },
       onError: function (kind) {
