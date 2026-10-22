@@ -59,6 +59,7 @@ type Env = AuthEnv &
     DEFAULT_LANG?: string;
     TIMEZONE?: string;
     TURNSTILE_SECRET?: string;
+    TURNSTILE_SITE_KEY?: string;
   };
 
 function clientIp(c: { req: { raw: Request; header: (n: string) => string | undefined } }): string {
@@ -205,7 +206,7 @@ app.get("/", async (c) => {
     });
   }
   const origin = new URL(c.req.url).origin;
-  return c.html(homePage({ origin, uiLang: requestUiLang(c) }));
+  return c.html(homePage({ origin, uiLang: requestUiLang(c), turnstileSiteKey: c.env?.TURNSTILE_SITE_KEY }));
 });
 
 app.get("/robots.txt", (c) => {

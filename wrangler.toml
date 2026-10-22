@@ -29,6 +29,9 @@ CF_ACCOUNT_ID = "30142eba9e53a37522d1c59b298db661"
 DAILY_QUESTION_LIMIT = "3"
 REFERRAL_BONUS = "0"
 READING_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+# Turnstile site key is public (rendered into the ask form). Empty =
+# widget off; the server enforces only when TURNSTILE_SECRET is set.
+TURNSTILE_SITE_KEY = ""
 DEFAULT_LANG = "th"
 TIMEZONE = "Asia/Bangkok"
 # secrets: BETTER_AUTH_SECRET, BETTER_AUTH_URL, GOOGLE_CLIENT_ID,

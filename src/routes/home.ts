@@ -1,8 +1,7 @@
 // Home / draw screen: quota row, daily card block, ask form with
 // topic chips, the draw stage (slots + deck mount), and Ngern with
-// the speech bubble. The shuffle/fan/pick/flip choreography
-// (public/app/draw.js) and the readings API land in M5; this file
-// owns the static structure both build on.
+// the speech bubble. The shuffle/fan/pick/flip choreography lives in
+// public/app/draw.js; this file owns the static structure it builds on.
 import { escapeHtml } from "../lib/html";
 import { fmt, t, type UiLang } from "../lib/i18n";
 import { computeStreak, localDayString } from "../lib/streaks";
@@ -12,6 +11,8 @@ export type HomeOpts = {
   uiLang?: UiLang;
   origin?: string;
   streakDays?: string[];
+  /** Turnstile site key (public). Empty/undefined renders no widget. */
+  turnstileSiteKey?: string;
 };
 
 export type Topic = "love" | "career" | "money" | "health" | "general";
@@ -54,6 +55,7 @@ ${quotaRow(ui, 3)}
 <label class="ask-label" for="q">${escapeHtml(d.ask)}</label>
 <textarea id="q" name="question" rows="2" maxlength="200" placeholder="${escapeHtml(d.placeholder)}"></textarea>
 ${topicChips(ui)}
+${opts.turnstileSiteKey ? `<div class="cf-turnstile" data-sitekey="${escapeHtml(opts.turnstileSiteKey)}" data-size="invisible"></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>` : ""}
 <button class="btn btn-primary" type="submit">${escapeHtml(d.shuffle)}</button>
 </form>
 <div id="draw-stage" class="stage" aria-live="polite"><div class="slots"><span class="slot"></span><span class="slot"></span><span class="slot"></span></div><div class="deck" id="deck"></div></div>

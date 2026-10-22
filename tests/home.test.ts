@@ -61,6 +61,14 @@ describe("GET / (draw screen)", () => {
     expect(us).toContain("What would you like to ask today?");
   });
 
+  it("renders the Turnstile widget only with a site key", () => {
+    expect(homePage({ uiLang: "en" })).not.toContain("cf-turnstile");
+    const withKey = homePage({ uiLang: "en", turnstileSiteKey: "0xTESTKEY" });
+    expect(withKey).toContain("cf-turnstile");
+    expect(withKey).toContain('data-sitekey="0xTESTKEY"');
+    expect(withKey).toContain("challenges.cloudflare.com/turnstile");
+  });
+
   it("homePage() renders both languages directly", () => {
     expect(homePage({ uiLang: "en" })).toContain("What would you like to ask today?");
     expect(homePage({ uiLang: "th" })).toContain("\u0e2d\u0e22\u0e32\u0e01\u0e16\u0e32\u0e21\u0e2d\u0e30\u0e44\u0e23\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49?");
