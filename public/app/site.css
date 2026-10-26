@@ -363,9 +363,10 @@ a{color:var(--accent)}
 .card-row-body p{line-height:1.6;margin:.2rem 0}
 @media(max-width:480px){.card-thumb{width:52px}}
 .glance-lead{font-family:var(--f-display);font-size:1.18rem;line-height:1.5;margin:.2rem 0 .5rem}
-.glance-lead.is-waiting{display:flex;flex-direction:column;gap:.45rem}
-.glance-lead.is-waiting span{display:block;height:1.1rem;border-radius:6px;background:var(--gold-dim);opacity:.35;animation:rwpulse 1.3s ease-in-out infinite}
-.glance-lead.is-waiting span:nth-child(2){width:64%;animation-delay:.15s}
+.glance-lead.is-waiting{display:flex;flex-wrap:wrap;align-items:center;gap:.45rem .6rem}
+.glance-lead.is-waiting .lead-ngern{width:44px;height:auto;flex:none}
+.glance-lead.is-waiting .lead-msg{font-family:var(--f-body);font-size:.95rem;color:var(--card-ink)}
+.glance-lead.is-waiting .lead-bar{flex:1 1 100%;height:1.1rem;border-radius:6px;background:var(--gold-dim);opacity:.35;animation:rwpulse 1.3s ease-in-out infinite}
 .rtext .sec-advice ol{margin:0;padding-left:1.35rem;display:flex;flex-direction:column;gap:.35rem;line-height:1.55}
 .reading .actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr))}
 .reading .actions .btn{box-sizing:border-box;min-width:0}

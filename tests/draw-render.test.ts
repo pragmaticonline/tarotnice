@@ -126,6 +126,8 @@ describe("renderReading positions", () => {
     handlers["delta"]({ data: JSON.stringify("Together these cards tell a story of change.") });
     let html = String(synthOf()!.innerHTML);
     expect(html).toContain("is-waiting");
+    expect(html).toContain("lead-ngern");
+    expect(html).toContain("Ngern is finding the words");
     expect(html).not.toContain("glance-lead\">Map");
     handlers["delta"]({
       data: JSON.stringify(
