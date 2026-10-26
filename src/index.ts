@@ -428,7 +428,9 @@ app.get("/api/readings/:id/stream", async (c) => {
             { role: "system", content: system },
             { role: "user", content: prompt },
           ],
-          max_tokens: 1024,
+          // Detailed story-style readings run long, especially in
+          // Thai (more tokens per word than English).
+          max_tokens: 2048,
         }, 25_000)) {
           full += delta;
           send(sseEvent("delta", JSON.stringify(delta)));

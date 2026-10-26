@@ -201,6 +201,19 @@ describe("pickSpread", () => {
     expect(pickSpread(q, "general", "en")).toEqual(pickSpread(q, "general", "en"));
   });
 
+  it("prefers the work spread over love for career/money topics", () => {
+    expect(pickSpread("Will my husband's salary increase?", "career", "en")).toEqual([
+      "Situation",
+      "Challenge",
+      "Resolution",
+    ]);
+    expect(pickSpread("เงินเดือนของสามีจะขึ้นไหม", "money", "th")).toEqual([
+      "สถานการณ์",
+      "ความท้าทาย",
+      "ทางออก",
+    ]);
+  });
+
   it("labels prompt cards with their spread positions", () => {
     const pc = toPromptCard(
       {
@@ -238,6 +251,20 @@ describe("pickSpread", () => {
       });
       expect(system).toMatch(/never mention modes|ห้ามเอ่ยถึงโหมด/i);
     }
+  });
+
+  it("keeps mode names, numbers and energy summaries out of the structure", () => {
+    const { system } = buildReadingPrompt({
+      lang: "en", topic: "general", question: "Should I quit my job?",
+      cards: [], prev: [], nickname: null,
+    });
+    expect(system).not.toContain("Normal mode starts");
+    expect(system).not.toContain("One paragraph per card");
+    expect(system).not.toContain("dominant suit/element");
+    expect(system).not.toMatch(/[0-9]\) Overview/);
+    expect(system).toContain("only when it adds meaning");
+    expect(system).toContain("Do not repeat the card name");
+    expect(system).toContain("Overview 4-6 sentences");
   });
 });
 
