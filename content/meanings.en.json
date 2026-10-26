@@ -1,7 +1,7 @@
 {
   "0": {
     "slug": "the-fool",
-    "reviewed": false,
+    "reviewed": true,
     "name": "The Fool",
     "keywords_upright": [
       "new beginnings",
@@ -23,7 +23,7 @@
   },
   "1": {
     "slug": "the-magician",
-    "reviewed": false,
+    "reviewed": true,
     "name": "The Magician",
     "keywords_upright": [
       "skill",
@@ -45,7 +45,7 @@
   },
   "2": {
     "slug": "the-high-priestess",
-    "reviewed": false,
+    "reviewed": true,
     "name": "The High Priestess",
     "keywords_upright": [
       "intuition",
@@ -67,7 +67,7 @@
   },
   "3": {
     "slug": "the-empress",
-    "reviewed": false,
+    "reviewed": true,
     "name": "The Empress",
     "keywords_upright": [
       "abundance",
@@ -89,7 +89,7 @@
   },
   "4": {
     "slug": "the-emperor",
-    "reviewed": false,
+    "reviewed": true,
     "name": "The Emperor",
     "keywords_upright": [
       "structure",
@@ -111,7 +111,7 @@
   },
   "5": {
     "slug": "the-hierophant",
-    "reviewed": false,
+    "reviewed": true,
     "name": "The Hierophant",
     "keywords_upright": [
       "tradition",
@@ -133,7 +133,7 @@
   },
   "6": {
     "slug": "the-lovers",
-    "reviewed": false,
+    "reviewed": true,
     "name": "The Lovers",
     "keywords_upright": [
       "love",
@@ -155,7 +155,7 @@
   },
   "7": {
     "slug": "the-chariot",
-    "reviewed": false,
+    "reviewed": true,
     "name": "The Chariot",
     "keywords_upright": [
       "determination",
@@ -177,7 +177,7 @@
   },
   "8": {
     "slug": "strength",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Strength",
     "keywords_upright": [
       "inner strength",
@@ -199,7 +199,7 @@
   },
   "9": {
     "slug": "the-hermit",
-    "reviewed": false,
+    "reviewed": true,
     "name": "The Hermit",
     "keywords_upright": [
       "reflection",
@@ -221,7 +221,7 @@
   },
   "10": {
     "slug": "wheel-of-fortune",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Wheel of Fortune",
     "keywords_upright": [
       "change",
@@ -243,7 +243,7 @@
   },
   "11": {
     "slug": "justice",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Justice",
     "keywords_upright": [
       "fairness",
@@ -265,7 +265,7 @@
   },
   "12": {
     "slug": "the-hanged-man",
-    "reviewed": false,
+    "reviewed": true,
     "name": "The Hanged Man",
     "keywords_upright": [
       "pause",
@@ -287,7 +287,7 @@
   },
   "13": {
     "slug": "death",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Death",
     "keywords_upright": [
       "endings",
@@ -309,7 +309,7 @@
   },
   "14": {
     "slug": "temperance",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Temperance",
     "keywords_upright": [
       "balance",
@@ -331,7 +331,7 @@
   },
   "15": {
     "slug": "the-devil",
-    "reviewed": false,
+    "reviewed": true,
     "name": "The Devil",
     "keywords_upright": [
       "attachment",
@@ -353,7 +353,7 @@
   },
   "16": {
     "slug": "the-tower",
-    "reviewed": false,
+    "reviewed": true,
     "name": "The Tower",
     "keywords_upright": [
       "sudden change",
@@ -375,7 +375,7 @@
   },
   "17": {
     "slug": "the-star",
-    "reviewed": false,
+    "reviewed": true,
     "name": "The Star",
     "keywords_upright": [
       "hope",
@@ -397,7 +397,7 @@
   },
   "18": {
     "slug": "the-moon",
-    "reviewed": false,
+    "reviewed": true,
     "name": "The Moon",
     "keywords_upright": [
       "uncertainty",
@@ -419,7 +419,7 @@
   },
   "19": {
     "slug": "the-sun",
-    "reviewed": false,
+    "reviewed": true,
     "name": "The Sun",
     "keywords_upright": [
       "joy",
@@ -441,7 +441,7 @@
   },
   "20": {
     "slug": "judgement",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Judgement",
     "keywords_upright": [
       "awakening",
@@ -463,7 +463,7 @@
   },
   "21": {
     "slug": "the-world",
-    "reviewed": false,
+    "reviewed": true,
     "name": "The World",
     "keywords_upright": [
       "completion",
@@ -485,7 +485,7 @@
   },
   "22": {
     "slug": "ace-of-wands",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Ace of Wands",
     "keywords_upright": [
       "inspiration",
@@ -507,7 +507,7 @@
   },
   "23": {
     "slug": "two-of-wands",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Two of Wands",
     "keywords_upright": [
       "planning",
@@ -529,7 +529,7 @@
   },
   "24": {
     "slug": "three-of-wands",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Three of Wands",
     "keywords_upright": [
       "progress",
@@ -551,7 +551,7 @@
   },
   "25": {
     "slug": "four-of-wands",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Four of Wands",
     "keywords_upright": [
       "celebration",
@@ -573,7 +573,7 @@
   },
   "26": {
     "slug": "five-of-wands",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Five of Wands",
     "keywords_upright": [
       "competition",
@@ -595,7 +595,7 @@
   },
   "27": {
     "slug": "six-of-wands",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Six of Wands",
     "keywords_upright": [
       "victory",
@@ -617,7 +617,7 @@
   },
   "28": {
     "slug": "seven-of-wands",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Seven of Wands",
     "keywords_upright": [
       "standing your ground",
@@ -639,7 +639,7 @@
   },
   "29": {
     "slug": "eight-of-wands",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Eight of Wands",
     "keywords_upright": [
       "speed",
@@ -661,7 +661,7 @@
   },
   "30": {
     "slug": "nine-of-wands",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Nine of Wands",
     "keywords_upright": [
       "resilience",
@@ -683,7 +683,7 @@
   },
   "31": {
     "slug": "ten-of-wands",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Ten of Wands",
     "keywords_upright": [
       "burden",
@@ -705,7 +705,7 @@
   },
   "32": {
     "slug": "page-of-wands",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Page of Wands",
     "keywords_upright": [
       "curiosity",
@@ -727,7 +727,7 @@
   },
   "33": {
     "slug": "knight-of-wands",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Knight of Wands",
     "keywords_upright": [
       "action",
@@ -749,7 +749,7 @@
   },
   "34": {
     "slug": "queen-of-wands",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Queen of Wands",
     "keywords_upright": [
       "confidence",
@@ -771,7 +771,7 @@
   },
   "35": {
     "slug": "king-of-wands",
-    "reviewed": false,
+    "reviewed": true,
     "name": "King of Wands",
     "keywords_upright": [
       "leadership",
@@ -793,7 +793,7 @@
   },
   "36": {
     "slug": "ace-of-cups",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Ace of Cups",
     "keywords_upright": [
       "new love",
@@ -815,7 +815,7 @@
   },
   "37": {
     "slug": "two-of-cups",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Two of Cups",
     "keywords_upright": [
       "partnership",
@@ -837,7 +837,7 @@
   },
   "38": {
     "slug": "three-of-cups",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Three of Cups",
     "keywords_upright": [
       "friendship",
@@ -859,7 +859,7 @@
   },
   "39": {
     "slug": "four-of-cups",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Four of Cups",
     "keywords_upright": [
       "apathy",
@@ -881,7 +881,7 @@
   },
   "40": {
     "slug": "five-of-cups",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Five of Cups",
     "keywords_upright": [
       "loss",
@@ -903,7 +903,7 @@
   },
   "41": {
     "slug": "six-of-cups",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Six of Cups",
     "keywords_upright": [
       "nostalgia",
@@ -925,7 +925,7 @@
   },
   "42": {
     "slug": "seven-of-cups",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Seven of Cups",
     "keywords_upright": [
       "choices",
@@ -947,7 +947,7 @@
   },
   "43": {
     "slug": "eight-of-cups",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Eight of Cups",
     "keywords_upright": [
       "walking away",
@@ -969,7 +969,7 @@
   },
   "44": {
     "slug": "nine-of-cups",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Nine of Cups",
     "keywords_upright": [
       "wishes fulfilled",
@@ -991,7 +991,7 @@
   },
   "45": {
     "slug": "ten-of-cups",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Ten of Cups",
     "keywords_upright": [
       "happiness",
@@ -1013,7 +1013,7 @@
   },
   "46": {
     "slug": "page-of-cups",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Page of Cups",
     "keywords_upright": [
       "sweet message",
@@ -1035,7 +1035,7 @@
   },
   "47": {
     "slug": "knight-of-cups",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Knight of Cups",
     "keywords_upright": [
       "romance",
@@ -1057,7 +1057,7 @@
   },
   "48": {
     "slug": "queen-of-cups",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Queen of Cups",
     "keywords_upright": [
       "compassion",
@@ -1079,7 +1079,7 @@
   },
   "49": {
     "slug": "king-of-cups",
-    "reviewed": false,
+    "reviewed": true,
     "name": "King of Cups",
     "keywords_upright": [
       "emotional balance",
@@ -1101,7 +1101,7 @@
   },
   "50": {
     "slug": "ace-of-swords",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Ace of Swords",
     "keywords_upright": [
       "clarity",
@@ -1123,7 +1123,7 @@
   },
   "51": {
     "slug": "two-of-swords",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Two of Swords",
     "keywords_upright": [
       "difficult choice",
@@ -1145,7 +1145,7 @@
   },
   "52": {
     "slug": "three-of-swords",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Three of Swords",
     "keywords_upright": [
       "heartbreak",
@@ -1167,7 +1167,7 @@
   },
   "53": {
     "slug": "four-of-swords",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Four of Swords",
     "keywords_upright": [
       "rest",
@@ -1189,7 +1189,7 @@
   },
   "54": {
     "slug": "five-of-swords",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Five of Swords",
     "keywords_upright": [
       "conflict",
@@ -1211,7 +1211,7 @@
   },
   "55": {
     "slug": "six-of-swords",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Six of Swords",
     "keywords_upright": [
       "transition",
@@ -1233,7 +1233,7 @@
   },
   "56": {
     "slug": "seven-of-swords",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Seven of Swords",
     "keywords_upright": [
       "strategy",
@@ -1255,7 +1255,7 @@
   },
   "57": {
     "slug": "eight-of-swords",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Eight of Swords",
     "keywords_upright": [
       "feeling trapped",
@@ -1277,7 +1277,7 @@
   },
   "58": {
     "slug": "nine-of-swords",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Nine of Swords",
     "keywords_upright": [
       "worry",
@@ -1299,7 +1299,7 @@
   },
   "59": {
     "slug": "ten-of-swords",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Ten of Swords",
     "keywords_upright": [
       "painful ending",
@@ -1321,7 +1321,7 @@
   },
   "60": {
     "slug": "page-of-swords",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Page of Swords",
     "keywords_upright": [
       "curiosity",
@@ -1343,7 +1343,7 @@
   },
   "61": {
     "slug": "knight-of-swords",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Knight of Swords",
     "keywords_upright": [
       "fast action",
@@ -1365,7 +1365,7 @@
   },
   "62": {
     "slug": "queen-of-swords",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Queen of Swords",
     "keywords_upright": [
       "clarity",
@@ -1387,7 +1387,7 @@
   },
   "63": {
     "slug": "king-of-swords",
-    "reviewed": false,
+    "reviewed": true,
     "name": "King of Swords",
     "keywords_upright": [
       "authority",
@@ -1409,7 +1409,7 @@
   },
   "64": {
     "slug": "ace-of-pentacles",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Ace of Pentacles",
     "keywords_upright": [
       "new opportunity",
@@ -1431,7 +1431,7 @@
   },
   "65": {
     "slug": "two-of-pentacles",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Two of Pentacles",
     "keywords_upright": [
       "balance",
@@ -1453,7 +1453,7 @@
   },
   "66": {
     "slug": "three-of-pentacles",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Three of Pentacles",
     "keywords_upright": [
       "teamwork",
@@ -1475,7 +1475,7 @@
   },
   "67": {
     "slug": "four-of-pentacles",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Four of Pentacles",
     "keywords_upright": [
       "security",
@@ -1497,7 +1497,7 @@
   },
   "68": {
     "slug": "five-of-pentacles",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Five of Pentacles",
     "keywords_upright": [
       "hardship",
@@ -1519,7 +1519,7 @@
   },
   "69": {
     "slug": "six-of-pentacles",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Six of Pentacles",
     "keywords_upright": [
       "generosity",
@@ -1541,7 +1541,7 @@
   },
   "70": {
     "slug": "seven-of-pentacles",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Seven of Pentacles",
     "keywords_upright": [
       "patience",
@@ -1563,7 +1563,7 @@
   },
   "71": {
     "slug": "eight-of-pentacles",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Eight of Pentacles",
     "keywords_upright": [
       "skill",
@@ -1585,7 +1585,7 @@
   },
   "72": {
     "slug": "nine-of-pentacles",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Nine of Pentacles",
     "keywords_upright": [
       "independence",
@@ -1607,7 +1607,7 @@
   },
   "73": {
     "slug": "ten-of-pentacles",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Ten of Pentacles",
     "keywords_upright": [
       "legacy",
@@ -1629,7 +1629,7 @@
   },
   "74": {
     "slug": "page-of-pentacles",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Page of Pentacles",
     "keywords_upright": [
       "learning",
@@ -1651,7 +1651,7 @@
   },
   "75": {
     "slug": "knight-of-pentacles",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Knight of Pentacles",
     "keywords_upright": [
       "reliability",
@@ -1673,7 +1673,7 @@
   },
   "76": {
     "slug": "queen-of-pentacles",
-    "reviewed": false,
+    "reviewed": true,
     "name": "Queen of Pentacles",
     "keywords_upright": [
       "nurturing",
@@ -1695,7 +1695,7 @@
   },
   "77": {
     "slug": "king-of-pentacles",
-    "reviewed": false,
+    "reviewed": true,
     "name": "King of Pentacles",
     "keywords_upright": [
       "success",

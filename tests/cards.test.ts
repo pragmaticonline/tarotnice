@@ -45,12 +45,12 @@ describe("content/cards.json", () => {
 });
 
 describe("meanings drafts", () => {
-  it("covers every card in both languages, all unreviewed", () => {
+  it("covers every card in both languages, all expert-approved", () => {
     for (const c of cards) {
       for (const [lang, table] of [["en", en], ["th", th]] as const) {
         const m = (table as Record<string, Record<string, unknown>>)[String(c.id)];
         expect(m, `${lang}:${c.id}`).toBeDefined();
-        expect(m.reviewed).toBe(false);
+        expect(m.reviewed).toBe(true);
         expect(m.slug).toBe(c.slug);
         for (const key of ["name", "keywords_upright", "keywords_reversed", "upright", "reversed", "love", "career", "money", "health"]) {
           expect(m[key], `${lang}:${c.id}.${key}`).toBeDefined();

@@ -1,8 +1,9 @@
 # Card meanings — owner review (Thai native speaker)
 
-Every entry in `content/meanings.{en,th}.json` is a DRAFT
-(`"reviewed": false`). The card library shows only reviewed entries
-as indexable; unreviewed pages get `noindex`.
+APPROVED 2026-10-26 by the tarot expert: all 78 entries in
+`content/meanings.{en,th}.json` plus all 78 `content/imagery.en.json`
+scene notes are `"reviewed": true`. Card detail pages are indexable;
+the sitemap lists all 156 card URLs.
 
 To approve an entry: read the EN + TH texts, fix tone and Thai
 naturalness, then set `"reviewed": true`.
