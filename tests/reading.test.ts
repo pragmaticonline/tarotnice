@@ -157,6 +157,23 @@ describe("prompt builder", () => {
     expect(user).toContain("Imagery: A fool at a cliff edge with a white dog.");
   });
 
+  it("instructs the model to ground cards in their imagery (en+th)", () => {
+    for (const lang of ["en", "th"] as const) {
+      const { system } = buildReadingPrompt({
+        lang, topic: "general", question: "What lies ahead?",
+        cards: [toPromptCard(card, false, "general")],
+        prev: [], nickname: null,
+      });
+      expect(system).toContain("Imagery");
+    }
+    const { system } = buildReadingPrompt({
+      lang: "en", topic: "general", question: "What lies ahead?",
+      cards: [toPromptCard(card, false, "general")],
+      prev: [], nickname: null,
+    });
+    expect(system).toContain("concrete visual details");
+  });
+
   it("omits the imagery line when the card has none", () => {
     const pc = toPromptCard(card, false, "general");
     expect(pc.imagery).toBeNull();
