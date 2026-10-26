@@ -34,7 +34,7 @@ function loadHome(
   fetchFn: (url: string) => Promise<{ json: () => Promise<unknown> }>,
   store: Record<string, string> = {},
 ) {
-  const label = { textContent: "Finding your questions" };
+  const label = { textContent: "One moment please" };
   const row = {
     classList: makeClassList(),
     querySelector: () => label,
@@ -105,6 +105,6 @@ describe("quota loading line", () => {
     const { label } = loadHome(() => Promise.reject(new Error("offline")));
     await tick();
     await tick();
-    expect(label.textContent).toBe("Finding your questions");
+    expect(label.textContent).toBe("One moment please");
   });
 });

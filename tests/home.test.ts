@@ -15,7 +15,7 @@ describe("GET / (draw screen)", () => {
     expect(html).toContain("Shuffle");
     // Quota row: loading line (never a wrong count) until home.js
     // paints fresh /api/me/summary numbers.
-    expect(html).toContain("Finding your questions");
+    expect(html).toContain("One moment please");
     expect(html).toContain('class="wdots"');
     expect(html).not.toContain("pip");
     // Draw stage: three empty slots + Ngern with the idle hint.
