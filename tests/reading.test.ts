@@ -207,10 +207,10 @@ describe("pickSpread", () => {
       "Challenge",
       "Resolution",
     ]);
-    expect(pickSpread("เงินเดือนของสามีจะขึ้นไหม", "money", "th")).toEqual([
-      "สถานการณ์",
-      "ความท้าทาย",
-      "ทางออก",
+    expect(pickSpread("\u0e40\u0e07\u0e34\u0e19\u0e40\u0e14\u0e37\u0e2d\u0e19\u0e02\u0e2d\u0e07\u0e2a\u0e32\u0e21\u0e35\u0e08\u0e30\u0e02\u0e36\u0e49\u0e19\u0e44\u0e2b\u0e21", "money", "th")).toEqual([
+      "\u0e2a\u0e16\u0e32\u0e19\u0e01\u0e32\u0e23\u0e13\u0e4c",
+      "\u0e04\u0e27\u0e32\u0e21\u0e17\u0e49\u0e32\u0e17\u0e32\u0e22",
+      "\u0e17\u0e32\u0e07\u0e2d\u0e2d\u0e01",
     ]);
   });
 
@@ -249,7 +249,7 @@ describe("pickSpread", () => {
         lang, topic: "general", question: "Should I quit my job?",
         cards: [], prev: [], nickname: null,
       });
-      expect(system).toMatch(/never mention modes|ห้ามเอ่ยถึงโหมด/i);
+      expect(system).toMatch(/never mention modes|\u0e2b\u0e49\u0e32\u0e21\u0e40\u0e2d\u0e48\u0e22\u0e16\u0e36\u0e07\u0e42\u0e2b\u0e21\u0e14/i);
     }
   });
 
