@@ -10,6 +10,7 @@ import {
   isLang,
   isTopic,
   parseSummary,
+  pickSpread,
   sseEvent,
   streamDeltas,
   toPromptCard,
@@ -152,6 +153,81 @@ describe("prompt builder", () => {
     });
     expect(system).toContain("\u0e2a\u0e23\u0e38\u0e1b: ");
     expect(user).toContain("\u0e07\u0e32\u0e19\u0e43\u0e2b\u0e21\u0e48\u0e14\u0e35\u0e44\u0e2b\u0e21");
+  });
+});
+
+describe("pickSpread", () => {
+  it("picks a decision spread for should-I questions", () => {
+    expect(pickSpread("Should I quit my job?", "career", "en")).toEqual([
+      "Am I where I want to be",
+      "What are my options",
+      "What do I fear the most",
+    ]);
+  });
+
+  it("picks a decision spread for Thai should-I questions", () => {
+    const spread = pickSpread("\u0e04\u0e27\u0e23\u0e25\u0e32\u0e2d\u0e2d\u0e01\u0e14\u0e35\u0e44\u0e2b\u0e21", "career", "th");
+    expect(spread).toHaveLength(3);
+    expect(new Set(spread).size).toBe(3);
+    expect(spread.join(" ")).not.toContain("Past");
+  });
+
+  it("picks a relationship spread for love topics", () => {
+    expect(pickSpread("Will we get back together?", "love", "en")).toEqual([
+      "Me",
+      "Partner",
+      "What we are building together",
+    ]);
+  });
+
+  it("picks a timeline spread for how-will-it-go questions", () => {
+    expect(pickSpread("How will my month go?", "general", "en")).toEqual([
+      "Past",
+      "Present",
+      "Future",
+    ]);
+  });
+
+  it("falls back to a general spread", () => {
+    expect(pickSpread("What do I need to know right now?", "general", "en")).toEqual([
+      "The energy around my situation",
+      "What I need to know",
+      "Advice for the situation",
+    ]);
+  });
+
+  it("is deterministic: same question always yields the same spread", () => {
+    const q = "Should I move to a new city?";
+    expect(pickSpread(q, "general", "en")).toEqual(pickSpread(q, "general", "en"));
+  });
+
+  it("labels prompt cards with their spread positions", () => {
+    const pc = toPromptCard(
+      {
+        id: 6, slug: "the-lovers", arcana: "major", suit: null, rank: 6,
+        imageKey: "cards/major-06", name: "The Lovers",
+        keywordsUpright: ["union"], keywordsReversed: ["misalignment"],
+        upright: "Union text.", reversed: "Off-key text.",
+        love: null, career: null, money: null, health: null,
+      },
+      false,
+      "general",
+    );
+    const { user } = buildReadingPrompt({
+      lang: "en", topic: "general", question: "Should I quit my job?",
+      cards: [pc, pc, pc], prev: [], nickname: null,
+    });
+    expect(user).toContain("What are my options");
+    expect(user).toContain("Card 1");
+  });
+
+  it("declares Normal vs Care mode in the system prompt", () => {
+    const { system } = buildReadingPrompt({
+      lang: "en", topic: "general", question: "Should I quit my job?",
+      cards: [], prev: [], nickname: null,
+    });
+    expect(system).toContain("Normal mode");
+    expect(system).toContain("Care mode");
   });
 });
 

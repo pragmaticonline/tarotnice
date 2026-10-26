@@ -358,6 +358,7 @@ a{color:var(--accent)}
 .card-row-body{flex:1 1 auto;min-width:0}
 .card-row-body h3{font-family:var(--f-display);font-size:1.2rem;margin:0 0 .15rem;color:var(--ink)}
 .card-row-body .kw-line{color:var(--muted);font-size:.9rem;margin:0 0 .35rem}
+.card-row-body .pos-line{color:var(--muted);font-size:.85rem;letter-spacing:.02em;margin:0 0 .1rem}
 .card-row-body p{line-height:1.6;margin:.2rem 0}
 @media(max-width:480px){.card-thumb{width:52px}}
 .glance-lead{font-family:var(--f-display);font-size:1.18rem;line-height:1.5;margin:.2rem 0 .5rem}

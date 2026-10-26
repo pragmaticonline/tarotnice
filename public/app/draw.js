@@ -350,31 +350,58 @@
       var glanceDone = false;
       var out = blocks.map(function (b, bi) {
         var html = esc(b).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+        // Position-led card paragraphs ("1 · What are my options —
+        // **Two of Wands**..."): strip the leading "N · Position — "
+        // before matching the card name, and show the position above
+        // the card name. Old position-less paragraphs still match.
+        var pos = null;
+        var scan = b;
+        var pm = b.match(/^(\d)\s*[·.•\-]\s*(.+?)\s*[—–\-:]\s*/);
+        if (pm) {
+          pos = pm[2].replace(/\*\*/g, "").trim();
+          scan = b.slice(pm[0].length);
+        }
         // Card paragraphs: bold-led (**The Star**) or plain-led
         // (The Queen of Wands indicates...). Match either so the
         // thumbnail row does not depend on model bolding.
-        var plain = b.replace(/\*\*/g, "");
-        var card = null;
-        var bodyStart = 0;
-        (reading.cards || []).forEach(function (c) {
-          if (card || !c.name || usedCard[c.name]) return;
-          var variants = [c.name, "The " + c.name];
-          for (var vi = 0; vi < variants.length; vi++) {
-            var v = variants[vi];
-            if (plain === v || (plain.indexOf(v) === 0 && /[\s:\u2014-]/.test(plain.charAt(v.length)))) {
-              card = c;
-              bodyStart = v.length;
-              break;
+        function matchCards(text) {
+          var found = null;
+          var start = 0;
+          (reading.cards || []).forEach(function (c) {
+            if (found || !c.name || usedCard[c.name]) return;
+            var variants = [c.name, "The " + c.name];
+            for (var vi = 0; vi < variants.length; vi++) {
+              var v = variants[vi];
+              if (text === v || (text.indexOf(v) === 0 && /[\s:\u2014-]/.test(text.charAt(v.length)))) {
+                found = c;
+                start = v.length;
+                break;
+              }
             }
+          });
+          return { card: found, start: start };
+        }
+        var hit = matchCards(scan.replace(/\*\*/g, ""));
+        var card = hit.card;
+        var bodyStart = hit.start;
+        var bodyPlain = scan.replace(/\*\*/g, "");
+        if (!card && pos) {
+          // The model bolded the position instead of the card
+          // ("1 · **Two of Wands** — ..."): the position IS the card.
+          var hit2 = matchCards(pos);
+          if (hit2.card) {
+            card = hit2.card;
+            bodyStart = 0;
+            bodyPlain = scan.replace(/\*\*/g, "");
           }
-        });
+        }
         if (card) {
           usedCard[card.name] = true;
           var kw = (card.keywords || []).join(" \u00b7 ");
-          var cBody = plain.slice(bodyStart).replace(/^[\s:\u2014-]+/, "");
+          var cBody = bodyPlain.slice(bodyStart).replace(/^[\s:\u2014-]+/, "");
           // Drop a leading "The " duplicated before names like The Hierophant.
           return '<div class="sec card-row"><img class="card-thumb' + (card.reversed ? " rev" : "") + '" src="' + esc(card.image) + '" alt="">' +
-            '<div class="card-row-body"><h3>' + esc(card.name) + (card.reversed ? (lang === "th" ? " (\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27)" : " (reversed)") : "") + "</h3>" +
+            '<div class="card-row-body">' + (pos && bodyStart > 0 ? '<p class="pos-line">' + esc(pos) + "</p>" : "") + '<h3>' + esc(card.name) + (card.reversed ? (lang === "th" ? " (\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27)" : " (reversed)") : "") + "</h3>" +
             (kw ? '<p class="kw-line">' + esc(kw) + "</p>" : "") +
             "<p>" + esc((cBody.indexOf(card.name) === 0 || cBody.indexOf("The " + card.name) === 0) ? cBody : (card.name + " " + cBody)) + "</p></div></div>";
         }
