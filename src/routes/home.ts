@@ -34,7 +34,10 @@ function quotaRow(ui: UiLang, remaining: number): string {
   const pips = [0, 1, 2]
     .map((i) => `<span class="pip${i < remaining ? " on" : ""}" aria-hidden="true"></span>`)
     .join("");
-  return `<p class="quota" role="status"><span class="pips">${pips}</span> <span data-quota-label>${escapeHtml(fmt(d.quota, { n: remaining }))}</span></p>`;
+  // is-loading from first paint: the counts are optimistic until
+  // home.js replaces them with /api/me/summary numbers. Without JS a
+  // <noscript> style in <head> restores the server text (see shell).
+  return `<p class="quota is-loading" role="status"><span class="pips">${pips}</span> <span data-quota-label>${escapeHtml(fmt(d.quota, { n: remaining }))}</span></p>`;
 }
 
 export function homePage(opts: HomeOpts = {}): string {
