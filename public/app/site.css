@@ -342,6 +342,7 @@ a{color:var(--accent)}
 .sec-h{font-family:var(--f-display);font-size:1.45rem;color:var(--ink);margin:1.6rem 0 .4rem}
 .rtext .sec-title{font-family:var(--f-display);font-size:1.25rem;color:var(--ink);margin:0}
 .rtext .sec-glance{background:var(--card-face);color:var(--card-ink);border:1.5px solid var(--gold);border-radius:16px;padding:1.05rem 1.15rem}
+.rtext .sec-glance .sec-title{color:var(--card-ink)}
 .glance-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap;margin-bottom:.5rem}
 .glance-chips{display:inline-flex;gap:.4rem;flex-wrap:wrap}
 .gchip{border:1px solid var(--gold-dim);border-radius:999px;padding:.18rem .65rem;font-size:.82rem}
