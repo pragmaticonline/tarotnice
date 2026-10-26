@@ -108,7 +108,16 @@
           document.dispatchEvent(e);
         } catch (err) {}
       })
-      .catch(function () {});
+      .catch(function () {
+        // Offline: fall back to today's cached count when there is
+        // one, so the loading line does not sit here forever.
+        try {
+          var cached = JSON.parse(lsGet("quota") || "null");
+          if (cached && cached.day === bangkokDayString(Date.now())) {
+            paintQuota({ used: cached.used, limit: 3 });
+          }
+        } catch (err) {}
+      });
   }
   function maybeRefresh() {
     // Visible again after >60s away: the day may have rolled over.

@@ -4,9 +4,10 @@ import vm from "node:vm";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-// The server renders a conservative "0 of 3" quota placeholder so a
-// refresh never flashes a full count; home.js replaces it with fresh
-// /api/me/summary numbers, and a failed fetch simply keeps the text.
+// The server renders a loading line ("Finding your questions…", never
+// a wrong count). home.js replaces it with fresh /api/me/summary
+// numbers; a failed fetch falls back to today's cached count when
+// there is one, and otherwise keeps the loading line.
 const HOME_PATH = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../public/app/home.js",
@@ -29,8 +30,11 @@ function makeClassList() {
   };
 }
 
-function loadHome(fetchFn: (url: string) => Promise<{ json: () => Promise<unknown> }>) {
-  const label = { textContent: "0 of 3 questions left today" };
+function loadHome(
+  fetchFn: (url: string) => Promise<{ json: () => Promise<unknown> }>,
+  store: Record<string, string> = {},
+) {
+  const label = { textContent: "Finding your questions" };
   const row = {
     classList: makeClassList(),
     querySelector: () => label,
@@ -40,6 +44,12 @@ function loadHome(fetchFn: (url: string) => Promise<{ json: () => Promise<unknow
     setTimeout,
     clearTimeout,
     fetch: fetchFn,
+    localStorage: {
+      getItem: (k: string) => (k in store ? store[k] : null),
+      setItem: (k: string, v: string) => {
+        store[k] = v;
+      },
+    },
     CustomEvent: class {
       type: string;
       detail: unknown;
@@ -70,8 +80,8 @@ function loadHome(fetchFn: (url: string) => Promise<{ json: () => Promise<unknow
 
 const tick = () => new Promise((r) => setTimeout(r, 20));
 
-describe("quota placeholder", () => {
-  it("paints fresh numbers over the zero-count placeholder", async () => {
+describe("quota loading line", () => {
+  it("paints fresh numbers over the loading line", async () => {
     const { label } = loadHome(async () => ({
       json: async () => ({ user: { id: "u" }, quota: { used: 1, limit: 3 }, streak: null }),
     }));
@@ -80,10 +90,21 @@ describe("quota placeholder", () => {
     expect(label.textContent).toBe("2 of 3 questions left today");
   });
 
-  it("keeps the placeholder when the fetch fails", async () => {
+  it("falls back to today's cached count when the fetch fails", async () => {
+    const day = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
+    const { label } = loadHome(
+      () => Promise.reject(new Error("offline")),
+      { "tarotnice:quota": JSON.stringify({ day, used: 2 }) },
+    );
+    await tick();
+    await tick();
+    expect(label.textContent).toBe("1 of 3 questions left today");
+  });
+
+  it("keeps the loading line when the fetch fails with no cache", async () => {
     const { label } = loadHome(() => Promise.reject(new Error("offline")));
     await tick();
     await tick();
-    expect(label.textContent).toBe("0 of 3 questions left today");
+    expect(label.textContent).toBe("Finding your questions");
   });
 });

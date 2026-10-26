@@ -25,7 +25,7 @@ describe("UI language resolution", () => {
       for (const key of [
         "ask", "placeholder", "shuffle", "hintIdle", "hintNeed",
         "hintShuffling", "hintPick", "hintReveal", "hintDone", "hintSleep",
-        "quota", "upright", "reversed", "again", "share", "shareTitle",
+        "quota", "quotaLoading", "upright", "reversed", "again", "share", "shareTitle",
         "shareShowQ", "sharePrivate", "shareCta", "shareText",
         "themeDay", "themeNight",
       ] as const) {

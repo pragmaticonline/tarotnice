@@ -31,10 +31,9 @@ export const NGERN_SITTING_SVG = `<svg class="ngern" width="120" height="142" vi
 
 function quotaRow(ui: UiLang): string {
   const d = t(ui);
-  // Text only, no pips. Zero-count placeholder until home.js paints
-  // fresh /api/me/summary numbers: conservative on refresh, never
-  // flashes someone else's (or yesterday's) remaining count as today's.
-  return `<p class="quota" role="status"><span data-quota-label>${escapeHtml(fmt(d.quota, { n: 0 }))}</span></p>`;
+  // Loading line (never a wrong count) until home.js paints fresh
+  // /api/me/summary numbers. Dots reuse the .wdots pulse pattern.
+  return `<p class="quota" role="status"><span data-quota-label>${escapeHtml(d.quotaLoading)}<span class="wdots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span></span></p>`;
 }
 
 export function homePage(opts: HomeOpts = {}): string {
