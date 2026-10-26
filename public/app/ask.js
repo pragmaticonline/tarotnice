@@ -87,9 +87,11 @@
     var guide = wrap.closest ? wrap.closest("#guide-ask") : null;
     if (!guide || !guide.classList.contains("s-idle")) return;
     bubble(t("hurry"));
+    if (guide.classList.add) guide.classList.add("s-nudge");
     if (hurryTimer) clearTimeout(hurryTimer);
     hurryTimer = setTimeout(function () {
       hurryTimer = null;
+      if (guide.classList.remove) guide.classList.remove("s-nudge");
       if (idleBubble) bubble(idleBubble);
     }, 2500);
   }

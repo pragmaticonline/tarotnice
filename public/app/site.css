@@ -163,6 +163,8 @@ a{color:var(--accent)}
 .bubble{position:relative;background:var(--card-face);color:var(--card-ink);border:1.5px solid var(--gold);border-radius:14px;padding:.9rem 1.1rem;margin:0 0 1rem;max-width:46ch;line-height:1.55}
 .bubble::before{content:"";position:absolute;left:-9px;bottom:14px;width:14px;height:14px;background:var(--card-face);border-left:1.5px solid var(--gold);border-bottom:1.5px solid var(--gold);transform:rotate(45deg)}
 .guide.s-picking .ngern .head,.guide.s-picking img{transform:rotate(-7deg)}
+.guide-ask.s-nudge .ngern .head{transform:rotate(-7deg)}
+.guide-ask.s-nudge .ngern .eyes{animation:blink 1.1s infinite}
 .guide.s-done .ngern .head,.guide.s-done img{transform:rotate(5deg)}
 
 /* Footer. */

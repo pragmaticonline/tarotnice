@@ -42,9 +42,16 @@ function makeEl(extra: Record<string, unknown> = {}) {
 
 function loadIdle() {
   const guideAskBubble = { textContent: IDLE };
+  const added: string[] = [];
   const guideAsk = makeEl({
     className: "guide guide-ask s-idle",
-    classList: { contains: (c: string) => c === "s-idle" },
+    classList: {
+      add: (c: string) => {
+        added.push(c);
+      },
+      remove: () => {},
+      contains: (c: string) => c === "s-idle",
+    },
     querySelector: () => guideAskBubble,
   });
   const clicks: Record<string, ((e: unknown) => void)[]> = {};
@@ -94,17 +101,18 @@ function loadIdle() {
   vm.runInContext(readFileSync(ASK_PATH, "utf8"), sandbox, {
     filename: "ask.js",
   });
-  return { guideAskBubble, clicks };
+  return { guideAskBubble, clicks, added };
 }
 
 describe("idle cat nudge", () => {
   it(
     "shows a hurry-up on tap, then restores the idle hint",
     async () => {
-      const { guideAskBubble, clicks } = loadIdle();
+      const { guideAskBubble, clicks, added } = loadIdle();
       expect(clicks["click"]?.length ?? 0).toBeGreaterThan(0);
       for (const fn of clicks["click"]) fn({});
       expect(guideAskBubble.textContent).toBe(HURRY);
+      expect(added).toContain("s-nudge");
       await new Promise((r) => setTimeout(r, 2800));
       expect(guideAskBubble.textContent).toBe(IDLE);
     },
