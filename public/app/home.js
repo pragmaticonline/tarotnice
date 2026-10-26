@@ -17,6 +17,13 @@
   function uiLang() {
     return document.documentElement.lang === "th" ? "th" : "en";
   }
+  // Bangkok calendar day ("YYYY-MM-DD"). Bangkok is fixed UTC+7, no
+  // DST — the same rule the server uses for quota boundaries. The
+  // previous code stored a UTC day here, which flips at the wrong
+  // midnight (up to 7h early).
+  function bangkokDayString(now) {
+    return new Date(now + 7 * 3600 * 1000).toISOString().slice(0, 10);
+  }
   function esc(s) {
     return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
   }
@@ -44,7 +51,7 @@
   function paintQuota(quota) {
     if (!quota) return;
     var remaining = Math.max(0, (quota.limit || 3) - (quota.used || 0));
-    lsSet("quota", JSON.stringify({ day: new Date().toISOString().slice(0, 10), used: quota.used || 0 }));
+    lsSet("quota", JSON.stringify({ day: bangkokDayString(Date.now()), used: quota.used || 0 }));
     var row = document.querySelector(".quota");
     if (!row) return;
     var pips = row.querySelectorAll(".pip");
@@ -76,12 +83,30 @@
     return data;
   }
 
+  // Quota is per Bangkok day, but this tab used to fetch it once
+  // per page load — a tab left open overnight kept showing
+  // yesterday's remaining count. Re-arm a one-shot refresh for the
+  // next server reset, and refresh whenever the tab becomes visible
+  // again (throttled so rapid tab-switching stays cheap).
+  var resetTimer = null;
+  var lastLoad = 0;
+  function armReset(resetsAt) {
+    if (resetTimer) clearTimeout(resetTimer);
+    resetTimer = null;
+    if (typeof resetsAt !== "number" || !(resetsAt > 0)) return;
+    var delay = resetsAt - Date.now() + 2000;
+    if (delay < 0) delay = 0;
+    // setTimeout caps at ~24.8 days; a quota reset is hours away.
+    resetTimer = setTimeout(function () { load(); }, Math.min(delay, 86400000));
+  }
   function load() {
+    lastLoad = Date.now();
     return summary()
       .then(function (data) {
         window.TarotHome.data = data;
         paintStreak(data.streak);
         paintQuota(data.quota);
+        armReset(data.quota && data.quota.resetsAt);
         try {
           var e = new CustomEvent("tarot:summary", { detail: data });
           document.dispatchEvent(e);
@@ -89,8 +114,17 @@
       })
       .catch(function () {});
   }
+  function maybeRefresh() {
+    // Visible again after >60s away: the day may have rolled over.
+    if (Date.now() - lastLoad > 60000) load();
+  }
 
   window.TarotHome = window.TarotHome || {};
   window.TarotHome.refresh = load;
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible") maybeRefresh();
+  });
+  window.addEventListener("focus", maybeRefresh);
+  window.addEventListener("pageshow", maybeRefresh);
   load();
 })();

@@ -16,8 +16,14 @@
     if (g) g.className = "guide s-" + state;
   }
   function bubble(msg) {
-    var askVisible = !document.getElementById("step-draw") || document.getElementById("step-draw").hidden;
-    var b = document.querySelector(askVisible ? "#guide-ask .bubble" : "#guide .bubble");
+    // Route to the visible step's cat: step 1 owns #guide-ask, the
+    // draw and reading steps own #guide. (The old step-draw check was
+    // true on both step 1 and step 3, and raced the 280ms step-2→3
+    // transition — completion text landed on a hidden cat while
+    // step 1 kept stale wait lines.)
+    var askSec = document.querySelector('[data-step="1"]');
+    var onAsk = !askSec || askSec.hidden === false;
+    var b = document.querySelector(onAsk ? "#guide-ask .bubble" : "#guide .bubble");
     if (b && msg) b.textContent = msg;
   }
 
@@ -118,7 +124,16 @@
     return h + ":" + String(m).padStart(2, "0");
   }
 
+  // Whether the ask step is parked in quota-exhausted sleep. Only
+  // sleepMode sets it; only wakeMode clears it — so a refresh that
+  // lands mid-submit never re-enables the in-flight submit button.
+  var sleeping = false;
+  // The idle hint, captured at init so wakeMode can restore it after
+  // sleepMode overwrote the bubble.
+  var idleBubble = null;
+
   function sleepMode(resetsAt) {
+    sleeping = true;
     var form = document.getElementById("ask-form");
     if (form) {
       form.querySelectorAll("textarea,button,input").forEach(function (n) {
@@ -133,6 +148,28 @@
     html += '<p><a class="btn btn-outline" href="/cards">' + esc(t("browse")) + "</a></p>";
     if (mount) mount.innerHTML = html;
     else bubble(t("sleep"));
+  }
+
+  // Quota reset while the tab stayed open: undo sleepMode (re-enable
+  // the form, wake Ngern, restore the idle hint) so the fresh quota
+  // from TarotHome.refresh() is actually askable.
+  function wakeMode() {
+    if (!sleeping) return;
+    sleeping = false;
+    var form = document.getElementById("ask-form");
+    if (form) {
+      form.querySelectorAll("textarea,button,input").forEach(function (n) {
+        n.disabled = false;
+      });
+    }
+    document.querySelectorAll("#guide .ngern-wrap, #guide-ask .ngern-wrap").forEach(function (wrap) {
+      if (wrap.dataset.awake) wrap.innerHTML = wrap.dataset.awake;
+    });
+    var g = document.getElementById("guide");
+    if (g) g.className = "guide s-idle";
+    var ga = document.getElementById("guide-ask");
+    if (ga) ga.className = "guide guide-ask s-idle";
+    if (idleBubble) bubble(idleBubble);
   }
 
   function collapseForm(question, topicLabel) {
@@ -331,6 +368,10 @@
     waitTimer = null;
     var ga = document.getElementById("guide-ask");
     if (ga && ga.classList.contains("s-shuffling")) ga.className = "guide guide-ask s-idle";
+    // The wait lines ("Warming up the deck…") would otherwise linger
+    // in the step-1 bubble: returning via a follow-up or Ask again
+    // showed a working cat over an idle form.
+    if (idleBubble) bubble(idleBubble);
   }
 
   async function submit(form) {
@@ -461,6 +502,8 @@
   function init() {
     var form = document.getElementById("ask-form");
     if (!form || !window.TarotDraw) return;
+    var idleEl = document.querySelector("#guide-ask .bubble");
+    if (idleEl) idleBubble = idleEl.textContent;
     document.querySelectorAll("#guide .ngern-wrap, #guide-ask .ngern-wrap").forEach(function (wrap) {
       wrap.addEventListener("click", function () { pokeSleep(wrap); });
     });
@@ -484,8 +527,11 @@
     }
     document.addEventListener("tarot:summary", function (e) {
       var d = (e && e.detail) || {};
-      if (d.quota && d.quota.used >= (d.quota.limit || 3) && document.getElementById("ask-form")) {
+      if (!d.quota || !document.getElementById("ask-form")) return;
+      if (d.quota.used >= (d.quota.limit || 3)) {
         sleepMode(d.quota.resetsAt || null);
+      } else {
+        wakeMode();
       }
     });
     form.addEventListener("submit", function (e) {

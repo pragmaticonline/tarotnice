@@ -1,6 +1,6 @@
 // TarotNice offline cache. Precache the app shell + fonts + mascot;
 // serve static assets cache-first, pages network-first with fallback.
-const CACHE = "tarotnice-v43";
+const CACHE = "tarotnice-v44";
 
 const CORE = [
   "/",
@@ -40,6 +40,12 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (event.request.method !== "GET" || url.origin !== location.origin) return;
+  // API + SSE streams: never intercept. Quota, readings, and history
+  // are per-user and per-day; letting them fall into the cache-first
+  // tail below served yesterday's /api/me/summary after a normal
+  // refresh (only a hard refresh bypasses the worker), so the quota
+  // row showed stale counts day after day.
+  if (url.pathname.startsWith("/api/")) return;
   // Card art + share images: cache-first (immutable, versioned).
   if (url.pathname.startsWith("/static/")) {
     event.respondWith(
