@@ -34,10 +34,10 @@ function quotaRow(ui: UiLang, remaining: number): string {
   const pips = [0, 1, 2]
     .map((i) => `<span class="pip${i < remaining ? " on" : ""}" aria-hidden="true"></span>`)
     .join("");
-  // is-loading from first paint: the counts are optimistic until
-  // home.js replaces them with /api/me/summary numbers. Without JS a
-  // <noscript> style in <head> restores the server text (see shell).
-  return `<p class="quota is-loading" role="status"><span class="pips">${pips}</span> <span data-quota-label>${escapeHtml(fmt(d.quota, { n: remaining }))}</span></p>`;
+  // Zero-count placeholder until home.js paints fresh
+  // /api/me/summary numbers: conservative on refresh, never flashes
+  // someone else's (or yesterday's) remaining count as today's.
+  return `<p class="quota" role="status"><span class="pips">${pips}</span> <span data-quota-label>${escapeHtml(fmt(d.quota, { n: remaining }))}</span></p>`;
 }
 
 export function homePage(opts: HomeOpts = {}): string {
@@ -61,7 +61,7 @@ ${steps}
 ${opts.turnstileSiteKey ? `<div class="cf-turnstile" data-sitekey="${escapeHtml(opts.turnstileSiteKey)}" data-size="invisible"></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>` : ""}
 <button class="btn btn-primary" type="submit">${escapeHtml(d.shuffleCards)}</button>
 </form>
-${quotaRow(ui, 3)}
+${quotaRow(ui, 0)}
 </section>
 <section id="step-draw" data-step="2" hidden>
 <div class="draw-top"><button type="button" class="draw-back" id="draw-back" aria-label="Back">\u2190</button><p class="draw-q" id="draw-q"></p></div>

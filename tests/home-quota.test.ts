@@ -4,10 +4,9 @@ import vm from "node:vm";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-// Refresh flashes the server-rendered optimistic "3 of 3" until
-// /api/me/summary lands. The quota row must shimmer (is-loading) from
-// fetch start until fresh numbers paint — or the fetch fails, in which
-// case the server text stays and the shimmer must still clear.
+// The server renders a conservative "0 of 3" quota placeholder so a
+// refresh never flashes a full count; home.js replaces it with fresh
+// /api/me/summary numbers, and a failed fetch simply keeps the text.
 const HOME_PATH = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../public/app/home.js",
@@ -31,11 +30,11 @@ function makeClassList() {
 }
 
 function loadHome(fetchFn: (url: string) => Promise<{ json: () => Promise<unknown> }>) {
-  const rowClasses = makeClassList();
-  const label = { textContent: "3 of 3 questions left today" };
+  const pips = [{ classList: makeClassList() }];
+  const label = { textContent: "0 of 3 questions left today" };
   const row = {
-    classList: rowClasses,
-    querySelectorAll: () => [{ classList: makeClassList() }],
+    classList: makeClassList(),
+    querySelectorAll: () => pips,
     querySelector: () => label,
   };
   const sandbox: Record<string, unknown> = {
@@ -68,33 +67,26 @@ function loadHome(fetchFn: (url: string) => Promise<{ json: () => Promise<unknow
   vm.runInContext(readFileSync(HOME_PATH, "utf8"), sandbox, {
     filename: "home.js",
   });
-  return { rowClasses, label };
+  return { label, pips };
 }
 
 const tick = () => new Promise((r) => setTimeout(r, 20));
 
-describe("quota loading shimmer", () => {
-  it("shimmers until fresh quota paints", async () => {
-    let resolveFetch!: (v: { json: () => Promise<unknown> }) => void;
-    const gate = new Promise<{ json: () => Promise<unknown> }>((r) => {
-      resolveFetch = r;
-    });
-    const { rowClasses, label } = loadHome(() => gate);
-    await tick();
-    expect(rowClasses.contains("is-loading")).toBe(true);
-    resolveFetch({
+describe("quota placeholder", () => {
+  it("paints fresh numbers over the zero-count placeholder", async () => {
+    const { label, pips } = loadHome(async () => ({
       json: async () => ({ user: { id: "u" }, quota: { used: 1, limit: 3 }, streak: null }),
-    });
+    }));
     await tick();
     await tick();
     expect(label.textContent).toBe("2 of 3 questions left today");
-    expect(rowClasses.contains("is-loading")).toBe(false);
+    expect(pips[0].classList.contains("on")).toBe(true);
   });
 
-  it("clears the shimmer when the fetch fails", async () => {
-    const { rowClasses } = loadHome(() => Promise.reject(new Error("offline")));
+  it("keeps the placeholder when the fetch fails", async () => {
+    const { label } = loadHome(() => Promise.reject(new Error("offline")));
     await tick();
     await tick();
-    expect(rowClasses.contains("is-loading")).toBe(false);
+    expect(label.textContent).toBe("0 of 3 questions left today");
   });
 });

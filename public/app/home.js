@@ -49,11 +49,11 @@
   }
 
   function paintQuota(quota) {
-    var row = document.querySelector(".quota");
-    if (row) row.classList.remove("is-loading");
-    if (!quota || !row) return;
+    if (!quota) return;
     var remaining = Math.max(0, (quota.limit || 3) - (quota.used || 0));
     lsSet("quota", JSON.stringify({ day: bangkokDayString(Date.now()), used: quota.used || 0 }));
+    var row = document.querySelector(".quota");
+    if (!row) return;
     var pips = row.querySelectorAll(".pip");
     for (var i = 0; i < pips.length; i++) {
       pips[i].classList.toggle("on", i < remaining);
@@ -101,11 +101,6 @@
   }
   function load() {
     lastLoad = Date.now();
-    // Shimmer the quota row until fresh numbers land: the server
-    // markup carries an optimistic "3 of 3" that would otherwise
-    // flash wrong counts on refresh.
-    var pending = document.querySelector(".quota");
-    if (pending) pending.classList.add("is-loading");
     return summary()
       .then(function (data) {
         window.TarotHome.data = data;
@@ -117,11 +112,7 @@
           document.dispatchEvent(e);
         } catch (err) {}
       })
-      .catch(function () {
-        // Offline or failed: keep the server text, drop the shimmer.
-        var row = document.querySelector(".quota");
-        if (row) row.classList.remove("is-loading");
-      });
+      .catch(function () {});
   }
   function maybeRefresh() {
     // Visible again after >60s away: the day may have rolled over.

@@ -13,13 +13,10 @@ describe("GET / (draw screen)", () => {
     expect(html).toContain('maxlength="200"');
     expect(html).not.toContain('name="topic"');
     expect(html).toContain("Shuffle");
-    // Quota row: three pips + remaining text, shimmering from first
-    // paint until home.js paints fresh /api/me/summary numbers.
-    expect(html).toContain("3 of 3 questions left today");
-    expect(html).toContain('class="quota is-loading"');
-    expect((html.match(/class="pip on"/g) || []).length).toBe(3);
-    // No-JS fallback restores the server text under the shimmer.
-    expect(html).toContain(".quota.is-loading [data-quota-label]::after{display:none}");
+    // Quota row: zero-count placeholder (no pips lit) until home.js
+    // paints fresh /api/me/summary numbers — never flashes full.
+    expect(html).toContain("0 of 3 questions left today");
+    expect(html).not.toContain('class="pip on"');
     // Draw stage: three empty slots + Ngern with the idle hint.
     expect((html.match(/<span class="slot"><\/span>/g) || []).length).toBe(3);
     // Ngern is inlined (animated .eyes/.head/.tail), not an <img>.

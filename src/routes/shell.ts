@@ -82,7 +82,6 @@ ${opts.jsonLd ? `<script type="application/ld+json">${opts.jsonLd}</script>` : "
 <link rel="preload" href="/fonts/ibm-plex-sans-thai-thai-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/ibm-plex-sans-thai-latin-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/app/site.css">
-<noscript><style>.quota.is-loading .pips{visibility:visible}.quota.is-loading [data-quota-label]{color:inherit}.quota.is-loading [data-quota-label]::after{display:none}</style></noscript>
 ${opts.extraHead ?? ""}
 </head>
 <body>
