@@ -1,0 +1,392 @@
+{
+  "0": {
+    "slug": "the-fool",
+    "reviewed": false,
+    "imagery": "A youth in bright patterned clothes steps toward a cliff edge under a blazing sun, white rose in one hand and a bundle on a staff over the shoulder, while a small white dog leaps at their heels."
+  },
+  "1": {
+    "slug": "the-magician",
+    "reviewed": false,
+    "imagery": "A robed figure stands behind a table bearing a wand, cup, sword and pentacle, one hand raised to the sky and one pointed to the earth beneath an infinity symbol, roses and lilies at their feet."
+  },
+  "2": {
+    "slug": "the-high-priestess",
+    "reviewed": false,
+    "imagery": "A crowned priestess sits between a black pillar marked B and a white pillar marked J, a pomegranate veil behind her, a crescent moon at her feet, and a scroll reading TORA half-hidden in her lap."
+  },
+  "3": {
+    "slug": "the-empress",
+    "reviewed": false,
+    "imagery": "A crowned woman in a starry crown reclines in a field of ripe grain, sceptre in hand and a heart-shaped shield with the Venus sign beside her, a waterfall behind."
+  },
+  "4": {
+    "slug": "the-emperor",
+    "reviewed": false,
+    "imagery": "A stern bearded king sits on a stone throne carved with rams' heads, holding an orb and an ankh-topped sceptre, bare mountains rising behind him."
+  },
+  "5": {
+    "slug": "the-hierophant",
+    "reviewed": false,
+    "imagery": "A pope-like figure in a triple crown raises two fingers in blessing over two kneeling monks, a triple sceptre in the other hand and two crossed keys at the throne's foot."
+  },
+  "6": {
+    "slug": "the-lovers",
+    "reviewed": false,
+    "imagery": "A naked couple stands beneath a radiant angel with outstretched arms, the man behind the Tree of Life in flames and the woman before the Tree of Knowledge with its serpent, a bright sun above."
+  },
+  "7": {
+    "slug": "the-chariot",
+    "reviewed": false,
+    "imagery": "An armored young prince rides a stone chariot canopied with stars, pulled by a black and a white sphinx, a walled city on the riverbank behind."
+  },
+  "8": {
+    "slug": "strength",
+    "reviewed": false,
+    "imagery": "A woman in a flower crown gently closes a lion's jaws with bare hands, an infinity symbol floating above her head, mountains on the horizon."
+  },
+  "9": {
+    "slug": "the-hermit",
+    "reviewed": false,
+    "imagery": "A grey-robed old man stands alone on a snowy peak holding a staff and a lantern lit with a six-pointed star, darkness all around."
+  },
+  "10": {
+    "slug": "wheel-of-fortune",
+    "reviewed": false,
+    "imagery": "A great wheel lettered TORA and set with alchemical signs turns among clouds, a sphinx steady on top, a serpent and a dog-headed figure falling and rising at its sides, four winged creatures watching from the corners."
+  },
+  "11": {
+    "slug": "justice",
+    "reviewed": false,
+    "imagery": "A crowned figure sits upright between two pillars holding balanced scales in one hand and an upright sword in the other, a square clasp at the cloak's neck."
+  },
+  "12": {
+    "slug": "the-hanged-man",
+    "reviewed": false,
+    "imagery": "A young man hangs upside down by one ankle from a wooden T-frame, hands behind the back and one leg bent, a calm halo glowing around the head."
+  },
+  "13": {
+    "slug": "death",
+    "reviewed": false,
+    "imagery": "A skeletal knight in black armor rides a white horse carrying a black banner with a white rose, a fallen king and a pleading child and maiden in the path, the sun rising between two towers behind."
+  },
+  "14": {
+    "slug": "temperance",
+    "reviewed": false,
+    "imagery": "A winged angel pours water from one cup to another between the hands, one foot on land and one in a pool, a path running to a glowing sun over iris flowers."
+  },
+  "15": {
+    "slug": "the-devil",
+    "reviewed": false,
+    "imagery": "A horned, bat-winged figure with an inverted pentagram on the brow looms over a black pedestal to which a naked man and woman are loosely chained, a flaming torch in the raised hand."
+  },
+  "16": {
+    "slug": "the-tower",
+    "reviewed": false,
+    "imagery": "Lightning strikes the crown off a stone tower on a rocky peak, flames bursting from the windows as two figures plunge headfirst through the night sky."
+  },
+  "17": {
+    "slug": "the-star",
+    "reviewed": false,
+    "imagery": "A naked woman kneels at a pool pouring water from two jugs, one stream into the water and one onto the land, beneath eight stars with an ibis perched in the tree behind her."
+  },
+  "18": {
+    "slug": "the-moon",
+    "reviewed": false,
+    "imagery": "A full moon with a solemn face shines between two towers while a dog and a wolf howl below and a crayfish crawls from the pool onto a winding path."
+  },
+  "19": {
+    "slug": "the-sun",
+    "reviewed": false,
+    "imagery": "A naked laughing child rides a white horse beneath a huge friendly sun, a wall of sunflowers behind and a red banner streaming from the small arms."
+  },
+  "20": {
+    "slug": "judgement",
+    "reviewed": false,
+    "imagery": "An angel sounds a trumpet bearing a red-cross banner from the clouds as grey figures rise with outstretched arms from open coffins on the water, mountains behind."
+  },
+  "21": {
+    "slug": "the-world",
+    "reviewed": false,
+    "imagery": "A dancing figure wrapped in a purple sash turns inside a great laurel wreath holding two wands, the bull, lion, eagle and angel watching from the four corners."
+  },
+  "22": {
+    "slug": "ace-of-wands",
+    "reviewed": false,
+    "imagery": "A hand emerges from a cloud gripping a thick sprouting wand, a castle on a hill and rolling green slopes below."
+  },
+  "23": {
+    "slug": "two-of-wands",
+    "reviewed": false,
+    "imagery": "A robed figure stands on castle battlements holding a small globe, one hand resting on a planted wand while a second wand stands chained nearby, sea and mountains beyond."
+  },
+  "24": {
+    "slug": "three-of-wands",
+    "reviewed": false,
+    "imagery": "A figure seen from behind stands between three planted wands watching ships sail across calm water toward the horizon."
+  },
+  "25": {
+    "slug": "four-of-wands",
+    "reviewed": false,
+    "imagery": "Two celebrating figures wave flowering bouquets beneath a canopy of four wands strung with a fruit garland, a castle and a happy crowd behind."
+  },
+  "26": {
+    "slug": "five-of-wands",
+    "reviewed": false,
+    "imagery": "Five youths brandish wooden staves at each other in a confused mock battle, all tangled together under a clear blue sky."
+  },
+  "27": {
+    "slug": "six-of-wands",
+    "reviewed": false,
+    "imagery": "A laurel-crowned rider on a white horse carries a wand hung with a victory wreath through a cheering crowd waving their own staves."
+  },
+  "28": {
+    "slug": "seven-of-wands",
+    "reviewed": false,
+    "imagery": "A figure on a hilltop grips a staff with both hands, holding the high ground against six staves thrusting up from below."
+  },
+  "29": {
+    "slug": "eight-of-wands",
+    "reviewed": false,
+    "imagery": "Eight long staves fly in formation diagonally across an open sky above a river valley, with no people anywhere in sight."
+  },
+  "30": {
+    "slug": "nine-of-wands",
+    "reviewed": false,
+    "imagery": "A weary bandaged figure leans on a staff in front of a palisade of eight planted wands, eyes still fixed watchfully ahead."
+  },
+  "31": {
+    "slug": "ten-of-wands",
+    "reviewed": false,
+    "imagery": "A bent figure struggles forward carrying a heavy bundle of ten long wands, a walled town visible in the near distance."
+  },
+  "32": {
+    "slug": "page-of-wands",
+    "reviewed": false,
+    "imagery": "A brightly dressed youth stands in a desert holding a tall sprouting wand upright with both hands, three pyramids on the horizon."
+  },
+  "33": {
+    "slug": "knight-of-wands",
+    "reviewed": false,
+    "imagery": "An armored knight on a rearing horse charges forward with a raised wand, cloak flying, three small pyramids behind."
+  },
+  "34": {
+    "slug": "queen-of-wands",
+    "reviewed": false,
+    "imagery": "A crowned queen sits on a lion-carved throne holding a tall wand and a sunflower, a black cat sitting at her feet."
+  },
+  "35": {
+    "slug": "king-of-wands",
+    "reviewed": false,
+    "imagery": "A crowned king in a salamander-patterned robe sits on a salamander-carved throne, gripping a rough wand and a small flaming salamander amulet."
+  },
+  "36": {
+    "slug": "ace-of-cups",
+    "reviewed": false,
+    "imagery": "A hand emerges from a cloud holding an overflowing cup fed by streams of water, a dove carrying a communion wafer diving toward it above a lotus-covered sea."
+  },
+  "37": {
+    "slug": "two-of-cups",
+    "reviewed": false,
+    "imagery": "A man and a woman pledge golden cups to each other beneath a winged lion head crowning a caduceus, a house on green hills behind."
+  },
+  "38": {
+    "slug": "three-of-cups",
+    "reviewed": false,
+    "imagery": "Three women dance in a circle toasting raised cups, fruit and harvest scattered at their feet."
+  },
+  "39": {
+    "slug": "four-of-cups",
+    "reviewed": false,
+    "imagery": "A seated youth with crossed arms ignores three cups standing on the grass while a fourth cup is offered from a floating hand out of a cloud."
+  },
+  "40": {
+    "slug": "five-of-cups",
+    "reviewed": false,
+    "imagery": "A black-cloaked figure stares down at three spilled cups, back turned on two upright cups behind, a bridge leading to a distant castle."
+  },
+  "41": {
+    "slug": "six-of-cups",
+    "reviewed": false,
+    "imagery": "A child hands a flower-filled cup to a smaller child in a walled courtyard where six cups stand brimming with blossoms, a guard with a staff walking away."
+  },
+  "42": {
+    "slug": "seven-of-cups",
+    "reviewed": false,
+    "imagery": "A silhouetted figure gazes up at seven cups floating on a cloud, each holding a vision: a castle, jewels, a dragon, a head, a shrouded glowing figure, a snake and a laurel wreath."
+  },
+  "43": {
+    "slug": "eight-of-cups",
+    "reviewed": false,
+    "imagery": "A cloaked figure with staff walks away toward barren mountains under a pale moon, leaving eight carefully stacked golden cups behind in the foreground."
+  },
+  "44": {
+    "slug": "nine-of-cups",
+    "reviewed": false,
+    "imagery": "A contented merchant sits arms crossed on a bench before nine golden cups arranged in a perfect arch on a draped table."
+  },
+  "45": {
+    "slug": "ten-of-cups",
+    "reviewed": false,
+    "imagery": "A couple with open arms and two dancing children rejoice beneath a rainbow arcing ten golden cups over their riverside house."
+  },
+  "46": {
+    "slug": "page-of-cups",
+    "reviewed": false,
+    "imagery": "A dreamy youth in a tasseled tunic stands on a rocky shore holding a cup from which a fish pops its head, waves rolling behind."
+  },
+  "47": {
+    "slug": "knight-of-cups",
+    "reviewed": false,
+    "imagery": "An armored knight on a calm white horse steps slowly forward holding out a golden cup, river and green hills on either side."
+  },
+  "48": {
+    "slug": "queen-of-cups",
+    "reviewed": false,
+    "imagery": "A crowned queen on a cherub-carved throne by the sea gazes into an ornate lidded cup held with both hands, water stretching to the horizon."
+  },
+  "49": {
+    "slug": "king-of-cups",
+    "reviewed": false,
+    "imagery": "A bearded king sits on a stone throne set in a churning sea, holding a cup and a sceptre, a ship riding the waves and a leaping fish beside him."
+  },
+  "50": {
+    "slug": "ace-of-swords",
+    "reviewed": false,
+    "imagery": "A hand emerges from a cloud gripping an upright sword crowned with a golden wreath from which palm and olive branches hang, jagged mountains below."
+  },
+  "51": {
+    "slug": "two-of-swords",
+    "reviewed": false,
+    "imagery": "A blindfolded woman sits on a stone bench at night balancing two crossed swords on her shoulders, a crescent moon over restless water and rocks."
+  },
+  "52": {
+    "slug": "three-of-swords",
+    "reviewed": false,
+    "imagery": "A red heart hangs pierced by three swords beneath heavy rain clouds, with no landscape at all."
+  },
+  "53": {
+    "slug": "four-of-swords",
+    "reviewed": false,
+    "imagery": "A carved knight lies in eternal rest on a stone tomb, hands folded in prayer, three swords hung above and one laid beneath, a stained-glass window glowing behind."
+  },
+  "54": {
+    "slug": "five-of-swords",
+    "reviewed": false,
+    "imagery": "A smirking figure gathers up the fallen swords while two defeated figures walk away toward the sea under broken clouds."
+  },
+  "55": {
+    "slug": "six-of-swords",
+    "reviewed": false,
+    "imagery": "A ferryman poles a flat boat carrying a shrouded woman and child across still water, six swords planted upright in the hull, a far green shore ahead."
+  },
+  "56": {
+    "slug": "seven-of-swords",
+    "reviewed": false,
+    "imagery": "A sly figure tiptoes away from a military camp carrying five swords, leaving two planted in the ground, colorful tents behind."
+  },
+  "57": {
+    "slug": "eight-of-swords",
+    "reviewed": false,
+    "imagery": "A bound, blindfolded woman stands fenced in by eight swords planted in marshy ground, a castle on a rocky height far behind her."
+  },
+  "58": {
+    "slug": "nine-of-swords",
+    "reviewed": false,
+    "imagery": "A figure sits upright in bed at night, face buried in the hands, nine swords hung in a row on the dark wall above a rose-patterned quilt."
+  },
+  "59": {
+    "slug": "ten-of-swords",
+    "reviewed": false,
+    "imagery": "A body lies face down on the shore pierced by ten swords along the spine while a black sky breaks into gold above calm water."
+  },
+  "60": {
+    "slug": "page-of-swords",
+    "reviewed": false,
+    "imagery": "A watchful youth stands on a windswept hill gripping an upright sword with both hands, hair and clouds streaming, birds wheeling overhead."
+  },
+  "61": {
+    "slug": "knight-of-swords",
+    "reviewed": false,
+    "imagery": "An armored knight on a galloping grey horse charges into a storm with sword raised high, trees bent sideways by the wind."
+  },
+  "62": {
+    "slug": "queen-of-swords",
+    "reviewed": false,
+    "imagery": "A stern crowned queen on a cherub-carved throne holds an upright sword in one hand and raises the other in command, butterflies and a single bird in the cloudy sky."
+  },
+  "63": {
+    "slug": "king-of-swords",
+    "reviewed": false,
+    "imagery": "A bearded king sits upright on a butterfly-carved throne holding a great sword straight before him, crescent moons and driven clouds behind."
+  },
+  "64": {
+    "slug": "ace-of-pentacles",
+    "reviewed": false,
+    "imagery": "A hand emerges from a cloud offering a single large golden coin above a blooming garden gate and a path into green hills."
+  },
+  "65": {
+    "slug": "two-of-pentacles",
+    "reviewed": false,
+    "imagery": "A dancing youth juggles two coins joined in a looping infinity cord while ships ride high rolling waves behind."
+  },
+  "66": {
+    "slug": "three-of-pentacles",
+    "reviewed": false,
+    "imagery": "A young mason carves a cathedral arch bearing three coins while a monk and a hooded patron study the building plans beside the scaffold."
+  },
+  "67": {
+    "slug": "four-of-pentacles",
+    "reviewed": false,
+    "imagery": "A crowned figure sits hunched on a stone seat clutching one coin to the chest with coins under both feet and hands, a city behind."
+  },
+  "68": {
+    "slug": "five-of-pentacles",
+    "reviewed": false,
+    "imagery": "Two ragged beggars limp through falling snow past a warmly lit church window set with five golden coins."
+  },
+  "69": {
+    "slug": "six-of-pentacles",
+    "reviewed": false,
+    "imagery": "A richly dressed merchant holds balanced scales in one hand and drops coins into the outstretched hands of two kneeling beggars."
+  },
+  "70": {
+    "slug": "seven-of-pentacles",
+    "reviewed": false,
+    "imagery": "A young farmer leans on a staff studying seven coins growing like fruit on a bush in a freshly tilled field."
+  },
+  "71": {
+    "slug": "eight-of-pentacles",
+    "reviewed": false,
+    "imagery": "A focused apprentice hammers a coin at a workbench beneath a row of seven finished coins, an eighth on the bench, a quiet town outside."
+  },
+  "72": {
+    "slug": "nine-of-pentacles",
+    "reviewed": false,
+    "imagery": "An elegant woman with a hooded falcon on her glove stands in a walled vineyard garden where nine golden coins hang among the vines, a small snail at her feet."
+  },
+  "73": {
+    "slug": "ten-of-pentacles",
+    "reviewed": false,
+    "imagery": "A white-bearded elder in a patterned robe sits with two dogs watching a family embrace under a stone arch, ten coins arranged overhead and banners flying from a castle."
+  },
+  "74": {
+    "slug": "page-of-pentacles",
+    "reviewed": false,
+    "imagery": "A studious youth stands in a green meadow holding a single golden coin up to the light with both hands, mountains on the horizon."
+  },
+  "75": {
+    "slug": "knight-of-pentacles",
+    "reviewed": false,
+    "imagery": "An armored knight sits motionless on a heavy draft horse holding out a single coin, a freshly plowed field stretching behind."
+  },
+  "76": {
+    "slug": "queen-of-pentacles",
+    "reviewed": false,
+    "imagery": "A crowned queen on a goat- and angel-carved throne in a rose garden cradles a large coin, a small rabbit hopping nearby."
+  },
+  "77": {
+    "slug": "king-of-pentacles",
+    "reviewed": false,
+    "imagery": "A bearded king in grapevine robes sits on a bull-carved throne holding a sceptre and a large coin, a castle and ripe vineyards behind."
+  }
+}

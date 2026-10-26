@@ -1,0 +1,1 @@
+ALTER TABLE `card_meanings` ADD `imagery` text;

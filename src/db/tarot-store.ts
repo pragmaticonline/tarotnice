@@ -18,6 +18,8 @@ export type CardView = {
   suit: string | null;
   rank: number | null;
   imageKey: string;
+  /** RWS scene note (EN canon); null until seeded / for TH rows. */
+  imagery?: string | null;
   name: string;
   /** English card name (readings always use English card names). */
   nameEn?: string;
@@ -168,6 +170,7 @@ export function d1TarotStore(db: D1Database) {
           money: schema.cardMeanings.money,
           health: schema.cardMeanings.health,
           reviewed: schema.cardMeanings.reviewed,
+          imagery: schema.cardMeanings.imagery,
         })
         .from(schema.cards)
         .innerJoin(
@@ -210,6 +213,7 @@ export function d1TarotStore(db: D1Database) {
           money: schema.cardMeanings.money,
           health: schema.cardMeanings.health,
           reviewed: schema.cardMeanings.reviewed,
+          imagery: schema.cardMeanings.imagery,
         })
         .from(schema.cards)
         .innerJoin(

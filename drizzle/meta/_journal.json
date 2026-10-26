@@ -29,6 +29,13 @@
       "when": 1792653390840,
       "tag": "0003_wealthy_silver_centurion",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1793011192363,
+      "tag": "0004_square_steve_rogers",
+      "breakpoints": true
     }
   ]
 }

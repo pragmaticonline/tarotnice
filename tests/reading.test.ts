@@ -145,6 +145,29 @@ describe("prompt builder", () => {
     expect(user).toContain("Ploy");
   });
 
+  it("passes imagery through and prints it on the card line", () => {
+    const withImg = { ...card, imagery: "A fool at a cliff edge with a white dog." };
+    const pc = toPromptCard(withImg, false, "general");
+    expect(pc.imagery).toBe("A fool at a cliff edge with a white dog.");
+    const { user } = buildReadingPrompt({
+      lang: "en", topic: "general", question: "What lies ahead?",
+      cards: [pc, pc, pc],
+      prev: [], nickname: null,
+    });
+    expect(user).toContain("Imagery: A fool at a cliff edge with a white dog.");
+  });
+
+  it("omits the imagery line when the card has none", () => {
+    const pc = toPromptCard(card, false, "general");
+    expect(pc.imagery).toBeNull();
+    const { user } = buildReadingPrompt({
+      lang: "en", topic: "general", question: "What lies ahead?",
+      cards: [pc, pc, pc],
+      prev: [], nickname: null,
+    });
+    expect(user).not.toContain("Imagery:");
+  });
+
   it("writes Thai prompts in Thai", () => {
     const { system, user } = buildReadingPrompt({
       lang: "th", topic: "general", question: "\u0e07\u0e32\u0e19\u0e43\u0e2b\u0e21\u0e48\u0e14\u0e35\u0e44\u0e2b\u0e21",
@@ -250,6 +273,17 @@ describe("pickSpread", () => {
         cards: [], prev: [], nickname: null,
       });
       expect(system).toMatch(/never mention modes|\u0e2b\u0e49\u0e32\u0e21\u0e40\u0e2d\u0e48\u0e22\u0e16\u0e36\u0e07\u0e42\u0e2b\u0e21\u0e14/i);
+    }
+  });
+
+  it("teaches pair-reading and timing from RWS canon", () => {
+    for (const lang of ["en", "th"] as const) {
+      const { system } = buildReadingPrompt({
+        lang, topic: "general", question: "Should I quit my job?",
+        cards: [], prev: [], nickname: null,
+      });
+      expect(system).toMatch(/pairs|\u0e04\u0e39\u0e48/u);
+      expect(system).toMatch(/Wands.*days|\u0e44\u0e21\u0e49.*\u0e27\u0e31\u0e19/u);
     }
   });
 
