@@ -79,6 +79,40 @@
     }, 2400);
   }
 
+  // Every few idle minutes a mouse dashes across the home guide and
+  // Ngern's pupils glance after it: toward entry, across, then release.
+  // Idle-only (step 1, s-idle, no nudge in progress, tab visible) and
+  // skipped entirely under prefers-reduced-motion.
+  var MOUSE_SVG = '<svg viewBox="0 0 64 26" aria-hidden="true"><path d="M8 21Q2 19 5 8" stroke="#8a93a8" stroke-width="2.5" fill="none" stroke-linecap="round"/><ellipse cx="32" cy="16" rx="20" ry="9" fill="#8a93a8"/><circle cx="49" cy="11" r="8" fill="#8a93a8"/><circle cx="44" cy="4" r="4.5" fill="#8a93a8"/><circle cx="44" cy="4" r="2" fill="#e3b3bb"/><circle cx="51.5" cy="10" r="1.6" fill="#1c2419"/></svg>';
+  var MOUSE_WAIT = 5 * 60 * 1000;
+  var MOUSE_RUN = 3600;
+  function mouseRun() {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var askSec = document.querySelector('[data-step="1"]');
+    var guide = document.getElementById("guide-ask");
+    if (!askSec || askSec.hidden !== false) return;
+    if (!guide || !guide.classList.contains("s-idle") || guide.classList.contains("s-nudge")) return;
+    if (document.visibilityState === "hidden") return;
+    if (guide.querySelector(".mouse-run")) return;
+    var fromLeft = Math.random() < 0.5;
+    var m = document.createElement("div");
+    m.className = "mouse-run " + (fromLeft ? "ltr" : "rtl");
+    m.setAttribute("aria-hidden", "true");
+    m.innerHTML = MOUSE_SVG;
+    guide.appendChild(m);
+    var pupils = guide.querySelectorAll(".pupil");
+    var look = function (x) {
+      for (var i = 0; i < pupils.length; i++) pupils[i].style.transform = "translate(" + x + "px,1px)";
+    };
+    look(fromLeft ? -3.5 : 3.5);
+    setTimeout(function () { look(fromLeft ? 3.5 : -3.5); }, MOUSE_RUN / 2);
+    setTimeout(function () {
+      for (var i = 0; i < pupils.length; i++) pupils[i].style.transform = "";
+      if (m.parentNode) m.parentNode.removeChild(m);
+      else if (m.remove) m.remove();
+    }, MOUSE_RUN + 200);
+  }
+
   // Tapping the idle home cat: a playful hurry-up that yields back to
   // the idle hint. Gated on s-idle so shuffling, waiting and sleeping
   // states keep their own bubble text.
@@ -526,6 +560,8 @@
     document.querySelectorAll("#guide .ngern-wrap, #guide-ask .ngern-wrap").forEach(function (wrap) {
       wrap.addEventListener("click", function () { pokeSleep(wrap); pokeIdle(wrap); });
     });
+    // Occasional mouse visitor while the home cat waits idly.
+    setInterval(mouseRun, MOUSE_WAIT);
     var back = document.getElementById("draw-back");
     if (back) back.addEventListener("click", function () {
       if (history.state && history.state.step) history.back();
