@@ -109,6 +109,34 @@ describe("renderReading positions", () => {
     expect(html).not.toContain("1 · What are my options —");
   });
 
+  it("holds a shimmer slot for the lead until the Summary streams in", () => {
+    const { TarotDraw, handlers } = loadDraw();
+    const mount = makeEl();
+    const reading = {
+      id: "r1",
+      cards: [
+        { name: "Two of Wands", keywords: ["planning"], image: "/a.png", image2x: "", reversed: false },
+      ],
+    };
+    TarotDraw.renderReading(mount, reading, "en", "/stream", {});
+    const synthOf = () =>
+      (mount.children as ReturnType<typeof makeEl>[]).find((c) =>
+        String(c.className).includes("rtext"),
+      );
+    handlers["delta"]({ data: JSON.stringify("Together these cards tell a story of change.") });
+    let html = String(synthOf()!.innerHTML);
+    expect(html).toContain("is-waiting");
+    expect(html).not.toContain("glance-lead\">Map");
+    handlers["delta"]({
+      data: JSON.stringify(
+        "\n\n1 · What are my options — **Two of Wands**: plan well.\n\nSummary: Map options before stepping out.",
+      ),
+    });
+    html = String(synthOf()!.innerHTML);
+    expect(html).not.toContain("is-waiting");
+    expect(html).toContain("Map options before stepping out");
+  });
+
   it("keeps rendering old position-less paragraphs without a pos line", () => {
     const html = renderOnce(
       "Together these cards tell a story of change.\n\n" +

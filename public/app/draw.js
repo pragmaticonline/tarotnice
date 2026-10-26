@@ -410,7 +410,8 @@
           var gHtml = esc(b.replace(/^(\*\*)?(Overview|\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21)(\*\*)?\s*:?\s*\n?/, "")).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
           return '<div class="sec sec-glance"><h2 class="sec-title">' +
             (lang === "th" ? "\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21" : "At a glance") + "</h2>" +
-            (summaryText ? '<p class="glance-lead">' + esc(summaryText) + "</p>" : "") +
+            (summaryText ? '<p class="glance-lead">' + esc(summaryText) + "</p>" :
+              '<p class="glance-lead is-waiting" aria-hidden="true"><span></span><span></span></p>') +
             '<p class="glance-text">' + gHtml + "</p></div>";
         }
         if (/^\*\*(\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33|Guidance)/.test(b) || /^Guidance:/.test(b)) {
