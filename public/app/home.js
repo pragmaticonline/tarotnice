@@ -54,10 +54,6 @@
     lsSet("quota", JSON.stringify({ day: bangkokDayString(Date.now()), used: quota.used || 0 }));
     var row = document.querySelector(".quota");
     if (!row) return;
-    var pips = row.querySelectorAll(".pip");
-    for (var i = 0; i < pips.length; i++) {
-      pips[i].classList.toggle("on", i < remaining);
-    }
     var label = row.querySelector("[data-quota-label]");
     if (label) {
       var limit = quota.limit || 3;

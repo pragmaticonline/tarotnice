@@ -13,10 +13,10 @@ describe("GET / (draw screen)", () => {
     expect(html).toContain('maxlength="200"');
     expect(html).not.toContain('name="topic"');
     expect(html).toContain("Shuffle");
-    // Quota row: zero-count placeholder (no pips lit) until home.js
+    // Quota row: text only, zero-count placeholder until home.js
     // paints fresh /api/me/summary numbers — never flashes full.
     expect(html).toContain("0 of 3 questions left today");
-    expect(html).not.toContain('class="pip on"');
+    expect(html).not.toContain("pip");
     // Draw stage: three empty slots + Ngern with the idle hint.
     expect((html.match(/<span class="slot"><\/span>/g) || []).length).toBe(3);
     // Ngern is inlined (animated .eyes/.head/.tail), not an <img>.

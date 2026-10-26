@@ -30,11 +30,9 @@ function makeClassList() {
 }
 
 function loadHome(fetchFn: (url: string) => Promise<{ json: () => Promise<unknown> }>) {
-  const pips = [{ classList: makeClassList() }];
   const label = { textContent: "0 of 3 questions left today" };
   const row = {
     classList: makeClassList(),
-    querySelectorAll: () => pips,
     querySelector: () => label,
   };
   const sandbox: Record<string, unknown> = {
@@ -67,20 +65,19 @@ function loadHome(fetchFn: (url: string) => Promise<{ json: () => Promise<unknow
   vm.runInContext(readFileSync(HOME_PATH, "utf8"), sandbox, {
     filename: "home.js",
   });
-  return { label, pips };
+  return { label };
 }
 
 const tick = () => new Promise((r) => setTimeout(r, 20));
 
 describe("quota placeholder", () => {
   it("paints fresh numbers over the zero-count placeholder", async () => {
-    const { label, pips } = loadHome(async () => ({
+    const { label } = loadHome(async () => ({
       json: async () => ({ user: { id: "u" }, quota: { used: 1, limit: 3 }, streak: null }),
     }));
     await tick();
     await tick();
     expect(label.textContent).toBe("2 of 3 questions left today");
-    expect(pips[0].classList.contains("on")).toBe(true);
   });
 
   it("keeps the placeholder when the fetch fails", async () => {
