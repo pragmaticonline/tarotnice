@@ -82,6 +82,8 @@ describe("meanings drafts", () => {
     const enBy = bySlug(en);
     expect(enBy["three-of-swords"].keywords_upright).toContain("heartbreak");
     expect(enBy["ten-of-swords"].keywords_upright).toContain("rock bottom");
-    expect(enBy["four-of-pentacles"].keywords_upright).toContain("holding on");
+    // Expert wording (2026-10-26) renders the same RWS idea as
+    // security/saving/control/protection; pin that instead of "holding on".
+    expect(enBy["four-of-pentacles"].keywords_upright).toContain("control");
   });
 });

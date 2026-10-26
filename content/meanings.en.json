@@ -4,21 +4,22 @@
     "reviewed": false,
     "name": "The Fool",
     "keywords_upright": [
-      "beginnings",
-      "spontaneity",
-      "leap of faith"
+      "new beginnings",
+      "courage",
+      "freedom",
+      "trust"
     ],
     "keywords_reversed": [
       "recklessness",
       "hesitation",
       "poor timing"
     ],
-    "upright": "A fresh start is asking for your yes. Pack light, stay curious, and take the first step even if the path ahead is still foggy.",
-    "reversed": "Pause before you leap. You may be holding back from a start you are ready for, or rushing into one you have not thought through.",
-    "love": "New romance or a playful reset \u2014 stay open, not naive.",
-    "career": "A new role or venture favors the bold beginner.",
-    "money": "Small brave bets beat big blind ones.",
-    "health": "Move your body; watch for careless knocks."
+    "upright": "A new chapter is opening. The Fool invites you to take the first step even before the plan is complete, led by curiosity and an open heart, while keeping your common sense with you.",
+    "reversed": "The energy of a fresh start splits two ways: frozen by fear at the edge, or jumping without looking. Ask yourself whether you need more courage right now, or more time to prepare.",
+    "love": "The butterflies stage of something new, or a bright fresh start together. Enjoy it, and notice whether the other person is ready to be serious.",
+    "career": "A green light for a new job, a change of field, or a project you have never tried. Your enthusiasm is your strength right now.",
+    "money": "Money tends to flow toward experiences and new things. Set a budget first, then be brave within limits you can afford.",
+    "health": "Fresh energy and an appetite for a new routine. Starting will feel easy; keeping it going is the part to plan for."
   },
   "1": {
     "slug": "the-magician",
@@ -26,20 +27,21 @@
     "name": "The Magician",
     "keywords_upright": [
       "skill",
-      "focus",
-      "making it happen"
+      "willpower",
+      "manifestation",
+      "resourcefulness"
     ],
     "keywords_reversed": [
       "scattered energy",
-      "untapped talent",
-      "trickery"
+      "self-doubt",
+      "manipulation"
     ],
-    "upright": "You already have every tool this needs. Pick one goal, focus your skill on it, and act \u2014 this is a week for doing, not doubting.",
-    "reversed": "Your talent is leaking into too many directions, or someone is selling confidence they do not have. Narrow down and verify.",
-    "love": "Charm is high \u2014 use it honestly, not to impress.",
-    "career": "A skill you underrate is exactly what the task needs.",
-    "money": "Negotiate; you have more leverage than you think.",
-    "health": "Channel restless energy into one healthy routine."
+    "upright": "You already have what you need to make this happen: the skills, the tools and the timing. The Magician asks you to focus your intention and turn ideas into action.",
+    "reversed": "Your talent is there, but energy may be scattered, or you may doubt yourself. It can also warn of clever words without substance; check what is real before you commit.",
+    "love": "Charm and good communication draw people in. Make sure words and actions match, on both sides.",
+    "career": "A strong time to pitch, present, start a project or show what you can do. Use every resource you have.",
+    "money": "Practical skill can turn into income. Focus on one clear plan rather than many half-started ideas.",
+    "health": "Good energy for taking charge of your routine. Small, deliberate habits will work better than big promises."
   },
   "2": {
     "slug": "the-high-priestess",
@@ -47,41 +49,43 @@
     "name": "The High Priestess",
     "keywords_upright": [
       "intuition",
+      "inner wisdom",
       "mystery",
-      "quiet knowing"
+      "stillness"
     ],
     "keywords_reversed": [
-      "ignoring your gut",
+      "ignored intuition",
       "secrets",
-      "noise over signal"
+      "disconnection"
     ],
-    "upright": "The answer is already in you. Get quiet, notice what you keep circling back to, and trust the pull before you can explain it.",
-    "reversed": "You are overriding your own knowing \u2014 with other people's opinions, or with busyness. Secrets (kept or kept from you) need daylight.",
-    "love": "Pay attention to what is unsaid between you.",
-    "career": "Wait one beat before committing; information is still surfacing.",
-    "money": "Read the fine print; something is unstated.",
-    "health": "Your body is signaling \u2014 sleep, rest, listen."
+    "upright": "Not everything is visible yet, and that is fine. The High Priestess asks you to slow down, listen to your inner voice and trust what you sense before you act.",
+    "reversed": "You may be ignoring your gut feeling, or something is being kept hidden. Make some quiet time to hear yourself again, and check the facts calmly.",
+    "love": "Deep feelings that haven't been fully spoken yet. Give the connection time, and pay attention to what you sense rather than only what is said.",
+    "career": "Observe before you act. Information still to come will matter, so keep your plans flexible.",
+    "money": "A time to review quietly rather than make big moves. Trust careful research over tips from others.",
+    "health": "Your body is giving signals; rest and quiet help you hear them. If something feels off, check with a professional."
   },
   "3": {
     "slug": "the-empress",
     "reviewed": false,
     "name": "The Empress",
     "keywords_upright": [
-      "nurture",
       "abundance",
+      "nurturing",
+      "comfort",
       "creativity"
     ],
     "keywords_reversed": [
-      "neglect",
-      "smothering",
-      "blocked creativity"
+      "over-giving",
+      "neglecting yourself",
+      "creative block"
     ],
-    "upright": "Tend what you want to grow \u2014 a project, a relationship, yourself. Comfort, beauty, and patience compound into abundance.",
-    "reversed": "You are pouring out with nothing coming back in, or gripping too tightly. Refill your own cup first; loosen the grip.",
-    "love": "Warmth and care deepen the bond; let yourself receive too.",
-    "career": "Mentor, create, make things beautiful \u2014 it pays.",
-    "money": "Steady nurturing grows savings; avoid comfort overspending.",
-    "health": "Rest, good food, nature \u2014 indulge the senses kindly."
+    "upright": "Something is growing and ready to flourish. The Empress brings warmth, care, comfort and creativity, and reminds you to nurture yourself as well as others.",
+    "reversed": "You may be giving so much that nothing is left for you, or growth has slowed. Fill your own cup first, and let things grow at their natural pace.",
+    "love": "A warm, caring and affectionate time. Love grows through attention, comfort and quality time together.",
+    "career": "Creative work and projects you have nurtured start to bear fruit. A good time for design, care-based work or anything you make with your hands.",
+    "money": "Comfort and steady growth. Enjoy what you have, while keeping spending in line with what truly brings you joy.",
+    "health": "Nourishing food, rest, nature and gentle movement restore you. Treat your body with kindness."
   },
   "4": {
     "slug": "the-emperor",
@@ -90,19 +94,20 @@
     "keywords_upright": [
       "structure",
       "authority",
-      "steady control"
+      "stability",
+      "leadership"
     ],
     "keywords_reversed": [
+      "control",
       "rigidity",
-      "control issues",
-      "weak boundaries"
+      "power struggles"
     ],
-    "upright": "Build the frame and the picture will hold. Set clear rules, budgets, and boundaries \u2014 order now buys freedom later.",
-    "reversed": "Too rigid or too loose: either control is choking the life out, or nothing is holding. Adjust the structure, not the goal.",
-    "love": "Commitment needs clear agreements, not assumptions.",
-    "career": "Process, hierarchy, and follow-through win the day.",
-    "money": "Budget like an emperor: every baht has a post.",
-    "health": "Routine and discipline beat motivation."
+    "upright": "It's time to bring order and structure. The Emperor asks you to set clear goals, make plans and lead with steady, responsible authority.",
+    "reversed": "Structure may have tipped into control or stubbornness, or there is a struggle with someone in charge. Ask whether the rules still serve you, and lead with fairness.",
+    "love": "A stable, protective and committed partner or phase. Make sure stability doesn't become one person controlling the other.",
+    "career": "Leadership, clear systems and long-term planning bring results. Working with authority figures goes well when you are prepared.",
+    "money": "Budgets, plans and discipline build security. A good time to organise finances properly.",
+    "health": "Regular routines, sleep and structure support your energy. Avoid pushing through on willpower alone."
   },
   "5": {
     "slug": "the-hierophant",
@@ -110,125 +115,131 @@
     "name": "The Hierophant",
     "keywords_upright": [
       "tradition",
+      "learning",
       "guidance",
-      "belonging"
+      "commitment"
     ],
     "keywords_reversed": [
-      "empty rules",
+      "questioning rules",
       "rebellion",
-      "bad advice"
+      "rigid beliefs"
     ],
-    "upright": "Tried paths and wise guides have something for you. Learn the tradition first \u2014 then decide what to keep and what to reshape.",
-    "reversed": "Rules for rules' sake are in the way. Question the doctrine, the guru, the 'we have always done it this way'.",
-    "love": "Shared values and rituals hold you together.",
-    "career": "A mentor, course, or institution opens the next door.",
-    "money": "Conventional advice fits now; skip exotic schemes.",
-    "health": "Trust established care; get a second opinion if uneasy."
+    "upright": "Wisdom comes through teachers, traditions and proven ways of doing things. The Hierophant points to learning, mentors, ceremonies and commitments made in good faith.",
+    "reversed": "You may be questioning the rules you grew up with, or feeling restricted by them. Keep what still rings true, and find your own path where it doesn't.",
+    "love": "Commitment, shared values and traditional steps such as meeting family or making things official.",
+    "career": "Training, mentors, institutions and proper procedures. Learning from someone experienced helps a lot.",
+    "money": "Stick to conventional, well-tested approaches and get advice from qualified people.",
+    "health": "Established routines and qualified advice work best. A good time for steady, proven habits."
   },
   "6": {
     "slug": "the-lovers",
     "reviewed": false,
     "name": "The Lovers",
     "keywords_upright": [
-      "union",
+      "love",
       "choice",
-      "alignment"
+      "harmony",
+      "values"
     ],
     "keywords_reversed": [
-      "misalignment",
-      "temptation",
-      "avoided choice"
+      "imbalance",
+      "misaligned values",
+      "indecision"
     ],
-    "upright": "A union \u2014 of people or of values \u2014 is the heart of this. Choose what you truly align with, and let the choice be wholehearted.",
-    "reversed": "Something is off-key: values clashing, a third pull, or a decision postponed. Name the misalignment before it names you.",
-    "love": "Deep bond, real choice. Choose each other daily.",
-    "career": "Partnership and shared vision beat solo grinding.",
-    "money": "Align spending with what you actually value.",
-    "health": "Balance caring for others with caring for yourself."
+    "upright": "A meaningful connection or an important choice of the heart. The Lovers asks you to choose what truly matches your values, in love or in life.",
+    "reversed": "Something feels out of tune: values that don't match, mixed feelings, or a decision being put off. Be honest about what you really want.",
+    "love": "Strong attraction, deep connection and mutual choice. A relationship where both people choose each other.",
+    "career": "A choice between paths, or a partnership at work. Choose the option that matches your values, not only the easier one.",
+    "money": "Decide according to your priorities. Shared finances work best when both people agree openly.",
+    "health": "Balance between head and heart. Do what feels right for your body, not what others expect."
   },
   "7": {
     "slug": "the-chariot",
     "reviewed": false,
     "name": "The Chariot",
     "keywords_upright": [
-      "drive",
-      "victory",
+      "determination",
+      "progress",
+      "willpower",
       "direction"
     ],
     "keywords_reversed": [
-      "scattered drive",
-      "force without steering",
-      "delays"
+      "losing direction",
+      "pushing too hard",
+      "frustration"
     ],
-    "upright": "Grip the reins and move. Opposing pulls resolve when you commit to one direction \u2014 victory comes through focused will.",
-    "reversed": "You are revving with no steering, or pushing a wall. Re-aim, drop a competing goal, then drive again.",
-    "love": "Steer the relationship somewhere on purpose; drift kills it.",
-    "career": "Ambitious push now \u2014 keep every horse facing one way.",
-    "money": "Drive toward one money goal; stop splitting fuel.",
-    "health": "Directed effort (training plan, sleep hours) works."
+    "upright": "Forward movement through focus and determination. The Chariot says you can win this by steering your energy firmly toward one clear goal.",
+    "reversed": "You may be pulled in different directions, or pushing so hard that you lose control. Slow down, pick one direction and steer again.",
+    "love": "Moving the relationship forward with intention. Work as a team toward the same destination.",
+    "career": "Strong progress, ambition and wins through effort. A good time for goals, competitions and work travel.",
+    "money": "Discipline and a clear target bring results. Stay in control of spending while you chase the goal.",
+    "health": "Strong drive and energy. Channel it into steady effort rather than pushing past your limits."
   },
   "8": {
     "slug": "strength",
     "reviewed": false,
     "name": "Strength",
     "keywords_upright": [
+      "inner strength",
       "courage",
       "patience",
-      "gentle power"
+      "compassion"
     ],
     "keywords_reversed": [
-      "force",
       "self-doubt",
-      "burnout"
+      "low energy",
+      "losing your temper"
     ],
-    "upright": "Real strength is gentle: patience with yourself, courage without noise. Tame the lion with calm persistence, not the whip.",
-    "reversed": "You are muscling through on fumes, or doubting a strength you actually have. Soften the grip; rest is part of power.",
-    "love": "Patience and softness tame tensions; no ultimatums.",
-    "career": "Quiet competence outlasts loud pressure.",
-    "money": "Steady hands; avoid panic moves.",
-    "health": "Gentle consistency heals more than heroic bursts."
+    "upright": "Real strength is quiet. This card shows courage, patience and a calm heart that can handle strong feelings or difficult situations with kindness rather than force.",
+    "reversed": "You may be doubting yourself, feeling drained, or reacting too quickly. Be gentle with yourself; your strength is still there, it just needs rest.",
+    "love": "Patience, tenderness and emotional maturity make the bond stronger. Gentle honesty works better than pressure.",
+    "career": "Steady confidence and calm handling of difficult people or tasks will earn respect.",
+    "money": "Self-control and patience pay off. Resist impulse decisions and stay on your plan.",
+    "health": "Resilience and good stamina. Look after your energy with kindness rather than pushing through."
   },
   "9": {
     "slug": "the-hermit",
     "reviewed": false,
     "name": "The Hermit",
     "keywords_upright": [
-      "solitude",
       "reflection",
-      "inner light"
+      "solitude",
+      "inner guidance",
+      "wisdom"
     ],
     "keywords_reversed": [
       "isolation",
-      "avoidance",
-      "lost light"
+      "loneliness",
+      "avoiding others"
     ],
-    "upright": "Step back and go inward for a while. Fewer voices, one lantern: your own experience will show the next step.",
-    "reversed": "Solitude has curdled into isolation, or you are dodging the quiet work. Reconnect \u2014 with one person, or with yourself.",
-    "love": "A little space clarifies; too much starves. Say what you need.",
-    "career": "Deep work beats meetings this week; document as you go.",
-    "money": "Review alone before any joint decision.",
-    "health": "Restorative solitude: sleep, walks, less screen."
+    "upright": "A time to step back and look inward. The Hermit invites quiet reflection, some time alone and listening to your own wisdom before taking the next step.",
+    "reversed": "Time alone may have turned into isolation or loneliness. It may be time to reconnect with people you trust, or to stop avoiding something.",
+    "love": "Needing space to understand your own feelings. Singles may prefer their own company for now; couples benefit from honest, quiet talks.",
+    "career": "Deep, focused work, research or rethinking your direction. Good advice may come from a mentor.",
+    "money": "Careful, thoughtful decisions. Take time to review before committing.",
+    "health": "Rest, quiet and time in nature recharge you. Balance solitude with some connection."
   },
   "10": {
     "slug": "wheel-of-fortune",
     "reviewed": false,
     "name": "Wheel of Fortune",
     "keywords_upright": [
+      "change",
+      "cycles",
       "turning point",
-      "luck",
-      "cycles"
+      "luck"
     ],
     "keywords_reversed": [
-      "bad timing",
+      "setbacks",
       "resisting change",
-      "stuck wheel"
+      "bad timing"
     ],
-    "upright": "The wheel is turning in your favor. Ride the upswing: say yes to the opening, and remember luck favors the ready.",
-    "reversed": "Timing is off or change feels forced. Do not fight the cycle \u2014 stabilize what you can and wait for the turn.",
-    "love": "A turning point: ride it together, not against each other.",
-    "career": "Fortune shifts \u2014 position yourself where it lands.",
-    "money": "Upswing favors action; downswing favors saving.",
-    "health": "Cycles pass; support the body through the low part."
+    "upright": "Life is turning. The Wheel of Fortune brings change, a new cycle and often a lucky break. Stay flexible and make the most of the opportunities that come round.",
+    "reversed": "The wheel is turning in a way you didn't want, or you are resisting change. This phase will pass; focus on what you can control.",
+    "love": "A turning point: a surprise meeting, a new stage, or a change in the relationship's rhythm.",
+    "career": "Unexpected opportunities and shifts. Be ready to move when the timing is right.",
+    "money": "Ups and downs. Make use of good periods and keep a cushion for slower ones.",
+    "health": "Energy moves in cycles. Adjust your routine to the season you are in."
   },
   "11": {
     "slug": "justice",
@@ -237,19 +248,20 @@
     "keywords_upright": [
       "fairness",
       "truth",
-      "consequences"
+      "balance",
+      "responsibility"
     ],
     "keywords_reversed": [
-      "bias",
       "unfairness",
-      "avoided reckoning"
+      "avoiding accountability",
+      "bias"
     ],
-    "upright": "Weigh it honestly and call it fairly. Truth, contracts, and consequences are in focus \u2014 act so your side stays clean.",
-    "reversed": "Something is tilted: bias (yours or theirs), blame-shifting, or a bill coming due. Rebalance before it compounds.",
-    "love": "Fair give-and-take; name imbalances kindly.",
-    "career": "Contracts, reviews, credit where due \u2014 document everything.",
-    "money": "Debts, taxes, fairness in splits: settle cleanly.",
-    "health": "Honest accounting of habits; adjust without shame."
+    "upright": "What is fair and true will come to light. Justice asks you to be honest, weigh things carefully and take responsibility for your choices. Agreements, contracts and decisions go well when they are fair.",
+    "reversed": "Something feels unfair, or someone is avoiding responsibility. Look at the facts honestly, including your own part, and correct what you can.",
+    "love": "Balance, honesty and fairness in the relationship. Talk openly about what each person gives and needs.",
+    "career": "Contracts, agreements and fair decisions. Be thorough and transparent.",
+    "money": "Check the details, read the fine print and keep things balanced. Settle what is owed.",
+    "health": "Balance in daily habits. Look honestly at what your body needs."
   },
   "12": {
     "slug": "the-hanged-man",
@@ -257,20 +269,21 @@
     "name": "The Hanged Man",
     "keywords_upright": [
       "pause",
-      "new angle",
-      "surrender"
+      "new perspective",
+      "surrender",
+      "patience"
     ],
     "keywords_reversed": [
       "stalling",
-      "martyrdom",
-      "forced sacrifice"
+      "resistance",
+      "feeling stuck"
     ],
-    "upright": "Hang loose on purpose. Flip the viewpoint \u2014 the answer looks different upside down \u2014 and let timing do its half.",
-    "reversed": "The pause has expired into a stall, or you are suffering for show. Either move or admit you are choosing to wait.",
-    "love": "Stop pushing; see it from their angle for a week.",
-    "career": "Delay is data. Use the waiting productively.",
-    "money": "Hold position; no heroics in fog.",
-    "health": "Rest is the treatment; stop negotiating with it."
+    "upright": "Things are on hold for a reason. The Hanged Man invites you to pause, let go of forcing and look at the situation from a completely different angle.",
+    "reversed": "You may feel stuck, or keep putting off a decision. Ask whether the waiting still has a purpose, or whether it's time to let go and move.",
+    "love": "A pause in the relationship, or seeing your partner in a new light. Don't force answers right now.",
+    "career": "Delays or waiting for a decision. Use this time to rethink your approach.",
+    "money": "Not the time for big moves. Wait, review and see what changes.",
+    "health": "Rest and slowing down help more than pushing. A change of routine may bring a fresh outlook."
   },
   "13": {
     "slug": "death",
@@ -278,20 +291,21 @@
     "name": "Death",
     "keywords_upright": [
       "endings",
-      "release",
-      "transformation"
+      "transformation",
+      "letting go",
+      "new chapter"
     ],
     "keywords_reversed": [
-      "clinging",
-      "stuck grief",
-      "refused ending"
+      "resisting change",
+      "holding on",
+      "stagnation"
     ],
-    "upright": "Something is over so something can begin. Grieve it, thank it, lay it down \u2014 the transformation needs the empty hands.",
-    "reversed": "You are dragging what already ended. The longer the grip, the heavier the cost; release is overdue, not optional.",
-    "love": "An old pattern must die for love to live.",
-    "career": "End the dead project; free the energy.",
-    "money": "Cut the losing line; mourn the sunk cost once.",
-    "health": "Release one habit that belongs to an older you."
+    "upright": "This card almost never means physical death. It marks the end of a chapter whose time is over, making room for something new. Letting go now makes the transition easier.",
+    "reversed": "You may be holding on to something that has already ended. The change is waiting for you to release it.",
+    "love": "A relationship transforms or a phase ends, making space for something healthier, together or apart.",
+    "career": "An old role, project or way of working comes to an end, opening a new direction.",
+    "money": "Clear out what no longer works, such as old habits or subscriptions, and restructure.",
+    "health": "A good time to let go of old habits and start fresh routines."
   },
   "14": {
     "slug": "temperance",
@@ -300,61 +314,64 @@
     "keywords_upright": [
       "balance",
       "moderation",
-      "alchemy"
+      "patience",
+      "healing"
     ],
     "keywords_reversed": [
       "excess",
       "imbalance",
-      "forced mix"
+      "impatience"
     ],
-    "upright": "Mix, don't swing. Small steady blends \u2014 work and rest, give and take \u2014 turn ordinary days into quiet gold.",
-    "reversed": "Too much of something (or someone) has tipped the scales. Cut back to the middle path; extremes are billing you.",
-    "love": "Blend, don't merge. Keep your own flavor.",
-    "career": "Sustainable pace; mix deep work with recovery.",
-    "money": "Middle path: save some, enjoy some.",
-    "health": "Moderation heals; extremes bill later."
+    "upright": "Finding the middle path. Temperance brings balance, patience and healing by blending different parts of life in the right amounts.",
+    "reversed": "Something is out of balance: too much of one thing, too little of another, or rushing. Come back to the middle and slow the pace.",
+    "love": "A calm, balanced relationship built on compromise and patience. Healing after a difficult time.",
+    "career": "Cooperation and steady pacing. Combine different skills or people to get the best result.",
+    "money": "Moderation and steady saving. Avoid extremes in spending.",
+    "health": "Balance and moderation in food, sleep and activity support healing."
   },
   "15": {
     "slug": "the-devil",
     "reviewed": false,
     "name": "The Devil",
     "keywords_upright": [
-      "patterns",
+      "attachment",
       "temptation",
-      "shadow"
+      "habits",
+      "restriction"
     ],
     "keywords_reversed": [
       "breaking free",
-      "facing shadow",
-      "looser chains"
+      "awareness",
+      "release"
     ],
-    "upright": "Look honestly at the chain: the habit, the story, the comfort you chose. Naming it loosens it \u2014 shame tightens it.",
-    "reversed": "The chains are loosening. Keep walking out: one honest day at a time, and do not romanticize the cage.",
-    "love": "Obsession or control dressed as passion \u2014 call it out.",
-    "career": "Golden handcuffs? Price your freedom honestly.",
-    "money": "Spending loops and shiny traps \u2014 freeze one card.",
-    "health": "Face the coping habit; replace, don't just remove."
+    "upright": "Something has a hold on you: a habit, a desire, a fear or an unhealthy pattern. The chains in this card are loose; seeing them clearly is the first step to freedom.",
+    "reversed": "You are starting to see the pattern and break free. Keep going, one step at a time, and ask for support if you need it.",
+    "love": "Strong attraction, or a relationship that feels hard to leave. Ask whether it is love, or attachment and habit.",
+    "career": "Feeling stuck in a job for money or security, or caught in office politics. Look for your real options.",
+    "money": "Watch impulse spending, debt or get-rich-quick offers. Take back control step by step.",
+    "health": "Look honestly at habits that drain you. Support from others or a professional can help you change them."
   },
   "16": {
     "slug": "the-tower",
     "reviewed": false,
     "name": "The Tower",
     "keywords_upright": [
+      "sudden change",
       "upheaval",
       "revelation",
-      "sudden change"
+      "breakthrough"
     ],
     "keywords_reversed": [
-      "resisted collapse",
-      "slow leak",
-      "rebuilding"
+      "delayed change",
+      "fear of change",
+      "aftershocks"
     ],
-    "upright": "What was shaky is falling \u2014 let it. Towers fall so truer ones rise; save what matters, release the rest to the lightning.",
-    "reversed": "You are holding up what already cracked, or rebuilding quietly after the bang. Either way: smaller, truer, on rock this time.",
-    "love": "A shock clears the air \u2014 rebuild honest or release.",
-    "career": "Structures change; be the one who adapts first.",
-    "money": "Expect the jolt; keep a buffer for falling bricks.",
-    "health": "Sudden signals need attention now, not later."
+    "upright": "Something built on shaky ground is falling away, often suddenly. It can feel shocking, but the truth that comes out clears space to rebuild on something stronger.",
+    "reversed": "Change you have been avoiding is still waiting, or you are dealing with the aftermath. Face it step by step rather than holding the cracks together.",
+    "love": "A sudden truth or change shakes the relationship. What is real will remain, and what isn't will fall away.",
+    "career": "Unexpected changes at work. Stay flexible; this can open a better path.",
+    "money": "An unexpected expense or change. Keep a safety cushion and avoid risky moves.",
+    "health": "Stress may build up suddenly; slow down and make time to recover. See a professional if something worries you."
   },
   "17": {
     "slug": "the-star",
@@ -363,40 +380,42 @@
     "keywords_upright": [
       "hope",
       "healing",
-      "quiet faith"
+      "renewal",
+      "inspiration"
     ],
     "keywords_reversed": [
-      "dimmed hope",
-      "healing slowly",
-      "faith wobbling"
+      "discouragement",
+      "low faith",
+      "feeling disconnected"
     ],
-    "upright": "After the storm, stars. Hope is realistic now: heal gently, wish concretely, and let small steady lights guide you.",
-    "reversed": "Hope feels far, but it is dimmed, not dead. Tend one small light \u2014 a routine, a person, a page \u2014 until it steadies.",
-    "love": "Healing love: honesty under starlight.",
-    "career": "Share your vision; hope attracts help.",
-    "money": "Calm recovery; wish with a plan attached.",
-    "health": "Healing is underway; support it gently."
+    "upright": "After a difficult time, hope returns. The Star brings healing, calm and renewed faith that things can get better. Let yourself believe in the future again.",
+    "reversed": "You may feel discouraged or disconnected from hope. Small acts of self-care and talking to people you trust can bring the light back.",
+    "love": "Healing, openness and gentle hope in love. A sincere connection that feels refreshing.",
+    "career": "Inspiration and a sense of purpose return. A good time to share your ideas and goals.",
+    "money": "Slow, steady recovery. Keep faith in your plan.",
+    "health": "A healing and restoring period. Rest, water and calm help you recover."
   },
   "18": {
     "slug": "the-moon",
     "reviewed": false,
     "name": "The Moon",
     "keywords_upright": [
-      "dreams",
       "uncertainty",
-      "the unseen"
+      "intuition",
+      "dreams",
+      "illusion"
     ],
     "keywords_reversed": [
       "clarity returning",
-      "named fears",
-      "lifting fog"
+      "fears fading",
+      "truth revealed"
     ],
-    "upright": "Things glimmer but do not resolve yet. Trust dreams and hunches, double-check facts, and do not sign in moonlight.",
-    "reversed": "Fog is lifting: fears named shrink, confusion untangles. Keep going \u2014 daylight is a decision away.",
-    "love": "Illusions dissolve; see the person, not the projection.",
-    "career": "Verify before you commit; rumors are loud now.",
-    "money": "Hidden costs surface \u2014 look twice.",
-    "health": "Sleep and dreams carry messages; rest more."
+    "upright": "Things are unclear right now, and fear or imagination may fill the gaps. The Moon asks you to move slowly, trust your intuition and check facts before you believe the worst.",
+    "reversed": "The fog is lifting. Confusion clears, fears lose their power and the truth becomes easier to see.",
+    "love": "Mixed signals or uncertainty. Don't jump to conclusions; give it time and talk openly.",
+    "career": "Unclear information or plans. Ask questions and get details in writing.",
+    "money": "Not a time for decisions based on rumours or unclear offers. Check everything carefully.",
+    "health": "Restless sleep or worry may affect your energy. Calm routines help; see a professional if worries persist."
   },
   "19": {
     "slug": "the-sun",
@@ -404,20 +423,21 @@
     "name": "The Sun",
     "keywords_upright": [
       "joy",
+      "success",
       "clarity",
       "vitality"
     ],
     "keywords_reversed": [
-      "clouded joy",
-      "delayed success",
-      "forced cheer"
+      "temporary clouds",
+      "low confidence",
+      "delayed success"
     ],
-    "upright": "Yes \u2014 bright, simple yes. Joy, clarity, and energy are yours: celebrate openly and share the warmth around.",
-    "reversed": "Clouds, not night: joy delayed or dimmed, success still coming. Do not fake the smile \u2014 tend the small good things.",
-    "love": "Warm, honest, playful \u2014 let it show.",
-    "career": "Visibility and wins; take the bow.",
-    "money": "Sunny outlook; still budget the picnic.",
-    "health": "Vitality returns; sunlight, movement, laughter."
+    "upright": "One of the brightest cards in the deck. The Sun brings joy, success, warmth and clarity. Things become clear, and you can shine as yourself.",
+    "reversed": "The sun is still there, just behind a cloud. Success may be delayed or confidence may dip, but the overall outlook is good.",
+    "love": "Happiness, warmth and openness. A joyful, honest relationship you are proud of.",
+    "career": "Success, recognition and clear progress. Your work is seen and appreciated.",
+    "money": "A positive, abundant period. Enjoy it and share the good fortune wisely.",
+    "health": "Vitality and good energy. Sunshine, play and time outdoors lift you up."
   },
   "20": {
     "slug": "judgement",
@@ -425,20 +445,21 @@
     "name": "Judgement",
     "keywords_upright": [
       "awakening",
-      "calling",
-      "forgiveness"
+      "renewal",
+      "inner calling",
+      "reflection"
     ],
     "keywords_reversed": [
-      "self-criticism",
-      "missed call",
-      "unfinished past"
+      "self-doubt",
+      "harsh self-judgement",
+      "ignoring the call"
     ],
-    "upright": "A calling is sounding \u2014 rise to the bigger version of you. Forgive the old chapters; answer with changed action.",
-    "reversed": "The inner judge is too loud, or you keep missing the call. Turn criticism into instruction; tie up one old thread.",
-    "love": "Forgive and choose fresh \u2014 or admit it is over.",
-    "career": "Your calling is knocking; answer with a move.",
-    "money": "Review past money lessons; apply one now.",
-    "health": "Forgive the body; start the new regimen kindly."
+    "upright": "A wake-up call. Judgement asks you to look back honestly, learn from the past and answer a calling toward a new version of yourself.",
+    "reversed": "You may be judging yourself too harshly, or ignoring a call to change. Forgive yourself and listen to what you already know.",
+    "love": "A second chance, an honest talk about the past, or a clear decision about the future of the relationship.",
+    "career": "A calling to a new direction, or an important evaluation. Trust what you have learned.",
+    "money": "Review your finances honestly and settle old matters.",
+    "health": "A good time for a fresh start with healthier habits, based on what you have learned."
   },
   "21": {
     "slug": "the-world",
@@ -446,20 +467,21 @@
     "name": "The World",
     "keywords_upright": [
       "completion",
+      "fulfilment",
       "wholeness",
-      "arrival"
+      "achievement"
     ],
     "keywords_reversed": [
-      "loose ends",
-      "almost there",
-      "unclosed circle"
+      "unfinished business",
+      "delays",
+      "seeking closure"
     ],
-    "upright": "The circle closes beautifully. Complete it, celebrate it, carry the lesson \u2014 a bigger circle is already forming.",
-    "reversed": "Nearly there: one loose end keeps the circle open. Tie it, and the completion (and the celebration) unlocks.",
-    "love": "Wholeness together \u2014 or whole on your own. Both count.",
-    "career": "Finish strong; the credential is the completion.",
-    "money": "A cycle completes; harvest, then plan the next.",
-    "health": "Integration: body, mind, and rhythm aligned."
+    "upright": "A cycle comes to a successful end. The World brings completion, fulfilment and the feeling that everything has come together. Celebrate, then get ready for the next adventure.",
+    "reversed": "You are close to the finish line, but something is still unfinished. Tie up loose ends before moving on.",
+    "love": "A fulfilling, complete relationship, or reaching an important milestone together.",
+    "career": "Finishing a big project, reaching a goal, or work that connects you with the wider world.",
+    "money": "Goals reached and stability achieved. A good moment to review and plan the next stage.",
+    "health": "Feeling whole and balanced. Celebrate the progress you have made."
   },
   "22": {
     "slug": "ace-of-wands",
@@ -467,20 +489,21 @@
     "name": "Ace of Wands",
     "keywords_upright": [
       "inspiration",
-      "new spark",
-      "bold start"
+      "new venture",
+      "passion",
+      "potential"
     ],
     "keywords_reversed": [
-      "false start",
       "delays",
-      "dampened fire"
+      "false starts",
+      "low motivation"
     ],
-    "upright": "A spark lands: an idea, an invitation, a surge of wanting that feels alive. Say yes to the first small step while the fire is warm.",
-    "reversed": "The spark struggles to catch: delays, mixed signals, or energy spent in the wrong direction. Wait for real heat rather than forcing smoke.",
-    "love": "Attraction with momentum; let it be playful before it is serious.",
-    "career": "Pitch it, start it, volunteer; raw initiative beats polish today.",
-    "money": "A bright idea is not a budget; seed it small and watch it.",
-    "health": "Energy returns when you move; start gently, then build."
+    "upright": "A spark of inspiration arrives. The Ace of Wands brings fresh energy, excitement and the push to start something new. Act while the fire is strong.",
+    "reversed": "The spark is there but blocked, or energy fizzles before anything is built. Start with one small step instead of waiting for the perfect moment.",
+    "love": "New attraction, chemistry and excitement, or a spark returning to an existing relationship.",
+    "career": "A new project, idea or venture. A good time to take initiative.",
+    "money": "A new income idea or opportunity that grows if you act on it.",
+    "health": "Rising energy and motivation to get moving. Build the routine so it lasts."
   },
   "23": {
     "slug": "two-of-wands",
@@ -488,41 +511,43 @@
     "name": "Two of Wands",
     "keywords_upright": [
       "planning",
-      "two paths",
-      "bold outlook"
+      "vision",
+      "decisions",
+      "expansion"
     ],
     "keywords_reversed": [
-      "indecision",
       "fear of change",
-      "narrow view"
+      "playing it safe",
+      "indecision"
     ],
-    "upright": "You hold the world loosely and look outward: two real paths, both viable. Plan past the horizon, then commit your weight to one.",
-    "reversed": "The map stays folded: indecision, fear of the bigger life, or planning as a hiding place. Choose the path you can grow on.",
-    "love": "Deciding what you actually want precedes asking for it.",
-    "career": "Strategy day: compare the two roads with numbers, not moods.",
-    "money": "Long-view planning pays; avoid scattering small bets.",
-    "health": "A plan you can repeat beats a heroic one-day effort."
+    "upright": "You have a solid base and you're looking at a bigger world. The Two of Wands is about planning your next move and choosing which direction to grow in.",
+    "reversed": "Fear of leaving your comfort zone keeps you in place, or you're rushing ahead without a plan. Make the plan, then make the choice.",
+    "love": "Thinking about the future together. Do your long-term plans point the same way?",
+    "career": "Planning a bigger step, expansion or relocation. Weigh the options, then commit.",
+    "money": "Weigh security against growth and plan for the long term.",
+    "health": "Set a clear intention and make a realistic plan for your routine."
   },
   "24": {
     "slug": "three-of-wands",
     "reviewed": false,
     "name": "Three of Wands",
     "keywords_upright": [
-      "expansion",
       "progress",
-      "ships coming in"
+      "expansion",
+      "foresight",
+      "opportunity"
     ],
     "keywords_reversed": [
       "delays",
-      "frustration",
-      "small thinking"
+      "obstacles",
+      "limited vision"
     ],
-    "upright": "What you launched is moving: early results, wider horizons, help from afar. Keep your eyes on the harbour and your hand steady.",
-    "reversed": "Ships delayed and tempers short. Check what is actually blocked before blaming the wind; some of it is small thinking.",
-    "love": "Growth together, or love at a distance handled with patience.",
-    "career": "Expansion works; prepare the next stage before it lands.",
-    "money": "Returns are en route; do not spend the cargo before docking.",
-    "health": "Steady progress; widen the routine rather than intensifying it."
+    "upright": "Your plans are in motion and the horizon is opening up. The Three of Wands brings progress, growth and opportunities that may come from far away.",
+    "reversed": "Results are slower or smaller than expected. Be patient, adjust the plan and strengthen your groundwork.",
+    "love": "Moving forward together, long-distance love, or looking beyond your usual type.",
+    "career": "Expansion, trade, travel or international work. Things you started are beginning to pay off.",
+    "money": "Investments in your future start to grow. Patience brings returns.",
+    "health": "Earlier efforts start to show. Keep going consistently."
   },
   "25": {
     "slug": "four-of-wands",
@@ -530,20 +555,21 @@
     "name": "Four of Wands",
     "keywords_upright": [
       "celebration",
-      "harmony",
-      "homecoming"
+      "home",
+      "stability",
+      "milestones"
     ],
     "keywords_reversed": [
-      "restlessness",
-      "tension at home",
-      "unfinished welcome"
+      "instability",
+      "cancelled plans",
+      "tension at home"
     ],
-    "upright": "A milestone worth marking: people gather, the roof holds, joy is communal. Celebrate properly; harmony is also an achievement.",
-    "reversed": "The party feels off: restlessness at home or celebration postponed. Fix the small friction instead of faking the toast.",
-    "love": "Public joy as a couple, or welcoming someone into your circle.",
-    "career": "Team milestones count; thank people out loud.",
-    "money": "Spend on shared joy within limits; home costs stay planned.",
-    "health": "Rest inside community; celebration is recovery too."
+    "upright": "A milestone worth celebrating. The Four of Wands brings joy, homecoming, stability and happy gatherings with the people you love.",
+    "reversed": "Celebrations may be delayed, or harmony at home or in a group feels shaky. Sort out the foundation before the party.",
+    "love": "A happy, secure time: moving in, engagement, a wedding or meeting the family.",
+    "career": "A project completed, a successful launch or a supportive team.",
+    "money": "Hard work paying off, with room to enjoy some of it.",
+    "health": "Rest and feeling at home in yourself again."
   },
   "26": {
     "slug": "five-of-wands",
@@ -551,20 +577,21 @@
     "name": "Five of Wands",
     "keywords_upright": [
       "competition",
-      "clashing egos",
+      "conflict",
+      "debate",
       "friction"
     ],
     "keywords_reversed": [
-      "avoidance",
-      "tension releasing",
-      "conflict dodged"
+      "avoiding conflict",
+      "inner tension",
+      "resolution"
     ],
-    "upright": "Sparks fly where ambitions collide: sparring, rivalry, everyone talking at once. Treat it as training, not war; the best idea can win.",
-    "reversed": "The fight drains or dissolves: conflict avoided too long, or tension finally spent. Name the real disagreement while it is small.",
-    "love": "Sparring can be chemistry or combat; keep it kind and it stays play.",
-    "career": "Compete on merit; do not make rivals of teammates.",
-    "money": "Too many hands on one pot; agree the split before spending.",
-    "health": "Burn the static off with movement, not arguments."
+    "upright": "Lots of competing voices and energy. The Five of Wands shows friction, rivalry or debate. It can sharpen you, as long as everyone plays fair.",
+    "reversed": "Conflict is being avoided or kept under the surface, or things are finally calming down. Say what needs to be said, kindly.",
+    "love": "Bickering, playful sparring or competition for attention. Clear the air honestly.",
+    "career": "Competition, clashing opinions or a busy team phase. Stay focused on the real goal.",
+    "money": "Competing priorities for your money. Decide what matters most.",
+    "health": "Restless energy that needs an outlet, such as exercise or sport."
   },
   "27": {
     "slug": "six-of-wands",
@@ -573,61 +600,64 @@
     "keywords_upright": [
       "victory",
       "recognition",
-      "riding high"
+      "confidence",
+      "success"
     ],
     "keywords_reversed": [
-      "delayed success",
-      "ego bruise",
-      "fall from grace"
+      "delayed recognition",
+      "self-doubt",
+      "ego"
     ],
-    "upright": "The crowd sees it: a win, praise, the ride through town. Accept recognition graciously; it fuels the next campaign.",
-    "reversed": "Applause delayed or pride bruised: a win that feels hollow, or credit going elsewhere. Let results argue for you.",
-    "love": "Being chosen and shown off a little; enjoy being proud together.",
-    "career": "Visibility is high; document the win, share credit.",
-    "money": "A bonus or lift is possible; do not inflate lifestyle overnight.",
-    "health": "Confidence helps the body; avoid victory laps that injure."
+    "upright": "A win that others can see. The Six of Wands brings success, recognition and well-earned confidence. Enjoy the moment and let yourself be seen.",
+    "reversed": "Recognition is delayed, or success feels empty. Look for your own measure of success rather than waiting for applause.",
+    "love": "A proud, supportive relationship where you feel chosen and celebrated.",
+    "career": "Promotion, praise, a won pitch or stepping into leadership.",
+    "money": "Rewards for your competence and a sense of progress.",
+    "health": "Recovery and returning confidence in your body."
   },
   "28": {
     "slug": "seven-of-wands",
     "reviewed": false,
     "name": "Seven of Wands",
     "keywords_upright": [
-      "stand your ground",
-      "conviction",
-      "holding the high ground"
+      "standing your ground",
+      "courage",
+      "boundaries",
+      "perseverance"
     ],
     "keywords_reversed": [
-      "overwhelmed",
-      "giving up",
-      "defensive crouch"
+      "exhaustion",
+      "giving in",
+      "overwhelm"
     ],
-    "upright": "You hold the hill: others want the spot, the budget, the say. Stand for what you built; conviction is a resource, spend it well.",
-    "reversed": "Too many challengers, or the crouch becomes the position. Pick which ground is truly yours and let the rest go.",
-    "love": "Defend the relationship's boundaries, not your ego.",
-    "career": "Justify your call with calm facts; do not fight every critic.",
-    "money": "Guard the core budget; say no to raids dressed as favours.",
-    "health": "Sustainable effort beats heroic defence; rest is strategy."
+    "upright": "You're holding your position against pressure. The Seven of Wands asks for courage and firm boundaries. What you've built is worth defending.",
+    "reversed": "You may be worn down and ready to give up, or fighting more battles than you need to. Choose what's worth defending and accept help.",
+    "love": "Protecting the relationship from outside pressure, or being defensive after past hurt.",
+    "career": "Defending your ideas, role or rates. Don't try to carry everything alone.",
+    "money": "Hold firm on your budget and limits.",
+    "health": "Strong stamina, but constant tension needs release."
   },
   "29": {
     "slug": "eight-of-wands",
     "reviewed": false,
     "name": "Eight of Wands",
     "keywords_upright": [
-      "swift action",
+      "speed",
+      "momentum",
       "news",
-      "momentum"
+      "progress"
     ],
     "keywords_reversed": [
       "delays",
-      "mixed signals",
-      "scattered arrows"
+      "miscommunication",
+      "lost momentum"
     ],
-    "upright": "Everything moves at once: messages, decisions, travel, momentum. Aim before the volley lands and ride the clear air.",
-    "reversed": "Arrows scatter: delays, crossed wires, haste making waste. Slow the send button; one clear message beats eight fast ones.",
-    "love": "Fast developments; enjoy the rush, confirm the meaning.",
-    "career": "Green lights across the board; prioritise before pouncing.",
-    "money": "Quick moves possible; read the small print at speed, twice.",
-    "health": "Momentum is medicine; protect sleep while life accelerates."
+    "upright": "Things are moving fast. The Eight of Wands brings quick progress, messages, news and travel. Act while the momentum is here.",
+    "reversed": "Delays, crossed wires or waiting on others. Slow down, check details and clear what's blocking the way.",
+    "love": "Fast-moving connection, lots of messages, or renewed excitement.",
+    "career": "Quick offers, decisions and focused productivity. Work travel is possible.",
+    "money": "Payments and decisions come quickly.",
+    "health": "A quick return of energy and motivation."
   },
   "30": {
     "slug": "nine-of-wands",
@@ -635,20 +665,21 @@
     "name": "Nine of Wands",
     "keywords_upright": [
       "resilience",
-      "last push",
-      "guarded strength"
+      "persistence",
+      "boundaries",
+      "almost there"
     ],
     "keywords_reversed": [
-      "exhaustion",
+      "burnout",
       "defensiveness",
-      "paranoia"
+      "giving up too soon"
     ],
-    "upright": "Bandaged but standing: you are closer than you feel. One more honest push, with your guard up and your lesson learned.",
-    "reversed": "The guard never lowers: exhaustion posing as vigilance. Rest is not surrender; let someone trusted hold the wall.",
-    "love": "Old wounds set the watch; let present kindness update the guard.",
-    "career": "Finish the campaign; document so the next push is lighter.",
-    "money": "Protect reserves; this is not the week for lending strength away.",
-    "health": "Recovery is the training now; sleep like it matters, it does."
+    "upright": "Tired but still standing. The Nine of Wands says you are close to the finish line. Hold on a little longer, protect your energy and keep healthy boundaries.",
+    "reversed": "Exhaustion or old hurts make you overly guarded. Rest, lower your defences where it's safe and accept support.",
+    "love": "A bond worn by past difficulties that needs honest talk. Singles may be cautious about opening up.",
+    "career": "A draining stretch that is nearly over. Keep going, but don't burn out.",
+    "money": "Protect your savings and rebuild slowly.",
+    "health": "You are running on reserves; rest is as important as effort."
   },
   "31": {
     "slug": "ten-of-wands",
@@ -656,104 +687,109 @@
     "name": "Ten of Wands",
     "keywords_upright": [
       "burden",
-      "overcommitment",
-      "carrying it all"
+      "responsibility",
+      "hard work",
+      "overload"
     ],
     "keywords_reversed": [
-      "release",
-      "delegation",
-      "setting it down"
+      "letting go",
+      "delegating",
+      "burnout"
     ],
-    "upright": "The bundle is heavy because you picked up every stick. The work matters; the carrying style does not. Put some down before the last steps.",
-    "reversed": "Release begins: delegating, dropping, saying the overdue no. Let the pile shrink to what is actually yours.",
-    "love": "Care shown as labour still needs words; share the load early.",
-    "career": "Delegate or renegotiate scope before burnout negotiates for you.",
-    "money": "Cut one recurring weight; effort is also a currency.",
-    "health": "The back keeps the score; lighten before it invoices you."
+    "upright": "You're carrying too much. The Ten of Wands shows heavy responsibility near the end of a long effort. Sort out what is truly yours to carry.",
+    "reversed": "Relief comes when you put some of the load down, or things give way because you held on too long. Delegate and ask for help.",
+    "love": "One person carrying most of the load. Share responsibilities more fairly.",
+    "career": "Too many tasks and duties. Prioritise and delegate.",
+    "money": "Several obligations at once. Deal with them step by step.",
+    "health": "Long-term overload; your body is asking for rest."
   },
   "32": {
     "slug": "page-of-wands",
     "reviewed": false,
     "name": "Page of Wands",
     "keywords_upright": [
-      "enthusiastic messenger",
+      "curiosity",
+      "enthusiasm",
       "exploration",
       "good news"
     ],
     "keywords_reversed": [
-      "scattered energy",
-      "hasty words",
-      "false alarms"
+      "scattered ideas",
+      "no follow-through",
+      "impatience"
     ],
-    "upright": "A bright messenger: news that excites, a new interest, beginner's fire. Explore loudly, commit later.",
-    "reversed": "Static on the line: hasty words, false alarms, enthusiasm without aim. Verify before you volley the news onward.",
-    "love": "Flirtation and spark; keep it light until it proves depth.",
-    "career": "Volunteer for the interesting task; curiosity is visible.",
-    "money": "Small exciting bets only; novelty is not due diligence.",
-    "health": "Try the new class, route, or recipe; play counts as training."
+    "upright": "A curious, adventurous spirit. The Page of Wands brings exciting news, new interests and the urge to explore. Try it and learn as you go.",
+    "reversed": "Lots of excitement but little follow-through. Pick one idea and stick with it.",
+    "love": "Playful flirting and fun early attraction.",
+    "career": "A green light to try a new idea or learn something new.",
+    "money": "Test new ideas on a small scale first.",
+    "health": "Excitement for a new activity; pace yourself."
   },
   "33": {
     "slug": "knight-of-wands",
     "reviewed": false,
     "name": "Knight of Wands",
     "keywords_upright": [
+      "action",
       "adventure",
-      "bold charge",
-      "restless drive"
+      "passion",
+      "boldness"
     ],
     "keywords_reversed": [
       "recklessness",
-      "hot and cold",
-      "travel snags"
+      "impatience",
+      "unfinished plans"
     ],
-    "upright": "The charger arrives: adventure, travel, a bold move made at speed. Ride it where it counts; aim the horse before the gallop.",
-    "reversed": "Hot hooves, cold hearth: reckless starts, restless exits, snags on the road. Slow down enough to actually arrive.",
-    "love": "Whirlwind energy; thrilling, and needs one honest conversation.",
-    "career": "Pitch boldly, chase the opening; follow-through sells it.",
-    "money": "Fast money tempts; speed is not a strategy.",
-    "health": "Channel the charge into sport before it becomes friction."
+    "upright": "Bold, fast and full of energy. The Knight of Wands charges toward adventure and new goals. Go for it, but know where you're heading.",
+    "reversed": "Rushing, impatience or quick temper leads to unfinished plans. Slow down enough to aim.",
+    "love": "Intense, exciting attraction that moves fast; check whether it has staying power.",
+    "career": "Rapid progress, travel or a bold move. Energy is high.",
+    "money": "Bold moves are possible, but avoid impulse spending.",
+    "health": "High energy; keep it steady instead of burning out."
   },
   "34": {
     "slug": "queen-of-wands",
     "reviewed": false,
     "name": "Queen of Wands",
     "keywords_upright": [
-      "confident warmth",
-      "magnetism",
-      "creative command"
+      "confidence",
+      "warmth",
+      "charisma",
+      "independence"
     ],
     "keywords_reversed": [
-      "jealousy",
       "insecurity",
-      "demanding streak"
+      "jealousy",
+      "burnout"
     ],
-    "upright": "Warm authority: confidence that rooms can feel, creativity with a spine. Lead by lighting other candles, not dimming them.",
-    "reversed": "The fire turns inward: jealousy, insecurity, or warmth with conditions. Refill your own cup before directing the room.",
-    "love": "Magnetic and generous; ask for admiration honestly, not by test.",
-    "career": "Visible leadership lands; mentor someone visibly too.",
-    "money": "Invest in presentation and people; both compound.",
-    "health": "Vitality loves rhythm: sun, movement, colour, company."
+    "upright": "Warm, confident and magnetic. The Queen of Wands invites you to step into the light, be yourself fully and lead with warmth and courage.",
+    "reversed": "Insecurity, jealousy or exhaustion dims your light. Reconnect with what makes you shine.",
+    "love": "Warm, passionate and self-assured love. Being fully yourself is your attraction.",
+    "career": "A respected, energetic leader who inspires others.",
+    "money": "Confident, decisive action once you've done the research.",
+    "health": "Lively energy and strong self-care."
   },
   "35": {
     "slug": "king-of-wands",
     "reviewed": false,
     "name": "King of Wands",
     "keywords_upright": [
-      "visionary leader",
-      "big picture",
-      "entrepreneurial fire"
+      "leadership",
+      "vision",
+      "boldness",
+      "entrepreneurship"
     ],
     "keywords_reversed": [
-      "impulsiveness",
       "domineering",
-      "overreach"
+      "impatience",
+      "ego"
     ],
-    "upright": "The long view with fire behind it: vision people can follow, risks taken on purpose. Lead the campaign, not every skirmish.",
-    "reversed": "Vision curdles into overreach: impulsive calls, a court that only cheers. Invite one honest dissent before deciding.",
-    "love": "Generous leadership at home; make room for another throne.",
-    "career": "Set the direction publicly; hire or delegate the how.",
-    "money": "Big-picture bets need boring safeguards; pair them.",
-    "health": "Sustainable pace is the real flex; protect the engine."
+    "upright": "A natural leader with vision. The King of Wands turns big ideas into reality, inspires others and takes bold, well-directed action.",
+    "reversed": "Leadership may tip into control or impatience. Listen to others and share the work.",
+    "love": "A passionate, loyal and protective partner who wants an equal.",
+    "career": "Leadership, founding something or taking charge of a big project.",
+    "money": "Visionary but calculated decisions.",
+    "health": "Strong energy; watch stress and remember to delegate."
   },
   "36": {
     "slug": "ace-of-cups",
@@ -761,20 +797,21 @@
     "name": "Ace of Cups",
     "keywords_upright": [
       "new love",
-      "emotional awakening",
-      "overflowing joy"
+      "emotional renewal",
+      "compassion",
+      "intuition"
     ],
     "keywords_reversed": [
       "blocked feelings",
       "emptiness",
-      "love withheld"
+      "self-care needed"
     ],
-    "upright": "The cup fills from inside: new love, friendship, faith, or simply feeling again. Let it overflow toward someone.",
-    "reversed": "The cup is covered: feelings blocked, numb, or poured where they are not met. Name the feeling before filling anything.",
-    "love": "A genuine opening; say the soft thing first.",
-    "career": "Work with heart in it appears; follow meaning, then money.",
-    "money": "Generosity flows; give from surplus, not from guilt.",
-    "health": "Emotional rest is physical rest; cry, laugh, hydrate."
+    "upright": "Your heart is filling up. The Ace of Cups brings new love, emotional renewal, compassion and the chance to receive something good. Open up and let it in.",
+    "reversed": "Feelings may be blocked, or you're giving more than you receive. Fill your own cup first and be gentle with yourself.",
+    "love": "A new relationship or feelings blossoming. Love given and received freely.",
+    "career": "Work that touches your heart, or caring and creative projects.",
+    "money": "Choices guided by your values and what truly matters to you.",
+    "health": "Emotional recovery and feeling nourished."
   },
   "37": {
     "slug": "two-of-cups",
@@ -782,20 +819,21 @@
     "name": "Two of Cups",
     "keywords_upright": [
       "partnership",
-      "union",
-      "mutual respect"
+      "mutual attraction",
+      "connection",
+      "harmony"
     ],
     "keywords_reversed": [
       "imbalance",
-      "broken bond",
-      "one-sided effort"
+      "miscommunication",
+      "distance"
     ],
-    "upright": "Two cups, raised level: partnership with mutual respect, a bond that pours both ways. Meet them halfway, exactly halfway.",
-    "reversed": "One cup pours, the other watches: imbalance, a truce cooling, or a bond needing repair. Check the levels honestly.",
-    "love": "The real thing has reciprocity; look for effort that matches yours.",
-    "career": "A 1:1 alliance strengthens; put the understanding in writing.",
-    "money": "Shared finances need shared rules; agree them kindly.",
-    "health": "Heal in company; ask for the specific help you need."
+    "upright": "Two people meeting as equals. The Two of Cups brings mutual attraction, partnership and a bond where both sides give and receive.",
+    "reversed": "The balance is off: one side gives more, or communication has broken down. Talk openly about what each of you needs.",
+    "love": "A balanced, loving connection, a new romance, or making up after a disagreement.",
+    "career": "A strong partnership or collaboration built on trust.",
+    "money": "Pooling resources with someone you trust, on fair terms.",
+    "health": "Support from someone close helps you feel better."
   },
   "38": {
     "slug": "three-of-cups",
@@ -804,19 +842,20 @@
     "keywords_upright": [
       "friendship",
       "celebration",
-      "community"
+      "community",
+      "collaboration"
     ],
     "keywords_reversed": [
+      "overindulgence",
       "gossip",
-      "third wheel",
-      "overindulgence"
+      "feeling left out"
     ],
-    "upright": "Raise it with your people: friendship, reunion, shared joy multiplied. Community is the blessing here, not background.",
-    "reversed": "The toast sours slightly: gossip, a third wheel, or one toast too many. Keep the circle kind and the cup moderate.",
-    "love": "Love inside a happy circle; friends are part of the romance.",
-    "career": "Celebrate the team win; networks quietly open doors.",
-    "money": "Group spending is joyful and slippery; set the kitty rules.",
-    "health": "Joy is contagious medicine; schedule your people."
+    "upright": "A time of shared happiness. The Three of Cups brings celebrations, reunions with friends and success that others share with you. Joy grows when it's shared.",
+    "reversed": "The circle feels shaky: gossip, jealousy or too much partying. Spend time with the people who genuinely support you.",
+    "love": "Fun and warmth. Early dating may be light; couples enjoy time with friends and family.",
+    "career": "Teamwork, networking and celebrating group success.",
+    "money": "Shared projects and fair sharing of rewards. Watch social spending.",
+    "health": "Support from good company. Avoid overdoing food, drink or late nights."
   },
   "39": {
     "slug": "four-of-cups",
@@ -824,20 +863,21 @@
     "name": "Four of Cups",
     "keywords_upright": [
       "apathy",
-      "contemplation",
-      "missed offer"
+      "boredom",
+      "withdrawal",
+      "missed opportunity"
     ],
     "keywords_reversed": [
-      "renewed interest",
-      "acceptance",
-      "saying yes"
+      "re-engaging",
+      "new interest",
+      "clarity"
     ],
-    "upright": "Arms crossed under the tree: boredom, apathy, an offer unnoticed at your elbow. Look up before concluding life is flat.",
-    "reversed": "The fog lifts: interest returns, the offered cup finally seen. Say yes to one small thing and watch appetite follow.",
-    "love": "Emotional flatness is information, not verdict; say what is missing.",
-    "career": "A dull patch hides an opening; review the unnoticed offer.",
-    "money": "Avoid apathy spending; check the account you have been ignoring.",
-    "health": "Low mood is a signal; light, air, and one person help."
+    "upright": "Life feels flat and nothing excites you. The Four of Cups suggests you may be so focused on what's missing that you don't notice a new offer right in front of you.",
+    "reversed": "The fog is lifting and interest returns. You're ready to say yes again, or to say a clear, mindful no.",
+    "love": "Boredom or taking each other for granted. Look again at what is being offered.",
+    "career": "Feeling bored at work or overlooking an opportunity.",
+    "money": "Opportunities may drift past; pay attention.",
+    "health": "Emotional tiredness; real rest and small joys help."
   },
   "40": {
     "slug": "five-of-cups",
@@ -845,20 +885,21 @@
     "name": "Five of Cups",
     "keywords_upright": [
       "loss",
-      "regret",
-      "spilled cups"
+      "grief",
+      "disappointment",
+      "regret"
     ],
     "keywords_reversed": [
       "acceptance",
       "moving on",
-      "bridge back"
+      "healing"
     ],
-    "upright": "Three cups down, and grief is honest work. Two still stand behind you: grieve what spilled, then turn around; the bridge is there.",
-    "reversed": "The turn begins: regret loosening, help accepted, the walk back over the bridge. Let the past be a place you visited.",
-    "love": "Sorrow needs witnessing, not fixing; stay or be stayed with.",
-    "career": "A setback is not the whole portfolio; salvage what stands.",
-    "money": "Count what remains before mourning what left; rebuild from the two cups.",
-    "health": "Grief lives in the body; gentle routines carry it."
+    "upright": "Something has been lost and it hurts. The Five of Cups honours that grief, and gently points out that two cups are still standing behind you: what remains still matters.",
+    "reversed": "The worst is passing. You're beginning to accept the loss, forgive and move on.",
+    "love": "Disappointment or grieving a relationship. Healing comes when you look at what is still there.",
+    "career": "A setback, while your skills and contacts are still intact.",
+    "money": "A loss that stings, but you still have something to rebuild with.",
+    "health": "Feeling low and heavy; let feelings move and lean on support."
   },
   "41": {
     "slug": "six-of-cups",
@@ -866,20 +907,21 @@
     "name": "Six of Cups",
     "keywords_upright": [
       "nostalgia",
-      "reunion",
-      "childhood sweetness"
+      "memories",
+      "kindness",
+      "reunion"
     ],
     "keywords_reversed": [
       "stuck in the past",
-      "rose-tinted trap",
+      "idealising",
       "letting go"
     ],
-    "upright": "Sweet water from an old well: nostalgia, old friends, places that knew you young. Visit warmly; bring something back.",
-    "reversed": "The past will not move out: rose-tinted traps or an old story driving. Thank it, then return to the present tense.",
-    "love": "An old flame or an old softness in a current love; check which.",
-    "career": "Past skills and contacts resurface usefully; call them.",
-    "money": "Old debts or gifts resurface; settle them cleanly.",
-    "health": "Comfort rituals from childhood still work; use them kindly."
+    "upright": "Sweet memories and simple kindness. The Six of Cups brings nostalgia, reunions with people from your past and gestures of goodwill.",
+    "reversed": "Living too much in the past, or idealising how things used to be. Take the good lessons and bring them into the present.",
+    "love": "An old flame, a familiar connection, or rediscovering playfulness together.",
+    "career": "A past contact or old passion comes back.",
+    "money": "Gifts or help from family.",
+    "health": "Play, rest and gentle self-care."
   },
   "42": {
     "slug": "seven-of-cups",
@@ -887,20 +929,21 @@
     "name": "Seven of Cups",
     "keywords_upright": [
       "choices",
-      "dreams",
-      "shimmering options"
+      "imagination",
+      "wishful thinking",
+      "illusion"
     ],
     "keywords_reversed": [
       "clarity",
-      "one true wish",
-      "cutting illusion"
+      "focus",
+      "reality check"
     ],
-    "upright": "Seven cups shimmer with dragons and jewels alike: many options, not all real. Choose by the life you want, not the sparkle.",
-    "reversed": "The mist thins: one wish proves true, the rest were weather. Commit to the real cup and let fantasies retire.",
-    "love": "Projecting is easy now; ask who they are, not who they gleam as.",
-    "career": "Too many shiny paths; score them against one clear goal.",
-    "money": "Avoid glittering schemes; boring and real wins.",
-    "health": "Decision fatigue is real; fewer choices, deeper rest."
+    "upright": "Many options and big dreams, but not all of them are real. The Seven of Cups asks you to look closely at each choice before you commit.",
+    "reversed": "Clarity returns. Illusions fall away and you can focus on one real choice.",
+    "love": "Idealising someone or missing warning signs. See the person as they are.",
+    "career": "Too many ideas at once; pick one path.",
+    "money": "Be careful with offers that sound too good to be true.",
+    "health": "Mental fog or daydreaming; grounding routines help."
   },
   "43": {
     "slug": "eight-of-cups",
@@ -908,104 +951,109 @@
     "name": "Eight of Cups",
     "keywords_upright": [
       "walking away",
-      "deeper meaning",
-      "leaving the almost"
+      "moving on",
+      "searching for meaning",
+      "letting go"
     ],
     "keywords_reversed": [
       "fear of change",
-      "drifting back",
-      "unfinished leaving"
+      "staying stuck",
+      "avoidance"
     ],
-    "upright": "Eight cups stacked neatly, and still you walk: leaving the almost-right for the true thing. The moonlit road is the honest one.",
-    "reversed": "Half out the door: fear of change or drifting back to the familiar cups. Decide what would make staying different, or go kindly.",
-    "love": "Leaving what almost worked takes more love, not less.",
-    "career": "A role that no longer feeds you; plan the exit with grace.",
-    "money": "Walk from sunk costs; the moon is not an expense line.",
-    "health": "Restlessness is data; the body wants a truer routine."
+    "upright": "Leaving something that no longer fulfils you. The Eight of Cups shows the courage to walk away from what looks fine on the outside, in search of something more meaningful.",
+    "reversed": "You may be staying because you're afraid of change, or leaving to avoid facing something. Be honest about your reasons.",
+    "love": "A relationship that feels empty, or searching for deeper connection.",
+    "career": "Leaving a stable but draining job, or looking for more meaningful work.",
+    "money": "Letting go of something that only looks secure.",
+    "health": "Letting go of habits that no longer serve you."
   },
   "44": {
     "slug": "nine-of-cups",
     "reviewed": false,
     "name": "Nine of Cups",
     "keywords_upright": [
-      "wish granted",
+      "wishes fulfilled",
+      "satisfaction",
       "contentment",
-      "emotional wealth"
+      "gratitude"
     ],
     "keywords_reversed": [
-      "dissatisfaction",
-      "greed",
-      "hollow treat"
+      "hollow success",
+      "overindulgence",
+      "unmet wishes"
     ],
-    "upright": "The wish card: contentment you can taste, pride in what fills your table. Ask clearly; gratitude seasons it.",
-    "reversed": "Full cup, flat taste: getting it did not feed you, or wanting crowds out having. Revisit what the wish was for.",
-    "love": "Emotional generosity attracts; enjoy being delighted in.",
-    "career": "A goal lands; savour before sprinting to the next.",
-    "money": "Comfort is real now; keep one wish funded, not five.",
-    "health": "Pleasure is part of health; schedule it without apology."
+    "upright": "Known as the wish card. The Nine of Cups brings satisfaction, comfort and getting what you hoped for. Enjoy it and feel grateful.",
+    "reversed": "Success that feels empty, or trying to fill a gap with too much comfort. Ask what would truly satisfy you.",
+    "love": "Happiness and self-love; feeling good on your own and together.",
+    "career": "A goal achieved; take time to enjoy it.",
+    "money": "Comfort and enjoyment, with room for a treat.",
+    "health": "Feeling good; enjoy pleasures in moderation."
   },
   "45": {
     "slug": "ten-of-cups",
     "reviewed": false,
     "name": "Ten of Cups",
     "keywords_upright": [
-      "family harmony",
-      "lasting joy",
-      "home under a rainbow"
+      "happiness",
+      "family",
+      "harmony",
+      "belonging"
     ],
     "keywords_reversed": [
-      "values clash",
-      "broken harmony",
-      "rain at home"
+      "family tension",
+      "unrealistic ideals",
+      "disconnection"
     ],
-    "upright": "Rainbow over the house: lasting joy, chosen family, love that includes the ordinary days. Build the home scenes you keep picturing.",
-    "reversed": "Weather inside the house: values clashing or harmony performed for show. Real repair starts with one honest table conversation.",
-    "love": "The long-game card: tend the daily, not just the milestone.",
-    "career": "Success that includes home life is the brief; protect both.",
-    "money": "Household alignment on money creates the actual wealth.",
-    "health": "Belonging is a health metric; invest in your people."
+    "upright": "Lasting happiness and a sense of belonging. The Ten of Cups brings harmony at home, loving relationships and emotional fulfilment.",
+    "reversed": "Tension behind a happy picture, or expecting a perfect family. Real harmony comes from honest conversations.",
+    "love": "A mature, committed relationship and building a home together.",
+    "career": "A supportive, family-like workplace.",
+    "money": "Security for the people you love.",
+    "health": "Wellbeing that comes from good relationships."
   },
   "46": {
     "slug": "page-of-cups",
     "reviewed": false,
     "name": "Page of Cups",
     "keywords_upright": [
-      "gentle messenger",
-      "intuition",
-      "creative beginning"
+      "sweet message",
+      "new feelings",
+      "creativity",
+      "sensitivity"
     ],
     "keywords_reversed": [
-      "emotional static",
-      "blocked intuition",
-      "moody news"
+      "moodiness",
+      "immaturity",
+      "creative block"
     ],
-    "upright": "A tender message surfaces: an apology, an idea, a feeling with a fish in it. Stay curious; sensitivity is the instrument.",
-    "reversed": "Static on the heart line: moody news, feelings performed or blocked. Wait for the sincere version before reacting.",
-    "love": "Sweet, shy openings; gentleness lands better than grand gestures.",
-    "career": "Creative hunches deserve one small test, not a launch.",
-    "money": "Do not lend on a feeling; check the facts with love.",
-    "health": "Name the feeling in one sentence; the body relaxes."
+    "upright": "A gentle new feeling or a sweet surprise. The Page of Cups brings emotional messages, creative ideas and a playful, open heart.",
+    "reversed": "Moodiness, mixed signals or a creative block. Express feelings honestly and stay grounded.",
+    "love": "A crush, an admirer, or renewed playfulness in a relationship.",
+    "career": "A creative start; follow what genuinely interests you.",
+    "money": "Hopeful ideas that still need practical action.",
+    "health": "Be kind to yourself and honour your feelings."
   },
   "47": {
     "slug": "knight-of-cups",
     "reviewed": false,
     "name": "Knight of Cups",
     "keywords_upright": [
-      "romantic offer",
+      "romance",
+      "invitation",
       "following the heart",
-      "graceful quest"
+      "charm"
     ],
     "keywords_reversed": [
-      "moody offers",
-      "unrealistic romance",
-      "emotional weather"
+      "unrealistic expectations",
+      "moodiness",
+      "empty promises"
     ],
-    "upright": "The romantic rider: an offer, invitation, or quest of the heart, delivered gracefully. Let feeling propose; let sense sign.",
-    "reversed": "The tide brings foam: moody offers, grand words, weather instead of climate. Judge by follow-through, not poetry.",
-    "love": "Someone leads with their heart; meet sincerity with sincerity.",
-    "career": "Pitch with story and grace; charm opens, craft closes.",
-    "money": "Beware beautiful pitches; romance is not due diligence.",
-    "health": "Moods move like weather; routines are the climate you control."
+    "upright": "Following your heart. The Knight of Cups arrives with an offer, an invitation or a romantic gesture. Act from the heart and keep your promises.",
+    "reversed": "Promises without follow-through, or expectations that are too idealistic. Check that words and actions match.",
+    "love": "A romantic offer, a suitor or a heartfelt gesture.",
+    "career": "Creative or meaningful work, or an attractive offer.",
+    "money": "A heart-led idea that needs a practical plan.",
+    "health": "Creative outlets and gentle care support your wellbeing."
   },
   "48": {
     "slug": "queen-of-cups",
@@ -1013,41 +1061,43 @@
     "name": "Queen of Cups",
     "keywords_upright": [
       "compassion",
-      "deep intuition",
-      "calm counsel"
+      "intuition",
+      "emotional depth",
+      "care"
     ],
     "keywords_reversed": [
-      "codependence",
-      "emotional overwhelm",
-      "blurred boundaries"
+      "overwhelm",
+      "blurred boundaries",
+      "self-neglect"
     ],
-    "upright": "The sea-queen: compassion with depth perception, intuition you can steer by. Listen below the words; counsel gently.",
-    "reversed": "The tide comes inside: overwhelm, codependence, boundaries dissolved. Your feelings are data, not duties.",
-    "love": "Deep attunement is your gift; do not disappear into their weather.",
-    "career": "Emotional intelligence is the strategy; use it openly.",
-    "money": "Generosity with boundaries keeps the well full.",
-    "health": "Solitude refills what empathy spends; book it."
+    "upright": "Deep empathy and a calm heart. The Queen of Cups listens, cares and trusts her intuition, while staying emotionally steady.",
+    "reversed": "Carrying everyone's feelings until you're drained. Protect your energy and care for yourself too.",
+    "love": "Deep, intuitive and caring love.",
+    "career": "Caring or creative roles, such as counselling, art or mediation.",
+    "money": "Decisions guided by intuition and stability.",
+    "health": "Honour your feelings and stay centred."
   },
   "49": {
     "slug": "king-of-cups",
     "reviewed": false,
     "name": "King of Cups",
     "keywords_upright": [
-      "emotional mastery",
-      "calm diplomacy",
-      "steady heart"
+      "emotional balance",
+      "wisdom",
+      "diplomacy",
+      "calm"
     ],
     "keywords_reversed": [
-      "cold control",
-      "suppressed feelings",
-      "mood as lever"
+      "moodiness",
+      "bottled-up feelings",
+      "manipulation"
     ],
-    "upright": "The calm king: feelings mastered, not muted; diplomacy with a pulse. Steer the room by steadiness, not volume.",
-    "reversed": "The lid sits tight: feelings suppressed or used as leverage. Thaw one honest conversation before deciding anything big.",
-    "love": "Steady devotion wins; say the warm thing out loud too.",
-    "career": "Negotiate from calm; your steadiness is the offer.",
-    "money": "Unemotional money decisions, reviewed on schedule.",
-    "health": "What is swallowed sits somewhere; give it words and water."
+    "upright": "Calm on stormy water. The King of Cups feels deeply but stays composed, offering wise, steady support and diplomacy.",
+    "reversed": "Feelings may be bottled up or used to steer others. Acknowledge emotions honestly.",
+    "love": "A stable, caring and emotionally mature partner.",
+    "career": "Diplomatic leadership, mediation or counselling roles.",
+    "money": "Composed, responsible decisions.",
+    "health": "Steady emotions; work through feelings calmly."
   },
   "50": {
     "slug": "ace-of-swords",
@@ -1055,41 +1105,43 @@
     "name": "Ace of Swords",
     "keywords_upright": [
       "clarity",
+      "truth",
       "breakthrough",
-      "truth"
+      "decision"
     ],
     "keywords_reversed": [
       "confusion",
       "misinformation",
-      "harsh start"
+      "harsh words"
     ],
-    "upright": "One clean cut: clarity, a truth named, a mind made up. Use the sword for surgery, not war; the first honest sentence changes everything.",
-    "reversed": "The blade is fogged: confusion, mixed facts, or a truth landing badly. Gather real information before swinging.",
-    "love": "One honest conversation clears months of weather.",
-    "career": "Decide, document, communicate once and clearly.",
-    "money": "Read the contract; the truth is in clause three.",
-    "health": "Name the worry precisely; vague dread shrinks when written."
+    "upright": "A moment of clear thinking. The Ace of Swords cuts through confusion and brings truth, a fresh idea or a decision you can stand behind.",
+    "reversed": "Confusion, mixed messages or decisions based on wrong information. Check the facts and speak with care.",
+    "love": "An honest conversation that clears the air.",
+    "career": "A strong idea or clear strategy. Communicate it directly.",
+    "money": "A realistic look at the numbers.",
+    "health": "Clear thinking about your needs; get facts from a professional."
   },
   "51": {
     "slug": "two-of-swords",
     "reviewed": false,
     "name": "Two of Swords",
     "keywords_upright": [
+      "difficult choice",
       "stalemate",
-      "truce",
-      "blocked choice"
+      "indecision",
+      "avoidance"
     ],
     "keywords_reversed": [
-      "release",
-      "information overload",
-      "truth faced"
+      "decision made",
+      "truth revealed",
+      "overwhelm"
     ],
-    "upright": "Blindfold on, blades crossed: a truce that is really a postponed choice. Peace kept by not-looking has an expiry date; choose your timing, then look.",
-    "reversed": "The blindfold slips: too much information, or the choice finally made. Breathe; deciding badly beats starving between doors.",
-    "love": "An unspoken thing guards the peace; it costs more each week.",
-    "career": "Two options, one deadline; use criteria, not comfort.",
-    "money": "Avoiding the statement is still a decision; open it.",
-    "health": "Mental rest needs the loop closed; decide or schedule the deciding."
+    "upright": "Stuck between two options and not wanting to look. The Two of Swords asks you to remove the blindfold, gather information and make the choice.",
+    "reversed": "The standoff breaks. Hidden information comes out and a decision can't be delayed any longer.",
+    "love": "Avoiding a conversation or a decision about the relationship.",
+    "career": "Waiting on others or torn between options.",
+    "money": "Avoiding the numbers; face them calmly.",
+    "health": "Tension from holding feelings in; find an honest outlet."
   },
   "52": {
     "slug": "three-of-swords",
@@ -1098,19 +1150,20 @@
     "keywords_upright": [
       "heartbreak",
       "sorrow",
-      "painful truth"
+      "painful truth",
+      "grief"
     ],
     "keywords_reversed": [
       "healing",
       "forgiveness",
-      "release of pain"
+      "recovery"
     ],
-    "upright": "The heart-piercing card: sorrow, betrayal, or a truth that hurts to hear. Rain is part of it; grief is not a malfunction, and it does move through.",
-    "reversed": "The swords come out one by one: healing, forgiveness offered or accepted, pain leaving the body. Let the scar be a seam, not a vault.",
-    "love": "Heartbreak needs honesty and time; do not rush the stitching.",
-    "career": "Painful feedback may be accurate; extract the useful third.",
-    "money": "A loss hurts; count it once, learn it once, stop re-paying it.",
-    "health": "Grief and stress are physical; rest like it is treatment."
+    "upright": "A painful truth or heartbreak. The Three of Swords honours the hurt and reminds you that letting yourself feel it is how healing begins.",
+    "reversed": "Healing has started and the pain is easing. Forgive when you're ready and stop reopening the wound.",
+    "love": "Heartbreak, a painful truth or a difficult ending.",
+    "career": "Criticism, rejection or disappointing news.",
+    "money": "An unwelcome cost; face the real figures.",
+    "health": "Stress weighing on you; rest and lean on support."
   },
   "53": {
     "slug": "four-of-swords",
@@ -1119,40 +1172,42 @@
     "keywords_upright": [
       "rest",
       "recovery",
-      "retreat"
+      "pause",
+      "reflection"
     ],
     "keywords_reversed": [
       "restlessness",
       "burnout",
-      "unfinished rest"
+      "returning to action"
     ],
-    "upright": "The knight lies down on purpose: rest, recovery, a mind stood down. Retreat is the strategy; the sword hangs within reach, not in hand.",
-    "reversed": "Rest refused or interrupted: the mind keeps fencing in bed. Protect the recovery window like an appointment with yourself.",
-    "love": "Quiet togetherness heals more than processing everything tonight.",
-    "career": "Strategic pause before the next campaign; sharpen offline.",
-    "money": "No big decisions from exhaustion; sleep on every signature.",
-    "health": "Actual rest: horizontal, unhurried, screens elsewhere."
+    "upright": "Time to rest and recover. The Four of Swords asks you to step back, quiet your mind and recharge before the next step.",
+    "reversed": "Refusing to rest, or slowly getting back to action after a break. Listen to what your body and mind need.",
+    "love": "Quiet time together, or taking time to heal before dating.",
+    "career": "Step back to avoid burnout.",
+    "money": "Hold off on big decisions and review your budget.",
+    "health": "Sleep, slowing down and recovery."
   },
   "54": {
     "slug": "five-of-swords",
     "reviewed": false,
     "name": "Five of Swords",
     "keywords_upright": [
+      "conflict",
       "hollow victory",
-      "conflict cost",
-      "winning ugly"
+      "tension",
+      "ego"
     ],
     "keywords_reversed": [
-      "lingering resentment",
+      "making amends",
       "reconciliation",
-      "walking the field"
+      "letting go"
     ],
-    "upright": "Won, and the field looks like that: a victory whose price was people. Pick up only the swords that are yours; some wins to decline next time.",
-    "reversed": "Smoke after the fight: resentment lingering, or a genuine attempt to reconcile. Bury the weapons you keep tripping over.",
-    "love": "Being right at that volume costs the relationship; choose the us.",
-    "career": "Win the point, keep the room; you will need these people.",
-    "money": "Do not win a refund and lose a relationship worth more.",
-    "health": "Conflict hormones are expensive; discharge them kindly."
+    "upright": "A win that costs too much. The Five of Swords warns that winning the argument can mean losing the relationship. Choose your battles.",
+    "reversed": "A chance to make peace, apologise or walk away from a pointless fight.",
+    "love": "Hurtful words or a power struggle; an apology may be needed.",
+    "career": "Office politics or unhealthy competition.",
+    "money": "Disputes; weigh whether the fight is worth it.",
+    "health": "Tension from conflict; find calm."
   },
   "55": {
     "slug": "six-of-swords",
@@ -1160,20 +1215,21 @@
     "name": "Six of Swords",
     "keywords_upright": [
       "transition",
+      "moving on",
       "calmer waters",
-      "quiet progress"
+      "recovery"
     ],
     "keywords_reversed": [
-      "unfinished business",
-      "resistance to change",
-      "rough crossing"
+      "stuck",
+      "resistance",
+      "unfinished business"
     ],
-    "upright": "A quiet boat to calmer water: transition, recovery, leaving turbulence without a scene. Healing is often just steady rowing.",
-    "reversed": "The boat circles: unfinished business, baggage riding along, or resisting the crossing you chose. Name what is still aboard.",
-    "love": "Moving on together, or apart, with dignity intact.",
-    "career": "A gradual move beats a dramatic quit; row, do not leap.",
-    "money": "Slow improvement is real improvement; keep the route boring.",
-    "health": "Recovery is a crossing, not a switch; pace the oars."
+    "upright": "Leaving a hard time behind. The Six of Swords shows a gradual move toward calmer, better circumstances, even if it feels bittersweet.",
+    "reversed": "The move is delayed, or old problems are following you. Deal with what you're carrying.",
+    "love": "Leaving a difficult period behind, together or apart.",
+    "career": "Leaving a stressful role, or relocating.",
+    "money": "Gradual recovery and steadier ground.",
+    "health": "Recovery and a calmer mind."
   },
   "56": {
     "slug": "seven-of-swords",
@@ -1181,167 +1237,175 @@
     "name": "Seven of Swords",
     "keywords_upright": [
       "strategy",
-      "stealth",
-      "lone approach"
+      "secrecy",
+      "independence",
+      "caution"
     ],
     "keywords_reversed": [
+      "coming clean",
       "truth revealed",
-      "conscience",
-      "plan exposed"
+      "fresh start"
     ],
-    "upright": "The quiet exit with armfuls of swords: strategy, discretion, solving it your own way. Clever is fine; keep it honest with yourself about why solo.",
-    "reversed": "The plan surfaces: conscience, exposure, or a shortcut repriced. Coming clean early is cheaper than being found out.",
-    "love": "Something unsaid is tiptoeing; bring it into the room kindly.",
-    "career": "Work the angle, document your part; lone-wolf has limits.",
-    "money": "Check the quiet leak; small print and small print only.",
-    "health": "Avoiding the check-up is also a strategy; pick a better one."
+    "upright": "Acting quietly or strategically. The Seven of Swords asks you to think carefully, protect what matters and be honest with yourself about your motives.",
+    "reversed": "Secrets come out, or it's time to come clean. Honesty brings relief.",
+    "love": "Someone guarding their feelings. Take things slowly and keep communication honest. This card is not proof that anyone is cheating.",
+    "career": "Be strategic, and protect your work and ideas.",
+    "money": "Read the fine print and watch for hidden costs.",
+    "health": "Something may have been overlooked; a second opinion can help."
   },
   "57": {
     "slug": "eight-of-swords",
     "reviewed": false,
     "name": "Eight of Swords",
     "keywords_upright": [
+      "feeling trapped",
+      "limiting beliefs",
       "restriction",
-      "self-imposed prison",
-      "waiting"
+      "fear"
     ],
     "keywords_reversed": [
-      "liberation",
+      "freedom",
       "new perspective",
-      "first step out"
+      "taking control"
     ],
-    "upright": "Bound and blindfolded among swords that are not even planted deep: restriction that feels total and is mostly perspective. One small step proves the ropes are loose.",
-    "reversed": "The blindfold comes off by your own hand: liberation, a door noticed, help accepted. Walk; the swords stay behind.",
-    "love": "Feeling trapped deserves a witness; say it before it hardens.",
-    "career": "The constraint is real but partial; find the unguarded degree of freedom.",
-    "money": "Feeling stuck is not a spreadsheet; list actual options.",
-    "health": "Small agency is medicine; one doable change today."
+    "upright": "Feeling stuck with no way out. The Eight of Swords shows that the trap is often held together by fear and beliefs; the way out is closer than it seems.",
+    "reversed": "The blindfold slips and you see your options. You're starting to free yourself.",
+    "love": "Feeling stuck in a pattern, or unable to stop thinking about someone.",
+    "career": "Feeling locked into a role, or doubting your abilities.",
+    "money": "Fears feel bigger than the real numbers.",
+    "health": "Overthinking; one small step can break the loop."
   },
   "58": {
     "slug": "nine-of-swords",
     "reviewed": false,
     "name": "Nine of Swords",
     "keywords_upright": [
+      "worry",
       "anxiety",
       "sleepless nights",
-      "worry loop"
+      "overthinking"
     ],
     "keywords_reversed": [
-      "release of worry",
-      "dawn",
-      "help accepted"
+      "relief",
+      "reaching out",
+      "hope"
     ],
-    "upright": "3 a.m. with every worst case queued: anxiety, guilt, the loop that feels like fact. It is a feeling with good stamina, not a prophecy; morning edits it.",
-    "reversed": "The night loosens: worry named, help accepted, dawn doing its work. Tell one person the actual fear; it shrinks in daylight.",
-    "love": "Do not sentence the relationship at 3 a.m.; revisit at breakfast.",
-    "career": "Write the worst case and its plan; the loop hates paper.",
-    "money": "Night arithmetic lies; check balances in daylight only.",
-    "health": "Sleep hygiene is the treatment plan; screens down, worry journal out."
+    "upright": "Worries that feel loudest at night. The Nine of Swords shows anxious thoughts that often seem bigger in the dark. Talking about them usually makes them lighter.",
+    "reversed": "Worries begin to ease as you face them or share them with someone you trust.",
+    "love": "Worry about the relationship or fear of being left.",
+    "career": "Stress and self-doubt about work.",
+    "money": "Fear may be larger than the real situation; look at the facts.",
+    "health": "Worry affecting your rest. Talk to someone you trust or a professional."
   },
   "59": {
     "slug": "ten-of-swords",
     "reviewed": false,
     "name": "Ten of Swords",
     "keywords_upright": [
-      "rock bottom",
       "painful ending",
-      "dawn after"
+      "rock bottom",
+      "release",
+      "new dawn"
     ],
     "keywords_reversed": [
       "recovery",
-      "survival",
-      "new day"
+      "slowly healing",
+      "holding on"
     ],
-    "upright": "Face down at the bottom, and the sky is already lightening: a painful ending that is, mercifully, an ending. What is finished cannot keep happening to you; rise slowly.",
-    "reversed": "Getting up with swords still being removed: survival mode, recovery in progress. You do not have to be inspiring yet; standing is enough.",
-    "love": "An ending can be mercy; let it end all the way.",
-    "career": "The collapsed thing frees your hands; inventory what you learned.",
-    "money": "Rock bottom is a floor, not a home; rebuild one brick of routine.",
-    "health": "Rest like recovery, not defeat; the body believes in dawn."
+    "upright": "A hard chapter has ended, and the worst is behind you. The Ten of Swords shows rock bottom, with dawn already on the horizon: from here, things can only get better.",
+    "reversed": "Recovery has begun. Healing takes time, so be patient with yourself.",
+    "love": "A painful ending, or a pattern that has run its course.",
+    "career": "A setback that means rebuilding.",
+    "money": "The low point has been reached; stop the losses and start again.",
+    "health": "Deep tiredness; rest and support come first."
   },
   "60": {
     "slug": "page-of-swords",
     "reviewed": false,
     "name": "Page of Swords",
     "keywords_upright": [
-      "curious mind",
-      "truth-seeking",
-      "vigilance"
+      "curiosity",
+      "new ideas",
+      "learning",
+      "news"
     ],
     "keywords_reversed": [
       "gossip",
-      "cynicism",
-      "sharp tongue"
+      "hasty words",
+      "suspicion"
     ],
-    "upright": "The watchful student: questions, research, a mind testing the wind. Curiosity with a notebook beats opinion with a megaphone.",
-    "reversed": "The blade is all edge: gossip, cynicism, surveillance dressed as care. Aim the sharp mind at ideas, not people.",
-    "love": "Ask the real question instead of testing them.",
-    "career": "Research first, speak second; your draft improves.",
-    "money": "Investigate before investing; forums are not advisors.",
-    "health": "Dr. Internet says rest first; then verify with a human."
+    "upright": "A sharp, curious mind. The Page of Swords asks questions, gathers information and brings news or a fresh perspective.",
+    "reversed": "Gossip, overthinking or speaking before thinking. Check your sources.",
+    "love": "Lively conversations and a meeting of minds.",
+    "career": "A learning phase; ask good questions.",
+    "money": "Read the fine print and stay informed.",
+    "health": "A clear mind; quiet the mental chatter."
   },
   "61": {
     "slug": "knight-of-swords",
     "reviewed": false,
     "name": "Knight of Swords",
     "keywords_upright": [
-      "swift charge",
-      "direct words",
-      "fast thinking"
+      "fast action",
+      "ambition",
+      "directness",
+      "determination"
     ],
     "keywords_reversed": [
-      "reckless words",
-      "scattered haste",
-      "arguments"
+      "rushing",
+      "aggression",
+      "impulsiveness"
     ],
-    "upright": "Charging with the sword up: fast decisions, direct speech, a debate won at gallop. Aim carefully; at this speed, words land as actions.",
-    "reversed": "All charge, no map: reckless words, arguments for sport, haste scattering the plan. Rein in for one breath before the next sentence.",
-    "love": "Bluntness is not honesty; land the truth with its parachute.",
-    "career": "Move fast on the decision, slow on the announcement.",
-    "money": "Impulse trades and purchases both charge interest.",
-    "health": "Adrenaline is a loan; repay with downshift time."
+    "upright": "Charging ahead with clear purpose. The Knight of Swords brings fast action, direct communication and determination.",
+    "reversed": "Rushing, harsh words or impulsive decisions. Aim before you act.",
+    "love": "Direct, honest communication; say clearly what you want.",
+    "career": "Fast progress, pitches and negotiations.",
+    "money": "Bold moves, once the logic checks out.",
+    "health": "High energy; channel it into exercise."
   },
   "62": {
     "slug": "queen-of-swords",
     "reviewed": false,
     "name": "Queen of Swords",
     "keywords_upright": [
-      "clear-eyed independence",
-      "honest counsel",
-      "perception"
+      "clarity",
+      "honesty",
+      "independence",
+      "boundaries"
     ],
     "keywords_reversed": [
-      "bitterness",
-      "cold judgment",
-      "walls as wit"
+      "coldness",
+      "harshness",
+      "bitterness"
     ],
-    "upright": "Clear eyes, kind blade: independence earned through experience, counsel that cuts cleanly. Your perception is the gift; deliver it warm.",
-    "reversed": "The wit grows walls: bitterness, cold judgment, honesty as armour. Soften the delivery without dulling the truth.",
-    "love": "Directness is attractive; add one degree of warmth.",
-    "career": "Your review saves projects; phrase the cut as care.",
-    "money": "Sentiment-free review of the numbers, once a month.",
-    "health": "Grief unspoken becomes sharpness; give it words privately."
+    "upright": "Clear-eyed and honest. The Queen of Swords sees things as they are, speaks truthfully and keeps healthy boundaries, with wisdom earned from experience.",
+    "reversed": "Honesty may turn harsh, or boundaries become walls. Balance truth with kindness.",
+    "love": "Knowing what you want and saying it honestly.",
+    "career": "Precise, strategic work such as editing, law or research.",
+    "money": "Get agreements in writing; don't give in to pressure.",
+    "health": "An active mind; balance discipline with rest."
   },
   "63": {
     "slug": "king-of-swords",
     "reviewed": false,
     "name": "King of Swords",
     "keywords_upright": [
-      "reason",
-      "fair judgment",
-      "mental authority"
+      "authority",
+      "fairness",
+      "logic",
+      "integrity"
     ],
     "keywords_reversed": [
-      "cold misuse of intellect",
-      "manipulation",
-      "rigidity"
+      "rigidity",
+      "coldness",
+      "misuse of power"
     ],
-    "upright": "The judge-king: reason with authority, decisions that hold because they are fair. Think it through, state it once, stand by the standard.",
-    "reversed": "Intellect as armour or lever: cold control, rules bent by cleverness. Fairness includes the cases you dislike.",
-    "love": "Lead with logic, stay for the feeling underneath it.",
-    "career": "Your call sets precedent; document the principle.",
-    "money": "Systems over impulses; let the policy decide at 3 a.m.",
-    "health": "The mind's verdicts are not the body's; listen downstairs too."
+    "upright": "Clear thinking and fair authority. The King of Swords makes decisions based on facts and principles, and leads with integrity.",
+    "reversed": "Logic without heart, rigid rules or misuse of power. Stay fair and open to other views.",
+    "love": "Honest, structured communication; reason leads.",
+    "career": "Leadership, expertise or formal decisions.",
+    "money": "Strict systems and long-term thinking.",
+    "health": "Follow expert advice and keep clear routines."
   },
   "64": {
     "slug": "ace-of-pentacles",
@@ -1349,41 +1413,43 @@
     "name": "Ace of Pentacles",
     "keywords_upright": [
       "new opportunity",
-      "seed money",
-      "prosperous start"
+      "prosperity",
+      "security",
+      "fresh start"
     ],
     "keywords_reversed": [
       "missed chance",
       "poor planning",
-      "unstable start"
+      "delays"
     ],
-    "upright": "A solid coin in an open hand: a job, offer, or resource with real weight. Plant it properly; this seed likes good soil and patience.",
-    "reversed": "The coin slips or the soil is wrong: missed chance, shaky plan, money promised loosely. Nail the terms before the handshake fades.",
-    "love": "Love with building plans; small reliabilities are romantic.",
-    "career": "A tangible opening; take it and do the paperwork beautifully.",
-    "money": "Seed money rules: start, automate, do not admire it daily.",
-    "health": "One sustainable habit started today outweighs a overhaul."
+    "upright": "A real, practical opportunity is offered to you. The Ace of Pentacles is a seed for something solid, such as a new job, income or project. Plant it and tend it.",
+    "reversed": "An opportunity is delayed or wasted. Strengthen your foundation and plan before investing.",
+    "love": "A grounded, practical and stable relationship.",
+    "career": "A job offer, promotion or new source of income.",
+    "money": "New money, savings or a safety fund.",
+    "health": "New energy and a steady routine."
   },
   "65": {
     "slug": "two-of-pentacles",
     "reviewed": false,
     "name": "Two of Pentacles",
     "keywords_upright": [
-      "juggling resources",
+      "balance",
       "adaptability",
-      "busy balance"
+      "juggling",
+      "priorities"
     ],
     "keywords_reversed": [
       "overwhelm",
-      "imbalance",
-      "dropped balls"
+      "disorganisation",
+      "overcommitment"
     ],
-    "upright": "Two coins, one infinity loop: juggling money, time, and tides with a grin. Keep the rhythm; drop nothing by adding slowly.",
-    "reversed": "A ball bounces away: too much, too uneven, the loop wobbling. Set one coin down on purpose before gravity chooses.",
-    "love": "Make room on the actual calendar; love is also logistics.",
-    "career": "Prioritise in pencil; everything is not a ball, some are stones.",
-    "money": "Cash-flow juggling needs a buffer, not better reflexes.",
-    "health": "Energy is a resource; budget it like money."
+    "upright": "Keeping several things in the air. The Two of Pentacles is about staying flexible, balancing priorities and adapting as life keeps moving.",
+    "reversed": "Too much on your plate and something is slipping. Cut back and set clear priorities.",
+    "love": "Balancing the relationship with busy schedules. Make time for each other.",
+    "career": "Multiple roles or tasks; prioritise wisely.",
+    "money": "Money coming in and going out; manage carefully.",
+    "health": "Balancing your needs with everything else; protect your sleep."
   },
   "66": {
     "slug": "three-of-pentacles",
@@ -1391,41 +1457,43 @@
     "name": "Three of Pentacles",
     "keywords_upright": [
       "teamwork",
-      "craft building",
-      "collaboration"
+      "skill",
+      "collaboration",
+      "learning"
     ],
     "keywords_reversed": [
-      "friction",
       "poor teamwork",
-      "unvalued skill"
+      "low quality",
+      "misalignment"
     ],
-    "upright": "Blueprints out, craftspeople talking: skill meeting teamwork, work that will outlast moods. Build with people who respect the plan.",
-    "reversed": "The build site bickers: roles unclear, skill unvalued, plans ignored. Re-draw who does what, in writing, kindly.",
-    "love": "Build something together; shared projects are glue.",
-    "career": "Your craft plus their structure; ask for the brief in writing.",
-    "money": "Collaborative income needs clear splits from day one.",
-    "health": "Train with others; accountability is a structure too."
+    "upright": "Building something together. The Three of Pentacles brings teamwork, skill and recognition for good work.",
+    "reversed": "Poor coordination, clashing egos or work that isn't up to standard. Realign the team and the goals.",
+    "love": "A relationship built on shared effort and daily teamwork.",
+    "career": "Collaboration, being recognised for your skills and staying open to feedback.",
+    "money": "Steady growth through shared projects.",
+    "health": "Steady progress with help from professionals."
   },
   "67": {
     "slug": "four-of-pentacles",
     "reviewed": false,
     "name": "Four of Pentacles",
     "keywords_upright": [
-      "holding on",
       "security",
-      "possessiveness"
+      "saving",
+      "control",
+      "protection"
     ],
     "keywords_reversed": [
-      "generosity",
-      "release of control",
-      "softened grip"
+      "letting go",
+      "overspending",
+      "fear of loss"
     ],
-    "upright": "Coins clutched to chest, head, and feet: security guarded hard, control mistaken for safety. What you own should not own your posture.",
-    "reversed": "The grip softens: generosity, spending on purpose, control released where it was only fear. Open one hand and watch nothing fall.",
-    "love": "Possessiveness is fear in a crown; trust is the braver hold.",
-    "career": "Guard the core, delegate the edges; hoarded work stalls growth.",
-    "money": "Saving is wise; squeezing is different. Fund one joy line.",
-    "health": "Tension is a full-body budget item; unclench deliberately."
+    "upright": "Holding on to what you have. The Four of Pentacles brings security and careful saving, but warns not to grip so tightly that nothing can move.",
+    "reversed": "Loosening your grip, for better or worse. Share and spend wisely, without swinging to the other extreme.",
+    "love": "Feeling safe, or holding your heart too tightly. Possessiveness can block closeness.",
+    "career": "A secure job, sometimes kept out of fear rather than choice.",
+    "money": "Saving and protecting resources; prudent, but don't become too tight.",
+    "health": "Tension held in the body; learn to let go and relax."
   },
   "68": {
     "slug": "five-of-pentacles",
@@ -1433,20 +1501,21 @@
     "name": "Five of Pentacles",
     "keywords_upright": [
       "hardship",
-      "insecurity",
-      "left out in the cold"
+      "money worries",
+      "feeling left out",
+      "struggle"
     ],
     "keywords_reversed": [
       "recovery",
-      "improvement",
-      "help found"
+      "help arriving",
+      "improvement"
     ],
-    "upright": "Snow outside the warm window: hardship, money worry, feeling left out. The lighted window is the point; help exists and asking is allowed.",
-    "reversed": "The thaw begins: improvement, help accepted, a door opening from inside. Walk toward the warmth without apologising for the cold.",
-    "love": "Hard times are a we-thing; say which part is heaviest.",
-    "career": "Ask for the reference, the intro, the ramp; pride is expensive.",
-    "money": "Hardship maths first: essentials, then one call to negotiate.",
-    "health": "Do not skip care for cost alone; ask what options exist."
+    "upright": "A hard time, often with money, work or security. The Five of Pentacles also shows a lit window nearby: help is closer than you think, so don't be afraid to ask.",
+    "reversed": "Things are starting to improve. Support arrives and the hardest part is easing.",
+    "love": "Feeling unsupported or going through a tough time together. Lean on each other.",
+    "career": "A lean period or setback; look for support and new options.",
+    "money": "Money worries. Ask for practical help and deal with problems step by step.",
+    "health": "Feeling worn down; reach out for support and care."
   },
   "69": {
     "slug": "six-of-pentacles",
@@ -1454,20 +1523,21 @@
     "name": "Six of Pentacles",
     "keywords_upright": [
       "generosity",
-      "fair exchange",
-      "resources shared"
+      "giving and receiving",
+      "fairness",
+      "support"
     ],
     "keywords_reversed": [
       "strings attached",
       "imbalance",
       "debt"
     ],
-    "upright": "Coins weighed and shared: generosity, patronage, fair exchange flowing the right way. Give cleanly or receive cleanly; both are skills.",
-    "reversed": "The scales tilt: strings attached, debt with interest of the soul, giving to control. Rebalance the exchange or decline it kindly.",
-    "love": "Care should circulate, not accumulate as debt.",
-    "career": "Mentorship and fair pay both appear; be the scale, not the thumb.",
-    "money": "Lend what you can gift; gift what you can forget.",
-    "health": "Accept help as maintenance, not defeat."
+    "upright": "Giving and receiving in balance. The Six of Pentacles brings generosity, fair exchange and support when it's needed.",
+    "reversed": "Help with strings attached, or one side always giving. Rebalance the exchange.",
+    "love": "Honest give-and-take in the relationship.",
+    "career": "A mentor or sponsor, fair pay or a fair agreement.",
+    "money": "Money flowing well, debts repaid, or helping someone in need.",
+    "health": "Care flowing both ways; let yourself accept help."
   },
   "70": {
     "slug": "seven-of-pentacles",
@@ -1475,166 +1545,174 @@
     "name": "Seven of Pentacles",
     "keywords_upright": [
       "patience",
-      "long-term investment",
-      "assessment"
+      "long-term growth",
+      "assessment",
+      "investment"
     ],
     "keywords_reversed": [
       "impatience",
-      "sunk-cost worry",
-      "slow returns"
+      "wasted effort",
+      "frustration"
     ],
-    "upright": "Leaning on the hoe, reading the garden: pause, assess, let compounding work. Not every quiet field is failing; some are rooting.",
-    "reversed": "Staring at the plants will not hurry them: impatience, sunk-cost fretting, tending what should be replanted. Review honestly, then commit or compost.",
-    "love": "Long games need small waterings; check what is actually growing.",
-    "career": "Quarterly honesty: keep, fix, or stop; do not just hover.",
-    "money": "Investments need seasons; check the soil, not the hour.",
-    "health": "Fitness compounds quietly; the mirror is a lagging indicator."
+    "upright": "Pausing to check how things are growing. The Seven of Pentacles asks you to review your efforts, adjust if needed and trust slow, steady growth.",
+    "reversed": "Frustration with slow results, or effort going into the wrong place. Redirect your energy.",
+    "love": "Taking an honest look at where the relationship is heading.",
+    "career": "Long-term commitment; results come with time.",
+    "money": "Patient, long-term growth rather than quick returns.",
+    "health": "Consistent habits over quick fixes."
   },
   "71": {
     "slug": "eight-of-pentacles",
     "reviewed": false,
     "name": "Eight of Pentacles",
     "keywords_upright": [
-      "apprenticeship",
-      "skill mastery",
-      "diligent work"
+      "skill",
+      "dedication",
+      "practice",
+      "craftsmanship"
     ],
     "keywords_reversed": [
       "perfectionism",
-      "shortcuts",
-      "uninspired grind"
+      "boredom",
+      "cutting corners"
     ],
-    "upright": "Coin after coin, each better: apprenticeship, repetition, craft compounding. Mastery is a pile of ordinary days done carefully.",
-    "reversed": "The chisel slips: perfectionism, shortcuts, or grind without pride. Return to the standard you respect, one coin at a time.",
-    "love": "Love is also a practice; small repeated kindnesses are the craft.",
-    "career": "Ship the reps; skill is visibly compounding, keep going.",
-    "money": "Earn the raise with documented craft, then ask.",
-    "health": "Technique before intensity; the body loves correct reps."
+    "upright": "Steady, focused work. The Eight of Pentacles is about practising, improving your skills and taking pride in doing things well.",
+    "reversed": "Perfectionism, boredom or rushing the job. Reconnect with why the work matters.",
+    "love": "Consistent effort and care build trust.",
+    "career": "Training, skill-building and quality work that builds your reputation.",
+    "money": "Steady savings and investing in your skills.",
+    "health": "Routine and tracking progress pay off."
   },
   "72": {
     "slug": "nine-of-pentacles",
     "reviewed": false,
     "name": "Nine of Pentacles",
     "keywords_upright": [
-      "earned abundance",
-      "self-reliance",
-      "quiet luxury"
+      "independence",
+      "self-sufficiency",
+      "comfort",
+      "reward"
     ],
     "keywords_reversed": [
-      "overwork",
-      "materialism",
-      "setback to comforts"
+      "overworking",
+      "overspending",
+      "insecurity"
     ],
-    "upright": "In the garden, robed in what she built: abundance earned, self-reliance with good taste. Enjoy it without explaining it.",
-    "reversed": "The garden needs the gardener less weary: overwork, comfort bought at body prices, or a setback to luxuries. Reinvest in rest.",
-    "love": "Whole on your own, generous in company; standards are kind.",
-    "career": "Your track record is the pitch; let it speak first.",
-    "money": "Comfort is funded; keep the boring system that built it.",
-    "health": "Pleasure and rest are part of the portfolio now."
+    "upright": "Enjoying what you've built. The Nine of Pentacles brings independence, comfort and the rewards of your own hard work.",
+    "reversed": "Overworking or spending to prove your worth. Build security from the inside.",
+    "love": "Feeling complete on your own, and choosing relationships that add to your life.",
+    "career": "Thriving work, a profitable side project or a good reputation.",
+    "money": "Self-made security and quality over show.",
+    "health": "Feeling well; keep your good routines."
   },
   "73": {
     "slug": "ten-of-pentacles",
     "reviewed": false,
     "name": "Ten of Pentacles",
     "keywords_upright": [
-      "wealth",
-      "family legacy",
-      "lasting security"
+      "legacy",
+      "family",
+      "long-term security",
+      "wealth"
     ],
     "keywords_reversed": [
-      "family money friction",
-      "legacy burden",
-      "unstable foundations"
+      "family disputes",
+      "instability",
+      "inheritance issues"
     ],
-    "upright": "Three generations under one arch: wealth that means security shared, legacy being built in ordinary kindnesses. Think in decades, act today.",
-    "reversed": "The arch strains: family money friction, inheritance of stress rather than ease. Clarity and kindness, in writing, early.",
-    "love": "Building a household is a long poem; write it together.",
-    "career": "Build the thing that outlasts your role in it.",
-    "money": "Family money talks go better before they are urgent.",
-    "health": "Health is the first inheritance; model it at home."
+    "upright": "Lasting security and legacy. The Ten of Pentacles brings family support, long-term stability and things built to last.",
+    "reversed": "Family tensions around money or property, or what seemed secure starts to shake. Talk openly and review long-term plans.",
+    "love": "A committed relationship focused on building a stable future.",
+    "career": "Established organisations, family business or long-term success.",
+    "money": "Long-term assets, savings and careful management.",
+    "health": "Stable wellbeing; notice family habits and patterns."
   },
   "74": {
     "slug": "page-of-pentacles",
     "reviewed": false,
     "name": "Page of Pentacles",
     "keywords_upright": [
-      "studious start",
-      "practical offer",
-      "new skill"
+      "learning",
+      "new skill",
+      "opportunity",
+      "practical start"
     ],
     "keywords_reversed": [
       "procrastination",
-      "unfocused plans",
-      "skipped homework"
+      "lack of focus",
+      "missed opportunity"
     ],
-    "upright": "The student with a coin held like a question: a course, an offer, a practical beginning. Do the homework; this one rewards diligence.",
-    "reversed": "The notebook stays shut: procrastination, plans admired instead of started. Open to page one and do the smallest assignment.",
-    "love": "Show interest in their actual world; reliability is attractive.",
-    "career": "Apply, enrol, submit; the form is the first exam.",
-    "money": "Learn the instrument before buying it; one lesson first.",
-    "health": "Track one metric for two weeks; studentship beats intensity."
+    "upright": "An eager, practical learner. The Page of Pentacles brings a new skill, a study opportunity or a first step toward a real goal.",
+    "reversed": "Procrastination or distraction. Stop overthinking and take the first concrete step.",
+    "love": "A slow-building, sincere interest.",
+    "career": "Courses, internships or good news about work.",
+    "money": "Starting to save and building carefully.",
+    "health": "A fresh start with realistic routines."
   },
   "75": {
     "slug": "knight-of-pentacles",
     "reviewed": false,
     "name": "Knight of Pentacles",
     "keywords_upright": [
-      "reliable",
-      "methodical",
-      "steady work"
+      "reliability",
+      "hard work",
+      "patience",
+      "routine"
     ],
     "keywords_reversed": [
-      "stubbornness",
       "stagnation",
-      "workaholism"
+      "stubbornness",
+      "boredom"
     ],
-    "upright": "The slowest knight, the surest arrival: method, routine, promises kept in weather. Boring on paper, bankable in life.",
-    "reversed": "The plough will not turn: stubbornness, stagnation, or work eating every other field. Same effort, one new furrow.",
-    "love": "Show up again; steadiness is a love language.",
-    "career": "Your reliability is promotable; make it visible, not just real.",
-    "money": "Automatic beats heroic; raise the transfer by a little.",
-    "health": "Consistency over intensity, every ordinary day."
+    "upright": "Slow, steady and reliable. The Knight of Pentacles gets results through consistent effort, patience and doing things properly.",
+    "reversed": "Stuck in a rut or stubborn about change. Add some purpose to the routine.",
+    "love": "A loyal, steady partner and a relationship that builds slowly.",
+    "career": "Recognition earned through consistent, quality work.",
+    "money": "Careful planning and avoiding risky bets.",
+    "health": "Slow, sustainable routines."
   },
   "76": {
     "slug": "queen-of-pentacles",
     "reviewed": false,
     "name": "Queen of Pentacles",
     "keywords_upright": [
-      "practical nurturing",
-      "resourceful care",
-      "grounded warmth"
+      "nurturing",
+      "practicality",
+      "comfort",
+      "resourcefulness"
     ],
     "keywords_reversed": [
-      "work-home imbalance",
-      "care as control",
-      "self-neglect"
+      "self-neglect",
+      "overwork",
+      "insecurity"
     ],
-    "upright": "The garden-queen: care made tangible, resources made warm, a home that runs on competence and kindness. Nourish, including yourself in the list.",
-    "reversed": "The garden eats the gardener: care as control, work-home blur, self last on the list. Your name goes on the watering rota too.",
-    "love": "Feed people well, then sit down and be fed too.",
-    "career": "Operational kindness scales; systemise the care you give.",
-    "money": "A budget with warmth in it survives contact with life.",
-    "health": "Caregiver, care for the caregiver; book your own check-up."
+    "upright": "Care shown through practical things. The Queen of Pentacles creates comfort, security and a well-run home, and looks after people and resources wisely.",
+    "reversed": "Caring for everyone except yourself, or worry about resources. Share the load and rest.",
+    "love": "A warm, steady and practical relationship.",
+    "career": "Steady work; roles in care, teaching or management.",
+    "money": "Sensible saving while enjoying comfort.",
+    "health": "Routine, rest and good self-care."
   },
   "77": {
     "slug": "king-of-pentacles",
     "reviewed": false,
     "name": "King of Pentacles",
     "keywords_upright": [
-      "prosperity",
-      "steady provider",
-      "disciplined success"
+      "success",
+      "stability",
+      "abundance",
+      "leadership"
     ],
     "keywords_reversed": [
-      "greed",
-      "work obsession",
-      "rigid provider"
+      "materialism",
+      "stubbornness",
+      "control"
     ],
-    "upright": "The builder-king among vines and ledgers: prosperity through discipline, success that feeds people. Security is a craft; you practice it daily.",
-    "reversed": "The ledger eats the kingdom: greed, work obsession, providing things instead of presence. Audit what the success is for.",
-    "love": "Provide presence first; the rest is garnish.",
-    "career": "Your systems create safety; teach them, do not hoard them.",
-    "money": "Wealth with a purpose clause outlives wealth with a scoreboard.",
-    "health": "The body is the founding asset; board meetings can wait."
+    "upright": "Success through steady effort. The King of Pentacles builds lasting value, manages resources wisely and provides security for others.",
+    "reversed": "Too focused on money or status, or controlling resources too tightly. Value people as much as results.",
+    "love": "A loyal, reliable partner who shows love through action.",
+    "career": "Senior leadership, business success or long-term contracts.",
+    "money": "Financial stability and steady growth.",
+    "health": "Disciplined routines; don't let work take over."
   }
 }
