@@ -79,6 +79,21 @@
     }, 2400);
   }
 
+  // Tapping the idle home cat: a playful hurry-up that yields back to
+  // the idle hint. Gated on s-idle so shuffling, waiting and sleeping
+  // states keep their own bubble text.
+  var hurryTimer = null;
+  function pokeIdle(wrap) {
+    var guide = wrap.closest ? wrap.closest("#guide-ask") : null;
+    if (!guide || !guide.classList.contains("s-idle")) return;
+    bubble(t("hurry"));
+    if (hurryTimer) clearTimeout(hurryTimer);
+    hurryTimer = setTimeout(function () {
+      hurryTimer = null;
+      if (idleBubble) bubble(idleBubble);
+    }, 2500);
+  }
+
   var STR = {
     en: {
       need: "Type your question first, then shuffle.",
@@ -86,6 +101,7 @@
       disclaimer: "Tarotnice readings are provided for entertainment, reflection, and personal insight only. They are not professional advice of any kind, including medical, psychological, legal, financial, or business advice. Please use your own judgment; any decision or action you take based on a reading is at your own discretion and solely your responsibility. For important matters, consult a qualified professional. Tarotnice hopes these readings help you see new possibilities and understand yourself better. Ultimately, the power to choose your path is always yours.",
       slowDay: "This connection has reached today's question limit. It resets at midnight (Bangkok time).",
       sleep: "Ngern is resting now. New questions tomorrow.",
+      hurry: "Take your time \u2014 but the cards are waiting. Type your question below!",
       browse: "Browse the card library",
       crisis: "Support",
       retry: "Try again",
@@ -101,6 +117,7 @@
       slowDown: "\u0e16\u0e32\u0e21\u0e15\u0e34\u0e14\u0e46 \u0e01\u0e31\u0e19\u0e40\u0e22\u0e2d\u0e30\u0e44\u0e1b\u0e19\u0e34\u0e14 \u0e23\u0e2d\u0e2a\u0e31\u0e01\u0e41\u0e1b\u0e4a\u0e1a\u0e41\u0e25\u0e49\u0e27\u0e25\u0e2d\u0e07\u0e43\u0e2b\u0e21\u0e48\u0e19\u0e30",
       slowDay: "\u0e01\u0e32\u0e23\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d\u0e19\u0e35\u0e49\u0e16\u0e36\u0e07\u0e08\u0e33\u0e19\u0e27\u0e19\u0e04\u0e33\u0e16\u0e32\u0e21\u0e2a\u0e39\u0e07\u0e2a\u0e38\u0e14\u0e02\u0e2d\u0e07\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49\u0e41\u0e25\u0e49\u0e27 \u0e23\u0e35\u0e40\u0e0b\u0e47\u0e15\u0e40\u0e17\u0e35\u0e48\u0e22\u0e07\u0e04\u0e37\u0e19 (\u0e40\u0e27\u0e25\u0e32\u0e1b\u0e23\u0e30\u0e40\u0e17\u0e28\u0e44\u0e17\u0e22)",
       sleep: "\u0e40\u0e07\u0e34\u0e19\u0e02\u0e2d\u0e1e\u0e31\u0e01\u0e01\u0e48\u0e2d\u0e19\u0e19\u0e30 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e43\u0e2b\u0e21\u0e48\u0e1e\u0e23\u0e38\u0e48\u0e07\u0e19\u0e35\u0e49",
+      hurry: "\u0e44\u0e21\u0e48\u0e15\u0e49\u0e2d\u0e07\u0e23\u0e35\u0e1a \u2014 \u0e41\u0e15\u0e48\u0e44\u0e1e\u0e48\u0e23\u0e2d\u0e2d\u0e22\u0e39\u0e48 \u0e1e\u0e34\u0e21\u0e1e\u0e4c\u0e04\u0e33\u0e16\u0e32\u0e21\u0e14\u0e49\u0e32\u0e19\u0e25\u0e48\u0e32\u0e07\u0e40\u0e25\u0e22",
       browse: "\u0e40\u0e1b\u0e34\u0e14\u0e2b\u0e49\u0e2d\u0e07\u0e2a\u0e21\u0e38\u0e14\u0e44\u0e1e\u0e48",
       crisis: "\u0e01\u0e33\u0e25\u0e31\u0e07\u0e43\u0e08",
       retry: "\u0e25\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07",
@@ -505,7 +522,7 @@
     var idleEl = document.querySelector("#guide-ask .bubble");
     if (idleEl) idleBubble = idleEl.textContent;
     document.querySelectorAll("#guide .ngern-wrap, #guide-ask .ngern-wrap").forEach(function (wrap) {
-      wrap.addEventListener("click", function () { pokeSleep(wrap); });
+      wrap.addEventListener("click", function () { pokeSleep(wrap); pokeIdle(wrap); });
     });
     var back = document.getElementById("draw-back");
     if (back) back.addEventListener("click", function () {
