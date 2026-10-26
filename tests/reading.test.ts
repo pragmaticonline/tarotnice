@@ -229,6 +229,16 @@ describe("pickSpread", () => {
     expect(system).toContain("Normal mode");
     expect(system).toContain("Care mode");
   });
+
+  it("never tells the user which mode applied (en + th)", () => {
+    for (const lang of ["en", "th"] as const) {
+      const { system } = buildReadingPrompt({
+        lang, topic: "general", question: "Should I quit my job?",
+        cards: [], prev: [], nickname: null,
+      });
+      expect(system).toMatch(/never mention modes|ห้ามเอ่ยถึงโหมด/i);
+    }
+  });
 });
 
 describe("parseSummary", () => {
