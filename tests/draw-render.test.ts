@@ -149,4 +149,34 @@ describe("renderReading positions", () => {
     expect(html).toContain("The Star");
     expect(html).not.toContain("pos-line");
   });
+
+  it("renders card paragraphs whose position contains a colon (live bug: card 1 fell back to '1.' text)", () => {
+    const html = renderOnce(
+      "Together these cards tell a story of change.\n\n" +
+        "1 · What to do: next steps — **Two of Wands**: You stand between security and a wider world.\n\n" +
+        "2 · Am I where I want to be — **Eight of Cups**: Your job no longer gives what you need.\n\n" +
+        "3 · What do I fear most — **The Star**: Hope returns little by little.\n\n" +
+        "Summary: Map options before stepping out.",
+    );
+    // All three cards get thumbnail rows; the raw "1 ·" prefix never leaks.
+    expect(html.match(/card-thumb/g)).toHaveLength(3);
+    expect(html).toContain("Two of Wands");
+    expect(html).toContain("Eight of Cups");
+    expect(html).toContain("The Star");
+    expect(html).not.toContain("<p>1 ·");
+    expect(html).toContain("What to do: next steps");
+  });
+
+  it("tolerates Card N, paren and bolded leads", () => {
+    const html = renderOnce(
+      "Together these cards tell a story of change.\n\n" +
+        "Card 1 (What are my options): **Two of Wands**. You stand between security and a wider world.\n\n" +
+        "2) Am I where I want to be — **Eight of Cups**: Your job no longer gives what you need.\n\n" +
+        "**3 · What do I fear most — The Star**: Hope returns little by little.\n\n" +
+        "Summary: Map options before stepping out.",
+    );
+    expect(html.match(/card-thumb/g)).toHaveLength(3);
+    expect(html).not.toContain("<p>Card 1");
+    expect(html).not.toContain("<p>2)");
+  });
 });
