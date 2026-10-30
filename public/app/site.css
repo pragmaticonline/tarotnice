@@ -510,3 +510,4 @@ button.token-chip{font:inherit;cursor:pointer;background:none}
 .shuffle-cost{opacity:.88;font-size:.92em;white-space:nowrap}
 .shuffle-cost .moonstone{position:relative;top:.15em;margin:0 .1em}
 .shuffle-price{color:var(--gold)}
+:root[data-mode="night"] .shuffle-price{color:#fff}
