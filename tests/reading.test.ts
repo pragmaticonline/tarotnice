@@ -358,6 +358,12 @@ describe("parseSummary", () => {
   it("caps at 140 chars", () => {
     expect(parseSummary("Summary: " + "x".repeat(200))).toHaveLength(140);
   });
+
+  it("pulls a bold-labelled summary (Thai model often writes **label:**)", () => {
+    expect(parseSummary("Body.\n**Summary:** Trust the slow build.")).toBe("Trust the slow build.");
+    const th = "Body.\n**\u0e2a\u0e23\u0e38\u0e1b:** \u0e44\u0e27\u0e49\u0e43\u0e08\u0e08\u0e31\u0e07\u0e2b\u0e27\u0e30\u0e02\u0e2d\u0e07\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07";
+    expect(parseSummary(th)).toBe("\u0e44\u0e27\u0e49\u0e43\u0e08\u0e08\u0e31\u0e07\u0e2b\u0e27\u0e30\u0e02\u0e2d\u0e07\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07");
+  });
 });
 
 describe("streamDeltas", () => {

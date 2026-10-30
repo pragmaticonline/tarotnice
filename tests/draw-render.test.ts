@@ -184,6 +184,49 @@ describe("renderReading positions", () => {
     expect(html).toContain("What to do: next steps");
   });
 
+  it("bold **Summary:** line fills the At-a-glance lead (no waiting cat)", () => {
+    const html = renderOnce(
+      "Together these cards tell a story of change.\n\n" +
+        "**Two of Wands**: You stand between security and a wider world.\n\n" +
+        "**Summary:** Map options before stepping out.",
+    );
+    expect(html).not.toContain("is-waiting");
+    expect(html).toContain("Map options before stepping out.");
+  });
+
+  it("bold Thai summary line fills the At-a-glance lead (no waiting cat)", () => {
+    const html = renderOnce(
+      "Together these cards tell a story of change.\n\n" +
+        "**Two of Wands**: You stand between security and a wider world.\n\n" +
+        "**\u0e2a\u0e23\u0e38\u0e1b:** \u0e27\u0e32\u0e07\u0e41\u0e1c\u0e19\u0e01\u0e48\u0e2d\u0e19\u0e01\u0e49\u0e32\u0e27\u0e2d\u0e2d\u0e01\u0e44\u0e1b",
+      "th",
+    );
+    expect(html).not.toContain("is-waiting");
+    expect(html).toContain("\u0e27\u0e32\u0e07\u0e41\u0e1c\u0e19\u0e01\u0e48\u0e2d\u0e19\u0e01\u0e49\u0e32\u0e27\u0e2d\u0e2d\u0e01\u0e44\u0e1b");
+  });
+
+  it("done with no Summary line still clears the waiting cat via server summary", () => {
+    const { TarotDraw, handlers } = loadDraw();
+    const mount = makeEl();
+    const reading = {
+      id: "r1",
+      cards: [
+        { name: "Two of Wands", keywords: ["planning"], image: "/a.png", image2x: "", reversed: false },
+      ],
+    };
+    TarotDraw.renderReading(mount, reading, "en", "/stream", {});
+    handlers["delta"]({
+      data: JSON.stringify("Together these cards tell a story.\n\n**Two of Wands**: plan well."),
+    });
+    handlers["done"]({ data: JSON.stringify({ summary: "Server side summary." }) });
+    const synth = (mount.children as ReturnType<typeof makeEl>[]).find((c) =>
+      String(c.className).includes("rtext"),
+    );
+    const html = String(synth!.innerHTML);
+    expect(html).not.toContain("is-waiting");
+    expect(html).toContain("Server side summary.");
+  });
+
   it("watchdog re-opens a silent stream and does not duplicate text", () => {
     const { TarotDraw, handlers, intervals, clock, esList } = loadDraw();
     const mount = makeEl();

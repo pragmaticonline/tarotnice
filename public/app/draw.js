@@ -338,14 +338,18 @@
       if (blocks.length <= 1) {
         blocks = full.split(/\n/).map(function (b) { return b.trim(); }).filter(Boolean);
       }
-      // The Summary line moves up into At-a-glance as its lead.
+      // The Summary line moves up into At-a-glance as its lead. The
+      // model often bold-labels it ("**\u0e2a\u0e23\u0e38\u0e1b:** ..."), which a
+      // plain-prefix match misses — the lead then sat on the waiting
+      // cat forever even after the reading finished.
       var summaryText = "";
       var sIdx = -1;
-      blocks.forEach(function (b, i) { if (/^(SUMMARY:|\u0e2a\u0e23\u0e38\u0e1b:)/i.test(b)) sIdx = i; });
-      if (sIdx >= 0) {
-        summaryText = blocks[sIdx].replace(/^(SUMMARY:|\u0e2a\u0e23\u0e38\u0e1b:)\s*/i, "");
-        blocks.splice(sIdx, 1);
-      }
+      blocks.forEach(function (b, i) {
+        var m = b.match(/^\s*(?:\*\*)?(?:SUMMARY|\u0e2a\u0e23\u0e38\u0e1b)\s*(?:\*\*)?\s*:\s*(?:\*\*)?\s*(.+)$/i);
+        if (m) { sIdx = i; summaryText = m[1].replace(/\*\*\s*$/, "").trim(); }
+      });
+      if (sIdx >= 0) blocks.splice(sIdx, 1);
+      if (!summaryText && doneSummary) summaryText = doneSummary;
       var usedCard = {};
       var glanceDone = false;
       var out = blocks.map(function (b, bi) {
@@ -460,6 +464,7 @@
     }
 
     var full = "";
+    var doneSummary = "";
     var es = null;
     var finished = false;
     var lastProgress = Date.now();
@@ -523,6 +528,10 @@
       try {
         summary = JSON.parse(e.data).summary || "";
       } catch (err) {}
+      // Server summary fills the At-a-glance lead if the streamed text
+      // had no parseable Summary line — never leave the waiting cat up.
+      doneSummary = summary;
+      renderSynth();
       (opts.onDone || function () {})(summary, full);
     });
     es.addEventListener("error", function (e) {

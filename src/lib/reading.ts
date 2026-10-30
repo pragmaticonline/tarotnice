@@ -368,7 +368,7 @@ export function buildReadingPrompt(input: {
 export function parseSummary(text: string): string {
   const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
   for (let i = lines.length - 1; i >= 0; i--) {
-    const m = /^(?:summary|\u0e2a\u0e23\u0e38\u0e1b)\s*:\s*(.+)$/i.exec(lines[i]);
+    const m = /^(?:\*\*)?(?:summary|\u0e2a\u0e23\u0e38\u0e1b)\s*(?:\*\*)?\s*:\s*(?:\*\*)?\s*(.+?)(?:\*\*)?$/i.exec(lines[i]);
     if (m) return m[1].slice(0, 140);
   }
   const first = (text.split(/(?<=[.!?])\s/)[0] ?? text).trim();
