@@ -17,6 +17,7 @@ import {
   isLang,
   isTopic,
   parseSummary,
+  proofreadThai,
   sseEvent,
   streamDeltas,
   toPromptCard,
@@ -93,6 +94,7 @@ type Env = AuthEnv &
     DAILY_QUESTION_LIMIT?: string;
     REFERRAL_BONUS?: string;
     READING_MODEL?: string;
+    PROOFREAD_MODEL?: string;
     DEFAULT_LANG?: string;
     TIMEZONE?: string;
     TURNSTILE_SECRET?: string;
@@ -541,6 +543,15 @@ app.get("/api/readings/:id/stream", async (c) => {
         }
         full = full.trim();
         if (!full) throw new Error("empty_response");
+        if (lang === "th" && c.env.AI) {
+          // Post-stream proofread: fix dropped Thai letters, then swap
+          // the client's text via a final event before done.
+          const checked = await proofreadThai(aiRun, c.env.PROOFREAD_MODEL?.trim() || "@cf/qwen/qwen3-30b-a3b-fp8", full);
+          if (checked !== full) {
+            full = checked;
+            send(sseEvent("final", JSON.stringify(checked)));
+          }
+        }
         const summary = parseSummary(full);
         await store.setReadingResult(row.id, { aiText: full, aiSummary: summary, model, status: "complete" });
         recordEvent(c.env, {

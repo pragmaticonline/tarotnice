@@ -100,6 +100,50 @@ export async function classifyCrisis(aiRun: AiRun, question: string): Promise<bo
   }
 }
 
+/**
+ * Post-stream Thai proofread pass: a cheap model fixes ONLY spelling
+ * (dropped/wrong letters) in a completed reading. Any failure, empty
+ * output, or wild length change falls back to the original text — the
+ * reading never blocks on this.
+ */
+export async function proofreadThai(
+  aiRun: (model: string, input: unknown) => Promise<unknown>,
+  model: string,
+  text: string,
+  timeoutMs = 45_000,
+): Promise<string> {
+  try {
+    const call = aiRun(model, {
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a Thai spelling proofreader. Fix ONLY misspelled Thai words in the user's text (missing or wrong consonants, vowels, tone marks). Do not rewrite, rephrase, add, delete, reorder, or reformat anything. Keep every heading, number, card name, punctuation, line break, and correctly spelled word exactly as-is. Return only the corrected text.",
+        },
+        { role: "user", content: text },
+      ],
+      max_tokens: 3000,
+    });
+    const res = await Promise.race([
+      call,
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), timeoutMs)),
+    ]);
+    const raw =
+      typeof res === "string"
+        ? res
+        : ((res as { response?: unknown })?.response as string) ??
+          ((res as { choices?: { message?: { content?: unknown } }[] })?.choices?.[0]?.message?.content as string) ??
+          "";
+    const out = typeof raw === "string" ? raw.trim().replace(/^```[a-z]*\n?|\n?```$/g, "") : "";
+    if (!out) return text;
+    const ratio = out.length / Math.max(1, text.length);
+    if (ratio < 0.75 || ratio > 1.3) return text;
+    return out;
+  } catch {
+    return text;
+  }
+}
+
 /** Supportive reply (no reading). Thai users get the 1323 hotline. */
 export function crisisMessage(lang: "th" | "en"): string {
   if (lang === "th") {

@@ -467,6 +467,16 @@
         renderSynth();
       } catch (err) {}
     });
+    es.addEventListener("final", function (e) {
+      // Post-stream proofread swap: server sends the corrected full text.
+      try {
+        var corrected = JSON.parse(e.data);
+        if (typeof corrected === "string" && corrected) {
+          full = corrected;
+          renderSynth();
+        }
+      } catch (err) {}
+    });
     es.addEventListener("done", function (e) {
       es.close();
       var summary = "";

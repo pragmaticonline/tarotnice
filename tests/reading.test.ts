@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  proofreadThai,
   buildReadingPrompt,
   cleanQuestion,
   crisisMessage,
@@ -101,6 +102,20 @@ describe("crisis pre-check", () => {
     expect(crisisMessage("th")).toContain("1323");
     expect(crisisMessage("th")).not.toContain("\u0e44\u0e1e\u0e48");
     expect(crisisMessage("en")).toContain("crisis line");
+  });
+});
+
+describe("proofreadThai", () => {
+  const mangled = "\u0e01\u0e32\u0e23\u0e2d\u0e21\u0e41\u0e25\u0e30\u0e04\u0e27\u0e32\u0e21\u0e31\u0e48\u0e19\u0e04\u0e07";
+  it("returns the corrected text when the model fixes spelling", async () => {
+    const aiRun = async () => ({ response: "\u0e01\u0e32\u0e23\u0e2d\u0e2d\u0e21\u0e41\u0e25\u0e30\u0e04\u0e27\u0e32\u0e21\u0e21\u0e31\u0e48\u0e19\u0e04\u0e07" });
+    await expect(proofreadThai(aiRun as never, "m", mangled)).resolves.toBe("\u0e01\u0e32\u0e23\u0e2d\u0e2d\u0e21\u0e41\u0e25\u0e30\u0e04\u0e27\u0e32\u0e21\u0e21\u0e31\u0e48\u0e19\u0e04\u0e07");
+  });
+
+  it("falls back to the original on empty, wild-length, or failing output", async () => {
+    await expect(proofreadThai((async () => ({ response: "" })) as never, "m", mangled)).resolves.toBe(mangled);
+    await expect(proofreadThai((async () => ({ response: "\u0e2a\u0e31\u0e49\u0e19" })) as never, "m", mangled)).resolves.toBe(mangled);
+    await expect(proofreadThai((async () => { throw new Error("down"); }) as never, "m", mangled)).resolves.toBe(mangled);
   });
 });
 
