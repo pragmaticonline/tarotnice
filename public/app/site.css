@@ -456,3 +456,4 @@ h1.read-q{font-weight:600}
 .drawer-save{width:100%}
 .drawer-guest-line{color:var(--muted)}
 .drawer-back-row button{background:none;border:none;font:inherit;color:var(--accent);cursor:pointer;font-size:1.05rem}
+.drawer-guest-btns{display:flex;flex-direction:column;gap:.6rem}
