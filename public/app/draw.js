@@ -350,6 +350,13 @@
       });
       if (sIdx >= 0) blocks.splice(sIdx, 1);
       if (!summaryText && doneSummary) summaryText = doneSummary;
+      // A header-only first block (glance header on its own line, body
+      // in the next block) would leave the glance empty and strand the
+      // body outside the glance box — merge them back together.
+      if (blocks.length > 1 && /^\s*(?:\*\*)?(?:Overview|\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21)\s*(?:\*\*)?\s*:?\s*(?:\*\*)?\s*$/i.test(blocks[0])) {
+        blocks[0] = blocks[0] + "\n" + blocks[1];
+        blocks.splice(1, 1);
+      }
       var usedCard = {};
       var glanceDone = false;
       var out = blocks.map(function (b, bi) {
@@ -417,14 +424,36 @@
         }
         if (!glanceDone && bi === 0 && !/^(\*\*)?(\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48|\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33|What to do|Advice|Guidance|\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21|Explore)/.test(b)) {
           glanceDone = true;
-          var gHtml = esc(b.replace(/^(\*\*)?(Overview|\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21)(\*\*)?\s*:?\s*\n?/, "")).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+          // Strip the section header in all its forms ("**\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21:** ..."
+          // left a literal "**" behind and bolded the body).
+          var gText = b.replace(/^\s*(?:\*\*)?(?:Overview|\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21)\s*(?:\*\*)?\s*:?\s*(?:\*\*)?\s*\n?/i, "");
+          var gPlain = gText.replace(/\*\*/g, "");
+          // The model sometimes opens the Overview with the same clause
+          // as the Summary lead — showing both reads as a duplicate.
+          // Drop the body's duplicated opening clause.
+          if (summaryText) {
+            var cp = 0;
+            while (cp < gPlain.length && cp < summaryText.length && gPlain.charAt(cp) === summaryText.charAt(cp)) cp++;
+            if (cp >= 20) {
+              var cut = -1;
+              if (cp >= gPlain.length) cut = cp;
+              else if (/[\s.!?]/.test(gPlain.charAt(cp - 1))) cut = cp;
+              else {
+                for (var ci = cp; ci < Math.min(gPlain.length, cp + 90); ci++) {
+                  if (/[\s.!?]/.test(gPlain.charAt(ci))) { cut = ci + 1; break; }
+                }
+              }
+              if (cut > 0) { gPlain = gPlain.slice(cut).trim(); gText = gPlain; }
+            }
+          }
+          var gHtml = esc(gText).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
           return '<div class="sec sec-glance"><h2 class="sec-title">' +
             (lang === "th" ? "\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21" : "At a glance") + "</h2>" +
             (summaryText ? '<p class="glance-lead">' + esc(summaryText) + "</p>" :
               '<p class="glance-lead is-waiting" aria-hidden="true"><img class="lead-ngern" src="/mascot/ngern-sitting.svg" alt="">' +
               '<span class="lead-msg">' + (lang === "th" ? "\u0e01\u0e33\u0e25\u0e31\u0e07\u0e23\u0e27\u0e1a\u0e23\u0e27\u0e21\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22" : "Putting it all together") +
               '<span class="wdots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span></span><span class="lead-bar"></span></p>') +
-            '<p class="glance-text">' + gHtml + "</p></div>";
+            (gPlain ? '<p class="glance-text">' + gHtml + "</p>" : "") + "</div>";
         }
         if (/^\*\*(\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33|Guidance)/.test(b) || /^Guidance:/.test(b)) {
           var gTitle = (b.match(/^\*\*([^*]+)\*\*/) || b.match(/^([^:\n]+):/) || [])[1] || "Guidance";

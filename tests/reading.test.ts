@@ -330,6 +330,70 @@ describe("pickSpread", () => {
     }
   });
 
+  it("requires the Overview to synthesize all three cards, not list them", () => {
+    const en = buildReadingPrompt({
+      lang: "en", topic: "general", question: "Should I quit my job?",
+      cards: [], prev: [], nickname: null,
+    });
+    expect(en.system).toContain("Synthesize all three cards into one combined picture");
+    expect(en.system).toContain("do not walk through the cards one by one");
+    const th = buildReadingPrompt({
+      lang: "th", topic: "general", question: "Should I quit my job?",
+      cards: [], prev: [], nickname: null,
+    });
+    expect(th.system).toContain("\u0e2a\u0e31\u0e07\u0e40\u0e04\u0e23\u0e32\u0e30\u0e2b\u0e4c\u0e44\u0e1e\u0e48\u0e17\u0e31\u0e49\u0e07\u0e2a\u0e32\u0e21\u0e43\u0e1a");
+    expect(th.system).toContain("\u0e2b\u0e49\u0e32\u0e21\u0e44\u0e25\u0e48\u0e40\u0e23\u0e35\u0e22\u0e07\u0e44\u0e1e\u0e48\u0e17\u0e35\u0e25\u0e30\u0e43\u0e1a");
+    expect(th.user).toContain("4-6");
+    expect(en.user).toContain("synthesize all three cards into one story");
+    expect(en.system).toContain("Do not name any card in the Overview");
+    expect(th.system).toContain("\u0e2b\u0e49\u0e32\u0e21\u0e40\u0e2d\u0e48\u0e22\u0e0a\u0e37\u0e48\u0e2d\u0e44\u0e1e\u0e48\u0e43\u0e19\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21");
+  });
+
+  it("gives both languages the same reasoning chain and combined guidance", () => {
+    const en = buildReadingPrompt({
+      lang: "en", topic: "general", question: "Should I quit my job?",
+      cards: [], prev: [], nickname: null,
+    });
+    expect(en.system).toContain("Reasoning chain");
+    expect(en.system).toContain("role in the whole three-card picture");
+    expect(en.system).toContain("combined message of all three cards");
+    expect(en.system).toContain("base it mainly on cards 2 and 3");
+    const th = buildReadingPrompt({
+      lang: "th", topic: "general", question: "Should I quit my job?",
+      cards: [], prev: [], nickname: null,
+    });
+    expect(th.system).toContain("\u0e25\u0e33\u0e14\u0e31\u0e1a\u0e01\u0e32\u0e23\u0e15\u0e35\u0e04\u0e27\u0e32\u0e21");
+    expect(th.system).toContain("\u0e1a\u0e17\u0e1a\u0e32\u0e17\u0e02\u0e2d\u0e07\u0e43\u0e1a\u0e19\u0e35\u0e49\u0e43\u0e19\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21");
+    expect(th.system).toContain("\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e23\u0e27\u0e21\u0e02\u0e2d\u0e07\u0e44\u0e1e\u0e48\u0e17\u0e31\u0e49\u0e07\u0e2a\u0e32\u0e21");
+    expect(th.system).toContain("\u0e15\u0e31\u0e49\u0e07\u0e2b\u0e25\u0e31\u0e01\u0e08\u0e32\u0e01\u0e44\u0e1e\u0e48\u0e43\u0e1a\u0e17\u0e35\u0e48 2 \u0e41\u0e25\u0e30 3");
+  });
+
+  it("uses the central interpretation framework in both languages", () => {
+    const en = buildReadingPrompt({
+      lang: "en", topic: "general", question: "Should I quit my job?",
+      cards: [], prev: [], nickname: null,
+    });
+    for (const step of [
+      "Central interpretation framework",
+      "Card 1 meaning in context",
+      "Card 2 meaning in context",
+      "Card 3 meaning in context",
+      "Relationship between cards",
+      "Overall synthesis",
+      "Answer to question",
+      "Guidance",
+      "Actions",
+      "Follow-up questions",
+    ]) expect(en.system).toContain(step);
+    const th = buildReadingPrompt({
+      lang: "th", topic: "general", question: "Should I quit my job?",
+      cards: [], prev: [], nickname: null,
+    });
+    expect(th.system).toContain("\u0e01\u0e23\u0e2d\u0e1a\u0e01\u0e32\u0e23\u0e15\u0e35\u0e04\u0e27\u0e32\u0e21\u0e01\u0e25\u0e32\u0e07");
+    expect(th.system).toContain("\u0e04\u0e27\u0e32\u0e21\u0e2a\u0e31\u0e21\u0e1e\u0e31\u0e19\u0e18\u0e4c\u0e23\u0e30\u0e2b\u0e27\u0e48\u0e32\u0e07\u0e44\u0e1e\u0e48");
+    expect(th.system).toContain("\u0e04\u0e33\u0e15\u0e2d\u0e1a\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21");
+  });
+
   it("keeps mode names, numbers and energy summaries out of the structure", () => {
     const { system } = buildReadingPrompt({
       lang: "en", topic: "general", question: "Should I quit my job?",
