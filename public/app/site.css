@@ -38,8 +38,9 @@ a{color:var(--accent)}
 .head-sp{flex:1 1 auto}
 .streak-chip{display:inline-flex;align-items:center;gap:.25rem;text-decoration:none;color:var(--ink);border:1px solid var(--gold-dim);border-radius:999px;padding:.3rem .7rem;font-size:.95rem}
 .token-chip{gap:.3em}
-.moonstone{display:inline-block;width:.85em;height:.85em;border-radius:50%;background:radial-gradient(circle at 32% 30%,#ffffff 0%,#eef2ff 38%,#c9d4f2 68%,#9aa8d8 100%);border:1px solid var(--gold-dim);box-shadow:inset 0 0 3px rgba(255,255,255,.9),0 0 4px rgba(160,175,230,.55);vertical-align:-.08em;flex:none}
-[data-quota-gem]{width:.72em;height:.72em;margin-right:.08em}
+/* Token marker: a faceted purple crystal (clip-path cut, brand purples). */
+.moonstone{display:inline-block;width:.82em;height:1.05em;background:linear-gradient(160deg,#cdbcff 0%,#8f79d6 38%,#5b489e 72%,#3d2f6e 100%);clip-path:polygon(50% 0,88% 32%,72% 100%,28% 100%,12% 32%);filter:drop-shadow(0 0 3px rgba(122,95,199,.55));vertical-align:-.14em;flex:none}
+[data-quota-gem]{width:.74em;height:.95em;margin-right:.08em}
 .theme-toggle,.lang-toggle{font-family:var(--f-body)}
 .theme-toggle{background:transparent;border:1px solid var(--gold-dim);border-radius:999px;color:var(--ink);padding:.4rem .8rem;font-size:.9rem;cursor:pointer;min-height:44px}
 .lang-toggle{display:inline-flex;border:1px solid var(--gold-dim);border-radius:999px;overflow:hidden}
