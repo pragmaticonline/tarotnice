@@ -40,13 +40,22 @@ type ESHandler = (e: { data: string }) => void;
 
 function loadDraw() {
   const handlers: Record<string, ESHandler> = {};
+  const intervals: (() => void)[] = [];
+  const clock = { now: 1_000_000 };
   const sandbox: Record<string, unknown> = {
     window: {} as Record<string, unknown>,
     document: { createElement: () => makeEl(), querySelector: () => null },
     setTimeout: () => 0,
     clearTimeout: () => {},
+    setInterval: (fn: () => void) => {
+      intervals.push(fn);
+      return intervals.length;
+    },
+    clearInterval: () => {},
+    Date: { now: () => clock.now },
     EventSource: class {
       url: string;
+      closed = false;
       constructor(url: string) {
         this.url = url;
         (sandbox.__es as unknown[]).push(this);
@@ -54,7 +63,9 @@ function loadDraw() {
       addEventListener(ev: string, fn: ESHandler) {
         handlers[ev] = fn;
       }
-      close() {}
+      close() {
+        this.closed = true;
+      }
     },
     __es: [] as unknown[],
   };
@@ -68,9 +79,15 @@ function loadDraw() {
       lang: string,
       streamUrl: string,
       opts: unknown,
-    ) => void;
+    ) => { close: () => void };
   };
-  return { TarotDraw, handlers };
+  return {
+    TarotDraw,
+    handlers,
+    intervals,
+    clock,
+    esList: sandbox.__es as { closed: boolean }[],
+  };
 }
 
 function renderOnce(fullText: string, lang = "en") {
@@ -165,6 +182,53 @@ describe("renderReading positions", () => {
     expect(html).toContain("The Star");
     expect(html).not.toContain("<p>1 ·");
     expect(html).toContain("What to do: next steps");
+  });
+
+  it("watchdog re-opens a silent stream and does not duplicate text", () => {
+    const { TarotDraw, handlers, intervals, clock, esList } = loadDraw();
+    const mount = makeEl();
+    const reading = {
+      id: "r1",
+      cards: [
+        { name: "Two of Wands", keywords: ["planning"], image: "/a.png", image2x: "", reversed: false },
+      ],
+    };
+    const errors: string[] = [];
+    TarotDraw.renderReading(mount, reading, "en", "/stream", {
+      onError: (k: string) => errors.push(k),
+    });
+    handlers["delta"]({ data: JSON.stringify("Together these cards tell a story.") });
+    expect(esList).toHaveLength(1);
+    // 61s of silence: watchdog closes the dead source and reconnects.
+    clock.now += 61_000;
+    intervals[0]();
+    expect(esList).toHaveLength(2);
+    expect(esList[0].closed).toBe(true);
+    // Server replays from the start on the new connection; the client
+    // reset `full`, so the replayed text renders once, not twice.
+    handlers["delta"]({ data: JSON.stringify("Together these cards tell a story.") });
+    const synth = (mount.children as ReturnType<typeof makeEl>[]).find((c) =>
+      String(c.className).includes("rtext"),
+    );
+    const html = String(synth!.innerHTML);
+    expect(html.match(/Together these cards/g)).toHaveLength(1);
+    expect(errors).toEqual([]);
+  });
+
+  it("watchdog gives up after 5 silent reconnects via onError", () => {
+    const { TarotDraw, intervals, clock, esList } = loadDraw();
+    const mount = makeEl();
+    const reading = { id: "r1", cards: [] };
+    const errors: string[] = [];
+    TarotDraw.renderReading(mount, reading, "en", "/stream", {
+      onError: (k: string) => errors.push(k),
+    });
+    for (let i = 0; i < 6; i++) {
+      clock.now += 61_000;
+      intervals[0]();
+    }
+    expect(esList.length).toBeGreaterThanOrEqual(5);
+    expect(errors).toEqual(["reading_failed"]);
   });
 
   it("tolerates Card N, paren and bolded leads", () => {

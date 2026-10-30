@@ -459,11 +459,37 @@
       synth.innerHTML = out;
     }
 
-    var es = new EventSource(streamUrl);
     var full = "";
+    var es = null;
+    var finished = false;
+    var lastProgress = Date.now();
+    var reconnects = 0;
+    // Watchdog: a stream that goes silent for 60s (dead connection the
+    // browser has not noticed, wedged generation) is re-opened; the
+    // server re-attaches or regenerates, so the reading cannot hang
+    // forever on a bouncing cat.
+    var watchdog = setInterval(function () {
+      if (finished) { clearInterval(watchdog); return; }
+      if (Date.now() - lastProgress < 60_000) return;
+      if (reconnects >= 5) {
+        clearInterval(watchdog);
+        finished = true;
+        (opts.onError || function () {})(full ? "interrupted" : "reading_failed");
+        return;
+      }
+      reconnects++;
+      lastProgress = Date.now();
+      try { if (es) es.close(); } catch (err) {}
+      full = "";
+      renderSynth();
+      connect();
+    }, 10_000);
+    function connect() {
+    es = new EventSource(streamUrl);
     es.addEventListener("delta", function (e) {
       try {
         full += JSON.parse(e.data);
+        lastProgress = Date.now();
         renderSynth();
       } catch (err) {}
     });
@@ -472,6 +498,7 @@
       // pause before the final swap does not look like a hang.
       try {
         var st = JSON.parse(e.data || "{}");
+        lastProgress = Date.now();
         if (st.phase === "proofreading") {
           bubble(lang === "th" ? "\u0e40\u0e07\u0e34\u0e19\u0e01\u0e33\u0e25\u0e31\u0e07\u0e15\u0e23\u0e27\u0e08\u0e17\u0e32\u0e19\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e43\u0e2b\u0e49\u0e04\u0e38\u0e13" : "Ngern is polishing your reading");
         }
@@ -483,11 +510,14 @@
         var corrected = JSON.parse(e.data);
         if (typeof corrected === "string" && corrected) {
           full = corrected;
+          lastProgress = Date.now();
           renderSynth();
         }
       } catch (err) {}
     });
     es.addEventListener("done", function (e) {
+      finished = true;
+      clearInterval(watchdog);
       es.close();
       var summary = "";
       try {
@@ -499,16 +529,22 @@
       try {
         var err = JSON.parse(e.data || "{}");
         if (err.error) {
+          finished = true;
+          clearInterval(watchdog);
           es.close();
           (opts.onError || function () {})(err.error);
           return;
         }
       } catch (err2) {}
-      // Network drop mid-stream: close; partial text stays.
-      es.close();
-      (opts.onError || function () {})(full ? "interrupted" : "reading_failed");
+      // Network drop: close (stops EventSource's own reconnect, which
+      // would append a replay to the existing text) and let the
+      // watchdog re-open cleanly. Only a server-sent error is terminal.
+      try { es.close(); } catch (err3) {}
+      lastProgress = Date.now() - 30_000;
     });
-    return es;
+    }
+    connect();
+    return { close: function () { finished = true; clearInterval(watchdog); try { if (es) es.close(); } catch (err) {} } };
   }
 
   // Idle stage: the stacked 78-card deck and slot frames are visible
