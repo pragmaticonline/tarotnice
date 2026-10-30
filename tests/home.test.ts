@@ -101,6 +101,7 @@ describe("GET / (draw screen)", () => {
     expect(en).toContain("Shuffle the cards");
     expect(en).toContain('class="shuffle-cost"');
     expect(en).toContain('class="moonstone"');
+    expect(en).toContain('class="shuffle-price">5 tokens</span>');
     expect(en).toContain("5 tokens");
     expect(en).not.toContain("\u2192</button>");
     const th = homePage({ uiLang: "th" });

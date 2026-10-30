@@ -508,4 +508,5 @@ button.token-chip{font:inherit;cursor:pointer;background:none}
 .collection-bar span{display:block;height:100%;background:#c99a3a;border-radius:999px}
 .cal-5wk .cal-cell{aspect-ratio:auto;height:34px}
 .shuffle-cost{opacity:.88;font-size:.92em;white-space:nowrap}
-.shuffle-cost .moonstone{position:relative;top:.08em;margin:0 .1em}
+.shuffle-cost .moonstone{position:relative;top:.15em;margin:0 .1em}
+.shuffle-price{color:var(--gold)}

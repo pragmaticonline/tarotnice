@@ -71,7 +71,7 @@ ${inviteBanner}${steps}
 <label class="ask-label" for="q">${escapeHtml(d.ask)}</label>
 <textarea id="q" name="question" rows="3" maxlength="200" placeholder="${escapeHtml(d.placeholder)}"></textarea>
 ${opts.turnstileSiteKey ? `<div class="cf-turnstile" data-sitekey="${escapeHtml(opts.turnstileSiteKey)}" data-size="invisible"></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>` : ""}
-<button class="btn btn-primary" type="submit">${escapeHtml(d.shuffleCards)} <span class="shuffle-cost" aria-hidden="true">| <span class="moonstone"></span> 5 ${escapeHtml(d.tokensUnit)}</span></button>
+<button class="btn btn-primary" type="submit">${escapeHtml(d.shuffleCards)} <span class="shuffle-cost" aria-hidden="true">| <span class="moonstone"></span> <span class="shuffle-price">5 ${escapeHtml(d.tokensUnit)}</span></span></button>
 </form>
 ${quotaRow(ui)}
 </section>
