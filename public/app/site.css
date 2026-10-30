@@ -258,6 +258,7 @@ a{color:var(--accent)}
 .land-badge{font-size:2.2rem;color:var(--gold);text-align:center;margin:.4rem 0 0}
 
 /* One-row compact header (52px) + header daily pill. */
+@media(max-width:719px){[data-token-unit]{display:none}.token-chip{gap:.15em}}
 .site-head{flex-wrap:nowrap;min-height:52px;gap:.45rem}
 .brand{font-size:1.25rem}
 .brand svg{width:32px;height:32px}

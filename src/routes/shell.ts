@@ -163,8 +163,7 @@ export function headerHtml(opts: {
   streak: StreakInfo;
   path?: string;
 }): string {
-  const path = opts.path ?? "/";
-  return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${streakChipHtml(opts.streak, opts.ui, "/progress")}${tokenChipHtml(opts.ui)}${authLinkHtml(opts.ui)}${themeToggleHtml(opts.ui)}${langButtonHtml(opts.ui, path)}</header>`;
+  return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${streakChipHtml(opts.streak, opts.ui, "/progress")}${tokenChipHtml(opts.ui)}${authLinkHtml(opts.ui)}</header>`;
 }
 
 /** Shared footer: tagline, entertainment line, legal links, one
@@ -176,5 +175,5 @@ export function siteFooterHtml(uiLang: UiLang = "en", path = "/"): string {
     (l) =>
       `<a class="foot-opt" lang="${l.code}" href="${escapeHtml(path)}${sep}ui=${l.code}"${l.code === uiLang ? ` aria-current="true"` : ""}>${escapeHtml(l.ownName)}</a>`,
   ).join("");
-  return `<footer class="site-foot"><div class="footer-main"><div class="foot-brand"><span class="foot-mark">${LOGO_SVG}</span><b>TarotNice</b><p class="foot-tag">${escapeHtml(d.tagline)}</p></div><nav class="foot-links" aria-label="Footer"><a class="foot-link" href="/cards">${escapeHtml(d.cardsTitle)}</a><a class="foot-link" href="/terms">${escapeHtml(d.terms)}</a><a class="foot-link" href="/privacy">${escapeHtml(d.privacy)}</a><a class="foot-link" href="/contact">${escapeHtml(d.contact)}</a></nav><div class="foot-lang"><p class="foot-label">${escapeHtml(d.appLanguage)}</p><div class="foot-opts">${items}</div></div></div><div class="footer-bottom"><p class="foot-legal">\u00a9 2026 TarotNice</p></div></footer>`;
+  return `<footer class="site-foot"><div class="footer-main"><div class="foot-brand"><span class="foot-mark">${LOGO_SVG}</span><b>TarotNice</b><p class="foot-tag">${escapeHtml(d.tagline)}</p></div><nav class="foot-links" aria-label="Footer"><a class="foot-link" href="/cards">${escapeHtml(d.cardsTitle)}</a><a class="foot-link" href="/terms">${escapeHtml(d.terms)}</a><a class="foot-link" href="/privacy">${escapeHtml(d.privacy)}</a><a class="foot-link" href="/contact">${escapeHtml(d.contact)}</a></nav><div class="foot-lang"><p class="foot-label">${escapeHtml(d.appLanguage)}</p><div class="foot-opts">${items}</div><p class="foot-theme">${themeToggleHtml(uiLang)}</p></div></div><div class="footer-bottom"><p class="foot-legal">\u00a9 2026 TarotNice</p></div></footer>`;
 }

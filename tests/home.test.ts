@@ -30,6 +30,12 @@ describe("GET / (draw screen)", () => {
     expect(html).toContain("data-streak");
     expect(html).toContain("data-theme-toggle");
     expect(html).toContain("?ui=th");
+    // Mobile header stays uncluttered: no language or Day/Night in the
+    // header (both live in the footer; language is footer-only).
+    const header = html.slice(html.indexOf("<header"), html.indexOf("</header>"));
+    expect(header).not.toContain("data-theme-toggle");
+    expect(header).not.toContain("ui=th");
+    expect(html).toContain("data-theme-toggle");
     // Header auth link: Sign in for guests (client script swaps it to
     // Account for registered users).
     expect(html).toContain('data-auth-link');
