@@ -82,6 +82,9 @@ function mailShell(opts: {
   url: string;
   cta: string;
   reassurance: string;
+  /** Thai rendering of the same message (every email is bilingual). */
+  th: { title: string; intro: string; steps?: string[]; reassurance: string };
+  ctaTh: string;
 }): { text: string; html: string } {
   const url = esc(opts.url);
   const stepsText = opts.steps?.length
@@ -99,6 +102,23 @@ function mailShell(opts: {
            .join("")}
        </td></tr>`
     : "";
+  const stepsHtmlTh = opts.th.steps?.length
+    ? `<tr><td style="padding:0 40px 8px;font-family:Arial,Helvetica,sans-serif">
+         <p style="margin:0 0 10px;font-size:13px;font-weight:bold;letter-spacing:1.2px;color:#76698f">WHAT HAPPENS NEXT \u00b7 \u0e02\u0e31\u0e49\u0e19\u0e15\u0e2d\u0e19\u0e15\u0e48\u0e2d\u0e44\u0e1b</p>
+         ${opts.th.steps
+           .map(
+             (step, i) => `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 10px"><tr>
+               <td width="26" valign="top"><span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#b0832f;color:#fffaf2;font-size:12px;font-weight:bold;line-height:22px;text-align:center">${i + 1}</span></td>
+               <td style="font-size:14px;line-height:21px;color:#2e2547">${esc(step)}</td></tr></table>`,
+           )
+           .join("")}
+       </td></tr>`
+    : "";
+  const thBlock = `<tr><td style="padding:26px 40px 6px;border-top:1px solid #ded5f2;font-family:Arial,Helvetica,sans-serif">
+    <h2 style="margin:0 0 14px;font-size:24px;line-height:32px;color:#2e2547">${esc(opts.th.title)}</h2>
+    <p style="margin:0;font-size:16px;line-height:25px;color:#2e2547">${esc(opts.th.intro)}</p>
+  </td></tr>
+  ${stepsHtmlTh}`;
   const text = `${opts.title}
 
 ${opts.intro}${stepsText}
@@ -109,7 +129,13 @@ If the button does not work, copy and paste the link above into your browser.
 
 ${opts.reassurance}
 
-Questions? Reply to this email or write to support@mailer.tarotnice.com.
+${opts.th.title}
+
+${opts.th.intro}${opts.th.steps?.length ? `\n\n${opts.th.steps.map((step, i) => `${i + 1}. ${step}`).join("\n")}` : ""}
+
+${opts.th.reassurance}
+
+Questions? Reply to this email or write to support@mailer.tarotnice.com. / \u0e21\u0e35\u0e04\u0e33\u0e16\u0e32\u0e21? \u0e15\u0e2d\u0e1a\u0e01\u0e25\u0e31\u0e1a\u0e2d\u0e35\u0e40\u0e21\u0e25\u0e19\u0e35\u0e49\u0e2b\u0e23\u0e37\u0e2d\u0e40\u0e02\u0e35\u0e22\u0e19\u0e21\u0e32\u0e17\u0e35\u0e48 support@mailer.tarotnice.com.
 
 \u2014 The TarotNice team
 https://tarotnice.com`;
@@ -136,22 +162,23 @@ https://tarotnice.com`;
   <tr><td style="padding:24px 40px 6px">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
       <td style="border-radius:12px;background:#4a3d78">
-        <a href="${url}" target="_blank" style="display:inline-block;padding:15px 34px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none">${esc(opts.cta)} &rarr;</a>
+        <a href="${url}" target="_blank" style="display:inline-block;padding:15px 34px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none">${esc(opts.cta)} \u00b7 ${esc(opts.ctaTh)} &rarr;</a>
       </td>
     </tr></table>
   </td></tr>
   <tr><td style="padding:14px 40px 26px;font-family:Arial,Helvetica,sans-serif">
-    <p style="margin:0;font-size:13px;line-height:20px;color:#76698f">Button not working? Copy and paste this link into your browser:</p>
+    <p style="margin:0;font-size:13px;line-height:20px;color:#76698f">Button not working? Copy and paste this link into your browser: / \u0e1b\u0e38\u0e48\u0e21\u0e01\u0e14\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49? \u0e04\u0e31\u0e14\u0e25\u0e2d\u0e01\u0e25\u0e34\u0e07\u0e01\u0e4c\u0e19\u0e35\u0e49\u0e44\u0e1b\u0e27\u0e32\u0e07\u0e43\u0e19\u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c:</p>
     <p style="margin:6px 0 0;font-size:13px;line-height:20px;word-break:break-all"><a href="${url}" target="_blank" style="color:#4a3d78">${url}</a></p>
   </td></tr>
   ${stepsHtml}
+  ${thBlock}
   <tr><td style="padding:10px 40px 30px;font-family:Arial,Helvetica,sans-serif">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fffaf0;border-radius:12px"><tr>
-      <td style="padding:16px 20px;font-size:13px;line-height:20px;color:#76698f">${esc(opts.reassurance)}</td>
+      <td style="padding:16px 20px;font-size:13px;line-height:20px;color:#76698f">${esc(opts.reassurance)}<br><br>${esc(opts.th.reassurance)}</td>
     </tr></table>
   </td></tr>
   <tr><td style="background:#f6f1fa;border-top:1px solid #ded5f2;padding:24px 40px;font-family:Arial,Helvetica,sans-serif">
-    <p style="margin:0 0 6px;font-size:13px;line-height:20px;color:#76698f">Questions? Reply to this email or write to <a href="mailto:support@mailer.tarotnice.com" style="color:#4a3d78;text-decoration:none">support@mailer.tarotnice.com</a>.</p>
+    <p style="margin:0 0 6px;font-size:13px;line-height:20px;color:#76698f">Questions? Reply to this email or write to <a href="mailto:support@mailer.tarotnice.com" style="color:#4a3d78;text-decoration:none">support@mailer.tarotnice.com</a>. / \u0e21\u0e35\u0e04\u0e33\u0e16\u0e32\u0e21? \u0e15\u0e2d\u0e1a\u0e01\u0e25\u0e31\u0e1a\u0e2d\u0e35\u0e40\u0e21\u0e25\u0e19\u0e35\u0e49\u0e2b\u0e23\u0e37\u0e2d\u0e40\u0e02\u0e35\u0e22\u0e19\u0e21\u0e32\u0e17\u0e35\u0e48 <a href="mailto:support@mailer.tarotnice.com" style="color:#4a3d78;text-decoration:none">support@mailer.tarotnice.com</a>.</p>
     <p style="margin:0;font-size:12px;line-height:18px;color:#76698f">You are receiving this because an account was created or a password reset was requested at <a href="https://tarotnice.com" style="color:#76698f">tarotnice.com</a>.</p>
     <p style="margin:10px 0 0;font-size:13px;color:#2e2547">&mdash; The TarotNice team</p>
   </td></tr>
@@ -176,10 +203,17 @@ export function verificationEmail(url: string): { subject: string; text: string;
     ],
     url,
     cta: "Confirm my email",
+    ctaTh: "\u0e22\u0e37\u0e19\u0e22\u0e31\u0e19\u0e2d\u0e35\u0e40\u0e21\u0e25",
     reassurance:
       "This confirmation link expires after a short time for your security. If it no longer works, just sign up or sign in again and we will send you a fresh one. If you did not create a TarotNice account, you can safely ignore this email \u2014 nothing will be activated.",
+    th: {
+      title: "\u0e22\u0e37\u0e19\u0e22\u0e31\u0e19\u0e2d\u0e35\u0e40\u0e21\u0e25\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13",
+      intro: "\u0e02\u0e2d\u0e1a\u0e04\u0e38\u0e13\u0e17\u0e35\u0e48\u0e2a\u0e21\u0e31\u0e04\u0e23 TarotNice \u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e1f\u0e23\u0e35\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e40\u0e2b\u0e25\u0e37\u0e2d\u0e2d\u0e35\u0e01\u0e40\u0e1e\u0e35\u0e22\u0e07\u0e04\u0e25\u0e34\u0e01\u0e40\u0e14\u0e35\u0e22\u0e27 \u2014 \u0e22\u0e37\u0e19\u0e22\u0e31\u0e19\u0e2d\u0e35\u0e40\u0e21\u0e25\u0e19\u0e35\u0e49 \u0e41\u0e25\u0e49\u0e27\u0e01\u0e32\u0e23\u0e14\u0e39\u0e14\u0e27\u0e07\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e08\u0e30\u0e16\u0e39\u0e01\u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01\u0e44\u0e27\u0e49\u0e43\u0e19\u0e1a\u0e31\u0e0d\u0e0a\u0e35 \u0e43\u0e0a\u0e49\u0e44\u0e14\u0e49\u0e17\u0e38\u0e01\u0e2d\u0e38\u0e1b\u0e01\u0e23\u0e13\u0e4c",
+      steps: ["\u0e04\u0e25\u0e34\u0e01\u0e1b\u0e38\u0e48\u0e21\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e22\u0e37\u0e19\u0e22\u0e31\u0e19\u0e2d\u0e35\u0e40\u0e21\u0e25\u0e19\u0e35\u0e49", "\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e14\u0e49\u0e27\u0e22\u0e23\u0e2b\u0e31\u0e2a\u0e1c\u0e48\u0e32\u0e19\u0e17\u0e35\u0e48\u0e15\u0e31\u0e49\u0e07\u0e44\u0e27\u0e49", "\u0e01\u0e25\u0e31\u0e1a\u0e21\u0e32\u0e40\u0e21\u0e37\u0e48\u0e2d\u0e44\u0e2b\u0e23\u0e48\u0e01\u0e47\u0e44\u0e14\u0e49 \u0e01\u0e32\u0e23\u0e14\u0e39\u0e14\u0e27\u0e07\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01\u0e2d\u0e22\u0e39\u0e48\u0e43\u0e19\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e17\u0e38\u0e01\u0e2d\u0e38\u0e1b\u0e01\u0e23\u0e13\u0e4c"],
+      reassurance: "\u0e25\u0e34\u0e07\u0e01\u0e4c\u0e22\u0e37\u0e19\u0e22\u0e31\u0e19\u0e19\u0e35\u0e49\u0e08\u0e30\u0e2b\u0e21\u0e14\u0e2d\u0e32\u0e22\u0e38\u0e43\u0e19\u0e2d\u0e35\u0e01\u0e44\u0e21\u0e48\u0e19\u0e32\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e1b\u0e25\u0e2d\u0e14\u0e20\u0e31\u0e22 \u0e2b\u0e32\u0e01\u0e43\u0e0a\u0e49\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49\u0e41\u0e25\u0e49\u0e27 \u0e43\u0e2b\u0e49\u0e2a\u0e21\u0e31\u0e04\u0e23\u0e2b\u0e23\u0e37\u0e2d\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07 \u0e40\u0e23\u0e32\u0e08\u0e30\u0e2a\u0e48\u0e07\u0e25\u0e34\u0e07\u0e01\u0e4c\u0e43\u0e2b\u0e21\u0e48\u0e43\u0e2b\u0e49 \u0e2b\u0e32\u0e01\u0e04\u0e38\u0e13\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e1a\u0e31\u0e0d\u0e0a\u0e35 TarotNice \u0e02\u0e49\u0e32\u0e21\u0e2d\u0e35\u0e40\u0e21\u0e25\u0e19\u0e35\u0e49\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22 \u0e08\u0e30\u0e44\u0e21\u0e48\u0e21\u0e35\u0e2d\u0e30\u0e44\u0e23\u0e16\u0e39\u0e01\u0e40\u0e1b\u0e34\u0e14\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19",
+    },
   });
-  return { subject: "Welcome to TarotNice \u2014 please confirm your email", text, html };
+  return { subject: "Welcome to TarotNice \u2014 please confirm your email \u00b7 \u0e22\u0e37\u0e19\u0e22\u0e31\u0e19\u0e2d\u0e35\u0e40\u0e21\u0e25", text, html };
 }
 
 export function resetPasswordEmail(url: string): { subject: string; text: string; html: string } {
@@ -191,8 +225,14 @@ export function resetPasswordEmail(url: string): { subject: string; text: string
       "We received a request to reset the password on your TarotNice account. Choose a new one and you will be back to your cards in under a minute.",
     url,
     cta: "Choose a new password",
+    ctaTh: "\u0e15\u0e31\u0e49\u0e07\u0e23\u0e2b\u0e31\u0e2a\u0e1c\u0e48\u0e32\u0e19\u0e43\u0e2b\u0e21\u0e48",
     reassurance:
       "This reset link expires after a short time and can only be used once. If you did not ask to reset your password, ignore this email \u2014 your current password stays exactly as it is, and no one can change it without this link.",
+    th: {
+      title: "\u0e15\u0e31\u0e49\u0e07\u0e23\u0e2b\u0e31\u0e2a\u0e1c\u0e48\u0e32\u0e19\u0e43\u0e2b\u0e21\u0e48",
+      intro: "\u0e40\u0e23\u0e32\u0e44\u0e14\u0e49\u0e23\u0e31\u0e1a\u0e04\u0e33\u0e02\u0e2d\u0e15\u0e31\u0e49\u0e07\u0e23\u0e2b\u0e31\u0e2a\u0e1c\u0e48\u0e32\u0e19\u0e43\u0e2b\u0e21\u0e48\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e1a\u0e31\u0e0d\u0e0a\u0e35 TarotNice \u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13 \u0e40\u0e25\u0e37\u0e2d\u0e01\u0e23\u0e2b\u0e31\u0e2a\u0e1c\u0e48\u0e32\u0e19\u0e43\u0e2b\u0e21\u0e48\u0e41\u0e25\u0e49\u0e27\u0e01\u0e25\u0e31\u0e1a\u0e44\u0e1b\u0e14\u0e39\u0e14\u0e27\u0e07\u0e15\u0e48\u0e2d\u0e44\u0e14\u0e49\u0e43\u0e19\u0e44\u0e21\u0e48\u0e16\u0e36\u0e07\u0e19\u0e32\u0e17\u0e35",
+      reassurance: "\u0e25\u0e34\u0e07\u0e01\u0e4c\u0e19\u0e35\u0e49\u0e08\u0e30\u0e2b\u0e21\u0e14\u0e2d\u0e32\u0e22\u0e38\u0e43\u0e19\u0e2d\u0e35\u0e01\u0e44\u0e21\u0e48\u0e19\u0e32\u0e19\u0e41\u0e25\u0e30\u0e43\u0e0a\u0e49\u0e44\u0e14\u0e49\u0e40\u0e1e\u0e35\u0e22\u0e07\u0e04\u0e23\u0e31\u0e49\u0e07\u0e40\u0e14\u0e35\u0e22\u0e27 \u0e2b\u0e32\u0e01\u0e04\u0e38\u0e13\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49\u0e02\u0e2d\u0e15\u0e31\u0e49\u0e07\u0e23\u0e2b\u0e31\u0e2a\u0e1c\u0e48\u0e32\u0e19\u0e43\u0e2b\u0e21\u0e48 \u0e02\u0e49\u0e32\u0e21\u0e2d\u0e35\u0e40\u0e21\u0e25\u0e19\u0e35\u0e49\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22 \u0e23\u0e2b\u0e31\u0e2a\u0e1c\u0e48\u0e32\u0e19\u0e40\u0e14\u0e34\u0e21\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e22\u0e31\u0e07\u0e43\u0e0a\u0e49\u0e44\u0e14\u0e49\u0e40\u0e2b\u0e21\u0e37\u0e2d\u0e19\u0e40\u0e14\u0e34\u0e21",
+    },
   });
-  return { subject: "Reset your TarotNice password", text, html };
+  return { subject: "Reset your TarotNice password \u00b7 \u0e15\u0e31\u0e49\u0e07\u0e23\u0e2b\u0e31\u0e2a\u0e1c\u0e48\u0e32\u0e19\u0e43\u0e2b\u0e21\u0e48", text, html };
 }

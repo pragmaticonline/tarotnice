@@ -26,9 +26,21 @@ describe("account emails", () => {
     expect(mail.text).toContain("What happens next");
   });
 
+  it("includes Thai alongside English in both emails", () => {
+    const v = verificationEmail(URL);
+    expect(v.subject).toContain("\u0e22\u0e37\u0e19\u0e22\u0e31\u0e19\u0e2d\u0e35\u0e40\u0e21\u0e25");
+    expect(v.html).toContain("\u0e22\u0e37\u0e19\u0e22\u0e31\u0e19\u0e2d\u0e35\u0e40\u0e21\u0e25\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13");
+    expect(v.text).toContain("\u0e02\u0e2d\u0e1a\u0e04\u0e38\u0e13\u0e17\u0e35\u0e48\u0e2a\u0e21\u0e31\u0e04\u0e23 TarotNice");
+    expect(v.html).toContain("Confirm my email \u00b7 \u0e22\u0e37\u0e19\u0e22\u0e31\u0e19\u0e2d\u0e35\u0e40\u0e21\u0e25");
+    const r = resetPasswordEmail(URL);
+    expect(r.subject).toContain("\u0e15\u0e31\u0e49\u0e07\u0e23\u0e2b\u0e31\u0e2a\u0e1c\u0e48\u0e32\u0e19\u0e43\u0e2b\u0e21\u0e48");
+    expect(r.html).toContain("\u0e40\u0e23\u0e32\u0e44\u0e14\u0e49\u0e23\u0e31\u0e1a\u0e04\u0e33\u0e02\u0e2d\u0e15\u0e31\u0e49\u0e07\u0e23\u0e2b\u0e31\u0e2a\u0e1c\u0e48\u0e32\u0e19\u0e43\u0e2b\u0e21\u0e48");
+    expect(r.text).toContain("\u0e15\u0e31\u0e49\u0e07\u0e23\u0e2b\u0e31\u0e2a\u0e1c\u0e48\u0e32\u0e19\u0e43\u0e2b\u0e21\u0e48");
+  });
+
   it("brands the password reset email with its security note", () => {
     const mail = resetPasswordEmail(URL);
-    expect(mail.subject).toBe("Reset your TarotNice password");
+    expect(mail.subject).toContain("Reset your TarotNice password");
     expect(mail.html).toContain("Choose a new password");
     expect(mail.html).toContain("can only be used once");
     expect(mail.text).toContain(URL);
