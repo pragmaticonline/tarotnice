@@ -313,7 +313,7 @@
     mount.innerHTML = "";
     // No per-card name blocks here any more: names sit under the
     // card images in step 3, and each card paragraph names itself.
-    mount.appendChild(el("h2", "sec-h", lang === "th" ? "\u0e44\u0e1e\u0e48\u0e17\u0e35\u0e25\u0e30\u0e43\u0e1a" : "Card by card"));
+    mount.appendChild(el("h2", "sec-h", lang === "th" ? "\u0e44\u0e1e\u0e48\u0e17\u0e35\u0e25\u0e30\u0e43\u0e1a" : "Your results"));
     var synth = el("div", "rc rtext", "");
     synth.addEventListener("click", function (e) {
       var b = e.target && e.target.closest ? e.target.closest("[data-fq]") : null;
@@ -424,11 +424,19 @@
           usedCard[card.name] = true;
           var kw = (card.keywords || []).join(" \u00b7 ");
           var cBody = bodyPlain.replace(/^[\s:;,.—–\-)\]]+/, "");
-          // Drop a leading "The " duplicated before names like The Hierophant.
+          // The name is already the row title: strip a repeated name
+          // (with optional Thai card word / "The" / reversed marker)
+          // from the body's first words, and never prepend it.
+          var bareName = card.name.replace(/^The\s+/i, "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          cBody = cBody.replace(
+            new RegExp("^\\s*(?:\u0e44\u0e1e\u0e48\\s*)?(?:The\\s+)?" + bareName + "(?:\\s*\\((?:reversed|\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27)\\))?[\\s:;,.—–\\-]+", "i"),
+            "",
+          );
+          if (!cBody) cBody = bodyPlain.replace(/^[\s:;,.—–\-)\]]+/, "");
           return '<div class="sec card-row"><img class="card-thumb' + (card.reversed ? " rev" : "") + '" src="' + esc(card.image) + '" alt="">' +
             '<div class="card-row-body">' + (pos ? '<p class="pos-line">' + esc(pos) + "</p>" : "") + '<h3>' + esc(card.name) + (card.reversed ? (lang === "th" ? " (\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27)" : " (reversed)") : "") + "</h3>" +
             (kw ? '<p class="kw-line">' + esc(kw) + "</p>" : "") +
-            "<p>" + esc((cBody.indexOf(card.name) === 0 || cBody.indexOf("The " + card.name) === 0) ? cBody : (card.name + " " + cBody)) + "</p></div></div>";
+            "<p>" + esc(cBody) + "</p></div></div>";
         }
         if (!glanceDone && bi === 0 && !/^(\*\*)?(\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48|\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33|What to do|Advice|Guidance|\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21|Explore)/.test(b)) {
           glanceDone = true;

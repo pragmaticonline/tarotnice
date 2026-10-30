@@ -310,6 +310,17 @@ describe("renderReading positions", () => {
     expect(html).toContain("Eight of Cups");
   });
 
+  it("card body does not repeat the card name shown in its title", () => {
+    const html = renderOnce(
+      "Together these cards tell a story of change.\n\n" +
+        "1 \u00b7 What are my options \u2014 **Two of Wands**: Two of Wands urges you to plan before stepping out.\n\n" +
+        "Summary: Map options before stepping out.",
+    );
+    expect(html).toContain("<h3>Two of Wands</h3>");
+    expect(html).not.toContain("<p>Two of Wands");
+    expect(html).toContain("urges you to plan before stepping out.");
+  });
+
   it("watchdog re-opens a silent stream and does not duplicate text", () => {
     const { TarotDraw, handlers, intervals, clock, esList } = loadDraw();
     const mount = makeEl();

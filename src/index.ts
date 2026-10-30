@@ -617,22 +617,33 @@ app.get("/api/readings/:id/stream", async (c) => {
           let enFull = "";
           let enBuf = "";
           send(sseEvent("status", JSON.stringify({ phase: "translating" })));
+          // Translations run on an ordered queue alongside generation:
+          // awaiting each one inside the stream loop paused the master
+          // stream until its 60s deadline expired mid-reading (the
+          // "couldn't read the cards" failures). The queue keeps block
+          // order while the master keeps flowing.
+          let queue: Promise<void> = Promise.resolve();
+          let queueError: unknown = null;
+          const queueBlock = (b: string) => {
+            queue = queue.then(() => emitBlock(b)).catch((e) => { queueError ??= e; });
+          };
           for await (const delta of streamDeltas(aiRun, model, {
             messages: [
               { role: "system", content: master.system },
               { role: "user", content: master.user },
             ],
             max_tokens: 2048,
-          }, 60_000)) {
+          }, 120_000)) {
             enFull += delta;
             enBuf += delta;
             const taken = takeCompletedBlocks(enBuf);
             enBuf = taken.rest;
-            for (const b of taken.blocks) await emitBlock(b);
+            for (const b of taken.blocks) queueBlock(b);
           }
           const tail = takeCompletedBlocks(enBuf + "\n\n");
-          for (const b of tail.blocks) await emitBlock(b);
-          if (enBuf.trim() && tail.blocks.length === 0) await emitBlock(enBuf.trim());
+          for (const b of tail.blocks) queueBlock(b);
+          await queue;
+          if (queueError) throw queueError instanceof Error ? queueError : new Error("translation_failed");
           enFull = enFull.trim();
           if (!enFull) throw new Error("empty_response");
           if (!isCompleteReading(enFull, enViews.map((v) => v.name))) throw new Error("incomplete_response");
