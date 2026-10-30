@@ -147,6 +147,13 @@
       noModel: "Readings are warming up. Your cards are drawn \u2014 please try again in a bit.",
       newIn: "New questions in ",
       shareToday: "Share today's reading",
+      needTokens: "You're out of free credit for today",
+      needTokensText: "Each question costs 5 tokens. Packs start at 50 tokens — pay by PromptPay QR or card.",
+      buyTokens: "Get tokens",
+      registerFirst: "Create a free account to keep asking",
+      registerFirstText: "Today's free question is used. Create a free account to use tokens for more questions — your reading moves into your account automatically.",
+      registerCta: "Create free account",
+      signInCta: "Sign in",
     },
     th: {
       need: "\u0e1e\u0e34\u0e21\u0e1e\u0e4c\u0e04\u0e33\u0e16\u0e32\u0e21\u0e01\u0e48\u0e2d\u0e19\u0e19\u0e30 \u0e41\u0e25\u0e49\u0e27\u0e04\u0e48\u0e2d\u0e22\u0e2a\u0e31\u0e1a\u0e44\u0e1e\u0e48",
@@ -164,6 +171,13 @@
       noModel: "\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e01\u0e33\u0e25\u0e31\u0e07\u0e40\u0e15\u0e23\u0e35\u0e22\u0e21\u0e15\u0e31\u0e27 \u0e44\u0e1e\u0e48\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e08\u0e31\u0e48\u0e27\u0e41\u0e25\u0e49\u0e27 \u0e25\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07\u0e43\u0e19\u0e2d\u0e35\u0e01\u0e2a\u0e31\u0e01\u0e04\u0e23\u0e39\u0e48",
       newIn: "\u0e04\u0e33\u0e16\u0e32\u0e21\u0e43\u0e2b\u0e21\u0e48\u0e43\u0e19\u0e2d\u0e35\u0e01 ",
       shareToday: "\u0e41\u0e0a\u0e23\u0e4c\u0e14\u0e27\u0e07\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49",
+      needTokens: "\u0e43\u0e0a\u0e49\u0e40\u0e04\u0e23\u0e14\u0e34\u0e15\u0e1f\u0e23\u0e35\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49\u0e2b\u0e21\u0e14\u0e41\u0e25\u0e49\u0e27 \u0e40\u0e15\u0e34\u0e21\u0e42\u0e17\u0e40\u0e04\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22",
+      needTokensText: "\u0e04\u0e33\u0e16\u0e32\u0e21\u0e25\u0e30 5 \u0e42\u0e17\u0e40\u0e04\u0e19 \u0e41\u0e1e\u0e47\u0e01\u0e40\u0e23\u0e34\u0e48\u0e21\u0e15\u0e49\u0e19 50 \u0e42\u0e17\u0e40\u0e04\u0e19 \u0e08\u0e48\u0e32\u0e22\u0e14\u0e49\u0e27\u0e22 PromptPay \u0e2b\u0e23\u0e37\u0e2d\u0e1a\u0e31\u0e15\u0e23\u0e44\u0e14\u0e49",
+      buyTokens: "\u0e40\u0e15\u0e34\u0e21\u0e42\u0e17\u0e40\u0e04\u0e19",
+      registerFirst: "\u0e2a\u0e21\u0e31\u0e04\u0e23\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e01\u0e48\u0e2d\u0e19\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d\u0e19\u0e30",
+      registerFirstText: "\u0e04\u0e33\u0e16\u0e32\u0e21\u0e1f\u0e23\u0e35\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49\u0e43\u0e0a\u0e49\u0e2b\u0e21\u0e14\u0e41\u0e25\u0e49\u0e27 \u0e2a\u0e23\u0e49\u0e32\u0e07\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e1f\u0e23\u0e35\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e43\u0e0a\u0e49\u0e42\u0e17\u0e40\u0e04\u0e19\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d \u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e17\u0e35\u0e48\u0e1c\u0e48\u0e32\u0e19\u0e21\u0e32\u0e08\u0e30\u0e22\u0e49\u0e32\u0e22\u0e40\u0e02\u0e49\u0e32\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e43\u0e2b\u0e49\u0e2d\u0e31\u0e15\u0e42\u0e19\u0e21\u0e31\u0e15\u0e34",
+      registerCta: "\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e1f\u0e23\u0e35",
+      signInCta: "\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a",
     },
   };
   function t(k) {
@@ -348,7 +362,21 @@
         btn.addEventListener("click", async function () {
           btn.disabled = true;
           try {
-            await fetch("/api/readings/" + reading.id + "/retry", { method: "POST", credentials: "include" });
+            var rr = await fetch("/api/readings/" + reading.id + "/retry", { method: "POST", credentials: "include" });
+            if (rr.status === 402) {
+              msg.textContent = t("needTokens");
+              btn.textContent = t("buyTokens");
+              btn.disabled = false;
+              btn.addEventListener("click", function () { location.href = "/billing"; });
+              return;
+            }
+            if (rr.status === 403) {
+              msg.textContent = t("registerFirst");
+              btn.textContent = t("registerCta");
+              btn.disabled = false;
+              btn.addEventListener("click", function () { location.href = "/register"; });
+              return;
+            }
           } catch (e) {}
           msg.remove();
           btn.remove();
@@ -487,6 +515,27 @@
       return;
     }
     stopWait();
+    if (res.status === 402 || res.status === 403) {
+      // Token metering: out of free credit. 402 = registered but the
+      // wallet is short (buy prompt); 403 = needs an account first.
+      // Show the upsell instead of parking the cat for the day.
+      var mount3 = readingMount();
+      if (res.status === 403) {
+        bubble(t("registerFirst"));
+        mount3.innerHTML =
+          '<div class="rc on"><b>' + esc(t("registerFirst")) + "</b><p>" + esc(t("registerFirstText")) + "</p>" +
+          '<p><a class="btn btn-primary" href="/register">' + esc(t("registerCta")) + "</a> " +
+          '<a class="btn btn-outline" href="/sign-in">' + esc(t("signInCta")) + "</a></p></div>";
+      } else {
+        bubble(t("needTokens"));
+        mount3.innerHTML =
+          '<div class="rc on"><b>' + esc(t("needTokens")) + "</b><p>" + esc(t("needTokensText")) + "</p>" +
+          '<p><a class="btn btn-primary" href="/billing">' + esc(t("buyTokens")) + "</a></p></div>";
+      }
+      if (btn) btn.disabled = false;
+      return;
+    }
+    stopWait();
     if (res.status === 429) {
       // Two different 429s: the daily quota (cat sleeps) and the
       // per-connection rate backstop (just slow down). Only the
@@ -575,15 +624,22 @@
       var q0 = document.getElementById("q");
       if (q0) q0.focus();
     }
-    // Sleep state from the start when no questions remain.
+    // Sleep state from the start when no questions remain. Token
+    // balances count too: an out-of-free-credit user with tokens (or
+    // referral credit) can still ask — the server charges at draw time.
+    function outOfQuestions(d) {
+      if (!d || !d.quota) return false;
+      if (d.tokens) return (d.tokens.remaining || 0) <= 0;
+      return d.quota.used >= (d.quota.limit || 3);
+    }
     var data = window.TarotHome && window.TarotHome.data;
-    if (data && data.quota && data.quota.used >= (data.quota.limit || 3)) {
+    if (outOfQuestions(data)) {
       sleepMode(data.quota.resetsAt || null);
     }
     document.addEventListener("tarot:summary", function (e) {
       var d = (e && e.detail) || {};
       if (!d.quota || !document.getElementById("ask-form")) return;
-      if (d.quota.used >= (d.quota.limit || 3)) {
+      if (outOfQuestions(d)) {
         sleepMode(d.quota.resetsAt || null);
       } else {
         wakeMode();

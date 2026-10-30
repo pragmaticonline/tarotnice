@@ -199,6 +199,17 @@ export const rateDays = sqliteTable(
   }),
 );
 
+// Personal invite codes (design: NICE-7K2Q). Resolution only: a code
+// exists once its owner has viewed their invite panel; the code itself
+// is derived from the user id (see lib/invite.ts).
+export const inviteCodes = sqliteTable("invite_codes", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  code: text("code").notNull().unique(),
+  createdAt: integer("created_at").notNull(),
+});
+
 // Who arrived via whose share.
 export const referrals = sqliteTable("referrals", {
   visitorUserId: text("visitor_user_id").primaryKey(),
@@ -206,4 +217,49 @@ export const referrals = sqliteTable("referrals", {
   referrerUserId: text("referrer_user_id").notNull(),
   firstReadingAt: integer("first_reading_at"), // set when the visitor completes a first reading
   createdAt: integer("created_at").notNull(),
+});
+
+// Token wallet movements (5 tokens = 1 question; see lib/wallet.ts).
+// One row per movement; balances are always derived, never stored.
+// Uniqueness is per (reason, ref): daily grants key by Bangkok day,
+// top-ups by Stripe Checkout session, referrals by referee, reading
+// spends by reading id, refunds by Stripe charge — so webhook retries
+// and double submits can never double-post.
+export const tokenLedger = sqliteTable(
+  "token_ledger",
+  {
+    id: text("id").primaryKey(), // uuid
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    delta: integer("delta").notNull(), // +credit / -spend
+    reason: text("reason").notNull(), // daily|topup|reading|referral|refund
+    ref: text("ref").notNull(),
+    source: text("source"), // reading rows: daily|wallet
+    day: text("day").notNull(), // Bangkok day at creation
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => ({
+    refUnique: uniqueIndex("token_ledger_user_reason_ref").on(t.userId, t.reason, t.ref),
+    userCreated: index("token_ledger_user_created").on(t.userId, t.createdAt),
+  }),
+);
+
+// Stripe webhook delivery log (mirrors nicelingo's stripe_events):
+// claiming an event id first makes fulfillment exactly-once.
+export const stripeEvents = sqliteTable("stripe_events", {
+  id: text("id").primaryKey(), // Stripe event id (evt_…)
+  type: text("type").notNull(),
+  userId: text("user_id"),
+  status: text("status").notNull(), // claimed|processed|ignored
+  createdAt: integer("created_at").notNull(),
+});
+
+// Reusable Stripe customer per user (mirrors nicelingo).
+export const stripeCustomers = sqliteTable("stripe_customers", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  customerId: text("customer_id").notNull(),
+  updatedAt: integer("updated_at").notNull(),
 });

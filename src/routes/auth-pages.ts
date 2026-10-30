@@ -72,6 +72,16 @@ export function registerPage(returnTo?: string | null, origin = "", uiLang: UiLa
   const ret = safeReturnPath(returnTo);
   const inner = `<h1>${escapeHtml(d.createAccountHeading)}</h1>
 <p>${escapeHtml(d.guestLine)}</p>
+<div class="invite-code-box" id="invite-box">
+<p class="invite-applied" id="invite-applied" hidden></p>
+<p class="invite-ask"><button type="button" class="linklike" id="invite-toggle">${escapeHtml(d.haveInviteCode)}</button></p>
+<div id="invite-fields" hidden>
+<label for="invite-code">${escapeHtml(d.inviteCodeOptional)}</label>
+<input id="invite-code" maxlength="11" autocomplete="off" placeholder="NICE-XXXX" style="text-transform:uppercase">
+<button class="btn btn-outline" id="invite-apply" type="button">${escapeHtml(d.applyCode)}</button>
+<p class="auth-err" id="invite-err" role="alert"></p>
+</div>
+</div>
 <form id="register-form">
 <label for="name">${escapeHtml(d.nameLabel)}</label>
 <input id="name" autocomplete="name" required>
@@ -83,6 +93,51 @@ ${returnField(ret)}
 <p class="auth-err" id="err" role="alert"></p>
 <button class="btn" type="submit">${escapeHtml(d.createAccountBtn)}</button>
 </form>
+<script>
+(function () {
+  var appliedCode = null;
+  var appliedName = null;
+  function refCode() {
+    try {
+      var m = document.cookie.match(/(?:^|; )tarotnice_ref=([^;]*)/);
+      if (!m) return null;
+      var v = decodeURIComponent(m[1]);
+      return v || null;
+    } catch (e) { return null; }
+  }
+  function showApplied(code, name) {
+    var box = document.getElementById("invite-applied");
+    box.hidden = false;
+    box.textContent = ${JSON.stringify(d.inviteCodeApplied)}.replace("{code}", code) + (name ? " · " + ${JSON.stringify(d.invitedByLine)}.replace("{name}", name).split("·")[1] : "");
+    document.getElementById("invite-fields").hidden = true;
+    document.getElementById("invite-toggle").hidden = true;
+  }
+  document.getElementById("invite-toggle").addEventListener("click", function () {
+    document.getElementById("invite-fields").hidden = false;
+    document.getElementById("invite-toggle").hidden = true;
+  });
+  // Saved invite from /r/NICE-XXXX or ?ref=: the cookie holds inv:<id>;
+  // the code itself arrives as ?invited=NICE-XXXX from the redirect, or
+  // stays server-side — show the applied state when we know the code.
+  var qs = new URLSearchParams(location.search);
+  var fromLink = qs.get("invited");
+  if (fromLink && /^NICE-[A-Z0-9]{4}$/i.test(fromLink)) { appliedCode = fromLink.toUpperCase(); showApplied(appliedCode, null); }
+  document.getElementById("invite-apply").addEventListener("click", async function () {
+    var code = document.getElementById("invite-code").value.trim().toUpperCase();
+    var err = document.getElementById("invite-err");
+    err.textContent = "";
+    if (!/^NICE-[A-Z0-9]{4}$/.test(code)) { err.textContent = ${JSON.stringify(d.codeUnknown)}; return; }
+    try {
+      var res = await fetch("/api/me/invite/lookup?code=" + encodeURIComponent(code), { credentials: "include" });
+      var data = await res.json().catch(function () { return {}; });
+      if (!res.ok || !data.owner) { err.textContent = ${JSON.stringify(d.codeUnknown)}; return; }
+      appliedCode = code;
+      showApplied(code, data.name || null);
+    } catch (e) { err.textContent = ${JSON.stringify(d.codeUnknown)}; }
+  });
+  window.__tarotAppliedCode = function () { return appliedCode; };
+})();
+</script>
 <p class="auth-alt">${escapeHtml(d.continueWithGoogle)}</p>
 ${googleButton(ret, d.continueWithGoogle)}
 <p class="auth-alt">${escapeHtml(d.alreadyRegistered)} <a href="/sign-in?return=${encodeURIComponent(ret)}">${escapeHtml(d.signIn)}</a></p>
@@ -111,6 +166,15 @@ document.getElementById("register-form").addEventListener("submit", async (e) =>
       err.textContent = "Account created. Check your email to confirm your address, then sign in.";
       return;
     }
+    // Redeem the applied/saved invite (joining bonus) before leaving.
+    try {
+      var code = window.__tarotAppliedCode ? window.__tarotAppliedCode() : null;
+      await fetch("/api/me/invite", {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(code ? { code } : {}),
+      });
+    } catch {}
     location.href = ret;
   } catch {
     err.textContent = "Network error. Please try again.";

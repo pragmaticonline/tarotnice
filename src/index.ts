@@ -25,7 +25,7 @@ import {
 import { computeStreak } from "./lib/streaks";
 import { d1PrefsStore } from "./db/prefs-store";
 import { d1TarotStore } from "./db/tarot-store";
-import { renderBadgeImage, renderShareImage, type ShareCard } from "./lib/share-images";
+import { renderBadgeImage, renderInviteImage, renderShareImage, type ShareCard } from "./lib/share-images";
 import { badgeLandingPage, shareLandingPage, unsharedPage } from "./routes/share";
 import {
   clientCategory,
@@ -46,11 +46,46 @@ import {
   resetPasswordPage,
   signInPage,
 } from "./routes/auth-pages";
+import { billingCancelPage, billingPage, billingSuccessPage, safeReturnPath } from "./routes/billing";
 import { countryOfRequest } from "./lib/geo";
 import { isUiLang, t, uiLangFor, type UiLang } from "./lib/i18n";
+import {
+  createPackCheckoutSession,
+  isPackId,
+  PACKS,
+  packForSession,
+  packPriceId,
+  retrieveCheckoutSession,
+  tokensConfigured,
+  verifyStripeSignature,
+  type StripeEnv,
+} from "./lib/stripe";
+import {
+  inviteCodeFor,
+  inviteCodeFromPngParam,
+  inviteRefFor,
+  isInviteCode,
+  normalizeInviteCode,
+  parseInviteRef,
+} from "./lib/invite";
+import {
+  DAILY_FREE_TOKENS,
+  REFERRAL_DAILY_CAP,
+  REFERRAL_FRIEND_BONUS_TOKENS,
+  REFERRAL_REWARD_TOKENS,
+  TOKENS_PER_QUESTION,
+  isTransactionFilter,
+  planSpend,
+  reasonsForFilter,
+  rewardsTodayCount,
+  walletBalance,
+  type LedgerRow,
+} from "./lib/wallet";
+import { checkoutReturnUrls } from "./routes/billing";
 
 type Env = AuthEnv &
-  AnalyticsEnv & {
+  AnalyticsEnv &
+  StripeEnv & {
     AI: Ai;
     ASSETS?: Fetcher;
     MEDIA?: R2Bucket;
@@ -198,7 +233,8 @@ async function currentUser(c: {
 }
 
 app.get("/", async (c) => {
-  // Referral touch: ?ref={shareId} from a share landing CTA, kept 7 days.
+  // Referral touch: ?ref={shareId} from a share landing CTA, or
+  // ?ref=NICE-XXXX / ?ref=inv:<userId> personal invites, kept 7 days.
   const ref = c.req.query("ref");
   if (isShareId(ref)) {
     setCookie(c, "tarotnice_ref", ref, {
@@ -206,9 +242,39 @@ app.get("/", async (c) => {
       maxAge: 7 * 24 * 3600,
       sameSite: "Lax",
     });
+  } else if (isInviteCode(ref) && c.env?.DB) {
+    const ownerId = await d1TarotStore(c.env.DB).inviteOwner(normalizeInviteCode(ref) as string);
+    if (ownerId) {
+      setCookie(c, "tarotnice_ref", inviteRefFor(ownerId), {
+        path: "/",
+        maxAge: 7 * 24 * 3600,
+        sameSite: "Lax",
+      });
+    }
+  } else if (ref && parseInviteRef(ref)) {
+    setCookie(c, "tarotnice_ref", ref, {
+      path: "/",
+      maxAge: 7 * 24 * 3600,
+      sameSite: "Lax",
+    });
   }
   const origin = new URL(c.req.url).origin;
-  return c.html(homePage({ origin, uiLang: requestUiLang(c), turnstileSiteKey: c.env?.TURNSTILE_SITE_KEY }));
+  // Invite landing banner (design board 2) after /r/NICE-XXXX: the code
+  // arrives as ?invited=; the inviter's nickname personalizes it.
+  let invite: { code: string; inviterName: string | null } | null = null;
+  const invited = c.req.query("invited");
+  if (isInviteCode(invited) && c.env?.DB) {
+    const code = normalizeInviteCode(invited) as string;
+    try {
+      const store = d1TarotStore(c.env.DB);
+      const ownerId = await store.inviteOwner(code);
+      const nickname = ownerId ? (await d1PrefsStore(c.env.DB).get(ownerId))?.nickname ?? null : null;
+      invite = { code, inviterName: nickname };
+    } catch {
+      invite = { code, inviterName: null };
+    }
+  }
+  return c.html(homePage({ origin, uiLang: requestUiLang(c), turnstileSiteKey: c.env?.TURNSTILE_SITE_KEY, invite }));
 });
 
 app.get("/robots.txt", (c) => {
@@ -280,26 +346,40 @@ app.post("/api/readings", async (c) => {
   const store = d1TarotStore(c.env.DB);
   await attributeReferral(c, store, user.id);
   const today = bangkokDay();
-  const limit = await effectiveLimit(c.env, store, user.id);
+  // Token metering: today's free credit (5 tokens = 1 question) spends
+  // first; beyond it, registered users spend wallet tokens. The daily
+  // grant is an idempotent ledger row, so a day never double-grants.
+  await ensureDailyGrant(store, user.id, today);
   // One open draw per user: hand back the cards already drawn today
   // (with their original question) instead of dealing new ones.
   const open = await store.openDrawn(user.id, today);
   if (open) {
-    const usedNow = await store.countReadings(user.id, today);
     return c.json({
       id: open.id,
       cards: open.cards,
-      // The open draw already counts in usedNow; resuming adds no try.
-      remaining: Math.max(0, limit - usedNow),
+      // Resuming an open draw costs nothing.
+      remaining: questionsLeft(await walletState(store, user.id, today)),
       resumed: true,
       question: open.question,
       topic: open.topic,
     });
   }
-  const used = await store.countReadings(user.id, today);
-  if (used >= limit) {
+  const balance = await walletState(store, user.id, today);
+  const spend = planSpend(balance, user.isAnonymous ? "anon" : "registered");
+  if (!spend.ok) {
     recordEvent(c.env, { name: "limit_hit", lang, ...requestContext(c), userKind: userKind(user) });
-    return c.json({ error: "limit", remaining: 0, resetsAt: nextBangkokMidnight() }, 429);
+    if (spend.error === "registration_required") {
+      return c.json({ error: "registration_required", resetsAt: nextBangkokMidnight() }, 403);
+    }
+    return c.json(
+      {
+        error: "insufficient_tokens",
+        balance: balance.wallet,
+        needed: TOKENS_PER_QUESTION,
+        resetsAt: nextBangkokMidnight(),
+      },
+      402,
+    );
   }
   const ip = clientIp(c);
   try {
@@ -322,14 +402,30 @@ app.post("/api/readings", async (c) => {
   }
   const drawn = drawReadingCards();
   const id = crypto.randomUUID();
-  await store.insertReading({ id, userId: user.id, day: today, topic, question, lang, cards: drawn });
+  // Charge at draw time (a draw is a commitment — no re-rolls). The
+  // spend row keys by reading id, so retries never double-charge.
+  await store.postLedger({
+    userId: user.id,
+    delta: -TOKENS_PER_QUESTION,
+    reason: "reading",
+    ref: id,
+    source: spend.source,
+    day: today,
+  });
+  try {
+    await store.insertReading({ id, userId: user.id, day: today, topic, question, lang, cards: drawn });
+  } catch (err) {
+    await store.deleteLedger("reading", id).catch(() => {});
+    throw err;
+  }
   await store.ipDayBump(ip, hourBucket);
   // SPEC §12: ids + orientations only. Names/images are library data
   // the client fetches separately; nothing to peek at before the flip.
-  // `used` was counted before this insert, so this draw leaves
-  // limit - used - 1 tries.
-  const remaining = Math.max(0, limit - used - 1);
-  return c.json({ id, cards: drawn, remaining });
+  const after = {
+    wallet: balance.wallet - (spend.source === "wallet" ? TOKENS_PER_QUESTION : 0),
+    dailyLeft: balance.dailyLeft - (spend.source === "daily" ? TOKENS_PER_QUESTION : 0),
+  };
+  return c.json({ id, cards: drawn, remaining: questionsLeft(after) });
 });
 
 // Stream the AI interpretation (SSE deltas, then done). Replays the
@@ -352,10 +448,17 @@ app.get("/api/readings/:id/stream", async (c) => {
   if (row.status !== "complete") {
     if (row.status === "failed") return c.json({ error: "reading_failed" }, 409);
     if (row.status === "streaming") return c.json({ error: "already_streaming" }, 409);
-    const others = await store.countReadings(user.id, row.day, row.id);
-    if (others >= limit) {
-      recordEvent(c.env, { name: "limit_hit", lang, ...requestContext(c), userKind: userKind(user) });
-      return c.json({ error: "limit", remaining: 0, resetsAt: nextBangkokMidnight() }, 429);
+    // Draw-time charging is authoritative: a reading with a spend row
+    // may always stream (covers paid questions past the free limit and
+    // retries re-planned at POST /retry). Rows drawn before token
+    // metering (no spend row) keep the legacy day-quota re-check.
+    const spentRow = await store.ledgerByRef("reading", row.id);
+    if (!spentRow) {
+      const others = await store.countReadings(user.id, row.day, row.id);
+      if (others >= limit) {
+        recordEvent(c.env, { name: "limit_hit", lang, ...requestContext(c), userKind: userKind(user) });
+        return c.json({ error: "limit", remaining: 0, resetsAt: nextBangkokMidnight() }, 429);
+      }
     }
     if (!(await store.claimForStreaming(row.id, user.id))) {
       return c.json({ error: "already_streaming" }, 409);
@@ -364,7 +467,8 @@ app.get("/api/readings/:id/stream", async (c) => {
   }
 
   const donePayload = async (summary: string) => {
-    const remaining = Math.max(0, limit - (await store.countReadings(user.id, row.day)));
+    await ensureDailyGrant(store, user.id, today);
+    const remaining = questionsLeft(await walletState(store, user.id, today));
     return sseEvent("done", JSON.stringify({ summary, remaining }));
   };
 
@@ -447,6 +551,9 @@ app.get("/api/readings/:id/stream", async (c) => {
           const referral = await store.getReferral(user.id);
           if (referral && !referral.converted && (await store.convertReferral(user.id))) {
             recordEvent(c.env, { name: "referral_converted", ...requestContext(c), userKind: userKind(user) });
+            // Design semantics: the inviter earns +5 tokens when the
+            // friend finishes a first reading, max 3 friends/day.
+            await rewardReferrer(store, referral.referrerId, user.id, today);
           }
         } catch {
           /* attribution is best-effort */
@@ -455,10 +562,17 @@ app.get("/api/readings/:id/stream", async (c) => {
         controller.close();
       } catch (error) {
         console.error(JSON.stringify({ message: "reading stream failed", error: error instanceof Error ? error.message : String(error) }));
+        let markedFailed = false;
         try {
           await store.setReadingResult(row.id, { aiText: "", aiSummary: "", model: "", status: "failed" });
+          markedFailed = true;
         } catch {
           /* keep the drawn row for retry */
+        }
+        // Failed readings are free: hand the spend back so a retry (or
+        // a fresh question) is charged at retry/draw time instead.
+        if (markedFailed) {
+          try { await store.deleteLedger("reading", row.id); } catch { /* spend stays if delete fails */ }
         }
         send(sseEvent("error", JSON.stringify({ error: "reading_failed" })));
         controller.close();
@@ -470,7 +584,8 @@ app.get("/api/readings/:id/stream", async (c) => {
   });
 });
 
-// Retry a failed reading on the same cards (failed rows cost no quota).
+// Retry a failed reading on the same cards. The failure refunded the
+// spend, so retry re-plans it against today's wallet (free credit first).
 app.post("/api/readings/:id/retry", async (c) => {
   const user = await authedUser(c);
   if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
@@ -478,6 +593,27 @@ app.post("/api/readings/:id/retry", async (c) => {
   const row = await store.getReading(c.req.param("id"));
   if (!row || row.userId !== user.id) return c.json({ error: "not_found" }, 404);
   if (row.status !== "failed") return c.json({ error: "bad_state" }, 400);
+  const today = bangkokDay();
+  await ensureDailyGrant(store, user.id, today);
+  const balance = await walletState(store, user.id, today);
+  const spend = planSpend(balance, user.isAnonymous ? "anon" : "registered");
+  if (!spend.ok) {
+    if (spend.error === "registration_required") {
+      return c.json({ error: "registration_required", resetsAt: nextBangkokMidnight() }, 403);
+    }
+    return c.json(
+      { error: "insufficient_tokens", balance: balance.wallet, needed: TOKENS_PER_QUESTION, resetsAt: nextBangkokMidnight() },
+      402,
+    );
+  }
+  await store.postLedger({
+    userId: user.id,
+    delta: -TOKENS_PER_QUESTION,
+    reason: "reading",
+    ref: row.id,
+    source: spend.source,
+    day: today,
+  });
   await store.setReadingResult(row.id, { aiText: "", aiSummary: "", model: "", status: "drawn" });
   return c.json({ ok: true });
 });
@@ -628,6 +764,22 @@ app.get("/r/:shareId", async (c) => {
   const ui = requestUiLang(c);
   const origin = new URL(c.req.url).origin;
   const shareId = c.req.param("shareId");
+  // Personal invite link (/r/NICE-XXXX, design board 2): save the
+  // inviter for attribution and send the friend to the ask flow.
+  if (isInviteCode(shareId) && c.env?.DB) {
+    const code = normalizeInviteCode(shareId) as string;
+    const ownerId = await d1TarotStore(c.env.DB).inviteOwner(code);
+    if (ownerId) {
+      setCookie(c, "tarotnice_ref", inviteRefFor(ownerId), {
+        path: "/",
+        maxAge: 7 * 24 * 3600,
+        sameSite: "Lax",
+      });
+      recordEvent(c.env, { name: "share_landing", kind: "invite", ...requestContext(c), userKind: "guest" });
+      return c.redirect(`/?ref=${code}&invited=${code}`, 302);
+    }
+    return c.html(unsharedPage(origin, ui), 410);
+  }
   if (!isShareId(shareId) || !c.env?.DB) return c.html(unsharedPage(origin, ui), 410);
   const store = d1TarotStore(c.env.DB);
   const row = await store.getReadingByShare(shareId);
@@ -729,6 +881,43 @@ async function badgeImageResponse(
 app.get("/b/:shareId/story.png", (c) => badgeImageResponse(c, c.req.param("shareId"), "story"));
 app.get("/b/:shareId/og.png", (c) => badgeImageResponse(c, c.req.param("shareId"), "og"));
 
+// Invite share image (1080x1080, design board 4). Public by code: the
+// code is itself the capability, like a share id.
+app.get("/invite/:code.png", async (c) => {
+  const code = inviteCodeFromPngParam(c.req.param("code.png"));
+  if (!code || !c.env?.DB || !c.env.MEDIA || !c.env.ASSETS) {
+    return new Response("Not found", { status: 404 });
+  }
+  const store = d1TarotStore(c.env.DB);
+  const ownerId = await store.inviteOwner(code);
+  if (!ownerId) return new Response("Not found", { status: 404 });
+  const qLang = c.req.query("lang");
+  const qMode = c.req.query("mode");
+  const mode = qMode === "night" ? "night" : "day";
+  const lang: "th" | "en" = qLang === "en" || qLang === "th" ? qLang : "th";
+  const key = `invite/${code}/${lang}-${mode}.png`;
+  const hit = await c.env.MEDIA.get(key);
+  if (hit) {
+    return new Response(await hit.arrayBuffer(), {
+      headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=31536000, immutable" },
+    });
+  }
+  const prefs = await d1PrefsStore(c.env.DB).get(ownerId);
+  try {
+    const bytes = await renderInviteImage(
+      { MEDIA: c.env.MEDIA, ASSETS: c.env.ASSETS },
+      { name: prefs?.nickname ?? null, code, lang, mode },
+    );
+    try { await c.env.MEDIA.put(key, bytes); } catch { /* cache write is best-effort */ }
+    return new Response(bytes as unknown as BodyInit, {
+      headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=31536000, immutable" },
+    });
+  } catch (err) {
+    console.error("invite image render failed", err);
+    return new Response("Render failed", { status: 503 });
+  }
+});
+
 async function shareImageResponse(
   c: { env: Env; req: { query: (n: string) => string | undefined } },
   kind: "reading" | "daily",
@@ -802,6 +991,56 @@ app.get("/r/:shareId/story.png", (c) => shareImageResponse(c, "reading", c.req.p
 app.get("/r/:shareId/og.png", (c) => shareImageResponse(c, "reading", c.req.param("shareId"), "og"));
 app.get("/d/:shareId/story.png", (c) => shareImageResponse(c, "daily", c.req.param("shareId"), "story"));
 app.get("/d/:shareId/og.png", (c) => shareImageResponse(c, "daily", c.req.param("shareId"), "og"));
+
+// Billing: token packs, history, invite panel. Registered users only;
+// guests land on sign-in with a return path (design: account first).
+app.get("/billing", async (c) => {
+  c.header("Cache-Control", "private, no-store");
+  const user = await currentUser(c);
+  if (!user || !isRegisteredUser(user)) {
+    return c.redirect(`/sign-in?return=${encodeURIComponent("/billing")}`, 302);
+  }
+  const ui = requestUiLang(c);
+  const store = d1TarotStore(c.env.DB);
+  const today = bangkokDay();
+  await ensureDailyGrant(store, user.id, today);
+  const balance = await walletState(store, user.id, today);
+  return c.html(
+    billingPage({
+      ui,
+      origin: new URL(c.req.url).origin,
+      env: c.env,
+      balance: balance.wallet,
+      freeLeft: balance.dailyLeft,
+    }),
+  );
+});
+
+// Post-checkout landing: verify the session server-side (credits only
+// ever land via the webhook; this page just reports honestly).
+app.get("/billing/success", async (c) => {
+  c.header("Cache-Control", "private, no-store");
+  const ui = requestUiLang(c);
+  const origin = new URL(c.req.url).origin;
+  const returnTo = safeReturnPath(c.req.query("return"));
+  const sessionId = c.req.query("session_id") ?? "";
+  let state: "verified" | "pending" | "failed" = "failed";
+  if (tokensConfigured(c.env) && sessionId) {
+    try {
+      const session = await retrieveCheckoutSession(c.env, sessionId);
+      state = session.payment_status === "paid" ? "verified" : "pending";
+    } catch {
+      state = "failed";
+    }
+  }
+  return c.html(billingSuccessPage({ ui, origin, returnTo, state }));
+});
+
+app.get("/billing/cancel", (c) => {
+  c.header("Cache-Control", "private, no-store");
+  const returnTo = safeReturnPath(c.req.query("return"));
+  return c.html(billingCancelPage({ ui: requestUiLang(c), origin: new URL(c.req.url).origin, returnTo }));
+});
 
 // Account pages (free registration saves readings across devices).
 app.get("/register", (c) => c.html(registerPage(c.req.query("return"), new URL(c.req.url).origin, requestUiLang(c))));
@@ -1258,8 +1497,8 @@ app.get("/api/me", async (c) => {
 });
 
 function questionLimit(env: Env | undefined): number {
-  const n = Number(env?.DAILY_QUESTION_LIMIT ?? "3");
-  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 3;
+  const n = Number(env?.DAILY_QUESTION_LIMIT ?? "1");
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 1;
 }
 
 /** 10-char unguessable public id (base62). Never expose readings.id. */
@@ -1284,7 +1523,26 @@ function refCookie(c: { req: { raw: Request; header: (n: string) => string | und
     .find((p) => p.startsWith("tarotnice_ref="))
     ?.slice("tarotnice_ref=".length);
   const ref = found ? decodeURIComponent(found) : "";
-  return isShareId(ref) ? ref : null;
+  if (isShareId(ref)) return ref;
+  if (parseInviteRef(ref)) return ref;
+  return null;
+}
+
+/**
+ * Resolve any referral ref to its owner user id: personal invites
+ * (`inv:<userId>`) resolve directly; reading/daily share ids resolve
+ * through their share rows. Null when unknown or self-referral.
+ */
+async function resolveRefOwner(
+  store: ReturnType<typeof d1TarotStore>,
+  ref: string,
+  visitorId: string,
+): Promise<string | null> {
+  const invitedBy = parseInviteRef(ref);
+  if (invitedBy) return invitedBy === visitorId ? null : invitedBy;
+  const owner = await store.shareOwner(ref);
+  if (!owner || owner.userId === visitorId) return null;
+  return owner.userId;
 }
 
 /** Attribute a referred visitor once (first touch wins). */
@@ -1297,9 +1555,9 @@ async function attributeReferral(
   if (!ref) return;
   try {
     if (await store.getReferral(userId)) return;
-    const owner = await store.shareOwner(ref);
-    if (!owner || owner.userId === userId) return;
-    await store.insertReferral(userId, ref, owner.userId);
+    const ownerId = await resolveRefOwner(store, ref, userId);
+    if (!ownerId) return;
+    await store.insertReferral(userId, ref, ownerId);
     recordEvent(c.env, { name: "referral_signup", ...requestContext(c), userKind: "anon" });
   } catch {
     /* attribution is best-effort */
@@ -1324,6 +1582,81 @@ async function effectiveLimit(
   }
 }
 
+// --- Token wallet helpers (rules in lib/wallet.ts) ---
+
+type WalletStore = ReturnType<typeof d1TarotStore>;
+
+async function walletState(store: WalletStore, userId: string, today: string) {
+  const rows = await store.ledgerRows(userId);
+  return walletBalance(
+    rows.map((r): LedgerRow => ({
+      delta: r.delta,
+      reason: r.reason as LedgerRow["reason"],
+      source: (r.source as LedgerRow["source"]) ?? null,
+      day: r.day,
+      createdAt: r.createdAt,
+    })),
+    today,
+  );
+}
+
+/** Lazily grant today's free credit (idempotent per Bangkok day). */
+async function ensureDailyGrant(store: WalletStore, userId: string, today: string): Promise<void> {
+  try {
+    await store.postLedger({
+      userId,
+      delta: DAILY_FREE_TOKENS,
+      reason: "daily",
+      ref: `daily:${today}`,
+      day: today,
+    });
+  } catch {
+    /* grant is best-effort; the balance read still succeeds */
+  }
+}
+
+/** Questions the user can still ask without paying (free, then packs). */
+function questionsLeft(balance: { wallet: number; dailyLeft: number }): number {
+  return (
+    (balance.dailyLeft >= TOKENS_PER_QUESTION ? 1 : 0) +
+    Math.floor(Math.max(0, balance.wallet) / TOKENS_PER_QUESTION)
+  );
+}
+
+/**
+ * Design referral rule: +5 tokens when a friend finishes their first
+ * reading, capped at REFERRAL_DAILY_CAP friends per Bangkok day. One
+ * reward per friend ever (ledger ref = referee id). Best-effort.
+ */
+async function rewardReferrer(
+  store: WalletStore,
+  referrerId: string,
+  refereeId: string,
+  today: string,
+): Promise<void> {
+  try {
+    if (referrerId === refereeId) return;
+    const dayRows = await store.ledgerRowsForDay(referrerId, today);
+    const todayLedger: LedgerRow[] = dayRows.map((r) => ({
+      delta: r.delta,
+      reason: r.reason as LedgerRow["reason"],
+      source: (r.source as LedgerRow["source"]) ?? null,
+      day: r.day,
+      createdAt: r.createdAt,
+    }));
+    if (rewardsTodayCount(todayLedger, today) >= REFERRAL_DAILY_CAP) return;
+    await store.postLedger({
+      userId: referrerId,
+      delta: REFERRAL_REWARD_TOKENS,
+      reason: "referral",
+      ref: refereeId,
+      day: today,
+    });
+  } catch {
+    /* reward is best-effort */
+  }
+}
+
 function authedUser(c: { env: AuthEnv; req: { raw: { headers: Headers } } }) {
   return currentUser(c);
 }
@@ -1343,17 +1676,318 @@ app.get("/api/me/summary", async (c) => {
   }
   const store = d1TarotStore(c.env.DB);
   const today = bangkokDay();
-  const [prefs, used, days] = await Promise.all([
+  await ensureDailyGrant(store, user.id, today);
+  const [prefs, used, days, balance] = await Promise.all([
     d1PrefsStore(c.env.DB).get(user.id),
     store.countReadings(user.id, today),
     store.activityDays(user.id),
+    walletState(store, user.id, today),
   ]);
   return c.json({
     user: { id: user.id, email: user.email, isAnonymous: user.isAnonymous },
     prefs: prefs ?? { lang: ui, theme: null, nickname: null },
     streak: computeStreak(days, today),
-    quota: { used, limit: questionLimit(c.env), resetsAt: nextBangkokMidnight() },
+    quota: { used, limit: await effectiveLimit(c.env, store, user.id), resetsAt: nextBangkokMidnight() },
+    tokens: {
+      balance: balance.wallet,
+      freeLeft: balance.dailyLeft,
+      remaining: questionsLeft(balance),
+      configured: tokensConfigured(c.env),
+    },
   });
+});
+
+/**
+ * Public invite-code lookup for the sign-up form's Apply state
+ * (design board 3): resolves a code to its owner's display name.
+ * Existence of a code is not a secret — codes are printed on shares.
+ */
+app.get("/api/me/invite/lookup", async (c) => {
+  const code = normalizeInviteCode(c.req.query("code"));
+  if (!code || !c.env?.DB) return c.json({ error: "unknown_code" }, 404);
+  const store = d1TarotStore(c.env.DB);
+  const ownerId = await store.inviteOwner(code);
+  if (!ownerId) return c.json({ error: "unknown_code" }, 404);
+  const prefs = await d1PrefsStore(c.env.DB).get(ownerId);
+  return c.json({ owner: true, name: prefs?.nickname ?? null });
+});
+
+/**
+ * Redeem an invite code (design board 3): attribute this registered
+ * user to the code's owner (first touch wins) and credit the one-off
+ * +5-token joining bonus. Called after sign-up with the applied code,
+ * or with the saved ref cookie when no code is typed.
+ */
+app.post("/api/me/invite", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  if (user.isAnonymous) return c.json({ error: "registration_required" }, 403);
+  let body: { code?: unknown };
+  try {
+    body = await c.req.json();
+  } catch {
+    body = {};
+  }
+  const store = d1TarotStore(c.env.DB);
+  const today = bangkokDay();
+  try {
+    let ref: string | null = null;
+    if (isInviteCode(body.code)) {
+      const ownerId = await store.inviteOwner(normalizeInviteCode(body.code) as string);
+      if (!ownerId) return c.json({ error: "unknown_code" }, 404);
+      if (ownerId === user.id) return c.json({ error: "own_code" }, 400);
+      ref = inviteRefFor(ownerId);
+    } else if (typeof body.code === "string" && body.code.trim()) {
+      return c.json({ error: "unknown_code" }, 404);
+    } else {
+      ref = refCookie(c);
+    }
+    if (ref) {
+      if (!(await store.getReferral(user.id))) {
+        const ownerId = await resolveRefOwner(store, ref, user.id);
+        if (ownerId) {
+          await store.insertReferral(user.id, ref, ownerId);
+          recordEvent(c.env, { name: "referral_signup", ...requestContext(c), userKind: userKind(user) });
+        }
+      }
+    }
+    const referral = await store.getReferral(user.id);
+    if (!referral) return c.json({ attributed: false, bonus: 0 });
+    const credited = await store.postLedger({
+      userId: user.id,
+      delta: REFERRAL_FRIEND_BONUS_TOKENS,
+      reason: "referral",
+      ref: `friend-bonus:${user.id}`,
+      day: today,
+    });
+    return c.json({ attributed: true, bonus: credited ? REFERRAL_FRIEND_BONUS_TOKENS : 0 });
+  } catch {
+    return c.json({ error: "invite_failed" }, 500);
+  }
+});
+
+// Transaction history (Transactions tab): cursor-paginated ledger rows
+// behind the All / Top-up / Daily / Tarot-reading filters.
+app.get("/api/me/transactions", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  const filterRaw = c.req.query("filter") ?? "all";
+  if (!isTransactionFilter(filterRaw)) return c.json({ error: "bad_filter" }, 400);
+  const cursorRaw = Number(c.req.query("cursor"));
+  const cursor = Number.isFinite(cursorRaw) && cursorRaw > 0 ? Math.floor(cursorRaw) : null;
+  const store = d1TarotStore(c.env.DB);
+  const today = bangkokDay();
+  const rows = await store.listTransactions({
+    userId: user.id,
+    reasons: reasonsForFilter(filterRaw),
+    cursor,
+    limit: 30,
+  });
+  // A daily grant is "used" when that day has a daily-source spend.
+  const spentDays = new Set(
+    (await store.ledgerRows(user.id))
+      .filter((r) => r.reason === "reading" && r.source === "daily")
+      .map((r) => r.day),
+  );
+  const items = rows.map((r) => ({
+    delta: r.delta,
+    reason: r.reason,
+    source: r.source,
+    day: r.day,
+    createdAt: r.createdAt,
+    ...(r.reason === "daily"
+      ? { status: spentDays.has(r.day) ? "used" : r.day === today ? "available" : "expired" }
+      : {}),
+  }));
+  return c.json({
+    items,
+    nextCursor: rows.length === 30 ? rows[rows.length - 1].createdAt : null,
+  });
+});
+
+// Referrals tab (design board 1): own code/link, today's reward
+// progress, totals, and per-friend states.
+app.get("/api/me/referrals", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  const store = d1TarotStore(c.env.DB);
+  const today = bangkokDay();
+  const code = await store.ensureInviteCode(user.id, inviteCodeFor(user.id));
+  const origin = new URL(c.req.url).origin;
+  const [friends, allRows] = await Promise.all([
+    store.listReferralFriends(user.id),
+    store.ledgerRows(user.id),
+  ]);
+  const rewarded = new Set(
+    allRows.filter((r) => r.reason === "referral" && !r.ref.startsWith("friend-bonus:")).map((r) => r.ref),
+  );
+  const todayRows: LedgerRow[] = (await store.ledgerRowsForDay(user.id, today)).map((r) => ({
+    delta: r.delta,
+    reason: r.reason as LedgerRow["reason"],
+    source: (r.source as LedgerRow["source"]) ?? null,
+    day: r.day,
+    createdAt: r.createdAt,
+  }));
+  const list = friends.map((f) => {
+    let status: "rewarded" | "read" | "joined" = "joined";
+    if (rewarded.has(f.visitorUserId)) status = "rewarded";
+    else if (f.firstReadingAt) status = "read";
+    else if (!f.isAnonymous) status = "joined";
+    return {
+      name: f.nickname,
+      status,
+      joinedAt: f.createdAt,
+      readAt: f.firstReadingAt,
+    };
+  });
+  return c.json({
+    code,
+    link: `${origin}/r/${code}`,
+    rewardToday: rewardsTodayCount(todayRows, today),
+    rewardCap: REFERRAL_DAILY_CAP,
+    totalEarned: allRows
+      .filter((r) => r.reason === "referral" && !r.ref.startsWith("friend-bonus:"))
+      .reduce((sum, r) => sum + r.delta, 0),
+    friends: list,
+  });
+});
+
+// Token-pack checkout (nicelingo model): registered users only, prices
+// are Dashboard objects referenced by env id — clients never name amounts.
+app.post("/api/billing/checkout", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  if (user.isAnonymous) return c.json({ error: "registration_required" }, 403);
+  if (!tokensConfigured(c.env)) return c.json({ error: "billing_not_configured" }, 503);
+  let body: { pack?: unknown; return?: unknown };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "bad_request" }, 400);
+  }
+  if (!isPackId(body.pack)) return c.json({ error: "unknown_pack" }, 400);
+  const pack = PACKS[body.pack];
+  const priceId = packPriceId(c.env, pack.id);
+  if (!priceId) return c.json({ error: "plan_not_configured" }, 503);
+  const email = typeof user.email === "string" && /.+@.+\..+/.test(user.email) ? user.email : null;
+  if (!email) return c.json({ error: "email_required" }, 400);
+  const store = d1TarotStore(c.env.DB);
+  const origin = new URL(c.req.url).origin;
+  try {
+    const urls = checkoutReturnUrls(origin, typeof body.return === "string" ? body.return : null);
+    const customerId = await store.getStripeCustomer(user.id);
+    const checkout = await createPackCheckoutSession(c.env, {
+      userId: user.id,
+      email,
+      successUrl: urls.successUrl,
+      cancelUrl: urls.cancelUrl,
+      priceId,
+      pack,
+      customerId,
+    });
+    if (checkout.url) return c.json({ url: checkout.url });
+    return c.json({ error: "checkout_failed" }, 502);
+  } catch (err) {
+    return c.json({ error: err instanceof Error ? err.message : "checkout_failed" }, 502);
+  }
+});
+
+type StripeEvent = {
+  id: string;
+  type: string;
+  data: {
+    object: {
+      id: string;
+      customer?: string;
+      payment_intent?: string;
+      client_reference_id?: string;
+      metadata?: Record<string, string>;
+    };
+  };
+};
+
+// Stripe webhook (nicelingo model): claim the event id first (exactly
+// once), verify payment server-side, then credit the ledger. Credits
+// never come from the browser redirect.
+app.post("/api/billing/webhook", async (c) => {
+  const raw = await c.req.text();
+  const ok = await verifyStripeSignature(raw, c.req.header("stripe-signature"), c.env.STRIPE_WEBHOOK_SECRET);
+  if (!ok) return c.json({ error: "invalid signature" }, 401);
+  let event: StripeEvent;
+  try {
+    event = JSON.parse(raw);
+    if (!event.id || !event.type || !event.data?.object) throw new Error("bad event");
+  } catch {
+    return c.json({ error: "invalid event" }, 400);
+  }
+  if (!c.env?.DB) return c.json({ error: "unavailable" }, 503);
+  const store = d1TarotStore(c.env.DB);
+  if (!(await store.claimStripeEvent(event.id, event.type, null))) {
+    return c.json({ received: true, duplicate: true });
+  }
+  const object = event.data.object;
+  const today = bangkokDay();
+  try {
+    if (
+      (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") &&
+      object.metadata?.kind === "token_pack"
+    ) {
+      const userId = object.metadata?.user_id ?? object.client_reference_id ?? null;
+      const session = await retrieveCheckoutSession(c.env, object.id);
+      const pack = packForSession(session);
+      if (userId && pack && session.payment_status === "paid") {
+        // Key by payment intent (fallback session id) so charge-level
+        // refund/dispute events can find this credit later.
+        await store.postLedger({
+          userId,
+          delta: pack.tokens,
+          reason: "topup",
+          ref: session.payment_intent ?? session.id,
+          day: today,
+        });
+        if (typeof session.customer === "string") {
+          await store.setStripeCustomer(userId, session.customer);
+        }
+        await store.markStripeEvent(event.id, "processed", userId);
+      } else {
+        // QR methods can complete unpaid; the async event credits later.
+        await store.markStripeEvent(event.id, "ignored", userId);
+      }
+    } else if (event.type === "charge.refunded" || event.type === "charge.dispute.closed") {
+      // Claw the pack back on a FULL refund (or lost dispute): top-ups
+      // key by payment intent, so the charge event resolves directly.
+      // Partial refunds are left for manual handling (marked ignored).
+      const charge = object as typeof object & {
+        status?: string; amount?: number; amount_refunded?: number;
+      };
+      const pi = typeof charge.payment_intent === "string" ? charge.payment_intent : null;
+      const fullLoss =
+        event.type === "charge.dispute.closed"
+          ? charge.status === "lost"
+          : (charge.amount ?? 0) > 0 && (charge.amount_refunded ?? 0) >= (charge.amount ?? 0);
+      const topup = pi && fullLoss ? await store.ledgerByRef("topup", pi) : null;
+      if (topup) {
+        await store.postLedger({
+          userId: topup.userId,
+          delta: -topup.delta,
+          reason: "refund",
+          ref: object.id,
+          day: today,
+        });
+        await store.markStripeEvent(event.id, "processed", topup.userId);
+      } else {
+        await store.markStripeEvent(event.id, "ignored");
+      }
+    } else {
+      await store.markStripeEvent(event.id, "ignored");
+    }
+  } catch (err) {
+    // Leave the event 'claimed' (not processed): Stripe retries hit the
+    // duplicate path, and ops can reconcile from the event log.
+    console.error(JSON.stringify({ message: "stripe webhook failed", error: err instanceof Error ? err.message : String(err) }));
+    return c.json({ error: "webhook_failed" }, 500);
+  }
+  return c.json({ received: true });
 });
 
 // Interface prefs: UI language, Day/Night theme (NULL = auto), nickname.

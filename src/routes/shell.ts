@@ -20,7 +20,7 @@ const THEME_INIT = `<script>(function(){try{var m=null;try{m=localStorage.getIte
 // to user_prefs via PUT /api/me/prefs (best-effort, M3).
 const THEME_TOGGLE = `<script>(function(){function paint(){try{var night=document.documentElement.getAttribute("data-mode")==="night";var btns=document.querySelectorAll("[data-theme-toggle]");for(var i=0;i<btns.length;i++){var b=btns[i];var d=b.querySelector("[data-theme-label]");if(d)d.textContent=night?"\u263e":"\u2600"}}catch(x){}}paint();document.addEventListener("click",function(e){var b=e.target&&e.target.closest?e.target.closest("[data-theme-toggle]"):null;if(!b)return;try{var cur=document.documentElement.getAttribute("data-mode")==="night"?"night":"day";var next=cur==="night"?"day":"night";document.documentElement.setAttribute("data-mode",next);try{localStorage.setItem("tarotnice:mode",next)}catch(x){}paint();fetch("/api/me/prefs",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify({theme:next}),credentials:"include"}).catch(function(){})}catch(x){}});})();</script>`;
 
-const DESCRIPTION = "Free tarot readings, every day. Draw your daily card and ask up to 3 questions.";
+const DESCRIPTION = "Free tarot readings, every day. Draw your daily card and ask a free question every day.";
 
 export function pageShell(opts: {
   title: string;

@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lt, ne } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lt, ne } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import * as schema from "./schema";
 
@@ -590,6 +590,211 @@ export function d1TarotStore(db: D1Database) {
         invited: rows.length,
         converted: rows.filter((r) => r.at !== null).length,
       };
+    },
+
+    // --- Token wallet (balances derive from these rows; lib/wallet.ts) ---
+
+    /** All ledger rows for a user, newest first. */
+    async ledgerRows(userId: string): Promise<{
+      id: string; delta: number; reason: string; ref: string;
+      source: string | null; day: string; createdAt: number;
+    }[]> {
+      return orm
+        .select()
+        .from(schema.tokenLedger)
+        .where(eq(schema.tokenLedger.userId, userId))
+        .orderBy(desc(schema.tokenLedger.createdAt));
+    },
+
+    /** Today's rows only (daily-bucket math + referral cap window). */
+    async ledgerRowsForDay(userId: string, day: string): Promise<{
+      delta: number; reason: string; source: string | null; day: string; createdAt: number;
+    }[]> {
+      const rows = await orm
+        .select({
+          delta: schema.tokenLedger.delta,
+          reason: schema.tokenLedger.reason,
+          source: schema.tokenLedger.source,
+          day: schema.tokenLedger.day,
+          createdAt: schema.tokenLedger.createdAt,
+        })
+        .from(schema.tokenLedger)
+        .where(and(eq(schema.tokenLedger.userId, userId), eq(schema.tokenLedger.day, day)));
+      return rows;
+    },
+
+    /** Insert one ledger row; false when (user, reason, ref) already exists. */
+    async postLedger(row: {
+      userId: string; delta: number; reason: string; ref: string;
+      source?: string | null; day: string;
+    }): Promise<boolean> {
+      const inserted = await orm
+        .insert(schema.tokenLedger)
+        .values({
+          id: crypto.randomUUID(),
+          userId: row.userId,
+          delta: row.delta,
+          reason: row.reason,
+          ref: row.ref,
+          source: row.source ?? null,
+          day: row.day,
+          createdAt: Date.now(),
+        })
+        .onConflictDoNothing()
+        .returning({ id: schema.tokenLedger.id });
+      return inserted.length > 0;
+    },
+
+    /** Remove a ledger row by (reason, ref) — undoes a spend when the
+     *  reading insert fails right after it. */
+    async deleteLedger(reason: string, ref: string): Promise<void> {
+      await orm
+        .delete(schema.tokenLedger)
+        .where(and(eq(schema.tokenLedger.reason, reason), eq(schema.tokenLedger.ref, ref)));
+    },
+
+    /** Ledger rows for one reason+ref (webhook refund lookup). */
+    async ledgerByRef(reason: string, ref: string): Promise<{
+      userId: string; delta: number;
+    } | null> {
+      const rows = await orm
+        .select({ userId: schema.tokenLedger.userId, delta: schema.tokenLedger.delta })
+        .from(schema.tokenLedger)
+        .where(and(eq(schema.tokenLedger.reason, reason), eq(schema.tokenLedger.ref, ref)))
+        .limit(1);
+      return rows[0] ?? null;
+    },
+
+    /** Cursor page of transactions (created_at upper bound, newest first). */
+    async listTransactions(opts: {
+      userId: string; reasons: string[] | null; cursor: number | null; limit: number;
+    }): Promise<{
+      delta: number; reason: string; ref: string; source: string | null;
+      day: string; createdAt: number;
+    }[]> {
+      const conds = [eq(schema.tokenLedger.userId, opts.userId)];
+      if (opts.reasons) conds.push(inArray(schema.tokenLedger.reason, opts.reasons));
+      if (opts.cursor !== null) conds.push(lt(schema.tokenLedger.createdAt, opts.cursor));
+      return orm
+        .select({
+          delta: schema.tokenLedger.delta,
+          reason: schema.tokenLedger.reason,
+          ref: schema.tokenLedger.ref,
+          source: schema.tokenLedger.source,
+          day: schema.tokenLedger.day,
+          createdAt: schema.tokenLedger.createdAt,
+        })
+        .from(schema.tokenLedger)
+        .where(and(...conds))
+        .orderBy(desc(schema.tokenLedger.createdAt))
+        .limit(Math.min(50, Math.max(1, opts.limit)));
+    },
+
+    /** Claim a Stripe event id; false = already seen (duplicate). */
+    async claimStripeEvent(id: string, type: string, userId: string | null): Promise<boolean> {
+      const rows = await orm
+        .insert(schema.stripeEvents)
+        .values({ id, type, userId, status: "claimed", createdAt: Date.now() })
+        .onConflictDoNothing()
+        .returning({ id: schema.stripeEvents.id });
+      return rows.length > 0;
+    },
+
+    async markStripeEvent(id: string, status: string, userId?: string | null): Promise<void> {
+      await orm
+        .update(schema.stripeEvents)
+        .set({ status, ...(userId !== undefined ? { userId } : {}) })
+        .where(eq(schema.stripeEvents.id, id));
+    },
+
+    async getStripeCustomer(userId: string): Promise<string | null> {
+      const rows = await orm
+        .select({ customerId: schema.stripeCustomers.customerId })
+        .from(schema.stripeCustomers)
+        .where(eq(schema.stripeCustomers.userId, userId))
+        .limit(1);
+      return rows[0]?.customerId ?? null;
+    },
+
+    async setStripeCustomer(userId: string, customerId: string): Promise<void> {
+      await orm
+        .insert(schema.stripeCustomers)
+        .values({ userId, customerId, updatedAt: Date.now() })
+        .onConflictDoUpdate({
+          target: schema.stripeCustomers.userId,
+          set: { customerId, updatedAt: Date.now() },
+        });
+    },
+
+    /** Verification/ anonymity flags for a user (referral reward gate). */
+    async getUserFlags(userId: string): Promise<{ emailVerified: boolean; isAnonymous: boolean } | null> {
+      const rows = await orm
+        .select({ emailVerified: schema.user.emailVerified, isAnonymous: schema.user.isAnonymous })
+        .from(schema.user)
+        .where(eq(schema.user.id, userId))
+        .limit(1);
+      const row = rows[0];
+      if (!row) return null;
+      return { emailVerified: row.emailVerified === true, isAnonymous: row.isAnonymous === true };
+    },
+
+    /** Register (or fetch) the caller's invite code. */
+    async ensureInviteCode(userId: string, code: string): Promise<string> {
+      const existing = await orm
+        .select({ code: schema.inviteCodes.code })
+        .from(schema.inviteCodes)
+        .where(eq(schema.inviteCodes.userId, userId))
+        .limit(1);
+      if (existing[0]) return existing[0].code;
+      await orm
+        .insert(schema.inviteCodes)
+        .values({ userId, code, createdAt: Date.now() })
+        .onConflictDoNothing();
+      const rows = await orm
+        .select({ code: schema.inviteCodes.code })
+        .from(schema.inviteCodes)
+        .where(eq(schema.inviteCodes.userId, userId))
+        .limit(1);
+      return rows[0]?.code ?? code;
+    },
+
+    /** Owner user id for an invite code, or null. */
+    async inviteOwner(code: string): Promise<string | null> {
+      const rows = await orm
+        .select({ userId: schema.inviteCodes.userId })
+        .from(schema.inviteCodes)
+        .where(eq(schema.inviteCodes.code, code))
+        .limit(1);
+      return rows[0]?.userId ?? null;
+    },
+
+    /** Friends one user invited, with reward/verification state inputs. */
+    async listReferralFriends(referrerId: string): Promise<{
+      visitorUserId: string; createdAt: number; firstReadingAt: number | null;
+      nickname: string | null; emailVerified: boolean; isAnonymous: boolean;
+    }[]> {
+      const rows = await orm
+        .select({
+          visitorUserId: schema.referrals.visitorUserId,
+          createdAt: schema.referrals.createdAt,
+          firstReadingAt: schema.referrals.firstReadingAt,
+          nickname: schema.userPrefs.nickname,
+          emailVerified: schema.user.emailVerified,
+          isAnonymous: schema.user.isAnonymous,
+        })
+        .from(schema.referrals)
+        .leftJoin(schema.user, eq(schema.user.id, schema.referrals.visitorUserId))
+        .leftJoin(schema.userPrefs, eq(schema.userPrefs.userId, schema.referrals.visitorUserId))
+        .where(eq(schema.referrals.referrerUserId, referrerId))
+        .orderBy(desc(schema.referrals.createdAt));
+      return rows.map((r) => ({
+        visitorUserId: r.visitorUserId,
+        createdAt: r.createdAt,
+        firstReadingAt: r.firstReadingAt,
+        nickname: r.nickname ?? null,
+        emailVerified: r.emailVerified === true,
+        isAnonymous: r.isAnonymous === true,
+      }));
     },
 
     /**

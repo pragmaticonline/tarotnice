@@ -48,18 +48,30 @@
     } catch (e) {}
   }
 
-  function paintQuota(quota) {
+  function paintQuota(quota, tokens) {
     if (!quota) return;
-    var remaining = Math.max(0, (quota.limit || 3) - (quota.used || 0));
+    // With token metering the summary's remaining already counts the
+    // free question plus any wallet-funded questions; fall back to the
+    // day-quota math for cached/preview payloads without tokens.
+    var remaining = tokens
+      ? Math.max(0, tokens.remaining || 0)
+      : Math.max(0, (quota.limit || 3) - (quota.used || 0));
     lsSet("quota", JSON.stringify({ day: bangkokDayString(Date.now()), used: quota.used || 0 }));
     var row = document.querySelector(".quota");
     if (!row) return;
     var label = row.querySelector("[data-quota-label]");
     if (label) {
       var limit = quota.limit || 3;
-      label.textContent = uiLang() === "th"
-        ? "\u0e40\u0e2b\u0e25\u0e37\u0e2d " + remaining + "/" + limit + " \u0e04\u0e33\u0e16\u0e32\u0e21\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49"
-        : remaining + " of " + limit + " questions left today";
+      var balance = tokens && tokens.balance > 0 ? tokens.balance : 0;
+      if (uiLang() === "th") {
+        label.textContent = tokens
+          ? "\u0e40\u0e2b\u0e25\u0e37\u0e2d " + remaining + " \u0e04\u0e33\u0e16\u0e32\u0e21" + (balance ? " \u00b7 \u0e42\u0e17\u0e40\u0e04\u0e19 " + balance : "")
+          : "\u0e40\u0e2b\u0e25\u0e37\u0e2d " + remaining + "/" + limit + " \u0e04\u0e33\u0e16\u0e32\u0e21\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49";
+      } else {
+        label.textContent = tokens
+          ? remaining + " questions left" + (balance ? " \u00b7 " + balance + " tokens" : "")
+          : remaining + " of " + limit + " questions left today";
+      }
     }
   }
 
@@ -101,7 +113,7 @@
       .then(function (data) {
         window.TarotHome.data = data;
         paintStreak(data.streak);
-        paintQuota(data.quota);
+        paintQuota(data.quota, data.tokens);
         armReset(data.quota && data.quota.resetsAt);
         try {
           var e = new CustomEvent("tarot:summary", { detail: data });

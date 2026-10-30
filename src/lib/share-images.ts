@@ -224,6 +224,44 @@ function badgeSvg(opts: {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${c.bg0}"/><stop offset="1" stop-color="${c.bg1}"/></linearGradient></defs><rect width="1200" height="630" fill="url(#bg)"/>${sun(180, 315, 70)}${title.replaceAll('x="50%"', 'x="660"')}<text x="660" y="560" font-family="IBM Plex Sans Thai" font-size="28" fill="${c.muted}" text-anchor="middle">tarotnice.com</text></svg>`;
 }
 
+const INVITE_STR = {
+  th: {
+    headline: "\u0e14\u0e39\u0e14\u0e27\u0e07\u0e14\u0e49\u0e27\u0e22\u0e01\u0e31\u0e19",
+    invites: "{name} \u0e0a\u0e27\u0e19\u0e04\u0e38\u0e13",
+    line: "\u0e14\u0e39\u0e14\u0e27\u0e07\u0e44\u0e1e\u0e48\u0e17\u0e32\u0e42\u0e23\u0e15\u0e4c\u0e1f\u0e23\u0e35 \u0e16\u0e32\u0e21\u0e44\u0e14\u0e49\u0e17\u0e38\u0e01\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07",
+    code: "\u0e42\u0e04\u0e49\u0e14",
+    footer: "\u0e2a\u0e21\u0e31\u0e04\u0e23\u0e14\u0e49\u0e27\u0e22\u0e42\u0e04\u0e49\u0e14\u0e19\u0e35\u0e49 \u0e23\u0e31\u0e1a +1 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e42\u0e1a\u0e19\u0e31\u0e2a \u00b7 tarotnice.com",
+  },
+  en: {
+    headline: "Draw the cards with me",
+    invites: "{name} invites you",
+    line: "Free tarot readings. Ask about anything.",
+    code: "Code",
+    footer: "Sign up with this code for +1 bonus question \u00b7 tarotnice.com",
+  },
+};
+
+function inviteSvg(opts: { name: string | null; code: string; lang: "th" | "en"; mode: "day" | "night" }): string {
+  const c = opts.mode === "night" ? NIGHT : DAY;
+  const s = INVITE_STR[opts.lang];
+  const who = opts.name ? s.invites.replace("{name}", opts.name) : "TarotNice";
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080"><defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.bg0}"/><stop offset="1" stop-color="${c.bg1}"/></linearGradient></defs><rect width="1080" height="1080" fill="url(#bg)"/><text x="540" y="150" text-anchor="middle" font-family="Cormorant Garamond, IBM Plex Sans Thai" font-size="76" font-weight="600" fill="${c.accent}">TarotNice</text><text x="540" y="330" text-anchor="middle" font-family="IBM Plex Sans Thai" font-size="44" fill="${c.muted}">${escXml(who)}</text><text x="540" y="450" text-anchor="middle" font-family="Cormorant Garamond, IBM Plex Sans Thai" font-size="72" font-weight="600" fill="${c.ink}">${escXml(s.headline)}</text><text x="540" y="540" text-anchor="middle" font-family="IBM Plex Sans Thai" font-size="38" fill="${c.muted}">${escXml(s.line)}</text><rect x="290" y="620" width="500" height="150" rx="16" fill="${c.face}" stroke="#cdb27a" stroke-width="2"/><text x="540" y="682" text-anchor="middle" font-family="IBM Plex Sans Thai" font-size="30" fill="${c.muted}">${escXml(s.code)}</text><text x="540" y="745" text-anchor="middle" font-family="IBM Plex Sans Thai" font-size="58" font-weight="600" fill="${c.accent}">${escXml(opts.code)}</text><text x="540" y="920" text-anchor="middle" font-family="IBM Plex Sans Thai" font-size="32" fill="${c.muted}">${escXml(s.footer)}</text></svg>`;
+}
+
+/** Render the 1080x1080 invite share image (design board 4). */
+export async function renderInviteImage(
+  env: ShareEnv,
+  opts: { name: string | null; code: string; lang: "th" | "en"; mode: "day" | "night" },
+): Promise<Uint8Array> {
+  await ensureWasm();
+  const fontBuffers = await fonts(env);
+  const resvg = new Resvg(inviteSvg(opts), {
+    font: { fontFiles: [], loadSystemFonts: false, fontBuffers },
+    fitTo: { mode: "width", value: 1080 },
+  });
+  return resvg.render().asPng();
+}
+
 /** Render a milestone badge image (story 1080x1920 / og 1200x630). */
 export async function renderBadgeImage(
   env: ShareEnv,

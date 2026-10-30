@@ -1,6 +1,6 @@
 // TarotNice offline cache. Precache the app shell + fonts + mascot;
 // serve static assets cache-first, pages network-first with fallback.
-const CACHE = "tarotnice-v44";
+const CACHE = "tarotnice-v45";
 
 const CORE = [
   "/",
@@ -12,6 +12,7 @@ const CORE = [
   "/app/sync-queue.js",
   "/app/history.js",
   "/app/progress.js",
+  "/app/billing.js",
   "/mascot/ngern-head-mark.svg",
   "/mascot/ngern-sitting.svg",
   "/mascot/ngern-sleeping.svg",

@@ -4,6 +4,7 @@
 // public/app/draw.js; this file owns the static structure it builds on.
 import { escapeHtml } from "../lib/html";
 import { fmt, t, type UiLang } from "../lib/i18n";
+import { isInviteCode } from "../lib/invite";
 import { computeStreak, localDayString } from "../lib/streaks";
 import { headerHtml, pageShell, siteFooterHtml } from "./shell";
 
@@ -13,6 +14,8 @@ export type HomeOpts = {
   streakDays?: string[];
   /** Turnstile site key (public). Empty/undefined renders no widget. */
   turnstileSiteKey?: string;
+  /** Invite landing banner (design board 2) when arriving via /r/NICE-XXXX. */
+  invite?: { code: string; inviterName: string | null } | null;
 };
 
 export type Topic = "love" | "career" | "money" | "health" | "general";
@@ -47,8 +50,21 @@ export function homePage(opts: HomeOpts = {}): string {
 <li class="step" data-step-ind="2"><span class="step-bar"></span><span class="step-label">2 ${escapeHtml(d.stepDraw)}</span></li>
 <li class="step" data-step-ind="3"><span class="step-bar"></span><span class="step-label">3 ${escapeHtml(d.stepRead)}</span></li>
 </ol>`;
+  const invite = opts.invite && isInviteCode(opts.invite.code) ? opts.invite : null;
+  const inviteBanner = invite
+    ? `<section class="invite-banner" aria-label="Invite">
+<p class="invite-who">${escapeHtml(
+        invite.inviterName
+          ? (ui === "th" ? `${invite.inviterName} \u0e0a\u0e27\u0e19\u0e04\u0e38\u0e13\u0e21\u0e32\u0e14\u0e39\u0e14\u0e27\u0e07` : `${invite.inviterName} invited you to a reading`)
+          : d.inviteBannerTitle,
+      )}</p>
+<p class="invite-sub">${escapeHtml(d.inviteBannerSub)}</p>
+<p class="invite-code"><span>${escapeHtml(d.inviteCodeLabel)}</span> <b>${escapeHtml(invite.code)}</b> <span>${escapeHtml(d.inviteCodeSaved)}</span></p>
+</section>
+`
+    : "";
   const body = `<main>
-${steps}
+${inviteBanner}${steps}
 <section id="step-ask" data-step="1">
 <div class="guide guide-ask s-idle" id="guide-ask"><span class="ngern-wrap">${NGERN_SITTING_SVG}</span><p class="bubble">${escapeHtml(d.hintIdle)}</p></div>
 <form id="ask-form" action="/api/readings" method="post" data-need="${escapeHtml(d.hintNeed)}">

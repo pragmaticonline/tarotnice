@@ -26,7 +26,7 @@ dataset = "tarotnice_events"
 
 [vars]
 CF_ACCOUNT_ID = "30142eba9e53a37522d1c59b298db661"
-DAILY_QUESTION_LIMIT = "3"
+DAILY_QUESTION_LIMIT = "1"
 REFERRAL_BONUS = "0"
 READING_MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct"
 # Turnstile site key is public (rendered into the ask form). Empty =
@@ -34,8 +34,14 @@ READING_MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct"
 TURNSTILE_SITE_KEY = ""
 DEFAULT_LANG = "th"
 TIMEZONE = "Asia/Bangkok"
+# Stripe pack price ids are NOT secrets (ids printed on checkout URLs);
+# they gate the buy UI together with STRIPE_SECRET_KEY. Empty = hidden.
+STRIPE_PACK_STARTER_PRICE_ID = ""
+STRIPE_PACK_STANDARD_PRICE_ID = ""
+STRIPE_PACK_PREMIUM_PRICE_ID = ""
 # secrets: BETTER_AUTH_SECRET, BETTER_AUTH_URL, GOOGLE_CLIENT_ID,
-# GOOGLE_CLIENT_SECRET, TURNSTILE_SECRET, MAILNICE_API_KEY, EMAIL_FROM
+# GOOGLE_CLIENT_SECRET, TURNSTILE_SECRET, MAILNICE_API_KEY, EMAIL_FROM,
+# STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
 # (later) LINE_CHANNEL_ID / LINE_CHANNEL_SECRET
 
 [ai]
