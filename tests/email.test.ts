@@ -8,7 +8,15 @@ describe("account emails", () => {
     const mail = verificationEmail(URL);
     expect(mail.subject).toContain("Welcome to TarotNice");
     expect(mail.html).toContain("tarotnice");
-    expect(mail.html).toContain("https://tarotnice.com/logo/apple-touch-icon.png");
+    expect(mail.html).toContain("https://tarotnice.com/mascot/ngern-head-mark.png");
+    expect(mail.html).not.toContain("/logo/apple-touch-icon.png");
+    // TarotNice palette (site.css day: ink #2e2547, accent #4a3d78,
+    // gold #b0832f); no nicelingo slogan or blue palette.
+    expect(mail.html).not.toContain("See it. Hear it. Say it.");
+    expect(mail.html).not.toContain("#1a5feb");
+    expect(mail.html).not.toContain("#0e1b3d");
+    expect(mail.html).toContain("#4a3d78");
+    expect(mail.html).toContain("#b0832f");
     expect(mail.html).toContain("Confirm my email");
     expect(mail.html.split(URL.replace(/&/g, "&amp;")).length - 1).toBeGreaterThanOrEqual(2);
     expect(mail.html).toContain("support@mailer.tarotnice.com");

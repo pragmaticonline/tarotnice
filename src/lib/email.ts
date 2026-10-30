@@ -69,7 +69,7 @@ function esc(value: string): string {
 /**
  * Branded transactional layout. Table-based with inline styles so it
  * renders consistently in Gmail, Outlook, and Apple Mail; the logo and
- * colours match tarotnice.com (ink #0e1b3d, blue #1a5feb, sun #ffe066).
+ * colours match tarotnice.com day palette (ink #2e2547, accent #4a3d78, gold #b0832f, bg #f6f1fa).
  * Every account email goes through this shell so verification and
  * password reset feel like one product.
  */
@@ -89,12 +89,12 @@ function mailShell(opts: {
     : "";
   const stepsHtml = opts.steps?.length
     ? `<tr><td style="padding:0 40px 8px;font-family:Arial,Helvetica,sans-serif">
-         <p style="margin:0 0 10px;font-size:13px;font-weight:bold;letter-spacing:1.2px;color:#5a6b8c">WHAT HAPPENS NEXT</p>
+         <p style="margin:0 0 10px;font-size:13px;font-weight:bold;letter-spacing:1.2px;color:#76698f">WHAT HAPPENS NEXT</p>
          ${opts.steps
            .map(
              (s, i) => `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 10px"><tr>
-               <td width="26" valign="top"><span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#ffe066;color:#0e1b3d;font-size:12px;font-weight:bold;line-height:22px;text-align:center">${i + 1}</span></td>
-               <td style="font-size:14px;line-height:21px;color:#24365e">${esc(s)}</td></tr></table>`,
+               <td width="26" valign="top"><span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#b0832f;color:#fffaf2;font-size:12px;font-weight:bold;line-height:22px;text-align:center">${i + 1}</span></td>
+               <td style="font-size:14px;line-height:21px;color:#2e2547">${esc(s)}</td></tr></table>`,
            )
            .join("")}
        </td></tr>`
@@ -116,48 +116,47 @@ https://tarotnice.com`;
   const html = `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(opts.title)} \u00b7 TarotNice</title></head>
-<body style="margin:0;padding:0;background:#eef3fb">
+<body style="margin:0;padding:0;background:#f6f1fa">
 <span style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(opts.preheader)}</span>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eef3fb">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f6f1fa">
 <tr><td align="center" style="padding:32px 16px">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background:#ffffff;border-radius:20px;overflow:hidden;border:1px solid #dbe6f7">
-  <tr><td style="background:#0e1b3d;padding:26px 40px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background:#ffffff;border-radius:20px;overflow:hidden;border:1px solid #ded5f2">
+  <tr><td style="background:#2e2547;padding:26px 40px">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td valign="middle"><img src="https://tarotnice.com/logo/apple-touch-icon.png" width="42" height="42" alt="TarotNice" style="display:block;border-radius:10px"></td>
+      <td valign="middle"><img src="https://tarotnice.com/mascot/ngern-head-mark.png" width="42" height="42" alt="TarotNice" style="display:block;border-radius:10px"></td>
       <td valign="middle" style="padding-left:12px;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:bold;color:#ffffff">TarotNice</td>
-      <td valign="middle" style="padding-left:10px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#8cc8ff">See it. Hear it. Say it.</td>
     </tr></table>
   </td></tr>
-  <tr><td style="height:5px;background:#ffe066;font-size:0;line-height:0">&nbsp;</td></tr>
+  <tr><td style="height:5px;background:#b0832f;font-size:0;line-height:0">&nbsp;</td></tr>
   <tr><td style="padding:36px 40px 6px;font-family:Arial,Helvetica,sans-serif">
-    <p style="margin:0 0 10px;font-size:12px;font-weight:bold;letter-spacing:1.6px;color:#1a5feb">${esc(opts.eyebrow)}</p>
-    <h1 style="margin:0 0 14px;font-size:27px;line-height:34px;color:#0e1b3d">${esc(opts.title)}</h1>
-    <p style="margin:0;font-size:16px;line-height:25px;color:#24365e">${esc(opts.intro)}</p>
+    <p style="margin:0 0 10px;font-size:12px;font-weight:bold;letter-spacing:1.6px;color:#4a3d78">${esc(opts.eyebrow)}</p>
+    <h1 style="margin:0 0 14px;font-size:27px;line-height:34px;color:#2e2547">${esc(opts.title)}</h1>
+    <p style="margin:0;font-size:16px;line-height:25px;color:#2e2547">${esc(opts.intro)}</p>
   </td></tr>
   <tr><td style="padding:24px 40px 6px">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td style="border-radius:12px;background:#1a5feb">
+      <td style="border-radius:12px;background:#4a3d78">
         <a href="${url}" target="_blank" style="display:inline-block;padding:15px 34px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none">${esc(opts.cta)} &rarr;</a>
       </td>
     </tr></table>
   </td></tr>
   <tr><td style="padding:14px 40px 26px;font-family:Arial,Helvetica,sans-serif">
-    <p style="margin:0;font-size:13px;line-height:20px;color:#5a6b8c">Button not working? Copy and paste this link into your browser:</p>
-    <p style="margin:6px 0 0;font-size:13px;line-height:20px;word-break:break-all"><a href="${url}" target="_blank" style="color:#1a5feb">${url}</a></p>
+    <p style="margin:0;font-size:13px;line-height:20px;color:#76698f">Button not working? Copy and paste this link into your browser:</p>
+    <p style="margin:6px 0 0;font-size:13px;line-height:20px;word-break:break-all"><a href="${url}" target="_blank" style="color:#4a3d78">${url}</a></p>
   </td></tr>
   ${stepsHtml}
   <tr><td style="padding:10px 40px 30px;font-family:Arial,Helvetica,sans-serif">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f8ff;border-radius:12px"><tr>
-      <td style="padding:16px 20px;font-size:13px;line-height:20px;color:#40557c">${esc(opts.reassurance)}</td>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fffaf0;border-radius:12px"><tr>
+      <td style="padding:16px 20px;font-size:13px;line-height:20px;color:#76698f">${esc(opts.reassurance)}</td>
     </tr></table>
   </td></tr>
-  <tr><td style="background:#f8fafd;border-top:1px solid #e3ecf9;padding:24px 40px;font-family:Arial,Helvetica,sans-serif">
-    <p style="margin:0 0 6px;font-size:13px;line-height:20px;color:#5a6b8c">Questions? Reply to this email or write to <a href="mailto:support@mailer.tarotnice.com" style="color:#1a5feb;text-decoration:none">support@mailer.tarotnice.com</a>.</p>
-    <p style="margin:0;font-size:12px;line-height:18px;color:#8a9bb8">You are receiving this because an account was created or a password reset was requested at <a href="https://tarotnice.com" style="color:#8a9bb8">tarotnice.com</a>.</p>
-    <p style="margin:10px 0 0;font-size:13px;color:#0e1b3d">&mdash; The TarotNice team</p>
+  <tr><td style="background:#f6f1fa;border-top:1px solid #ded5f2;padding:24px 40px;font-family:Arial,Helvetica,sans-serif">
+    <p style="margin:0 0 6px;font-size:13px;line-height:20px;color:#76698f">Questions? Reply to this email or write to <a href="mailto:support@mailer.tarotnice.com" style="color:#4a3d78;text-decoration:none">support@mailer.tarotnice.com</a>.</p>
+    <p style="margin:0;font-size:12px;line-height:18px;color:#76698f">You are receiving this because an account was created or a password reset was requested at <a href="https://tarotnice.com" style="color:#76698f">tarotnice.com</a>.</p>
+    <p style="margin:10px 0 0;font-size:13px;color:#2e2547">&mdash; The TarotNice team</p>
   </td></tr>
 </table>
-<p style="margin:18px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#8a9bb8">TarotNice &middot; Free tarot readings, every day</p>
+<p style="margin:18px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#76698f">TarotNice &middot; Free tarot readings, every day</p>
 </td></tr></table>
 </body></html>`;
   return { text, html };
