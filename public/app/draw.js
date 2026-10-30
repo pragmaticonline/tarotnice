@@ -428,10 +428,13 @@
           // (with optional Thai card word / "The" / reversed marker)
           // from the body's first words, and never prepend it.
           var bareName = card.name.replace(/^The\s+/i, "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          cBody = cBody.replace(
-            new RegExp("^\\s*(?:\u0e44\u0e1e\u0e48\\s*)?(?:The\\s+)?" + bareName + "(?:\\s*\\((?:reversed|\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27)\\))?[\\s:;,.—–\\-]+", "i"),
-            "",
+          var nameLead = new RegExp(
+            "^\\s*(?:\\((?:reversed|\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27)\\)[\\s:;,.—–\\-]*)?(?:\u0e44\u0e1e\u0e48\\s*)?(?:The\\s+)?" +
+              bareName +
+              "(?:\\s*\\((?:reversed|\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27)\\))?[\\s:;,.—–\\-]+",
+            "i",
           );
+          for (var stripN = 0; stripN < 2; stripN++) cBody = cBody.replace(nameLead, "");
           if (!cBody) cBody = bodyPlain.replace(/^[\s:;,.—–\-)\]]+/, "");
           return '<div class="sec card-row"><img class="card-thumb' + (card.reversed ? " rev" : "") + '" src="' + esc(card.image) + '" alt="">' +
             '<div class="card-row-body">' + (pos ? '<p class="pos-line">' + esc(pos) + "</p>" : "") + '<h3>' + esc(card.name) + (card.reversed ? (lang === "th" ? " (\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27)" : " (reversed)") : "") + "</h3>" +
