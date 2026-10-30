@@ -46,6 +46,8 @@ describe("GET / (draw screen)", () => {
     expect(html).not.toContain("data-auth-link");
     // Token amount chip at the top of the screen (count filled client-side).
     expect(html).toContain("data-token-chip");
+    // Gem click: signed-in -> /billing, guest -> sign-in then billing.
+    expect(html).toContain("/sign-in?return=%2Fbilling");
     expect(html).toContain("data-token-count");
     // Tokens are shown with a moonstone next to the number.
     expect(html).toContain('class="moonstone"');

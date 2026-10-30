@@ -86,6 +86,11 @@ describe("ask.js STR parity", () => {
     expect([...th].sort()).toEqual([...en].sort());
   });
 
+  it("sends guests with insufficient credits to sign-in", () => {
+    expect(src).toContain('res.data.error === "registration_required"');
+    expect(src).toContain('location.href = "/sign-in?return=%2F"');
+  });
+
   it("uses the full §7 disclaimer wording in both languages", () => {
     // Guards against regressing to the legacy short Thai text: both
     // disclaimers must cover entertainment-only, no professional

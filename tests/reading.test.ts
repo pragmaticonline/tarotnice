@@ -174,6 +174,17 @@ describe("prompt builder", () => {
     expect(system).toContain("concrete visual details");
   });
 
+  it("tells the Thai prompt to spell every word completely (no dropped letters)", () => {
+    const { system } = buildReadingPrompt({
+      lang: "th", topic: "general", question: "What lies ahead?",
+      cards: [toPromptCard(card, false, "general")],
+      prev: [], nickname: null,
+    });
+    expect(system).toContain("\u0e04\u0e27\u0e32\u0e21\u0e21\u0e31\u0e48\u0e19\u0e04\u0e07");
+    expect(system).toContain("\u0e01\u0e32\u0e23\u0e2d\u0e2d\u0e21");
+    expect(system).toContain("\u0e04\u0e27\u0e1a\u0e04\u0e38\u0e21");
+  });
+
   it("omits the imagery line when the card has none", () => {
     const pc = toPromptCard(card, false, "general");
     expect(pc.imagery).toBeNull();

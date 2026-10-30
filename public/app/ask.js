@@ -499,6 +499,11 @@
       return;
     }
     stopWait();
+    if (res.status === 403 && res.data && res.data.error === "registration_required") {
+      // Out of free credit as a guest: go straight to sign-in.
+      location.href = "/sign-in?return=%2F";
+      return;
+    }
     if (res.status === 403) {
       // Bot check / forbidden: not a question problem, say so.
       bubble(t("blocked"));

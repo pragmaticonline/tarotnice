@@ -28,7 +28,7 @@ function q(s){return document.querySelector(s)}function qa(s){return document.qu
 function paint(d){try{
  if(d.tokens){var total=Math.max(0,d.tokens.freeLeft||0)+Math.max(0,d.tokens.balance||0);var chips=qa("[data-token-chip]");for(var j=0;j<chips.length;j++){chips[j].hidden=false;var n=chips[j].querySelector("[data-token-count]");if(n)n.textContent=String(total)}var c=q("[data-drawer-credits]");if(c)c.textContent=String(total);var w=q("[data-drawer-wallet-count]");if(w)w.textContent=String(total)}
  if(d.streak){var sc=d.streak.current||0;var st=q("[data-drawer-streak]");if(st)st.textContent=String(sc);var un=q("[data-drawer-day-unit]");if(un)un.textContent=sc===1?un.getAttribute("data-one"):un.getAttribute("data-many")}
- var reg=d.user&&!d.user.isAnonymous;
+ var reg=d.user&&!d.user.isAnonymous;window.__tnRegistered=!!reg;
  var nick=(d.prefs&&d.prefs.nickname)||"";
  var name=nick||(reg?String(d.user.email||"").split("@")[0]:"");
  var nm=q("[data-drawer-name]");if(nm)nm.textContent=reg?name:"TarotNice";
@@ -50,6 +50,7 @@ function setTheme(mode){var root=document.documentElement;if(mode==="auto"){try{
 function putTheme(v){fetch("/api/me/prefs",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify({theme:v}),credentials:"include"}).catch(function(){})}
 function markTheme(){var saved=null;try{saved=localStorage.getItem("tarotnice:mode")}catch(e){}var cur=saved||"auto";var bs=qa("[data-theme-choice]");for(var i=0;i<bs.length;i++)bs[i].setAttribute("aria-pressed",bs[i].getAttribute("data-theme-choice")===cur?"true":"false")}
 document.addEventListener("click",function(e){var t=e.target&&e.target.closest?e.target:null;if(!t)return;
+ if(t.closest("[data-token-chip]")){location.href=window.__tnRegistered?"/billing":"/sign-in?return=%2Fbilling";return}
  var o=t.closest("[data-drawer-open]");if(o){openDrawer();return}
  if(t.closest("[data-drawer-close]")||t.closest("[data-drawer-backdrop]")){closeDrawer();return}
  if(t.closest("[data-drawer-settings-open]")){showSettings();return}
@@ -195,7 +196,7 @@ export function authLinkHtml(ui: UiLang): string {
  *  is filled client-side from /api/me/summary; hidden until then. */
 export function tokenChipHtml(ui: UiLang): string {
   const d = t(ui);
-  return `<span class="lang-btn token-chip" data-token-chip hidden aria-label="${escapeHtml(d.billingTitle)}"><span class="moonstone" aria-hidden="true"></span><b data-token-count>0</b></span>`;
+  return `<button type="button" class="lang-btn token-chip" data-token-chip hidden aria-label="${escapeHtml(d.billingTitle)}"><span class="moonstone" aria-hidden="true"></span><b data-token-count>0</b></button>`;
 }
 
 /** Header menu button (design: hamburger + avatar initial in a pill). */
