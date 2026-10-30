@@ -38,6 +38,8 @@ describe("GET / (draw screen)", () => {
     expect(html).toContain("data-token-count");
     // Tokens are shown with a moonstone next to the number.
     expect(html).toContain('class="moonstone"');
+    // Unit is its own flex item so a real gap shows between number and unit.
+    expect(html).toContain("data-token-unit");
     expect(html).toContain("data-quota-gem");
     expect(html).toContain('href="/sign-in"');
     expect(html).toContain('data-account-label="Account"');

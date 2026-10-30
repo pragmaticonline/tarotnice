@@ -37,6 +37,7 @@ a{color:var(--accent)}
 .brand svg{width:36px;height:36px}
 .head-sp{flex:1 1 auto}
 .streak-chip{display:inline-flex;align-items:center;gap:.25rem;text-decoration:none;color:var(--ink);border:1px solid var(--gold-dim);border-radius:999px;padding:.3rem .7rem;font-size:.95rem}
+.token-chip{gap:.35em}
 .moonstone{display:inline-block;width:.85em;height:.85em;border-radius:50%;background:radial-gradient(circle at 32% 30%,#ffffff 0%,#eef2ff 38%,#c9d4f2 68%,#9aa8d8 100%);border:1px solid var(--gold-dim);box-shadow:inset 0 0 3px rgba(255,255,255,.9),0 0 4px rgba(160,175,230,.55);vertical-align:-.08em;margin-right:.3em;flex:none}
 .theme-toggle,.lang-toggle{font-family:var(--f-body)}
 .theme-toggle{background:transparent;border:1px solid var(--gold-dim);border-radius:999px;color:var(--ink);padding:.4rem .8rem;font-size:.9rem;cursor:pointer;min-height:44px}
