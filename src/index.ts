@@ -16,9 +16,12 @@ import {
   isCrisisQuestion,
   isLang,
   isTopic,
-  hasSummaryLine,
+  isCompleteReading,
   parseSummary,
+  pickSpread,
   proofreadThai,
+  takeCompletedBlocks,
+  translateBlockToThai,
   sseEvent,
   streamDeltas,
   toPromptCard,
@@ -574,26 +577,89 @@ app.get("/api/readings/:id/stream", async (c) => {
         });
         const aiRun = (m: string, input: unknown) => c.env.AI!.run(m as never, input as never) as Promise<unknown>;
         let full = "";
-        for await (const delta of streamDeltas(aiRun, model, {
-          messages: [
-            { role: "system", content: system },
-            { role: "user", content: prompt },
-          ],
-          // Detailed story-style readings run long, especially in
-          // Thai (more tokens per word than English).
-          max_tokens: 2048,
-        }, 60_000)) {
-          full += delta;
-          send(sseEvent("delta", JSON.stringify(delta)));
+        let translated = false;
+        if (lang === "th") {
+          // Thai path: generate an English master (never sent to the
+          // client), translate each completed block, and stream the
+          // Thai in small paced chunks so the typing animation stays.
+          // Direct Thai generation kept skipping structure, duplicating
+          // the summary, and drifting in tone; the master keeps the
+          // interpretation identical across languages.
+          const topic = isTopic(row.topic) ? row.topic : "general";
+          const enViews = [];
+          for (const card of row.cards) {
+            const view = await store.getCard(card.id, "en");
+            if (!view) throw new Error("unknown_card");
+            enViews.push(toPromptCard(view, card.reversed, topic));
+          }
+          const master = buildReadingPrompt({
+            lang: "en", topic,
+            question: row.question, cards: enViews, prev, nickname,
+          });
+          const enSpread = pickSpread(row.question, topic, "en");
+          const thSpread = pickSpread(row.question, topic, "th");
+          const positionMap = enSpread.map((p, i) => `${p}=${thSpread[i]}`);
+          const translator = c.env.PROOFREAD_MODEL?.trim() || "@cf/qwen/qwen3-30b-a3b-fp8";
+          const thaiBlocks: string[] = [];
+          const emitBlock = async (blockEn: string) => {
+            const th =
+              (await translateBlockToThai(aiRun, translator, blockEn, positionMap)) ??
+              (await translateBlockToThai(aiRun, model, blockEn, positionMap));
+            if (!th) throw new Error("translation_failed");
+            const joined = (thaiBlocks.length ? "\n\n" : "") + th;
+            thaiBlocks.push(th);
+            // Paced typing animation (~25 chunks/sec, first promptly).
+            for (const chunk of joined.match(/[\s\S]{1,120}/g) ?? []) {
+              send(sseEvent("delta", JSON.stringify(chunk)));
+              await new Promise((r) => setTimeout(r, 40));
+            }
+          };
+          let enFull = "";
+          let enBuf = "";
+          send(sseEvent("status", JSON.stringify({ phase: "translating" })));
+          for await (const delta of streamDeltas(aiRun, model, {
+            messages: [
+              { role: "system", content: master.system },
+              { role: "user", content: master.user },
+            ],
+            max_tokens: 2048,
+          }, 60_000)) {
+            enFull += delta;
+            enBuf += delta;
+            const taken = takeCompletedBlocks(enBuf);
+            enBuf = taken.rest;
+            for (const b of taken.blocks) await emitBlock(b);
+          }
+          const tail = takeCompletedBlocks(enBuf + "\n\n");
+          for (const b of tail.blocks) await emitBlock(b);
+          if (enBuf.trim() && tail.blocks.length === 0) await emitBlock(enBuf.trim());
+          enFull = enFull.trim();
+          if (!enFull) throw new Error("empty_response");
+          if (!isCompleteReading(enFull, enViews.map((v) => v.name))) throw new Error("incomplete_response");
+          full = thaiBlocks.join("\n\n").trim();
+          if (!full) throw new Error("empty_response");
+          translated = true;
+        } else {
+          for await (const delta of streamDeltas(aiRun, model, {
+            messages: [
+              { role: "system", content: system },
+              { role: "user", content: prompt },
+            ],
+            max_tokens: 2048,
+          }, 60_000)) {
+            full += delta;
+            send(sseEvent("delta", JSON.stringify(delta)));
+          }
+          full = full.trim();
         }
-        full = full.trim();
         if (!full) throw new Error("empty_response");
-        // A generation that stopped early (no closing Summary line)
-        // is not a complete reading: fail it so the spend is refunded
-        // and the user can retry, instead of storing a truncated text
-        // whose fallback summary duplicates the overview.
-        if (!hasSummaryLine(full)) throw new Error("incomplete_response");
-        if (lang === "th" && c.env.AI) {
+        // A generation that stopped early is not a complete reading:
+        // fail it so the spend is refunded and the user can retry,
+        // instead of storing a truncated text. A full Guidance +
+        // Actions structure without the Summary line still counts —
+        // the fixed fallback summary covers the glance lead.
+        if (!isCompleteReading(full, views.map((v) => v.name))) throw new Error("incomplete_response");
+        if (lang === "th" && !translated && c.env.AI) {
           // Post-stream proofread: fix dropped Thai letters, then swap
           // the client's text via a final event before done.
           send(sseEvent("status", JSON.stringify({ phase: "proofreading" })));

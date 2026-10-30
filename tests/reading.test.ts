@@ -11,11 +11,14 @@ import {
   isLang,
   isTopic,
   hasSummaryLine,
+  isCompleteReading,
   parseSummary,
   pickSpread,
   sseEvent,
   streamDeltas,
+  takeCompletedBlocks,
   toPromptCard,
+  translateBlockToThai,
 } from "../src/lib/reading";
 
 describe("question validation", () => {
@@ -393,6 +396,14 @@ describe("pickSpread", () => {
     expect(th.system).toContain("\u0e01\u0e23\u0e2d\u0e1a\u0e01\u0e32\u0e23\u0e15\u0e35\u0e04\u0e27\u0e32\u0e21\u0e01\u0e25\u0e32\u0e07");
     expect(th.system).toContain("\u0e04\u0e27\u0e32\u0e21\u0e2a\u0e31\u0e21\u0e1e\u0e31\u0e19\u0e18\u0e4c\u0e23\u0e30\u0e2b\u0e27\u0e48\u0e32\u0e07\u0e44\u0e1e\u0e48");
     expect(th.system).toContain("\u0e04\u0e33\u0e15\u0e2d\u0e1a\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21");
+    // Framework presents through visible sections, ends with Summary,
+    // and each card paragraph closes with its own summary sentence.
+    expect(en.system).toContain("11) Summary");
+    expect(en.system).toContain("summarizes this card's message for the question");
+    expect(en.system).toContain("The written reading presents this framework as");
+    expect(th.system).toContain("\u0e2a\u0e23\u0e38\u0e1b (Summary)");
+    expect(th.system).toContain("\u0e2a\u0e23\u0e38\u0e1b\u0e2a\u0e32\u0e23\u0e02\u0e2d\u0e07\u0e44\u0e1e\u0e48\u0e43\u0e1a\u0e19\u0e35\u0e49\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21");
+    expect(th.system).toContain("\u0e1a\u0e17\u0e17\u0e33\u0e19\u0e32\u0e22\u0e17\u0e35\u0e48\u0e40\u0e02\u0e35\u0e22\u0e19\u0e19\u0e33\u0e40\u0e2a\u0e19\u0e2d\u0e01\u0e23\u0e2d\u0e1a\u0e19\u0e35\u0e49\u0e14\u0e31\u0e07\u0e19\u0e35\u0e49");
   });
 
   it("keeps mode names, numbers and energy summaries out of the structure", () => {
@@ -442,10 +453,70 @@ describe("parseSummary", () => {
     expect(hasSummaryLine("Body with no closing line at all")).toBe(false);
   });
 
+  it("isCompleteReading accepts a full structure without a Summary line, rejects early stops", () => {
+    const full = "Overview text. ".repeat(60) + "\n\n**Guidance:** do this.\n\n**What to do:**\n- one\n- two";
+    expect(isCompleteReading(full)).toBe(true);
+    expect(isCompleteReading("Body.\nSummary: done.")).toBe(true);
+    expect(isCompleteReading("Overview only, stopped early. ")).toBe(false);
+    expect(isCompleteReading("short")).toBe(false);
+  });
+
+  it("isCompleteReading requires every drawn card to be interpreted", () => {
+    const names = ["Page of Cups", "The High Priestess", "Ace of Wands"];
+    const noCards =
+      "Overview only, no card paragraphs at all, but a tidy ending. ".repeat(4) +
+      "\n\n**Guidance:** start gently.\n\n**What to do:**\n- one\n\nSummary: You are ready.";
+    expect(isCompleteReading(noCards, names)).toBe(false);
+    const withCards =
+      noCards + "\n\n**Page of Cups**: new feelings.\n\n**The High Priestess**: listen in.\n\n**Ace of Wands**: begin.";
+    expect(isCompleteReading(withCards, names)).toBe(true);
+  });
+
+  it("prompts match tone to the stakes of the question in both languages", () => {
+    const en = buildReadingPrompt({
+      lang: "en", topic: "general", question: "Should I get ice cream today?",
+      cards: [], prev: [], nickname: null,
+    });
+    expect(en.system).toContain("Match the stakes of the question");
+    const th = buildReadingPrompt({
+      lang: "th", topic: "general", question: "Should I get ice cream today?",
+      cards: [], prev: [], nickname: null,
+    });
+    expect(th.system).toContain("\u0e43\u0e2b\u0e49\u0e40\u0e02\u0e49\u0e32\u0e01\u0e31\u0e1a\u0e19\u0e49\u0e33\u0e2b\u0e19\u0e31\u0e01\u0e02\u0e2d\u0e07\u0e04\u0e33\u0e16\u0e32\u0e21");
+  });
+
   it("pulls a bold-labelled summary (Thai model often writes **label:**)", () => {
     expect(parseSummary("Body.\n**Summary:** Trust the slow build.")).toBe("Trust the slow build.");
     const th = "Body.\n**\u0e2a\u0e23\u0e38\u0e1b:** \u0e44\u0e27\u0e49\u0e43\u0e08\u0e08\u0e31\u0e07\u0e2b\u0e27\u0e30\u0e02\u0e2d\u0e07\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07";
     expect(parseSummary(th)).toBe("\u0e44\u0e27\u0e49\u0e43\u0e08\u0e08\u0e31\u0e07\u0e2b\u0e27\u0e30\u0e02\u0e2d\u0e07\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07");
+  });
+});
+
+describe("translate pipeline helpers", () => {
+  it("takeCompletedBlocks returns only blank-line-terminated blocks", () => {
+    expect(takeCompletedBlocks("one\n\ntwo\n\nthr")).toEqual({ blocks: ["one", "two"], rest: "thr" });
+    expect(takeCompletedBlocks("no boundary")).toEqual({ blocks: [], rest: "no boundary" });
+    expect(takeCompletedBlocks("a\n\n\n\nb\n\n")).toEqual({ blocks: ["a", "b"], rest: "" });
+  });
+
+  it("translateBlockToThai returns the model translation and maps labels in its prompt", async () => {
+    let seenSystem = "";
+    const aiRun = async (_m: string, input: unknown) => {
+      seenSystem = (input as { messages: { content: string }[] }).messages[0].content;
+      return { response: "\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21: \u0e44\u0e1e\u0e48\u0e2a\u0e32\u0e21\u0e43\u0e1a\u0e1a\u0e2d\u0e01\u0e27\u0e48\u0e32\u0e58" };
+    };
+    const out = await translateBlockToThai(aiRun, "qwen", "Overview: The three cards say yes.", ["What are my options=\u0e17\u0e32\u0e07\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19"]);
+    expect(out).toContain("\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21:");
+    expect(seenSystem).toContain("keep tarot card names in English");
+    expect(seenSystem).toContain("\u0e2a\u0e23\u0e38\u0e1b:");
+    expect(seenSystem).toContain("\u0e17\u0e32\u0e07\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19");
+    expect(seenSystem).toContain("\u0e44\u0e1e\u0e48 for a tarot card");
+  });
+
+  it("translateBlockToThai returns null on failure or empty output", async () => {
+    expect(await translateBlockToThai(async () => { throw new Error("down"); }, "qwen", "Overview: x", [])).toBeNull();
+    expect(await translateBlockToThai(async () => ({ response: "  " }), "qwen", "Overview: x", [])).toBeNull();
+    expect(await translateBlockToThai(async () => ({ response: "Overview: still english, no thai script" }), "qwen", "Overview: x", [])).toBeNull();
   });
 });
 

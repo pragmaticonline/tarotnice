@@ -449,6 +449,28 @@
               }
               if (cut > 0) { gPlain = gPlain.slice(cut).trim(); gText = gPlain; }
             }
+            // Fuzzy case: the model restates the summary inside the
+            // overview's opening (not as an exact prefix). If the
+            // body's head is mostly the same text as the lead, drop
+            // the duplicated head at a clause boundary.
+            if (gPlain.length > 80) {
+              var bigrams = function (s) {
+                var m = {};
+                var flat = s.replace(/\s+/g, "");
+                for (var bi2 = 0; bi2 < flat.length - 1; bi2++) m[flat.slice(bi2, bi2 + 2)] = 1;
+                return m;
+              };
+              var sm = bigrams(summaryText);
+              var hm = bigrams(gPlain.slice(0, 150));
+              var sCount = 0, hCount = 0, inter = 0;
+              for (var k1 in sm) sCount++;
+              for (var k2 in hm) { hCount++; if (sm[k2]) inter++; }
+              var dice = sCount + hCount ? (2 * inter) / (sCount + hCount) : 0;
+              if (dice >= 0.5) {
+                var headCut = gPlain.lastIndexOf(" ", 150);
+                if (headCut > 50) { gPlain = gPlain.slice(headCut + 1).trim(); gText = gPlain; }
+              }
+            }
           }
           var gHtml = esc(gText).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
           return '<div class="sec sec-glance"><h2 class="sec-title">' +
