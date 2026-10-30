@@ -298,6 +298,18 @@ describe("renderReading positions", () => {
     expect(html.split("\u0e21\u0e35\u0e1e\u0e25\u0e31\u0e07\u0e20\u0e32\u0e22\u0e43\u0e19\u0e17\u0e35\u0e48\u0e40\u0e02\u0e49\u0e21\u0e41\u0e02\u0e47\u0e07").length - 1).toBe(1);
   });
 
+  it("translated card paragraphs with a Thai card-word before the name still get card rows", () => {
+    const html = renderOnce(
+      "Together these cards tell a story of change.\n\n" +
+        "1 \u00b7 \u0e08\u0e38\u0e14\u0e17\u0e35\u0e48\u0e09\u0e31\u0e19\u0e22\u0e37\u0e19\u0e2d\u0e22\u0e39\u0e48 \u2014 \u0e44\u0e1e\u0e48 **Two of Wands** \nplan well.\n\n" +
+        "2 \u00b7 \u0e17\u0e32\u0e07\u0e40\u0e25\u0e37\u0e2d\u0e01 \u2014 \u0e44\u0e1e\u0e48 **Eight of Cups** \nwalk away.\n\n" +
+        "Summary: Map options before stepping out.",
+    );
+    expect(html.match(/card-thumb/g)).toHaveLength(2);
+    expect(html).toContain("Two of Wands");
+    expect(html).toContain("Eight of Cups");
+  });
+
   it("watchdog re-opens a silent stream and does not duplicate text", () => {
     const { TarotDraw, handlers, intervals, clock, esList } = loadDraw();
     const mount = makeEl();

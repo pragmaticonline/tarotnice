@@ -404,9 +404,13 @@
           // when the lead points straight at the card), so a numbered
           // non-card paragraph that merely mentions a card is not claimed.
           var pre = at ? rest.slice(0, at.idx) : "";
-          if (at && at.idx <= 120 && (pre.trim() === "" || /[\s—–\-:·•|\/]$/.test(pre.replace(/\s+$/, "")))) {
+          // Translated paragraphs may put the Thai card word right
+          // before the English name ("... \u2014 \u0e44\u0e1e\u0e48 **Page of Cups**"):
+          // strip it so the position still ends at a separator.
+          var preClean = pre.replace(/\s+$/, "").replace(/\u0e44\u0e1e\u0e48$/, "").replace(/\s+$/, "");
+          if (at && at.idx <= 120 && (preClean.trim() === "" || /[\s—–\-:·•|\/]$/.test(preClean))) {
             card = at.card;
-            pos = pre.replace(/[\s—–\-:·•|\/]+$/, "").trim() || null;
+            pos = preClean.replace(/[\s—–\-:·•|\/]+$/, "").trim() || null;
             bodyPlain = rest.slice(at.idx + at.len);
           }
         } else {

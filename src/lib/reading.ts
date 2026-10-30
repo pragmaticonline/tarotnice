@@ -175,7 +175,7 @@ export async function translateBlockToThai(
             (positionMap.length
               ? "Translate spread position names exactly as follows: " + positionMap.join("; ") + ". "
               : "") +
-            "Use \u0e44\u0e1e\u0e48 for a tarot card (never \u0e1a\u0e31\u0e15\u0e23) and \u0e04\u0e38\u0e13 for 'you'. Spell every Thai word completely and correctly, with no dropped consonants, vowels, or tone marks. Do not add, remove, summarize, or explain anything. Return only the translated text.",
+            "Use \u0e44\u0e1e\u0e48 for a tarot card (never \u0e1a\u0e31\u0e15\u0e23) and \u0e04\u0e38\u0e13 for 'you'. At the start of a card paragraph, keep the number, the position name, and the **English card name** exactly as in the source \u2014 do not insert \u0e44\u0e1e\u0e48 before the English card name there. Spell every Thai word completely and correctly, with no dropped consonants, vowels, or tone marks. Do not add, remove, summarize, or explain anything. Return only the translated text.",
         },
         { role: "user", content: block },
       ],
