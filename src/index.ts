@@ -546,7 +546,10 @@ app.get("/api/readings/:id/stream", async (c) => {
         if (lang === "th" && c.env.AI) {
           // Post-stream proofread: fix dropped Thai letters, then swap
           // the client's text via a final event before done.
-          const checked = await proofreadThai(aiRun, c.env.PROOFREAD_MODEL?.trim() || "@cf/qwen/qwen3-30b-a3b-fp8", full);
+          // Heartbeats while proofreading: a silent SSE connection
+          // gets dropped by proxies and strands the client mid-reading.
+          const beat = setInterval(() => { try { send(": ping\n\n"); } catch { /* closed */ } }, 10_000);
+          const checked = await proofreadThai(aiRun, c.env.PROOFREAD_MODEL?.trim() || "@cf/qwen/qwen3-30b-a3b-fp8", full).finally(() => clearInterval(beat));
           if (checked !== full) {
             full = checked;
             send(sseEvent("final", JSON.stringify(checked)));
