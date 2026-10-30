@@ -51,7 +51,7 @@ export function billingPage(opts: {
 ${headerHtml({ ui: opts.ui, streak: { current: 0, longest: 0, activeToday: false }, path: "/billing" })}
 <h1 class="display">${escapeHtml(d.billingTitle)}</h1>
 <section class="balance-card" aria-label="${escapeHtml(d.billingBalance)}">
-<p class="balance-row"><span>${escapeHtml(d.billingBalance)}</span><b id="balance-value">${opts.balance}</b></p>
+<p class="balance-row"><span>${escapeHtml(d.billingBalance)}</span><span><span class="moonstone" aria-hidden="true"></span><b id="balance-value">${opts.balance}</b></span></p>
 <p class="balance-row"><span>${escapeHtml(d.freeTodayLabel)}</span><b id="free-value">${opts.freeLeft}/5</b></p>
 </section>
 ${configured ? `<h2>${escapeHtml(d.packsTitle)}</h2>

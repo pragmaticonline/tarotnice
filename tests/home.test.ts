@@ -33,6 +33,12 @@ describe("GET / (draw screen)", () => {
     // Header auth link: Sign in for guests (client script swaps it to
     // Account for registered users).
     expect(html).toContain('data-auth-link');
+    // Token amount chip at the top of the screen (count filled client-side).
+    expect(html).toContain("data-token-chip");
+    expect(html).toContain("data-token-count");
+    // Tokens are shown with a moonstone next to the number.
+    expect(html).toContain('class="moonstone"');
+    expect(html).toContain("data-quota-gem");
     expect(html).toContain('href="/sign-in"');
     expect(html).toContain('data-account-label="Account"');
     // Footer legal links (no entertainment line).

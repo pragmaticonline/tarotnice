@@ -21,8 +21,9 @@ const THEME_INIT = `<script>(function(){try{var m=null;try{m=localStorage.getIte
 const THEME_TOGGLE = `<script>(function(){function paint(){try{var night=document.documentElement.getAttribute("data-mode")==="night";var btns=document.querySelectorAll("[data-theme-toggle]");for(var i=0;i<btns.length;i++){var b=btns[i];var d=b.querySelector("[data-theme-label]");if(d)d.textContent=night?"\u263e":"\u2600"}}catch(x){}}paint();document.addEventListener("click",function(e){var b=e.target&&e.target.closest?e.target.closest("[data-theme-toggle]"):null;if(!b)return;try{var cur=document.documentElement.getAttribute("data-mode")==="night"?"night":"day";var next=cur==="night"?"day":"night";document.documentElement.setAttribute("data-mode",next);try{localStorage.setItem("tarotnice:mode",next)}catch(x){}paint();fetch("/api/me/prefs",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify({theme:next}),credentials:"include"}).catch(function(){})}catch(x){}});})();</script>`;
 
 // Header auth link starts as Sign in; this swaps it to Account once
-// /api/me/summary shows a registered (non-anonymous) user.
-const AUTH_LINK = `<script>(function(){try{fetch("/api/me/summary",{credentials:"include"}).then(function(r){return r.json()}).then(function(d){try{if(!d||!d.user||d.user.isAnonymous)return;var links=document.querySelectorAll("[data-auth-link]");for(var i=0;i<links.length;i++){links[i].setAttribute("href","/account");links[i].textContent=links[i].getAttribute("data-account-label")||"Account"}}catch(x){}}).catch(function(){})}catch(e){}})();</script>`;
+// /api/me/summary shows a registered (non-anonymous) user. The same
+// fetch paints the header token chip (free + wallet tokens).
+const AUTH_LINK = `<script>(function(){try{fetch("/api/me/summary",{credentials:"include"}).then(function(r){return r.json()}).then(function(d){try{if(!d)return;if(d.tokens){var total=Math.max(0,d.tokens.freeLeft||0)+Math.max(0,d.tokens.balance||0);var chips=document.querySelectorAll("[data-token-chip]");for(var j=0;j<chips.length;j++){chips[j].hidden=false;var n=chips[j].querySelector("[data-token-count]");if(n)n.textContent=String(total)}}if(!d.user||d.user.isAnonymous)return;var links=document.querySelectorAll("[data-auth-link]");for(var i=0;i<links.length;i++){links[i].setAttribute("href","/account");links[i].textContent=links[i].getAttribute("data-account-label")||"Account"}}catch(x){}}).catch(function(){})}catch(e){}})();</script>`;
 
 const DESCRIPTION = "Free tarot readings, every day. Draw your daily card and ask a free question every day.";
 
@@ -150,13 +151,20 @@ export function authLinkHtml(ui: UiLang): string {
   return `<a class="lang-btn head-auth" data-auth-link data-account-label="${escapeHtml(d.account)}" href="/sign-in">${escapeHtml(d.signIn)}</a>`;
 }
 
+/** Token amount at the top of the screen (free + wallet). The count
+ *  is filled client-side from /api/me/summary; hidden until then. */
+export function tokenChipHtml(ui: UiLang): string {
+  const d = t(ui);
+  return `<span class="lang-btn token-chip" data-token-chip hidden aria-label="${escapeHtml(d.billingTitle)}"><span class="moonstone" aria-hidden="true"></span><b data-token-count>0</b> ${escapeHtml(d.tokensUnit)}</span>`;
+}
+
 export function headerHtml(opts: {
   ui: UiLang;
   streak: StreakInfo;
   path?: string;
 }): string {
   const path = opts.path ?? "/";
-  return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${streakChipHtml(opts.streak, opts.ui, "/progress")}${authLinkHtml(opts.ui)}${themeToggleHtml(opts.ui)}${langButtonHtml(opts.ui, path)}</header>`;
+  return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${streakChipHtml(opts.streak, opts.ui, "/progress")}${tokenChipHtml(opts.ui)}${authLinkHtml(opts.ui)}${themeToggleHtml(opts.ui)}${langButtonHtml(opts.ui, path)}</header>`;
 }
 
 /** Shared footer: tagline, entertainment line, legal links, one

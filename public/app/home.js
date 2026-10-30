@@ -57,19 +57,30 @@
       ? Math.max(0, tokens.remaining || 0)
       : Math.max(0, (quota.limit || 3) - (quota.used || 0));
     lsSet("quota", JSON.stringify({ day: bangkokDayString(Date.now()), used: quota.used || 0 }));
+    // Header token chip: total spendable tokens (today's free + wallet).
+    if (tokens) {
+      var gem = document.querySelector("[data-quota-gem]");
+      if (gem) gem.hidden = false;
+      var chip = document.querySelector("[data-token-chip]");
+      if (chip) {
+        chip.hidden = false;
+        var count = chip.querySelector ? chip.querySelector("[data-token-count]") : null;
+        if (count) count.textContent = String(Math.max(0, tokens.freeLeft || 0) + Math.max(0, tokens.balance || 0));
+      }
+    }
     var row = document.querySelector(".quota");
     if (!row) return;
     var label = row.querySelector("[data-quota-label]");
     if (label) {
       var limit = quota.limit || 3;
-      var balance = tokens && tokens.balance > 0 ? tokens.balance : 0;
+      var totalTokens = tokens ? Math.max(0, tokens.freeLeft || 0) + Math.max(0, tokens.balance || 0) : 0;
       if (uiLang() === "th") {
         label.textContent = tokens
-          ? "\u0e40\u0e2b\u0e25\u0e37\u0e2d " + remaining + " \u0e04\u0e33\u0e16\u0e32\u0e21" + (balance ? " \u00b7 \u0e42\u0e17\u0e40\u0e04\u0e19 " + balance : "")
+          ? "\u0e40\u0e2b\u0e25\u0e37\u0e2d " + totalTokens + " \u0e42\u0e17\u0e40\u0e04\u0e19"
           : "\u0e40\u0e2b\u0e25\u0e37\u0e2d " + remaining + "/" + limit + " \u0e04\u0e33\u0e16\u0e32\u0e21\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49";
       } else {
         label.textContent = tokens
-          ? remaining + " questions left" + (balance ? " \u00b7 " + balance + " tokens" : "")
+          ? totalTokens + " tokens remaining"
           : remaining + " of " + limit + " questions left today";
       }
     }

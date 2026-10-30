@@ -90,6 +90,20 @@ describe("quota loading line", () => {
     expect(label.textContent).toBe("2 of 3 questions left today");
   });
 
+  it("shows tokens remaining (free + wallet) instead of questions left", async () => {
+    const { label } = loadHome(async () => ({
+      json: async () => ({
+        user: { id: "u" },
+        quota: { used: 0, limit: 1 },
+        tokens: { balance: 50, freeLeft: 5, remaining: 11, configured: true },
+        streak: null,
+      }),
+    }));
+    await tick();
+    await tick();
+    expect(label.textContent).toBe("55 tokens remaining");
+  });
+
   it("falls back to today's cached count when the fetch fails", async () => {
     const day = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
     const { label } = loadHome(

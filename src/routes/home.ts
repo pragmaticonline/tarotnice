@@ -36,7 +36,7 @@ function quotaRow(ui: UiLang): string {
   const d = t(ui);
   // Loading line (never a wrong count) until home.js paints fresh
   // /api/me/summary numbers. Dots reuse the .wdots pulse pattern.
-  return `<p class="quota" role="status"><span data-quota-label>${escapeHtml(d.quotaLoading)}<span class="wdots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span></span></p>`;
+  return `<p class="quota" role="status"><span class="moonstone" data-quota-gem hidden aria-hidden="true"></span><span data-quota-label>${escapeHtml(d.quotaLoading)}<span class="wdots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span></span></p>`;
 }
 
 export function homePage(opts: HomeOpts = {}): string {
