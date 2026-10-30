@@ -27,7 +27,7 @@ const AUTH_LINK = `<script>(function(){
 function q(s){return document.querySelector(s)}function qa(s){return document.querySelectorAll(s)}
 function paint(d){try{
  if(d.tokens){var total=Math.max(0,d.tokens.freeLeft||0)+Math.max(0,d.tokens.balance||0);var chips=qa("[data-token-chip]");for(var j=0;j<chips.length;j++){chips[j].hidden=false;var n=chips[j].querySelector("[data-token-count]");if(n)n.textContent=String(total)}var c=q("[data-drawer-credits]");if(c)c.textContent=String(total);var w=q("[data-drawer-wallet-count]");if(w)w.textContent=String(total)}
- if(d.streak){var st=q("[data-drawer-streak]");if(st)st.textContent=String(d.streak.current||0)}
+ if(d.streak){var sc=d.streak.current||0;var st=q("[data-drawer-streak]");if(st)st.textContent=String(sc);var un=q("[data-drawer-day-unit]");if(un)un.textContent=sc===1?un.getAttribute("data-one"):un.getAttribute("data-many")}
  var reg=d.user&&!d.user.isAnonymous;
  var nick=(d.prefs&&d.prefs.nickname)||"";
  var name=nick||(reg?String(d.user.email||"").split("@")[0]:"");
@@ -232,7 +232,7 @@ export function drawerHtml(ui: UiLang): string {
   <p><a class="btn btn-primary drawer-ask" href="/">&#10038; ${escapeHtml(d.drawerAsk)}</a></p>
   <div class="drawer-stats">
     <span class="drawer-stat"><small>${escapeHtml(d.drawerCredits)}</small><b><span class="moonstone" aria-hidden="true"></span><span data-drawer-credits>0</span></b></span>
-    <span class="drawer-stat"><small>${escapeHtml(d.drawerStreak)}</small><b><span data-drawer-streak>0</span> ${escapeHtml(d.drawerDays)}</b></span>
+    <span class="drawer-stat"><small>${escapeHtml(d.drawerStreak)}</small><b><span data-drawer-streak>0</span> <span data-drawer-day-unit data-one="${escapeHtml(d.drawerDayUnit)}" data-many="${escapeHtml(d.drawerDays)}">${escapeHtml(d.drawerDays)}</span></b></span>
   </div>
   <nav class="drawer-nav">
     <a href="/history">${escapeHtml(d.historyTitle)}</a>
