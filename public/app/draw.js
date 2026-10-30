@@ -467,6 +467,16 @@
         renderSynth();
       } catch (err) {}
     });
+    es.addEventListener("status", function (e) {
+      // Proofread phase: tell the user Ngern is still working so the
+      // pause before the final swap does not look like a hang.
+      try {
+        var st = JSON.parse(e.data || "{}");
+        if (st.phase === "proofreading") {
+          bubble(lang === "th" ? "\u0e40\u0e07\u0e34\u0e19\u0e01\u0e33\u0e25\u0e31\u0e07\u0e15\u0e23\u0e27\u0e08\u0e17\u0e32\u0e19\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e43\u0e2b\u0e49\u0e04\u0e38\u0e13" : "Ngern is polishing your reading");
+        }
+      } catch (err) {}
+    });
     es.addEventListener("final", function (e) {
       // Post-stream proofread swap: server sends the corrected full text.
       try {

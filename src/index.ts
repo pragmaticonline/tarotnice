@@ -446,15 +446,19 @@ app.get("/api/readings/:id/stream", async (c) => {
   // Fresh generations only: re-check the day's quota (draws count
   // from POST time now, so this also stops pre-fix bypass rows) and
   // atomically claim the reading — a second opener gets a 409, not a
-  // second model call. Completed readings replay below.
+  // second model call. Completed readings replay below. A reconnect
+  // while streaming re-attaches and polls for the finished text
+  // instead of 409ing (a dropped mobile connection must not strand
+  // the reading forever).
+  let reattach = false;
   if (row.status !== "complete") {
     if (row.status === "failed") return c.json({ error: "reading_failed" }, 409);
-    if (row.status === "streaming") return c.json({ error: "already_streaming" }, 409);
+    if (row.status === "streaming") reattach = true;
     // Draw-time charging is authoritative: a reading with a spend row
     // may always stream (covers paid questions past the free limit and
     // retries re-planned at POST /retry). Rows drawn before token
     // metering (no spend row) keep the legacy day-quota re-check.
-    const spentRow = await store.ledgerByRef("reading", row.id);
+    const spentRow = reattach ? true : await store.ledgerByRef("reading", row.id);
     if (!spentRow) {
       const others = await store.countReadings(user.id, row.day, row.id);
       if (others >= limit) {
@@ -462,7 +466,7 @@ app.get("/api/readings/:id/stream", async (c) => {
         return c.json({ error: "limit", remaining: 0, resetsAt: nextBangkokMidnight() }, 429);
       }
     }
-    if (!(await store.claimForStreaming(row.id, user.id))) {
+    if (!reattach && !(await store.claimForStreaming(row.id, user.id))) {
       return c.json({ error: "already_streaming" }, 409);
     }
     row.status = "streaming";
@@ -486,6 +490,29 @@ app.get("/api/readings/:id/stream", async (c) => {
           send(await donePayload(row.aiSummary ?? parseSummary(row.aiText)));
           controller.close();
           return;
+        }
+        if (reattach) {
+          // Original connection dropped mid-generation: poll until the
+          // first connection stores the finished reading, then replay.
+          const deadline = Date.now() + 150_000;
+          for (;;) {
+            const fresh = await store.getReading(row.id);
+            if (fresh?.status === "complete" && fresh.aiText) {
+              for (const chunk of fresh.aiText.match(/[\s\S]{1,120}/g) ?? []) {
+                send(sseEvent("delta", JSON.stringify(chunk)));
+              }
+              send(await donePayload(fresh.aiSummary ?? parseSummary(fresh.aiText)));
+              controller.close();
+              return;
+            }
+            if (fresh?.status === "failed" || Date.now() > deadline) {
+              send(sseEvent("error", JSON.stringify({ error: "reading_failed" })));
+              controller.close();
+              return;
+            }
+            send(": ping\n\n");
+            await new Promise((r) => setTimeout(r, 3_000));
+          }
         }
         const model = c.env.READING_MODEL?.trim() || null;
         if (!model || !c.env.AI) {
@@ -546,6 +573,7 @@ app.get("/api/readings/:id/stream", async (c) => {
         if (lang === "th" && c.env.AI) {
           // Post-stream proofread: fix dropped Thai letters, then swap
           // the client's text via a final event before done.
+          send(sseEvent("status", JSON.stringify({ phase: "proofreading" })));
           // Heartbeats while proofreading: a silent SSE connection
           // gets dropped by proxies and strands the client mid-reading.
           const beat = setInterval(() => { try { send(": ping\n\n"); } catch { /* closed */ } }, 10_000);
