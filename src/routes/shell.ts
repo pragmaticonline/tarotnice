@@ -209,7 +209,7 @@ export function headerHtml(opts: {
   streak: StreakInfo;
   path?: string;
 }): string {
-  return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${streakChipHtml(opts.streak, opts.ui, "/progress")}${tokenChipHtml(opts.ui)}${drawerButtonHtml(opts.ui)}</header>`;
+  return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${tokenChipHtml(opts.ui)}${drawerButtonHtml(opts.ui)}</header>`;
 }
 
 /** Account drawer (design boards A-C): profile, credits/streak, menu,
