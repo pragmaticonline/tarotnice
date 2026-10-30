@@ -40,7 +40,7 @@ a{color:var(--accent)}
 .token-chip{gap:.3em}
 /* Token marker: a faceted purple crystal (clip-path cut, brand purples). */
 .moonstone{display:inline-block;width:.98em;height:.86em;background:linear-gradient(160deg,#cdbcff 0%,#8f79d6 38%,#5b489e 72%,#3d2f6e 100%);clip-path:polygon(22% 0,78% 0,100% 36%,50% 100%,0 36%);filter:drop-shadow(0 0 3px rgba(122,95,199,.55));vertical-align:-.02em;flex:none}
-[data-quota-gem]{width:.88em;height:.78em;margin-right:.08em}
+[data-quota-gem]{width:.88em;height:.78em;margin-right:.08em;position:relative;top:-.06em}
 .theme-toggle,.lang-toggle{font-family:var(--f-body)}
 .theme-toggle{background:transparent;border:1px solid var(--gold-dim);border-radius:999px;color:var(--ink);padding:.4rem .8rem;font-size:.9rem;cursor:pointer;min-height:44px}
 .lang-toggle{display:inline-flex;border:1px solid var(--gold-dim);border-radius:999px;overflow:hidden}
