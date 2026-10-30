@@ -55,8 +55,9 @@ function makeEl(extra: Record<string, unknown> = {}): Record<string, unknown> {
   return el;
 }
 
-async function runFollowUpFlow(postRemaining = 2) {
+async function runFollowUpFlow(postRemaining = 2, summary: unknown = null) {
   const created: Record<string, unknown>[] = [];
+  const fetchCalls: string[] = [];
   const guideAskBubble = { textContent: IDLE_HINT };
   const guideBubble = { textContent: "" };
   // Faithful step visibility: step 1 shown, draw + read hidden.
@@ -104,6 +105,7 @@ async function runFollowUpFlow(postRemaining = 2) {
     history: { pushState: () => {}, back: () => {} },
     location: { search: "" },
     fetch: async (url: unknown) => {
+      fetchCalls.push(String(url));
       if (String(url).includes("/api/readings")) {
         // Slow mobile POST: the wait-line interval (1.6s) ticks to
         // "Warming up the deck…" before the draw arrives.
@@ -168,7 +170,13 @@ async function runFollowUpFlow(postRemaining = 2) {
         opts.onDone("A summary", "Full text");
       },
     },
-    TarotHome: { refresh: () => {}, data: null },
+    TarotHome: { refresh: () => {}, data: summary },
+    sessionStorage: {
+      store: {} as Record<string, string>,
+      getItem(k: string) { return (this as { store: Record<string, string> }).store[k] ?? null; },
+      setItem(k: string, v: string) { (this as { store: Record<string, string> }).store[k] = v; },
+      removeItem(k: string) { delete (this as { store: Record<string, string> }).store[k]; },
+    },
     scrollTo: () => {},
     addEventListener: () => {},
   };
@@ -178,6 +186,15 @@ async function runFollowUpFlow(postRemaining = 2) {
     filename: "ask.js",
   });
   await formHandlers.submit({ preventDefault: () => {} });
+  if (summary) {
+    await new Promise((r) => setTimeout(r, 300));
+    return {
+      guideAskBubble, guideBubble, question, created,
+      location: sandbox.location as { href?: string },
+      fetchCalls,
+      session: sandbox.window.sessionStorage as unknown as { store: Record<string, string> },
+    };
+  }
   // The submit handler is fire-and-forget and the POST is slow by
   // design (1.7s): poll for the stream to start, then let the
   // deferred step-2→3 transition (280ms) settle.
@@ -210,6 +227,24 @@ describe("ask flow step-1 bubble", () => {
   it("never leaves the reported stale wait line behind", async () => {
     const { guideAskBubble } = await runFollowUpFlow();
     expect(guideAskBubble.textContent).not.toBe(WAIT_LINE);
+  }, 15000);
+
+  it("under 5 credits: guest is sent to sign-in then billing, question preserved, no draw POST", async () => {
+    const summary = {
+      quota: { used: 1, limit: 1, resetsAt: null },
+      tokens: { remaining: 0, freeLeft: 0, balance: 3 },
+      user: { isAnonymous: true },
+      openReading: null,
+    };
+    const r = await runFollowUpFlow(2, summary) as unknown as {
+      location: { href?: string };
+      fetchCalls: string[];
+      session: { store: Record<string, string> };
+      question: { value: string };
+    };
+    expect(r.location.href).toBe("/sign-in?return=%2Fbilling");
+    expect(r.fetchCalls.some((u) => u.includes("/api/readings"))).toBe(false);
+    expect(r.session.store["tarotnice:pending-question"]).toBe(r.question.value || "Will it go well?");
   }, 15000);
 
   it("still shows Ask again when the last free question was just used (remaining 0)", async () => {

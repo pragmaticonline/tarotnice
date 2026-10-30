@@ -249,6 +249,46 @@
     form.replaceWith(wrap);
   }
 
+  // Under-5-credits gate: with no question left (tokens remaining < 1
+  // question), trying to ask routes out instead of failing at the
+  // server. Guests go to sign-in with billing as the return (after
+  // login they land on billing to top up); registered users go
+  // straight to billing. The typed question is kept in sessionStorage
+  // and restored when they come back to the ask box.
+  var lastSummary = null;
+  function summaryData() {
+    return lastSummary || (window.TarotHome && window.TarotHome.data) || null;
+  }
+  function cannotAfford() {
+    var d = summaryData();
+    if (!d || d.openReading) return false;
+    if (d.tokens) return (d.tokens.remaining || 0) < 1;
+    return false;
+  }
+  function savePendingQuestion() {
+    try {
+      var q = document.getElementById("q");
+      var v = q && q.value ? String(q.value).trim() : "";
+      if (v) window.sessionStorage.setItem("tarotnice:pending-question", v);
+    } catch (e) {}
+  }
+  function gateInsufficient() {
+    savePendingQuestion();
+    var d = summaryData();
+    var reg = (d && d.user && !d.user.isAnonymous) || window.__tnRegistered;
+    location.href = reg ? "/billing" : "/sign-in?return=%2Fbilling";
+  }
+  function restorePendingQuestion() {
+    try {
+      var v = window.sessionStorage.getItem("tarotnice:pending-question");
+      var q = document.getElementById("q");
+      if (v && q && !q.value) q.value = v;
+    } catch (e) {}
+  }
+  function clearPendingQuestion() {
+    try { window.sessionStorage.removeItem("tarotnice:pending-question"); } catch (e) {}
+  }
+
   function topicLabel(code) {
     var input = document.querySelector('#ask-form input[name="topic"][value="' + code + '"]');
     if (!input) return code;
@@ -455,6 +495,7 @@
   }
 
   async function submit(form) {
+    if (cannotAfford()) { gateInsufficient(); return; }
     var q = document.getElementById("q");
     var question = ((q && q.value) || "").trim();
     if (!question) {
@@ -499,8 +540,15 @@
     }
     stopWait();
     if (res.status === 403 && res.data && res.data.error === "registration_required") {
-      // Out of free credit as a guest: go straight to sign-in.
-      location.href = "/sign-in?return=%2F";
+      // Out of free credit as a guest: sign-in, then billing to top up.
+      savePendingQuestion();
+      location.href = "/sign-in?return=%2Fbilling";
+      return;
+    }
+    if (res.status === 402) {
+      // Registered but short: straight to billing, question kept.
+      savePendingQuestion();
+      location.href = "/billing";
       return;
     }
     if (res.status === 403) {
@@ -567,6 +615,7 @@
       var list = await listRes.json();
       (list.cards || []).forEach(function (card) { byId[card.id] = card; });
     } catch (e) {}
+    clearPendingQuestion();
     var enriched = (res.data.cards || []).map(function (drawn) {
       var view = byId[drawn.id] || {};
       return {
@@ -641,14 +690,33 @@
       return d.quota.used >= (d.quota.limit || 3);
     }
     var data = window.TarotHome && window.TarotHome.data;
-    if (outOfQuestions(data)) {
-      sleepMode(data.quota.resetsAt || null);
+    if (data) lastSummary = data;
+    // When the wallet cannot cover a question, keep the form clickable
+    // (visual rest only) so a tap can route to login/billing; the old
+    // full sleep disabled the very controls the user taps.
+    function applyOutOfQuestions(d) {
+      if (d.tokens && (d.tokens.remaining || 0) < 1 && !d.openReading) {
+        bubble(t("sleep"));
+        if (window.TarotHome && window.TarotHome.sleepNgern) window.TarotHome.sleepNgern();
+      } else {
+        sleepMode(d.quota.resetsAt || null);
+      }
     }
+    if (outOfQuestions(data)) {
+      applyOutOfQuestions(data);
+    }
+    restorePendingQuestion();
+    document.addEventListener("click", function (e) {
+      if (!cannotAfford()) return;
+      var inForm = e.target && e.target.closest && e.target.closest("#ask-form");
+      if (inForm) { e.preventDefault(); gateInsufficient(); }
+    }, true);
     document.addEventListener("tarot:summary", function (e) {
       var d = (e && e.detail) || {};
+      if (d && (d.tokens || d.user)) lastSummary = d;
       if (!d.quota || !document.getElementById("ask-form")) return;
       if (outOfQuestions(d)) {
-        sleepMode(d.quota.resetsAt || null);
+        applyOutOfQuestions(d);
       } else {
         wakeMode();
       }
