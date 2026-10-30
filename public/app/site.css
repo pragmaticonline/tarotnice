@@ -50,7 +50,7 @@ a{color:var(--accent)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;background:var(--accent);color:var(--on-accent);border:0;border-radius:14px;padding:1rem 1.5rem;font-size:1.05rem;font-family:var(--f-body);font-weight:500;cursor:pointer;text-decoration:none;min-height:52px}
 .btn-outline{background:transparent;color:var(--accent);border:2px solid var(--accent)}
 .btn-primary{font-size:1.15rem;width:100%}
-.quota{display:flex;align-items:center;gap:.6rem;color:var(--muted);margin:0}
+.quota{display:flex;align-items:center;gap:.15rem;color:var(--muted);margin:0}
 .pips{display:inline-flex;gap:.3rem}
 .pip{width:14px;height:20px;border-radius:3px;border:1.5px solid var(--gold-dim);display:inline-block}
 .pip.on{background:var(--gold);border-color:var(--gold)}
