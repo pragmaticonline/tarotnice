@@ -453,10 +453,10 @@ app.get("/api/readings/:id/stream", async (c) => {
   let reattach = false;
   if (row.status !== "complete") {
     if (row.status === "failed") return c.json({ error: "reading_failed" }, 409);
-    // Wedged stream: claimed over 10 minutes ago and never finished —
+    // Wedged stream: claimed over 3 minutes ago and never finished —
     // its generation died with a dropped connection. Reset to drawn so
     // this request claims and regenerates instead of polling a ghost.
-    if (row.status === "streaming" && Date.now() - row.createdAt > 10 * 60_000) {
+    if (row.status === "streaming" && Date.now() - row.createdAt > 3 * 60_000) {
       await store.setReadingResult(row.id, { aiText: "", aiSummary: "", model: "", status: "drawn" });
       row.status = "drawn";
     }
@@ -511,6 +511,14 @@ app.get("/api/readings/:id/stream", async (c) => {
               send(await donePayload(fresh.aiSummary ?? parseSummary(fresh.aiText)));
               controller.close();
               return;
+            }
+            if (fresh && Date.now() - fresh.createdAt > 3 * 60_000) {
+              // Original generation is dead (its connection dropped and
+              // Workers cancelled it silently): reset and regenerate
+              // right here instead of polling a ghost until timeout.
+              await store.setReadingResult(row.id, { aiText: "", aiSummary: "", model: "", status: "drawn" });
+              row.status = "drawn";
+              break;
             }
             if (fresh?.status === "failed" || Date.now() > deadline) {
               send(sseEvent("error", JSON.stringify({ error: "reading_failed" })));
@@ -1726,9 +1734,9 @@ app.get("/api/me/summary", async (c) => {
   const store = d1TarotStore(c.env.DB);
   const today = bangkokDay();
   await ensureDailyGrant(store, user.id, today);
-  // Unwedge a dead stream (claimed >10 min ago, never finished) so the
+  // Unwedge a dead stream (claimed >3 min ago, never finished) so the
   // reading becomes resumable instead of stranding the user all day.
-  const staleId = await store.staleStreaming(user.id, today, Date.now() - 10 * 60_000).catch(() => null);
+  const staleId = await store.staleStreaming(user.id, today, Date.now() - 3 * 60_000).catch(() => null);
   if (staleId) {
     await store.setReadingResult(staleId, { aiText: "", aiSummary: "", model: "", status: "drawn" }).catch(() => {});
   }
