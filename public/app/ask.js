@@ -634,6 +634,10 @@
     // referral credit) can still ask — the server charges at draw time.
     function outOfQuestions(d) {
       if (!d || !d.quota) return false;
+      // An unfinished reading from today is always resumable — never
+      // lock the form (and strand that reading) just because its spend
+      // already used up the day's questions.
+      if (d.openReading) return false;
       if (d.tokens) return (d.tokens.remaining || 0) <= 0;
       return d.quota.used >= (d.quota.limit || 3);
     }

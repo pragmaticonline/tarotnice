@@ -846,6 +846,28 @@ export function d1TarotStore(db: D1Database) {
       return { id: row.id, topic: row.topic, question: row.question, lang: row.lang, cards };
     },
 
+    /** A reading stuck in "streaming" since before `beforeMs` (its
+     *  generation died with a dropped connection and was never marked
+     *  failed). Returns its id so callers can unwedge it. */
+    async staleStreaming(userId: string, day: string, beforeMs: number): Promise<string | null> {
+      const rows = await orm
+        .select({ id: schema.readings.id })
+        .from(schema.readings)
+        .where(
+          and(
+            eq(schema.readings.userId, userId),
+            eq(schema.readings.bangkokDay, day),
+            eq(schema.readings.status, "streaming"),
+          ),
+        )
+        .limit(5);
+      for (const r of rows) {
+        const full = await this.getReading(r.id);
+        if (full && full.createdAt < beforeMs) return r.id;
+      }
+      return null;
+    },
+
     /** Atomically claim a drawn reading for streaming (one opener). */
     async claimForStreaming(id: string, userId: string): Promise<boolean> {
       const rows = await orm

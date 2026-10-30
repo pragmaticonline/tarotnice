@@ -453,6 +453,13 @@ app.get("/api/readings/:id/stream", async (c) => {
   let reattach = false;
   if (row.status !== "complete") {
     if (row.status === "failed") return c.json({ error: "reading_failed" }, 409);
+    // Wedged stream: claimed over 10 minutes ago and never finished —
+    // its generation died with a dropped connection. Reset to drawn so
+    // this request claims and regenerates instead of polling a ghost.
+    if (row.status === "streaming" && Date.now() - row.createdAt > 10 * 60_000) {
+      await store.setReadingResult(row.id, { aiText: "", aiSummary: "", model: "", status: "drawn" });
+      row.status = "drawn";
+    }
     if (row.status === "streaming") reattach = true;
     // Draw-time charging is authoritative: a reading with a spend row
     // may always stream (covers paid questions past the free limit and
@@ -1719,6 +1726,13 @@ app.get("/api/me/summary", async (c) => {
   const store = d1TarotStore(c.env.DB);
   const today = bangkokDay();
   await ensureDailyGrant(store, user.id, today);
+  // Unwedge a dead stream (claimed >10 min ago, never finished) so the
+  // reading becomes resumable instead of stranding the user all day.
+  const staleId = await store.staleStreaming(user.id, today, Date.now() - 10 * 60_000).catch(() => null);
+  if (staleId) {
+    await store.setReadingResult(staleId, { aiText: "", aiSummary: "", model: "", status: "drawn" }).catch(() => {});
+  }
+  const openReading = await store.openDrawn(user.id, today).catch(() => null);
   const [prefs, used, days, balance] = await Promise.all([
     d1PrefsStore(c.env.DB).get(user.id),
     store.countReadings(user.id, today),
@@ -1736,6 +1750,7 @@ app.get("/api/me/summary", async (c) => {
       remaining: questionsLeft(balance),
       configured: tokensConfigured(c.env),
     },
+    openReading: openReading ? { id: openReading.id, question: openReading.question } : null,
   });
 });
 

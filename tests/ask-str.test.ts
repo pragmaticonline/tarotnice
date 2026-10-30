@@ -86,6 +86,10 @@ describe("ask.js STR parity", () => {
     expect([...th].sort()).toEqual([...en].sort());
   });
 
+  it("never sleeps the ask form when an unfinished reading can resume", () => {
+    expect(src).toContain("d.openReading");
+  });
+
   it("sends guests with insufficient credits to sign-in", () => {
     expect(src).toContain('res.data.error === "registration_required"');
     expect(src).toContain('location.href = "/sign-in?return=%2F"');
