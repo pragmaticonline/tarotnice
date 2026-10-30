@@ -332,6 +332,16 @@ describe("renderReading positions", () => {
     expect(html).toContain("urges you to plan before stepping out.");
   });
 
+  it("Thai card section heading says Your results, not card-by-card", () => {
+    const { TarotDraw } = loadDraw();
+    const mount = makeEl();
+    TarotDraw.renderReading(mount, { id: "r1", cards: [] }, "th", "/stream", {});
+    const head = mount.children[0] as ReturnType<typeof makeEl>;
+    const text = String(head.innerHTML || head.textContent);
+    expect(text).toBe("\u0e1c\u0e25\u0e25\u0e31\u0e1e\u0e18\u0e4c\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13");
+    expect(text).not.toContain("\u0e44\u0e1e\u0e48\u0e17\u0e35\u0e25\u0e30\u0e43\u0e1a");
+  });
+
   it("watchdog re-opens a silent stream and does not duplicate text", () => {
     const { TarotDraw, handlers, intervals, clock, esList } = loadDraw();
     const mount = makeEl();

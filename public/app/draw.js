@@ -313,7 +313,7 @@
     mount.innerHTML = "";
     // No per-card name blocks here any more: names sit under the
     // card images in step 3, and each card paragraph names itself.
-    mount.appendChild(el("h2", "sec-h", lang === "th" ? "\u0e44\u0e1e\u0e48\u0e17\u0e35\u0e25\u0e30\u0e43\u0e1a" : "Your results"));
+    mount.appendChild(el("h2", "sec-h", lang === "th" ? "\u0e1c\u0e25\u0e25\u0e31\u0e1e\u0e18\u0e4c\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13" : "Your results"));
     var synth = el("div", "rc rtext", "");
     synth.addEventListener("click", function (e) {
       var b = e.target && e.target.closest ? e.target.closest("[data-fq]") : null;
