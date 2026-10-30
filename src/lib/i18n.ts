@@ -183,6 +183,12 @@ const en = {
   prefsSaved: "Saved.", deleteData: "Delete my data",
   deleteDataConfirm: "Delete your account and all readings? This cannot be undone.",
   deleteDataDone: "Deleted. See you again sometime.",
+  drawerAsk: "Ask Ngern", drawerCredits: "Credits", drawerStreak: "Streak",
+  drawerDays: "days", drawerJourney: "My journey", drawerSettings: "Account settings",
+  drawerWallet: "Wallet", drawerHelp: "Help & contact", drawerEmail: "Email",
+  drawerGuest: "You are browsing as a guest.", drawerCreate: "Create free account",
+  saveChanges: "Save changes", deleteAccount: "Delete account",
+  drawerNickHint: "Ngern uses this name in your readings.",
 };
 
 export type UiDict = typeof en;
@@ -339,6 +345,7 @@ const th: UiDict = {
   prefsSaved: "\u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01\u0e41\u0e25\u0e49\u0e27", deleteData: "\u0e25\u0e1a\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19",
   deleteDataConfirm: "\u0e25\u0e1a\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e41\u0e25\u0e30\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14? \u0e22\u0e49\u0e2d\u0e19\u0e01\u0e25\u0e31\u0e1a\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49",
   deleteDataDone: "\u0e25\u0e1a\u0e41\u0e25\u0e49\u0e27 \u0e44\u0e27\u0e49\u0e40\u0e08\u0e2d\u0e01\u0e31\u0e19\u0e43\u0e2b\u0e21\u0e48",
+  drawerAsk: "Ask Ngern", drawerCredits: "\u0e40\u0e04\u0e23\u0e14\u0e34\u0e15", drawerStreak: "\u0e2a\u0e15\u0e23\u0e35\u0e04", drawerDays: "\u0e27\u0e31\u0e19", drawerJourney: "\u0e01\u0e32\u0e23\u0e40\u0e14\u0e34\u0e19\u0e17\u0e32\u0e07\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19", drawerSettings: "\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32\u0e1a\u0e31\u0e0d\u0e0a\u0e35", drawerWallet: "\u0e01\u0e23\u0e30\u0e40\u0e1b\u0e4b\u0e32\u0e40\u0e07\u0e34\u0e19", drawerHelp: "\u0e0a\u0e48\u0e27\u0e22\u0e40\u0e2b\u0e25\u0e37\u0e2d\u0e41\u0e25\u0e30\u0e15\u0e34\u0e14\u0e15\u0e48\u0e2d", drawerEmail: "\u0e2d\u0e35\u0e40\u0e21\u0e25", drawerGuest: "\u0e04\u0e38\u0e13\u0e01\u0e33\u0e25\u0e31\u0e07\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19\u0e41\u0e1a\u0e1a\u0e1c\u0e39\u0e49\u0e40\u0e22\u0e35\u0e48\u0e22\u0e21\u0e0a\u0e21", drawerCreate: "\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e1f\u0e23\u0e35", saveChanges: "\u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01\u0e01\u0e32\u0e23\u0e40\u0e1b\u0e25\u0e35\u0e48\u0e22\u0e19\u0e41\u0e1b\u0e25\u0e07", deleteAccount: "\u0e25\u0e1a\u0e1a\u0e31\u0e0d\u0e0a\u0e35", drawerNickHint: "\u0e40\u0e07\u0e34\u0e19\u0e43\u0e0a\u0e49\u0e0a\u0e37\u0e48\u0e2d\u0e19\u0e35\u0e49\u0e43\u0e19\u0e01\u0e32\u0e23\u0e14\u0e39\u0e14\u0e27\u0e07\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13",
 };
 
 export function t(lang: UiLang): UiDict {

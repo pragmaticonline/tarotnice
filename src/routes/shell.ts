@@ -20,10 +20,49 @@ const THEME_INIT = `<script>(function(){try{var m=null;try{m=localStorage.getIte
 // to user_prefs via PUT /api/me/prefs (best-effort, M3).
 const THEME_TOGGLE = `<script>(function(){function paint(){try{var night=document.documentElement.getAttribute("data-mode")==="night";var btns=document.querySelectorAll("[data-theme-toggle]");for(var i=0;i<btns.length;i++){var b=btns[i];var d=b.querySelector("[data-theme-label]");if(d)d.textContent=night?"\u263e":"\u2600"}}catch(x){}}paint();document.addEventListener("click",function(e){var b=e.target&&e.target.closest?e.target.closest("[data-theme-toggle]"):null;if(!b)return;try{var cur=document.documentElement.getAttribute("data-mode")==="night"?"night":"day";var next=cur==="night"?"day":"night";document.documentElement.setAttribute("data-mode",next);try{localStorage.setItem("tarotnice:mode",next)}catch(x){}paint();fetch("/api/me/prefs",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify({theme:next}),credentials:"include"}).catch(function(){})}catch(x){}});})();</script>`;
 
-// Header auth link starts as Sign in; this swaps it to Account once
-// /api/me/summary shows a registered (non-anonymous) user. The same
-// fetch paints the header token chip (free + wallet tokens).
-const AUTH_LINK = `<script>(function(){try{fetch("/api/me/summary",{credentials:"include"}).then(function(r){return r.json()}).then(function(d){try{if(!d)return;if(d.tokens){var total=Math.max(0,d.tokens.freeLeft||0)+Math.max(0,d.tokens.balance||0);var chips=document.querySelectorAll("[data-token-chip]");for(var j=0;j<chips.length;j++){chips[j].hidden=false;var n=chips[j].querySelector("[data-token-count]");if(n)n.textContent=String(total)}}if(!d.user||d.user.isAnonymous)return;var links=document.querySelectorAll("[data-auth-link]");for(var i=0;i<links.length;i++){links[i].setAttribute("href","/account");links[i].textContent=links[i].getAttribute("data-account-label")||"Account"}}catch(x){}}).catch(function(){})}catch(e){}})();</script>`;
+// Account drawer behaviour: paints the header token chip + drawer
+// profile from /api/me/summary, opens/closes the drawer, swaps to the
+// settings sub-view, saves nickname, handles theme/language/sign-out.
+const AUTH_LINK = `<script>(function(){
+function q(s){return document.querySelector(s)}function qa(s){return document.querySelectorAll(s)}
+function paint(d){try{
+ if(d.tokens){var total=Math.max(0,d.tokens.freeLeft||0)+Math.max(0,d.tokens.balance||0);var chips=qa("[data-token-chip]");for(var j=0;j<chips.length;j++){chips[j].hidden=false;var n=chips[j].querySelector("[data-token-count]");if(n)n.textContent=String(total)}var c=q("[data-drawer-credits]");if(c)c.textContent=String(total);var w=q("[data-drawer-wallet-count]");if(w)w.textContent=String(total)}
+ if(d.streak){var st=q("[data-drawer-streak]");if(st)st.textContent=String(d.streak.current||0)}
+ var reg=d.user&&!d.user.isAnonymous;
+ var nick=(d.prefs&&d.prefs.nickname)||"";
+ var name=nick||(reg?String(d.user.email||"").split("@")[0]:"");
+ var nm=q("[data-drawer-name]");if(nm)nm.textContent=reg?name:"TarotNice";
+ var em=q("[data-drawer-email]");if(em)em.textContent=reg?(d.user.email||""):"";
+ var em2=q("[data-drawer-email2]");if(em2)em2.value=reg?(d.user.email||""):"";
+ var ni=q("[data-drawer-nick]");if(ni&&nick)ni.value=nick;
+ var av=qa("[data-avatar-initial]");for(var i=0;i<av.length;i++)av[i].textContent=(name||"T").charAt(0).toUpperCase();
+ var guest=q("[data-drawer-guest]");if(guest)guest.hidden=!!reg;
+ var prof=q("[data-drawer-profile]");if(prof)prof.hidden=!reg;
+ var so=q("[data-drawer-signout]");if(so)so.hidden=!reg;
+ var stBtn=q("[data-drawer-settings-open]");if(stBtn)stBtn.hidden=!reg;
+}catch(x){}}
+function load(){fetch("/api/me/summary",{credentials:"include"}).then(function(r){return r.json()}).then(paint).catch(function(){})}
+function openDrawer(){var d=q("[data-drawer]"),b=q("[data-drawer-backdrop]");if(d){d.hidden=false;requestAnimationFrame(function(){d.classList.add("open")})}if(b)b.hidden=false;showMain();load()}
+function closeDrawer(){var d=q("[data-drawer]"),b=q("[data-drawer-backdrop]");if(d){d.classList.remove("open");setTimeout(function(){d.hidden=true},220)}if(b)b.hidden=true}
+function showMain(){var m=q("[data-drawer-main]"),s=q("[data-drawer-settings]");if(m)m.hidden=false;if(s)s.hidden=true}
+function showSettings(){var m=q("[data-drawer-main]"),s=q("[data-drawer-settings]");if(m)m.hidden=true;if(s)s.hidden=false}
+function setTheme(mode){var root=document.documentElement;if(mode==="auto"){try{localStorage.removeItem("tarotnice:mode")}catch(e){}var h=6;try{h=Number(new Intl.DateTimeFormat("en",{hour:"numeric",hour12:false,timeZone:"Asia/Bangkok"}).format(new Date()))}catch(e){}root.setAttribute("data-mode",(h>=18||h<6)?"night":"day");putTheme(null)}else{root.setAttribute("data-mode",mode);try{localStorage.setItem("tarotnice:mode",mode)}catch(e){}putTheme(mode)}markTheme()}
+function putTheme(v){fetch("/api/me/prefs",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify({theme:v}),credentials:"include"}).catch(function(){})}
+function markTheme(){var saved=null;try{saved=localStorage.getItem("tarotnice:mode")}catch(e){}var cur=saved||"auto";var bs=qa("[data-theme-choice]");for(var i=0;i<bs.length;i++)bs[i].setAttribute("aria-pressed",bs[i].getAttribute("data-theme-choice")===cur?"true":"false")}
+document.addEventListener("click",function(e){var t=e.target&&e.target.closest?e.target:null;if(!t)return;
+ var o=t.closest("[data-drawer-open]");if(o){openDrawer();return}
+ if(t.closest("[data-drawer-close]")||t.closest("[data-drawer-backdrop]")){closeDrawer();return}
+ if(t.closest("[data-drawer-settings-open]")){showSettings();return}
+ if(t.closest("[data-drawer-back]")){showMain();return}
+ var th=t.closest("[data-theme-choice]");if(th){setTheme(th.getAttribute("data-theme-choice"));return}
+ if(t.closest("[data-drawer-save]")){var ni=q("[data-drawer-nick]");fetch("/api/me/prefs",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify({nickname:ni?ni.value:""}),credentials:"include"}).then(load).catch(function(){});return}
+ if(t.closest("[data-drawer-signout]")){fetch("/api/auth/sign-out",{method:"POST",credentials:"include",headers:{"content-type":"application/json"},body:"{}"}).then(function(){location.href="/"}).catch(function(){location.href="/"});return}
+ if(t.closest("[data-drawer-delete]")){var c=t.closest("[data-drawer-delete]").getAttribute("data-confirm")||"Delete?";if(!confirm(c))return;fetch("/api/me",{method:"DELETE",credentials:"include"}).then(function(){try{localStorage.clear()}catch(x){}location.href="/"}).catch(function(){});return}
+});
+document.addEventListener("keydown",function(e){if(e.key==="Escape")closeDrawer()});
+var langs=qa("[data-drawer-lang]");for(var i=0;i<langs.length;i++)langs[i].setAttribute("href",location.pathname+"?ui="+langs[i].getAttribute("data-drawer-lang"));
+markTheme();load();
+})();</script>`;
 
 const DESCRIPTION = "Free tarot readings, every day. Draw your daily card and ask a free question every day.";
 
@@ -93,6 +132,7 @@ ${opts.extraHead ?? ""}
 <div class="wrap">
 ${opts.body}
 </div>
+${drawerHtml(lang)}
 ${THEME_TOGGLE}
 ${AUTH_LINK}
 ${analyticsBeacon()}
@@ -158,12 +198,72 @@ export function tokenChipHtml(ui: UiLang): string {
   return `<span class="lang-btn token-chip" data-token-chip hidden aria-label="${escapeHtml(d.billingTitle)}"><span class="moonstone" aria-hidden="true"></span><b data-token-count>0</b></span>`;
 }
 
+/** Header menu button (design: hamburger + avatar initial in a pill). */
+export function drawerButtonHtml(ui: UiLang): string {
+  const d = t(ui);
+  return `<button class="menu-btn" type="button" data-drawer-open aria-label="${escapeHtml(d.yourAccount)}"><span aria-hidden="true">&#9776;</span><span class="avatar-dot" data-avatar-initial aria-hidden="true">T</span></button>`;
+}
+
 export function headerHtml(opts: {
   ui: UiLang;
   streak: StreakInfo;
   path?: string;
 }): string {
-  return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${streakChipHtml(opts.streak, opts.ui, "/progress")}${tokenChipHtml(opts.ui)}${authLinkHtml(opts.ui)}</header>`;
+  return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${streakChipHtml(opts.streak, opts.ui, "/progress")}${tokenChipHtml(opts.ui)}${drawerButtonHtml(opts.ui)}</header>`;
+}
+
+/** Account drawer (design boards A-C): profile, credits/streak, menu,
+ *  preferences, and an account-settings sub-view. Values are painted
+ *  client-side from /api/me/summary by the AUTH_LINK script. */
+export function drawerHtml(ui: UiLang): string {
+  const d = t(ui);
+  return `<div class="drawer-backdrop" data-drawer-backdrop hidden></div>
+<aside class="drawer" data-drawer hidden aria-label="${escapeHtml(d.yourAccount)}">
+<div data-drawer-main>
+  <div class="drawer-head">
+    <span class="avatar-dot avatar-lg" data-avatar-initial aria-hidden="true">T</span>
+    <span class="drawer-id" data-drawer-profile hidden><b data-drawer-name>TarotNice</b><small data-drawer-email></small></span>
+    <button class="drawer-x" type="button" data-drawer-close aria-label="Close">&times;</button>
+  </div>
+  <div data-drawer-guest>
+    <p class="drawer-guest-line">${escapeHtml(d.drawerGuest)}</p>
+    <p class="drawer-guest-btns"><a class="btn btn-primary" href="/sign-in">${escapeHtml(d.signIn)}</a> <a class="btn btn-outline" href="/register">${escapeHtml(d.drawerCreate)}</a></p>
+  </div>
+  <p><a class="btn btn-primary drawer-ask" href="/">&#10038; ${escapeHtml(d.drawerAsk)}</a></p>
+  <div class="drawer-stats">
+    <span class="drawer-stat"><small>${escapeHtml(d.drawerCredits)}</small><b><span class="moonstone" aria-hidden="true"></span><span data-drawer-credits>0</span></b></span>
+    <span class="drawer-stat"><small>${escapeHtml(d.drawerStreak)}</small><b><span data-drawer-streak>0</span> ${escapeHtml(d.drawerDays)}</b></span>
+  </div>
+  <nav class="drawer-nav">
+    <a href="/history">${escapeHtml(d.historyTitle)}</a>
+    <a href="/progress">${escapeHtml(d.drawerJourney)}</a>
+    <a href="/billing">${escapeHtml(d.refTab)} <span class="drawer-pill">+1</span></a>
+    <a href="/cards">${escapeHtml(d.cardsTitle)}</a>
+    <button type="button" data-drawer-settings-open>${escapeHtml(d.drawerSettings)} <span aria-hidden="true">&rsaquo;</span></button>
+    <a href="/billing">${escapeHtml(d.drawerWallet)} <span class="drawer-sub"><span class="moonstone" aria-hidden="true"></span><span data-drawer-wallet-count>0</span></span></a>
+  </nav>
+  <h3 class="drawer-h">${escapeHtml(d.accountPrefs)}</h3>
+  <p class="drawer-label">${escapeHtml(d.appLanguage)}</p>
+  <div class="seg" role="group"><a data-drawer-lang="th" href="/?ui=th">\u0e44\u0e17\u0e22</a><a data-drawer-lang="en" href="/?ui=en">English</a></div>
+  <p class="drawer-label">${escapeHtml(d.themeLabel)}</p>
+  <div class="seg" role="group"><button type="button" data-theme-choice="auto">${escapeHtml(d.themeAuto)}</button><button type="button" data-theme-choice="day">${escapeHtml(d.themeDay)}</button><button type="button" data-theme-choice="night">${escapeHtml(d.themeNight)}</button></div>
+  <nav class="drawer-nav drawer-foot-nav">
+    <a href="/contact">${escapeHtml(d.drawerHelp)}</a>
+    <button type="button" data-drawer-signout>${escapeHtml(d.signOut)}</button>
+  </nav>
+  <p class="drawer-legal"><a href="/terms">${escapeHtml(d.terms)}</a> &middot; <a href="/privacy">${escapeHtml(d.privacy)}</a></p>
+</div>
+<div data-drawer-settings hidden>
+  <p class="drawer-back-row"><button type="button" data-drawer-back>&lsaquo; ${escapeHtml(d.drawerSettings)}</button></p>
+  <label class="drawer-field">${escapeHtml(d.nicknameLabel)}<input data-drawer-nick maxlength="40"></label>
+  <p class="drawer-hint">${escapeHtml(d.drawerNickHint)}</p>
+  <label class="drawer-field">${escapeHtml(d.drawerEmail)}<input data-drawer-email2 readonly></label>
+  <p><button class="btn btn-primary drawer-save" type="button" data-drawer-save>${escapeHtml(d.saveChanges)}</button></p>
+  <h3 class="drawer-h drawer-danger">${escapeHtml(d.deleteAccount)}</h3>
+  <p class="drawer-hint">${escapeHtml(d.deleteDataConfirm)}</p>
+  <p><button class="btn btn-danger" type="button" data-drawer-delete data-confirm="${escapeHtml(d.deleteDataConfirm)}">${escapeHtml(d.deleteData)}</button></p>
+</div>
+</aside>`;
 }
 
 /** Shared footer: tagline, entertainment line, legal links, one

@@ -17,7 +17,7 @@ describe("auth pages", () => {
     expect(html).toContain("Continue with Google");
     expect(html).toContain("/api/auth/sign-up/email");
     expect(html).toContain("/sign-in");
-    expect(html).not.toContain("/billing");
+    expect(html).toContain("/billing"); // account drawer wallet link
     expect(html).not.toContain("Premium");
   });
 
@@ -35,7 +35,7 @@ describe("auth pages", () => {
     expect(html).toContain("Back home");
     expect(html).toContain("Save your readings on any phone");
     expect(html).not.toContain("/students");
-    expect(html).not.toContain("/billing");
+    expect(html).toContain("/billing"); // account drawer wallet link
   });
 
   it("account redirects anonymous visitors to sign-in", async () => {

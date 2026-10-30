@@ -421,3 +421,38 @@ h1.read-q{font-weight:600}
 .friend-name{flex:1 1 auto;min-width:0}
 .friend-status{color:var(--muted);font-size:.9rem}
 .linklike{background:none;border:0;color:var(--accent);cursor:pointer;font:inherit;padding:0;text-decoration:underline}
+
+/* Account drawer (design boards A-C). */
+.menu-btn{display:inline-flex;align-items:center;gap:.45rem;min-height:40px;padding:.3rem .6rem;border:1px solid var(--gold-dim);border-radius:999px;background:transparent;color:var(--ink);font-family:var(--f-body);font-size:1rem;cursor:pointer}
+.avatar-dot{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:.95rem}
+.avatar-lg{width:46px;height:46px;font-size:1.25rem;flex:none}
+.drawer-backdrop{position:fixed;inset:0;background:rgba(20,14,40,.45);z-index:60}
+.drawer{position:fixed;top:0;right:0;height:100dvh;width:min(380px,92vw);background:var(--bg);color:var(--ink);z-index:61;padding:20px;overflow-y:auto;box-shadow:-12px 0 32px rgba(20,14,40,.25);transform:translateX(105%);transition:transform .22s ease}
+.drawer.open{transform:none}
+.drawer-head{display:flex;align-items:center;gap:.7rem}
+.drawer-id{display:flex;flex-direction:column;min-width:0}
+.drawer-id small{color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.drawer-x{margin-left:auto;background:none;border:none;color:var(--ink);font-size:1.6rem;cursor:pointer;line-height:1}
+.drawer-ask{display:block;text-align:center}
+.drawer-stats{display:flex;gap:.7rem;margin:.9rem 0}
+.drawer-stat{flex:1;border:1px solid var(--gold-dim);border-radius:14px;padding:.6rem .8rem;display:flex;flex-direction:column;gap:.2rem;background:var(--card-face);color:var(--card-ink)}
+.drawer-stat small{color:var(--muted)}
+.drawer-stat b{font-size:1.15rem}
+.drawer-nav{display:flex;flex-direction:column}
+.drawer-nav a,.drawer-nav button{display:flex;align-items:center;gap:.6rem;padding:.72rem .2rem;color:var(--ink);text-decoration:none;background:none;border:none;font:inherit;text-align:left;cursor:pointer;border-bottom:1px solid rgba(127,110,180,.14)}
+.drawer-pill{margin-left:auto;background:var(--accent);color:var(--on-accent);border-radius:999px;padding:.1rem .55rem;font-size:.78rem}
+.drawer-sub{margin-left:auto;color:var(--muted);display:inline-flex;align-items:center;gap:.25rem}
+.drawer-h{font-family:var(--f-display);color:var(--accent);margin:1.1rem 0 .4rem}
+.drawer-danger{color:#b3372f}
+.drawer-label{color:var(--muted);margin:.7rem 0 .3rem;font-size:.9rem}
+.seg{display:flex;border:1px solid var(--gold-dim);border-radius:999px;overflow:hidden}
+.seg a,.seg button{flex:1;text-align:center;padding:.5rem .2rem;color:var(--ink);text-decoration:none;background:none;border:none;font:inherit;cursor:pointer}
+.seg a[aria-current="true"],.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.drawer-foot-nav{margin-top:1rem}
+.drawer-legal{color:var(--muted);font-size:.88rem}
+.drawer-field{display:flex;flex-direction:column;gap:.3rem;margin:.6rem 0;font-weight:600}
+.drawer-field input{padding:.65rem .8rem;border:1px solid var(--gold-dim);border-radius:12px;font:inherit;background:var(--card-face);color:var(--card-ink)}
+.drawer-hint{color:var(--muted);font-size:.9rem}
+.drawer-save{width:100%}
+.drawer-guest-line{color:var(--muted)}
+.drawer-back-row button{background:none;border:none;font:inherit;color:var(--accent);cursor:pointer;font-size:1.05rem}

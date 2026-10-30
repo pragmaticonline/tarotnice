@@ -36,9 +36,13 @@ describe("GET / (draw screen)", () => {
     expect(header).not.toContain("data-theme-toggle");
     expect(header).not.toContain("ui=th");
     expect(html).toContain("data-theme-toggle");
-    // Header auth link: Sign in for guests (client script swaps it to
-    // Account for registered users).
-    expect(html).toContain('data-auth-link');
+    // Account drawer (design update): header menu button opens it;
+    // profile, credits/streak, menu, preferences, settings sub-view.
+    expect(html).toContain("data-drawer-open");
+    expect(html).toContain("data-drawer");
+    expect(html).toContain("data-drawer-credits");
+    expect(html).toContain("data-drawer-settings");
+    expect(html).not.toContain("data-auth-link");
     // Token amount chip at the top of the screen (count filled client-side).
     expect(html).toContain("data-token-chip");
     expect(html).toContain("data-token-count");
@@ -48,14 +52,13 @@ describe("GET / (draw screen)", () => {
     expect(html).not.toContain("data-token-unit");
     expect(html).toContain("data-quota-gem");
     expect(html).toContain('href="/sign-in"');
-    expect(html).toContain('data-account-label="Account"');
     // Footer legal links (no entertainment line).
     expect(html).not.toContain("For reflection and entertainment.");
     expect(html).toContain('href="/terms"');
     expect(html).toContain('href="/privacy"');
     expect(html).toContain('href="/contact"');
-    // No billing, no curriculum, no parrot.
-    expect(html).not.toContain("/billing");
+    // Drawer links the wallet (billing) by design; no curriculum/parrot.
+    expect(html).toContain('href="/billing"');
     expect(html).not.toContain("parrot");
     expect(html).not.toContain("Premium");
   });
