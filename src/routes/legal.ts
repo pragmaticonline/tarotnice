@@ -15,7 +15,17 @@ header.site a{display:inline-flex;align-items:center;gap:.5rem;text-decoration:n
 header.site svg{width:32px;height:32px}
 a{color:#4a3d78}
 h1{font-size:1.6rem;line-height:1.25}
-p.small{color:#76698f;font-size:.92rem}`;
+p.small{color:#76698f;font-size:.92rem}
+p.lede{color:#76698f;margin-top:-.4rem}
+.faq-h{font-size:1.25rem;margin:1.6rem 0 .7rem}
+.faq{background:#fffdf7;border:1px solid #e4d9c8;border-radius:14px;padding:.9rem 1.1rem;margin:.55rem 0}
+.faq summary{cursor:pointer;font-weight:700;list-style:none}
+.faq summary::-webkit-details-marker{display:none}
+.faq p{margin:.6rem 0 .1rem;color:#4c4368}
+.contact-card{background:#43356f;color:#f4eefc;border-radius:18px;padding:1.4rem 1.5rem;margin:1.6rem 0 1rem}
+.contact-card h2{margin:.1rem 0 .5rem;font-size:1.45rem}
+.contact-btn{display:inline-block;background:#d9a742;color:#241b3a;font-weight:800;text-decoration:none;padding:.7rem 1.1rem;border-radius:10px}
+.contact-links{color:#76698f;font-size:.95rem}`;
 
 function shell(title: string, heading: string, inner: string, uiLang: UiLang): string {
   return `<!DOCTYPE html>
@@ -72,9 +82,36 @@ export function privacyPage(uiLang: UiLang = "en"): string {
 
 export function contactPage(uiLang: UiLang = "en"): string {
   const d = t(uiLang);
-  const body =
+  const faq: { q: string; a: string }[] =
     uiLang === "th"
-      ? `<p>\u0e21\u0e35\u0e04\u0e33\u0e16\u0e32\u0e21 \u0e23\u0e32\u0e22\u0e07\u0e32\u0e19\u0e1a\u0e31\u0e4a\u0e01 \u0e2b\u0e23\u0e37\u0e2d\u0e2d\u0e22\u0e32\u0e01\u0e40\u0e2a\u0e19\u0e2d\u0e41\u0e19\u0e30? \u0e40\u0e02\u0e35\u0e22\u0e19\u0e21\u0e32\u0e17\u0e35\u0e48 <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a> \u0e41\u0e25\u0e49\u0e27\u0e1a\u0e2d\u0e01\u0e40\u0e23\u0e32\u0e27\u0e48\u0e32\u0e40\u0e01\u0e34\u0e14\u0e2d\u0e30\u0e44\u0e23\u0e02\u0e36\u0e49\u0e19 \u0e04\u0e38\u0e13\u0e17\u0e33\u0e2d\u0e30\u0e44\u0e23\u0e2d\u0e22\u0e39\u0e48\u0e15\u0e2d\u0e19\u0e19\u0e31\u0e49\u0e19 \u0e41\u0e25\u0e30\u0e43\u0e0a\u0e49\u0e2d\u0e38\u0e1b\u0e01\u0e23\u0e13\u0e4c\u0e2d\u0e30\u0e44\u0e23</p>`
-      : `<p>Questions, a bug to report, or a suggestion? Write to <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a> and tell us what happened, what you were doing, and which device you use.</p>`;
-  return shell(d.contact, d.contact, body, uiLang);
+      ? [
+      { q: "\u0e01\u0e32\u0e23\u0e14\u0e39\u0e14\u0e27\u0e07\u0e17\u0e33\u0e07\u0e32\u0e19\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23?", a: "\u0e1e\u0e34\u0e21\u0e1e\u0e4c\u0e04\u0e33\u0e16\u0e32\u0e21\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13 \u0e2a\u0e31\u0e1a\u0e44\u0e1e\u0e48 \u0e41\u0e25\u0e49\u0e27\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e1e\u0e48 3 \u0e43\u0e1a \u0e40\u0e07\u0e34\u0e19\u0e08\u0e30\u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e17\u0e31\u0e49\u0e07\u0e2a\u0e32\u0e21\u0e43\u0e1a\u0e23\u0e27\u0e21\u0e01\u0e31\u0e19\u0e41\u0e25\u0e30\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e01\u0e25\u0e31\u0e1a\u0e21\u0e32\u0e17\u0e35\u0e48\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e04\u0e38\u0e13\u0e16\u0e32\u0e21" },
+      { q: "\u0e09\u0e31\u0e19\u0e16\u0e32\u0e21\u0e44\u0e14\u0e49\u0e01\u0e35\u0e48\u0e04\u0e33\u0e16\u0e32\u0e21?", a: "\u0e04\u0e38\u0e13\u0e44\u0e14\u0e49 1 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e1f\u0e23\u0e35\u0e17\u0e38\u0e01\u0e27\u0e31\u0e19 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e40\u0e1e\u0e34\u0e48\u0e21\u0e40\u0e15\u0e34\u0e21\u0e43\u0e0a\u0e49\u0e40\u0e04\u0e23\u0e14\u0e34\u0e15\u0e43\u0e19\u0e01\u0e23\u0e30\u0e40\u0e1b\u0e4b\u0e32\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13 \u0e41\u0e25\u0e30\u0e01\u0e32\u0e23\u0e0a\u0e27\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e08\u0e30\u0e17\u0e33\u0e43\u0e2b\u0e49\u0e44\u0e14\u0e49\u0e40\u0e1e\u0e34\u0e48\u0e21" },
+      { q: "\u0e04\u0e33\u0e16\u0e32\u0e21\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19\u0e40\u0e1b\u0e47\u0e19\u0e2a\u0e48\u0e27\u0e19\u0e15\u0e31\u0e27\u0e44\u0e2b\u0e21?", a: "\u0e43\u0e0a\u0e48 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e41\u0e25\u0e30\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e40\u0e01\u0e47\u0e1a\u0e44\u0e27\u0e49\u0e43\u0e19\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e40\u0e17\u0e48\u0e32\u0e19\u0e31\u0e49\u0e19 \u0e44\u0e21\u0e48\u0e40\u0e04\u0e22\u0e16\u0e39\u0e01\u0e41\u0e0a\u0e23\u0e4c\u0e41\u0e25\u0e30\u0e44\u0e21\u0e48\u0e40\u0e04\u0e22\u0e43\u0e0a\u0e49\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e01\u0e32\u0e23\u0e42\u0e06\u0e29\u0e13\u0e32" },
+      { q: "\u0e09\u0e31\u0e19\u0e25\u0e1a\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e2b\u0e23\u0e37\u0e2d\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e44\u0e14\u0e49\u0e44\u0e2b\u0e21?", a: "\u0e04\u0e38\u0e13\u0e25\u0e1a\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e43\u0e14\u0e01\u0e47\u0e44\u0e14\u0e49\u0e08\u0e32\u0e01\u0e2b\u0e19\u0e49\u0e32\u0e02\u0e2d\u0e07\u0e21\u0e31\u0e19 \u0e2b\u0e23\u0e37\u0e2d\u0e25\u0e1a\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e41\u0e25\u0e30\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14\u0e44\u0e14\u0e49\u0e08\u0e32\u0e01\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e43\u0e19\u0e40\u0e21\u0e19\u0e39" },
+      { q: "\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e40\u0e1b\u0e47\u0e19\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33\u0e17\u0e32\u0e07\u0e27\u0e34\u0e0a\u0e32\u0e0a\u0e35\u0e1e\u0e44\u0e2b\u0e21?", a: "\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48 \u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e21\u0e35\u0e44\u0e27\u0e49\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e1a\u0e31\u0e19\u0e40\u0e17\u0e34\u0e07\u0e41\u0e25\u0e30\u0e01\u0e32\u0e23\u0e17\u0e1a\u0e17\u0e27\u0e19\u0e15\u0e19\u0e40\u0e2d\u0e07\u0e40\u0e17\u0e48\u0e32\u0e19\u0e31\u0e49\u0e19 \u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33\u0e17\u0e32\u0e07\u0e01\u0e32\u0e23\u0e41\u0e1e\u0e17\u0e22\u0e4c \u0e01\u0e0e\u0e2b\u0e21\u0e32\u0e22 \u0e01\u0e32\u0e23\u0e40\u0e07\u0e34\u0e19 \u0e2b\u0e23\u0e37\u0e2d\u0e27\u0e34\u0e0a\u0e32\u0e0a\u0e35\u0e1e\u0e2d\u0e37\u0e48\u0e19" },
+      { q: "\u0e23\u0e2b\u0e31\u0e2a\u0e0a\u0e27\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e17\u0e33\u0e07\u0e32\u0e19\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23?", a: "\u0e41\u0e0a\u0e23\u0e4c\u0e25\u0e34\u0e07\u0e01\u0e4c\u0e0a\u0e27\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e08\u0e32\u0e01\u0e2b\u0e19\u0e49\u0e32\u0e01\u0e23\u0e30\u0e40\u0e1b\u0e4b\u0e32\u0e40\u0e07\u0e34\u0e19 \u0e40\u0e21\u0e37\u0e48\u0e2d\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e40\u0e02\u0e49\u0e32\u0e23\u0e48\u0e27\u0e21\u0e41\u0e25\u0e30\u0e14\u0e39\u0e14\u0e27\u0e07\u0e04\u0e23\u0e31\u0e49\u0e07\u0e41\u0e23\u0e01 \u0e04\u0e38\u0e13\u0e17\u0e31\u0e49\u0e07\u0e04\u0e39\u0e48\u0e08\u0e30\u0e44\u0e14\u0e49\u0e04\u0e33\u0e16\u0e32\u0e21\u0e1f\u0e23\u0e35 (\u0e2a\u0e39\u0e07\u0e2a\u0e38\u0e14 3 \u0e15\u0e48\u0e2d\u0e27\u0e31\u0e19)" },
+    ]
+      : [
+      { q: "How does a reading work?", a: "Type your question, shuffle, then pick 3 cards. Ngern reads the three cards together and links them back to what you asked." },
+      { q: "How many questions can I ask?", a: "You get 1 free question every day. Extra questions use credits from your wallet, and inviting friends earns more." },
+      { q: "Are my questions private?", a: "Yes. Your questions and readings are stored only on your account, never shared, and never used for advertising." },
+      { q: "Can I delete a reading or my account?", a: "You can delete any reading from its page, or delete your whole account and data from Account settings in the menu." },
+      { q: "Is a reading professional advice?", a: "No. Readings are for entertainment and reflection only, never medical, legal, financial, or other professional advice." },
+      { q: "How do invite codes work?", a: "Share your invite link from the Wallet page. When a friend joins and takes their first reading, you both earn a free question (up to 3 a day)." },
+    ];
+  const faqHtml = faq
+    .map(
+      (f, i) =>
+        `<details class="faq"${i === 0 ? " open" : ""}><summary>${escapeHtml(f.q)}</summary><p>${escapeHtml(f.a)}</p></details>`,
+    )
+    .join("");
+  const body =
+    `<p class="lede">${escapeHtml(d.helpLede)}</p>` +
+    `<h2 class="faq-h">${escapeHtml(d.faqTitle)}</h2>${faqHtml}` +
+    `<section class="contact-card"><h2>${escapeHtml(d.contactUsTitle)}</h2>` +
+    `<p>${escapeHtml(uiLang === "th" ? "\u0e04\u0e33\u0e16\u0e32\u0e21 \u0e23\u0e32\u0e22\u0e07\u0e32\u0e19\u0e1a\u0e31\u0e4a\u0e01 \u0e2b\u0e23\u0e37\u0e2d\u0e2d\u0e22\u0e32\u0e01\u0e40\u0e2a\u0e19\u0e2d\u0e41\u0e19\u0e30? \u0e1a\u0e2d\u0e01\u0e40\u0e23\u0e32\u0e27\u0e48\u0e32\u0e40\u0e01\u0e34\u0e14\u0e2d\u0e30\u0e44\u0e23\u0e02\u0e36\u0e49\u0e19 \u0e04\u0e38\u0e13\u0e17\u0e33\u0e2d\u0e30\u0e44\u0e23\u0e2d\u0e22\u0e39\u0e48\u0e15\u0e2d\u0e19\u0e19\u0e31\u0e49\u0e19 \u0e41\u0e25\u0e30\u0e43\u0e0a\u0e49\u0e2d\u0e38\u0e1b\u0e01\u0e23\u0e13\u0e4c\u0e2d\u0e30\u0e44\u0e23" : "Questions, a bug to report, or a suggestion? Tell us what happened, what you were doing, and which device you use.")}</p>` +
+    `<p><a class="contact-btn" href="mailto:${SUPPORT_EMAIL}">&#9993; ${SUPPORT_EMAIL}</a></p></section>` +
+    `<p class="contact-links"><a href="/terms">${escapeHtml(d.terms)}</a> · <a href="/privacy">${escapeHtml(d.privacy)}</a> · <a href="/cards">${escapeHtml(d.cardsTitle)}</a></p>`;
+  return shell(d.drawerHelp, d.drawerHelp, body, uiLang);
 }

@@ -7,7 +7,7 @@ describe("GET /terms, /privacy, /contact", () => {
     for (const [path, heading] of [
       ["/terms", "Terms"],
       ["/privacy", "Privacy"],
-      ["/contact", "Contact"],
+      ["/contact", "Help &amp; contact"],
     ]) {
       const res = await app.request(path);
       expect(res.status).toBe(200);
@@ -15,6 +15,11 @@ describe("GET /terms, /privacy, /contact", () => {
       expect(html).toContain(`<h1>${heading}</h1>`);
       expect(html).toContain("TarotNice");
     }
+    const contact = await (await app.request("/contact")).text();
+    expect(contact).toContain("Common questions");
+    expect(contact).toContain("How does a reading work?");
+    expect(contact).toContain("contact-card");
+    expect(contact.match(/<details class="faq"/g)).toHaveLength(6);
   });
 
   it("has no refunds page (nothing to refund)", async () => {

@@ -101,14 +101,51 @@ function initDetail(id) {
   }
 }
 
+function initHistoryFilter() {
+  var search = document.querySelector("[data-history-search]");
+  if (!search) return;
+  var chips = document.querySelectorAll("[data-topic-filter]");
+  var items = document.querySelectorAll("[data-reading-item]");
+  var groups = document.querySelectorAll("[data-month-group]");
+  var none = document.querySelector("[data-history-none]");
+  var topic = "all";
+  function apply() {
+    var q = (search.value || "").toLowerCase().trim();
+    var anyVisible = false;
+    items.forEach(function (item) {
+      var okTopic = topic === "all" || item.getAttribute("data-topic") === topic;
+      var okSearch = !q || (item.getAttribute("data-search") || "").includes(q);
+      var show = okTopic && okSearch;
+      item.hidden = !show;
+      if (show) anyVisible = true;
+    });
+    groups.forEach(function (g) {
+      var has = g.querySelector("[data-reading-item]:not([hidden])");
+      g.hidden = !has;
+    });
+    if (none) none.hidden = anyVisible;
+  }
+  search.addEventListener("input", apply);
+  chips.forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      chips.forEach(function (c) { c.classList.remove("on"); });
+      chip.classList.add("on");
+      topic = chip.getAttribute("data-topic-filter") || "all";
+      apply();
+    });
+  });
+}
+
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", function () {
     flush();
+    initHistoryFilter();
     var id = currentId();
     if (id) initDetail(id);
   });
 } else {
   flush();
+  initHistoryFilter();
   var syncId = currentId();
   if (syncId) initDetail(syncId);
 }

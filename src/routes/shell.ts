@@ -28,6 +28,7 @@ function q(s){return document.querySelector(s)}function qa(s){return document.qu
 function paint(d){try{
  if(d.tokens){var total=Math.max(0,d.tokens.freeLeft||0)+Math.max(0,d.tokens.balance||0);var chips=qa("[data-token-chip]");for(var j=0;j<chips.length;j++){chips[j].hidden=false;var n=chips[j].querySelector("[data-token-count]");if(n)n.textContent=String(total)}var c=q("[data-drawer-credits]");if(c)c.textContent=String(total);var w=q("[data-drawer-wallet-count]");if(w)w.textContent=String(total)}
  if(d.streak){var sc=d.streak.current||0;var st=q("[data-drawer-streak]");if(st)st.textContent=String(sc);var un=q("[data-drawer-day-unit]");if(un)un.textContent=sc===1?un.getAttribute("data-one"):un.getAttribute("data-many")}
+ if(typeof d.historyCount==="number"){var hc=q("[data-drawer-history-count]");if(hc){hc.hidden=d.historyCount===0;hc.textContent=String(d.historyCount)}}
  var reg=d.user&&!d.user.isAnonymous;window.__tnRegistered=!!reg;
  var nick=(d.prefs&&d.prefs.nickname)||"";
  var name=nick||(reg?String(d.user.email||"").split("@")[0]:"");
@@ -236,9 +237,9 @@ export function drawerHtml(ui: UiLang): string {
     <span class="drawer-stat"><small>${escapeHtml(d.drawerStreak)}</small><b><span data-drawer-streak>0</span> <span data-drawer-day-unit data-one="${escapeHtml(d.drawerDayUnit)}" data-many="${escapeHtml(d.drawerDays)}">${escapeHtml(d.drawerDays)}</span></b></span>
   </div>
   <nav class="drawer-nav">
-    <a href="/history">${escapeHtml(d.historyTitle)}</a>
+    <a href="/history">${escapeHtml(d.historyTitle)} <span class="drawer-count" data-drawer-history-count hidden></span></a>
     <a href="/progress">${escapeHtml(d.drawerJourney)}</a>
-    <a href="/billing">${escapeHtml(d.refTab)} <span class="drawer-pill">+1</span></a>
+    <a href="/billing">${escapeHtml(d.refTab)} <span class="drawer-pill">${escapeHtml(d.invitePill)}</span></a>
     <a href="/cards">${escapeHtml(d.cardsTitle)}</a>
     <button type="button" data-drawer-settings-open>${escapeHtml(d.drawerSettings)} <span aria-hidden="true">&rsaquo;</span></button>
     <a href="/billing">${escapeHtml(d.drawerWallet)} <span class="drawer-sub"><span class="moonstone" aria-hidden="true"></span><span data-drawer-wallet-count>0</span></span></a>

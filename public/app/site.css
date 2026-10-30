@@ -459,3 +459,51 @@ h1.read-q{font-weight:600}
 .drawer-guest-btns{display:flex;flex-direction:column;gap:.6rem}
 .drawer-stat .moonstone{position:relative;top:.06em;margin-right:.3em}
 button.token-chip{font:inherit;cursor:pointer;background:none}
+
+/* Design boards D-G: history, detail, journey */
+.hist-head{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.hist-head .muted{margin:.1rem 0 0}
+.hist-tools{margin:1rem 0 .4rem}
+.hist-search{display:flex;align-items:center;gap:.5rem;background:var(--card-face);border:1.5px solid var(--gold-dim);border-radius:12px;padding:.55rem .8rem}
+.hist-search input{flex:1;border:0;background:transparent;color:var(--card-ink);font:inherit;outline:none;min-width:0}
+.hist-chips{display:flex;gap:.45rem;flex-wrap:wrap;margin:.7rem 0 .2rem}
+.hist-chip{border:1.5px solid var(--gold-dim);background:transparent;color:inherit;border-radius:999px;padding:.32rem .85rem;font:inherit;font-size:.92rem;cursor:pointer}
+.hist-chip.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.hist-month-h{font-size:1.05rem;margin:1.2rem 0 .55rem;color:var(--muted)}
+.history-link{display:flex;gap:.8rem;align-items:flex-start}
+.hist-thumbs{display:flex;gap:3px;flex:none;padding-top:.15rem}
+.hist-thumb{width:26px;height:42px;object-fit:cover;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.hist-main{flex:1;min-width:0;display:block}
+.hist-meta{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
+.topic-pill{display:inline-block;border:1px solid var(--gold-dim);border-radius:999px;padding:.05rem .6rem;font-size:.8rem;color:var(--muted)}
+.hist-date{font-size:.85rem;color:var(--muted)}
+.history-q{display:block;font-size:1.08rem;margin:.3rem 0 .15rem}
+.history-sum{display:block;color:var(--card-ink);opacity:.85}
+.hist-cards{display:block;font-size:.85rem;color:var(--muted);margin-top:.25rem}
+.hist-chev{font-size:1.5rem;color:var(--muted);line-height:1;padding-top:.2rem}
+.drawer-count{margin-left:auto;color:var(--muted);font-size:.92rem}
+.back-link{color:inherit;text-decoration:none;font-weight:600}
+.detail-pos{display:block;font-size:.85rem;color:var(--muted);margin-bottom:.35rem;text-align:center}
+.detail-overview .detail-lead{font-size:1.05rem}
+.detail-sub{margin:1rem 0 .3rem;font-size:1rem}
+.reading-detail .detail-card img{width:min(150px,26vw)}
+.recent-card figcaption small{display:block;color:var(--muted)}
+.journey-hero{display:flex;gap:1.1rem;align-items:center;flex-wrap:wrap;background:#43356f;color:#f4eefc;border-radius:18px;padding:1.2rem 1.4rem;margin:1rem 0}
+.journey-cat{width:72px;height:72px}
+.journey-hero-main{flex:1;min-width:160px}
+.journey-hero-main small{opacity:.85}
+.journey-big{font-size:1.9rem;margin:.15rem 0}
+.journey-note{margin:.1rem 0;opacity:.85;font-size:.95rem}
+.journey-stats{display:flex;gap:.7rem}
+.journey-stats span{background:rgba(255,255,255,.13);border-radius:12px;padding:.6rem .9rem;display:grid}
+.journey-stats small{opacity:.85;font-size:.8rem}
+.journey-stats b{font-size:1.25rem}
+.cal-5wk{max-width:520px}
+.cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;max-width:520px;text-align:center;color:var(--muted);font-size:.82rem;margin-top:.4rem}
+.cal-cell.blank{background:transparent;opacity:0}
+.cal-legend{display:flex;align-items:center;gap:.4rem;color:var(--muted);font-size:.9rem}
+.cal-cell.mini{width:14px;height:14px;aspect-ratio:auto;display:inline-block}
+.collection-head{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
+.collection-bar{background:var(--gold-dim);opacity:1;border-radius:999px;height:10px;overflow:hidden;margin:.5rem 0}
+.collection-bar span{display:block;height:100%;background:#c99a3a;border-radius:999px}
+.cal-5wk .cal-cell{aspect-ratio:auto;height:34px}

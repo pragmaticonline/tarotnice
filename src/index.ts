@@ -41,7 +41,7 @@ import {
 } from "./lib/analytics";
 import { contactPage, privacyPage, termsPage } from "./routes/legal";
 import { homePage } from "./routes/home";
-import { historyDetailPage, historyPage } from "./routes/history";
+import { historyDetailPage, historyPage, readingDateLabel } from "./routes/history";
 import { progressPage } from "./routes/progress";
 import { cardDetailPage, cardsPage } from "./routes/library";
 import {
@@ -1312,6 +1312,9 @@ app.get("/history/:id", async (c) => {
         id: reading.id,
         topicLabel: topicLabel(ui, reading.topic),
         question: reading.question,
+        dateLabel: readingDateLabel(ui, reading.createdAt),
+        positions: [...pickSpread(reading.question, isTopic(reading.topic) ? reading.topic : "general", lang)],
+        summary: reading.aiSummary,
         cards,
         aiText: reading.aiText,
         journal: reading.journal,
@@ -1485,7 +1488,7 @@ app.get("/progress", async (c) => {
       ui,
       origin: new URL(c.req.url).origin,
       streak,
-      days: last14Days(days),
+      days: lastNDays(days, 35),
       owned: ownedDaily,
       cardNames,
       referrals,
@@ -1504,15 +1507,15 @@ app.get("/progress", async (c) => {
   );
 });
 
-/** Last 14 Bangkok days ending today, oldest first. */
-function last14Days(days: string[]): { date: string; active: boolean }[] {
+/** Last N Bangkok days ending today, oldest first. */
+function lastNDays(days: string[], n: number): { date: string; active: boolean }[] {
   const active = new Set(days);
   // Bangkok "today": UTC + 7h, floored to a UTC day.
   const todayMs = Date.now() + 7 * 3600 * 1000;
   const today = new Date(todayMs);
   today.setUTCHours(0, 0, 0, 0);
   const out: { date: string; active: boolean }[] = [];
-  for (let back = 13; back >= 0; back--) {
+  for (let back = n - 1; back >= 0; back--) {
     const key = new Date(today.getTime() - back * 24 * 3600 * 1000).toISOString().slice(0, 10);
     out.push({ date: key, active: active.has(key) });
   }
@@ -1843,6 +1846,7 @@ app.get("/api/me/summary", async (c) => {
       remaining: questionsLeft(balance),
       configured: tokensConfigured(c.env),
     },
+    historyCount: await store.progressStats(user.id).then((s) => s.readings).catch(() => 0),
     openReading: openReading ? { id: openReading.id, question: openReading.question } : null,
   });
 });

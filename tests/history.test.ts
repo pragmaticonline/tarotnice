@@ -34,6 +34,12 @@ describe("historyPage", () => {
     expect(html).toContain("/history?cursor=1");
     expect(html).toContain("noindex");
     expect(html.indexOf("/history/r1")).toBeLessThan(html.indexOf("/history/r0"));
+    // Design board D: search, topic chips, month groups, card thumbs.
+    expect(html).toContain("data-history-search");
+    expect(html).toContain('data-topic-filter="love"');
+    expect(html).toContain("data-month-group");
+    expect(html).toContain("hist-thumb");
+    expect(html).toContain("New reading");
   });
 
   it("shows the empty state without a cursor link", () => {
@@ -117,6 +123,11 @@ describe("progressPage", () => {
     expect(html).toContain("The Fool");
     const cells = html.match(/cal-cell/g)?.length ?? 0;
     expect(cells).toBeGreaterThanOrEqual(14);
+    // Design board F: streak hero, 5-week grid, collection bar.
+    expect(html).toContain("journey-hero");
+    expect(html).toContain("Last 5 weeks");
+    expect(html).toContain("collection-bar");
+    expect(html).toContain("2 / 78 collected");
     const deck = html.match(/deck-cell/g)?.length ?? 0;
     expect(deck).toBeGreaterThanOrEqual(78);
   });

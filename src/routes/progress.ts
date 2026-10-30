@@ -24,12 +24,19 @@ export function progressPage(opts: {
 }): string {
   const d = t(opts.ui);
   const head = headerHtml({ ui: opts.ui, streak: opts.streak, path: "/progress" });
-  const cells = opts.days
-    .map(
-      (day) =>
-        `<span class="cal-cell${day.active ? " on" : ""}" title="${escapeHtml(day.date)}" aria-label="${escapeHtml(day.date)}${day.active ? " ✓" : ""}"></span>`,
-    )
-    .join("");
+  // Design: Last 5 weeks as a Mon-Sun grid (pad the first week with
+  // blanks so columns line up with weekdays).
+  const firstDow = opts.days.length ? new Date(opts.days[0].date + "T00:00:00Z").getUTCDay() : 1; // 0=Sun
+  const leadBlanks = (firstDow + 6) % 7; // Monday-first offset
+  const cells =
+    Array.from({ length: leadBlanks }, () => `<span class="cal-cell blank" aria-hidden="true"></span>`).join("") +
+    opts.days
+      .map(
+        (day) =>
+          `<span class="cal-cell${day.active ? " on" : ""}" title="${escapeHtml(day.date)}" aria-label="${escapeHtml(day.date)}${day.active ? " ✓" : ""}"></span>`,
+      )
+      .join("");
+  const ownedPct = Math.round((new Set(opts.owned).size / 78) * 100);
   const owned = new Set(opts.owned);
   const deck = Array.from({ length: 78 }, (_, id) => {
     const name = opts.cardNames[id] ?? `#${id}`;
@@ -51,24 +58,30 @@ export function progressPage(opts: {
     origin: opts.origin,
     noindex: true,
     body:
-      `${head}<main><h1 class="display">${escapeHtml(d.progressTitle)}</h1>` +
-      `<section class="panel-card"><h2>${escapeHtml(d.streakTitle)}</h2>` +
-      `<p class="streak-big">🌙 <b>${opts.streak.current}</b></p>` +
-      `<p class="muted">${escapeHtml(d.freezeNote)}</p>` +
-      `<div class="cal" role="img" aria-label="${escapeHtml(d.calendarTitle)}">${cells}</div>` +
-      `<p class="muted">${escapeHtml(d.bestTitle)}: <b>${opts.streak.longest}</b> · ${escapeHtml(d.historyTitle)}: <b>${opts.readings}</b></p></section>` +
+      `${head}<main><h1 class="display">${escapeHtml(d.drawerJourney)}</h1>` +
+      `<section class="journey-hero"><img class="journey-cat" src="/mascot/ngern-sitting.svg" alt="" width="72" height="72">` +
+      `<div class="journey-hero-main"><small>${escapeHtml(d.streakTitle)}</small>` +
+      `<p class="journey-big"><b>${opts.streak.current}</b> ${escapeHtml(opts.streak.current === 1 ? d.drawerDayUnit : d.drawerDays)}</p>` +
+      `<p class="journey-note">${escapeHtml(d.freezeNote)}</p></div>` +
+      `<div class="journey-stats"><span><small>${escapeHtml(d.bestTitle)}</small><b>${opts.streak.longest}</b></span>` +
+      `<span><small>${escapeHtml(d.historyTitle)}</small><b>${opts.readings}</b></span></div></section>` +
+      `<section class="panel-card"><h2>${escapeHtml(d.lastWeeksTitle)}</h2>` +
+      `<div class="cal-head" aria-hidden="true"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>` +
+      `<div class="cal cal-5wk" role="img" aria-label="${escapeHtml(d.calendarTitle)}">${cells}</div>` +
+      `<p class="cal-legend"><span class="cal-cell on mini" aria-hidden="true"></span> ${escapeHtml(d.drewCardsLegend)} <span class="cal-cell mini" aria-hidden="true"></span> ${escapeHtml(d.noReadingLegend)}</p></section>` +
       (opts.recentDaily && opts.recentDaily.length
         ? `<section class="panel-card"><h2>${escapeHtml(d.recentDailyTitle)}</h2><div class="recent-strip">` +
           opts.recentDaily
             .map(
               (r) =>
-                `<figure class="recent-card"><img src="${escapeHtml(r.image)}" alt="${escapeHtml(r.name)}" loading="lazy"><figcaption>${escapeHtml(r.name)}</figcaption></figure>`,
+                `<figure class="recent-card"><img src="${escapeHtml(r.image)}" alt="${escapeHtml(r.name)}" loading="lazy"><figcaption>${escapeHtml(r.name)}<small>${escapeHtml(r.day)}</small></figcaption></figure>`,
             )
             .join("") +
           `</div></section>`
         : "") +
-      `<section class="panel-card"><h2>${escapeHtml(d.collectionTitle)}</h2>` +
-      `<p class="muted">${owned.size} / 78</p><div class="deck" role="list">${deck}</div></section>` +
+      `<section class="panel-card"><div class="collection-head"><h2>${escapeHtml(d.collectionTitle)}</h2><span class="muted">${escapeHtml(fmt(d.collectedOf, { owned: owned.size, total: 78 }))}</span></div>` +
+      `<div class="collection-bar" role="img" aria-label="${ownedPct}%"><span style="width:${ownedPct}%"></span></div>` +
+      `<p class="muted">${escapeHtml(d.collectionNote)}</p><div class="deck" role="list">${deck}</div></section>` +
       `<section class="panel-card"><h2>${escapeHtml(d.referralTitle)}</h2>` +
       `<p>${escapeHtml(fmt(d.referralLine, { invited: opts.referrals.invited, converted: opts.referrals.converted }))}</p>` +
       `<p class="muted">${escapeHtml(opts.bonusOn ? d.referralBonusOn : d.referralBonusOff)}</p></section>` +
