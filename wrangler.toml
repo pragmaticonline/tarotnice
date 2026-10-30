@@ -28,7 +28,7 @@ dataset = "tarotnice_events"
 CF_ACCOUNT_ID = "30142eba9e53a37522d1c59b298db661"
 DAILY_QUESTION_LIMIT = "1"
 REFERRAL_BONUS = "0"
-READING_MODEL = "@cf/google/gemma-4-26b-a4b-it"
+READING_MODEL = "@cf/meta/llama-4-scout-17b-16e-instruct"
 # Turnstile site key is public (rendered into the ask form). Empty =
 # widget off; the server enforces only when TURNSTILE_SECRET is set.
 TURNSTILE_SITE_KEY = ""
