@@ -20,6 +20,10 @@ const THEME_INIT = `<script>(function(){try{var m=null;try{m=localStorage.getIte
 // to user_prefs via PUT /api/me/prefs (best-effort, M3).
 const THEME_TOGGLE = `<script>(function(){function paint(){try{var night=document.documentElement.getAttribute("data-mode")==="night";var btns=document.querySelectorAll("[data-theme-toggle]");for(var i=0;i<btns.length;i++){var b=btns[i];var d=b.querySelector("[data-theme-label]");if(d)d.textContent=night?"\u263e":"\u2600"}}catch(x){}}paint();document.addEventListener("click",function(e){var b=e.target&&e.target.closest?e.target.closest("[data-theme-toggle]"):null;if(!b)return;try{var cur=document.documentElement.getAttribute("data-mode")==="night"?"night":"day";var next=cur==="night"?"day":"night";document.documentElement.setAttribute("data-mode",next);try{localStorage.setItem("tarotnice:mode",next)}catch(x){}paint();fetch("/api/me/prefs",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify({theme:next}),credentials:"include"}).catch(function(){})}catch(x){}});})();</script>`;
 
+// Header auth link starts as Sign in; this swaps it to Account once
+// /api/me/summary shows a registered (non-anonymous) user.
+const AUTH_LINK = `<script>(function(){try{fetch("/api/me/summary",{credentials:"include"}).then(function(r){return r.json()}).then(function(d){try{if(!d||!d.user||d.user.isAnonymous)return;var links=document.querySelectorAll("[data-auth-link]");for(var i=0;i<links.length;i++){links[i].setAttribute("href","/account");links[i].textContent=links[i].getAttribute("data-account-label")||"Account"}}catch(x){}}).catch(function(){})}catch(e){}})();</script>`;
+
 const DESCRIPTION = "Free tarot readings, every day. Draw your daily card and ask a free question every day.";
 
 export function pageShell(opts: {
@@ -89,6 +93,7 @@ ${opts.extraHead ?? ""}
 ${opts.body}
 </div>
 ${THEME_TOGGLE}
+${AUTH_LINK}
 ${analyticsBeacon()}
 <script src="/app/share.js" defer></script>
 <script>(function(){try{if("serviceWorker" in navigator){addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){});});}}catch(e){}})();</script>
@@ -138,13 +143,20 @@ export function langButtonHtml(ui: UiLang, path: string): string {
   return `<a class="lang-btn" lang="${other.code}" href="${escapeHtml(path)}${sep}ui=${other.code}" aria-label="${escapeHtml(t(ui).interfaceLanguage)}">${other.code.toUpperCase()}</a>`;
 }
 
+/** Auth entry in the header: Sign in (guests) -> Account (registered,
+ *  swapped client-side by AUTH_LINK). Reuses the lang-btn pill style. */
+export function authLinkHtml(ui: UiLang): string {
+  const d = t(ui);
+  return `<a class="lang-btn head-auth" data-auth-link data-account-label="${escapeHtml(d.account)}" href="/sign-in">${escapeHtml(d.signIn)}</a>`;
+}
+
 export function headerHtml(opts: {
   ui: UiLang;
   streak: StreakInfo;
   path?: string;
 }): string {
   const path = opts.path ?? "/";
-  return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${streakChipHtml(opts.streak, opts.ui, "/progress")}${themeToggleHtml(opts.ui)}${langButtonHtml(opts.ui, path)}</header>`;
+  return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${streakChipHtml(opts.streak, opts.ui, "/progress")}${authLinkHtml(opts.ui)}${themeToggleHtml(opts.ui)}${langButtonHtml(opts.ui, path)}</header>`;
 }
 
 /** Shared footer: tagline, entertainment line, legal links, one

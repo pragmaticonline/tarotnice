@@ -30,6 +30,11 @@ describe("GET / (draw screen)", () => {
     expect(html).toContain("data-streak");
     expect(html).toContain("data-theme-toggle");
     expect(html).toContain("?ui=th");
+    // Header auth link: Sign in for guests (client script swaps it to
+    // Account for registered users).
+    expect(html).toContain('data-auth-link');
+    expect(html).toContain('href="/sign-in"');
+    expect(html).toContain('data-account-label="Account"');
     // Footer legal links (no entertainment line).
     expect(html).not.toContain("For reflection and entertainment.");
     expect(html).toContain('href="/terms"');
