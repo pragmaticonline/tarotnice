@@ -155,7 +155,7 @@ export function authLinkHtml(ui: UiLang): string {
  *  is filled client-side from /api/me/summary; hidden until then. */
 export function tokenChipHtml(ui: UiLang): string {
   const d = t(ui);
-  return `<span class="lang-btn token-chip" data-token-chip hidden aria-label="${escapeHtml(d.billingTitle)}"><span class="moonstone" aria-hidden="true"></span><b data-token-count>0</b> <span data-token-unit>${escapeHtml(d.tokensUnit)}</span></span>`;
+  return `<span class="lang-btn token-chip" data-token-chip hidden aria-label="${escapeHtml(d.billingTitle)}"><span class="moonstone" aria-hidden="true"></span><b data-token-count>0</b></span>`;
 }
 
 export function headerHtml(opts: {
