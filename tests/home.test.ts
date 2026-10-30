@@ -96,6 +96,17 @@ describe("GET / (draw screen)", () => {
     expect(withKey).toContain("challenges.cloudflare.com/turnstile");
   });
 
+  it("shuffle button shows the 5-token cost with the gem, not an arrow", () => {
+    const en = homePage({ uiLang: "en" });
+    expect(en).toContain("Shuffle the cards");
+    expect(en).toContain('class="shuffle-cost"');
+    expect(en).toContain('class="moonstone"');
+    expect(en).toContain("5 tokens");
+    expect(en).not.toContain("\u2192</button>");
+    const th = homePage({ uiLang: "th" });
+    expect(th).toContain("5 \u0e42\u0e17\u0e40\u0e04\u0e19");
+  });
+
   it("homePage() renders both languages directly", () => {
     expect(homePage({ uiLang: "en" })).toContain("What would you like to ask today?");
     expect(homePage({ uiLang: "th" })).toContain("\u0e2d\u0e22\u0e32\u0e01\u0e16\u0e32\u0e21\u0e2d\u0e30\u0e44\u0e23\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49?");
