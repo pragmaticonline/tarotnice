@@ -27,7 +27,8 @@ describe("GET / (draw screen)", () => {
     expect(html).toContain("Hi, I&#39;m Ngern");
     // Header: Ngern mark, streak hook, Day/Night + TH/EN toggles.
     expect(html).toContain('data-logo="ngern"');
-    expect(html).toContain("data-streak");
+    // No streak chip in the header anymore (streak lives in the drawer).
+    expect(html).not.toContain("data-streak");
     expect(html).toContain("data-theme-toggle");
     expect(html).toContain("?ui=th");
     // Mobile header stays uncluttered: no language or Day/Night in the
