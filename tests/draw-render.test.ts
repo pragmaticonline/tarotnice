@@ -258,6 +258,31 @@ describe("renderReading positions", () => {
     expect(html).toContain("Server side summary.");
   });
 
+  it("server fallback summary with a header prefix does not duplicate the glance body", () => {
+    const { TarotDraw, handlers } = loadDraw();
+    const mount = makeEl();
+    const reading = {
+      id: "r1",
+      cards: [
+        { name: "Two of Wands", keywords: ["planning"], image: "/a.png", image2x: "", reversed: false },
+      ],
+    };
+    TarotDraw.renderReading(mount, reading, "th", "/stream", {});
+    const body = "Together these cards tell a story of change and careful rebuilding ahead.";
+    handlers["delta"]({
+      data: JSON.stringify("\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21:\n\n" + body + "\n\n**Two of Wands**: plan well."),
+    });
+    // Server fallback summary (no Summary line in text): header + the
+    // body's own opening, truncated — must not render as a duplicate.
+    handlers["done"]({ data: JSON.stringify({ summary: "\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21:\n\nTogether these cards tell a story of change" }) });
+    const synth = (mount.children as ReturnType<typeof makeEl>[]).find((c) =>
+      String(c.className).includes("rtext"),
+    );
+    const html = String(synth!.innerHTML);
+    expect(html).not.toContain("\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21:\n");
+    expect(html.split("Together these cards tell a story").length - 1).toBe(1);
+  });
+
   it("watchdog re-opens a silent stream and does not duplicate text", () => {
     const { TarotDraw, handlers, intervals, clock, esList } = loadDraw();
     const mount = makeEl();

@@ -374,14 +374,32 @@ export function buildReadingPrompt(input: {
 
 /** Pull the trailing "Summary: ..."/"\u0e2a\u0e23\u0e38\u0e1b: ..." line (\u2264140 chars).
  *  Falls back to the first sentence, truncated. */
+const SUMMARY_LINE_RE = /^(?:\*\*)?(?:summary|\u0e2a\u0e23\u0e38\u0e1b)\s*(?:\*\*)?\s*:\s*(?:\*\*)?\s*(.+?)(?:\*\*)?$/i;
+
+/** True when the text carries a real closing Summary line. A reading
+ *  without one stopped early — it must not be stored as complete. */
+export function hasSummaryLine(text: string): boolean {
+  return text.split("\n").some((l) => SUMMARY_LINE_RE.test(l.trim()));
+}
+
 export function parseSummary(text: string): string {
   const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
   for (let i = lines.length - 1; i >= 0; i--) {
-    const m = /^(?:\*\*)?(?:summary|\u0e2a\u0e23\u0e38\u0e1b)\s*(?:\*\*)?\s*:\s*(?:\*\*)?\s*(.+?)(?:\*\*)?$/i.exec(lines[i]);
+    const m = SUMMARY_LINE_RE.exec(lines[i]);
     if (m) return m[1].slice(0, 140);
   }
-  const first = (text.split(/(?<=[.!?])\s/)[0] ?? text).trim();
-  return first.slice(0, 140);
+  // Fallback: first sentence of the body. Strip a leading section
+  // header first (it leaked into the glance lead verbatim, duplicated
+  // the overview, and was sliced mid-word at 140 chars).
+  const body = text.replace(
+    /^\s*(?:\*\*)?(?:Overview|\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21)\s*(?:\*\*)?\s*:?\s*(?:\*\*)?\s*\n?/i,
+    "",
+  );
+  const first = (body.split(/(?<=[.!?])\s/)[0] ?? body).replace(/\s*\n\s*/g, " ").trim();
+  if (first.length <= 140) return first;
+  const cut = first.slice(0, 140);
+  const lastSpace = cut.lastIndexOf(" ");
+  return (lastSpace > 40 ? cut.slice(0, lastSpace) : cut).trim();
 }
 
 // --- SSE streaming (provider-agnostic) ---

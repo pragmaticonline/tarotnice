@@ -16,6 +16,7 @@ import {
   isCrisisQuestion,
   isLang,
   isTopic,
+  hasSummaryLine,
   parseSummary,
   proofreadThai,
   sseEvent,
@@ -494,7 +495,9 @@ app.get("/api/readings/:id/stream", async (c) => {
           for (const chunk of row.aiText.match(/[\s\S]{1,120}/g) ?? []) {
             send(sseEvent("delta", JSON.stringify(chunk)));
           }
-          send(await donePayload(row.aiSummary ?? parseSummary(row.aiText)));
+          // Recompute rather than trust the stored summary: rows
+          // stored by the old fallback carry a header + mid-word cut.
+          send(await donePayload(parseSummary(row.aiText)));
           controller.close();
           return;
         }
@@ -508,7 +511,7 @@ app.get("/api/readings/:id/stream", async (c) => {
               for (const chunk of fresh.aiText.match(/[\s\S]{1,120}/g) ?? []) {
                 send(sseEvent("delta", JSON.stringify(chunk)));
               }
-              send(await donePayload(fresh.aiSummary ?? parseSummary(fresh.aiText)));
+              send(await donePayload(parseSummary(fresh.aiText)));
               controller.close();
               return;
             }
@@ -585,6 +588,11 @@ app.get("/api/readings/:id/stream", async (c) => {
         }
         full = full.trim();
         if (!full) throw new Error("empty_response");
+        // A generation that stopped early (no closing Summary line)
+        // is not a complete reading: fail it so the spend is refunded
+        // and the user can retry, instead of storing a truncated text
+        // whose fallback summary duplicates the overview.
+        if (!hasSummaryLine(full)) throw new Error("incomplete_response");
         if (lang === "th" && c.env.AI) {
           // Post-stream proofread: fix dropped Thai letters, then swap
           // the client's text via a final event before done.

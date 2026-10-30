@@ -10,6 +10,7 @@ import {
   isCrisisQuestion,
   isLang,
   isTopic,
+  hasSummaryLine,
   parseSummary,
   pickSpread,
   sseEvent,
@@ -421,6 +422,24 @@ describe("parseSummary", () => {
 
   it("caps at 140 chars", () => {
     expect(parseSummary("Summary: " + "x".repeat(200))).toHaveLength(140);
+  });
+
+  it("fallback summary strips the section header and does not cut mid-word", () => {
+    const thHead = "\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21";
+    const body = "\u0e0a\u0e48\u0e27\u0e07\u0e19\u0e35\u0e49\u0e04\u0e38\u0e13\u0e21\u0e35\u0e1e\u0e25\u0e31\u0e07\u0e43\u0e2b\u0e21\u0e48\u0e46 \u0e17\u0e35\u0e48\u0e04\u0e2d\u0e22\u0e01\u0e23\u0e30\u0e15\u0e38\u0e49\u0e19\u0e43\u0e2b\u0e49\u0e04\u0e38\u0e13\u0e2b\u0e32\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e43\u0e2b\u0e21\u0e48\u0e46 \u0e2d\u0e22\u0e39\u0e48\u0e40\u0e2a\u0e21\u0e2d \u0e40\u0e21\u0e37\u0e48\u0e2d\u0e04\u0e38\u0e13\u0e23\u0e39\u0e49\u0e2a\u0e36\u0e01\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08\u0e41\u0e25\u0e30\u0e40\u0e15\u0e34\u0e21\u0e40\u0e15\u0e47\u0e21\u0e43\u0e19\u0e14\u0e49\u0e32\u0e19\u0e2b\u0e19\u0e36\u0e48\u0e07\u0e41\u0e25\u0e49\u0e27 \u0e01\u0e47\u0e16\u0e36\u0e07\u0e40\u0e27\u0e25\u0e32\u0e17\u0e35\u0e48\u0e08\u0e30\u0e40\u0e15\u0e23\u0e35\u0e22\u0e21\u0e1e\u0e23\u0e49\u0e2d\u0e21\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e01\u0e32\u0e23\u0e1c\u0e08\u0e0d\u0e20\u0e31\u0e22\u0e04\u0e23\u0e31\u0e49\u0e07\u0e15\u0e48\u0e2d\u0e44\u0e1b\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e21\u0e32\u0e01\u0e21\u0e32\u0e22";
+    const out = parseSummary(thHead + ":\n\n" + body);
+    expect(out.startsWith(thHead)).toBe(false);
+    expect(out).not.toContain("\n");
+    expect(body.startsWith(out.slice(0, -1)) || out.length <= 140).toBe(true);
+    expect(out.length).toBeLessThanOrEqual(140);
+    // Ends at a word boundary (space in Thai text), not mid-word.
+    expect(body.charAt(out.length) === " " || out.length >= body.length).toBe(true);
+  });
+
+  it("hasSummaryLine detects plain and bold summary lines only", () => {
+    expect(hasSummaryLine("Body.\nSummary: done.")).toBe(true);
+    expect(hasSummaryLine("Body.\n**\u0e2a\u0e23\u0e38\u0e1b:** done.")).toBe(true);
+    expect(hasSummaryLine("Body with no closing line at all")).toBe(false);
   });
 
   it("pulls a bold-labelled summary (Thai model often writes **label:**)", () => {

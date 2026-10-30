@@ -297,15 +297,13 @@
       });
       row.appendChild(share);
     }
-    if (remaining <= 0) {
-      mount.appendChild(row);
-      sleepMode(null);
-      return;
-    }
+    // Always offer Ask again — even at 0 remaining. Hiding it stranded
+    // free users after their daily question; asking again routes
+    // through the normal login/buy flow on submit instead.
     var btn = document.createElement("button");
     btn.type = "button";
     btn.className = "btn btn-outline";
-    btn.textContent = t("again") + " (" + remaining + ")";
+    btn.textContent = remaining > 0 ? t("again") + " (" + remaining + ")" : t("again");
     btn.addEventListener("click", function () {
       var q = document.getElementById("q");
       if (q) q.value = "";
@@ -318,6 +316,7 @@
     });
     row.appendChild(btn);
     mount.appendChild(row);
+    if (remaining <= 0) sleepMode(null);
   }
 
   async function streamInto(mount, reading, lang, onDone) {

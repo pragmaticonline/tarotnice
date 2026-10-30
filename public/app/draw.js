@@ -350,6 +350,10 @@
       });
       if (sIdx >= 0) blocks.splice(sIdx, 1);
       if (!summaryText && doneSummary) summaryText = doneSummary;
+      // Server fallback summaries can carry the section header and the
+      // overview's own opening; strip the header so the lead does not
+      // repeat it (and so the dedupe below can match the body).
+      summaryText = summaryText.replace(/^\s*(?:\*\*)?(?:Overview|\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21)\s*(?:\*\*)?\s*:?\s*(?:\*\*)?\s*/i, "").trim();
       // A header-only first block (glance header on its own line, body
       // in the next block) would leave the glance empty and strand the
       // body outside the glance box — merge them back together.

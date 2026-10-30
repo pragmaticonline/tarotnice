@@ -55,7 +55,8 @@ function makeEl(extra: Record<string, unknown> = {}): Record<string, unknown> {
   return el;
 }
 
-async function runFollowUpFlow() {
+async function runFollowUpFlow(postRemaining = 2) {
+  const created: Record<string, unknown>[] = [];
   const guideAskBubble = { textContent: IDLE_HINT };
   const guideBubble = { textContent: "" };
   // Faithful step visibility: step 1 shown, draw + read hidden.
@@ -112,7 +113,7 @@ async function runFollowUpFlow() {
           json: async () => ({
             id: "r1",
             cards: [{ id: 0, reversed: false }],
-            remaining: 2,
+            remaining: postRemaining,
           }),
         };
       }
@@ -145,7 +146,11 @@ async function runFollowUpFlow() {
       querySelectorAll: () => [],
       getElementById: (id: string) => byId[id] ?? null,
       addEventListener: () => {},
-      createElement: () => makeEl(),
+      createElement: () => {
+        const e = makeEl();
+        created.push(e);
+        return e;
+      },
     },
     window: {},
   };
@@ -184,7 +189,7 @@ async function runFollowUpFlow() {
   if (!followUp) throw new Error("renderReading never ran");
   (followUp as { onFollowUp: (q: string) => void }).onFollowUp("Is it serious?");
   await new Promise((r) => setTimeout(r, 400));
-  return { guideAskBubble, guideBubble, question };
+  return { guideAskBubble, guideBubble, question, created };
 }
 
 describe("ask flow step-1 bubble", () => {
@@ -205,5 +210,11 @@ describe("ask flow step-1 bubble", () => {
   it("never leaves the reported stale wait line behind", async () => {
     const { guideAskBubble } = await runFollowUpFlow();
     expect(guideAskBubble.textContent).not.toBe(WAIT_LINE);
+  }, 15000);
+
+  it("still shows Ask again when the last free question was just used (remaining 0)", async () => {
+    const { created } = await runFollowUpFlow(0);
+    const labels = created.map((e) => String(e.textContent || ""));
+    expect(labels.some((l) => l.startsWith("Ask again"))).toBe(true);
   }, 15000);
 });
