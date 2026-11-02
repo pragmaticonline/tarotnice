@@ -98,6 +98,8 @@ export const userPrefs = sqliteTable("user_prefs", {
   lang: text("lang").notNull().default("th"),
   theme: text("theme"), // 'day' | 'night' | NULL (auto)
   nickname: text("nickname"),
+  notifyDaily: integer("notify_daily").notNull().default(1),
+  notifyPromo: integer("notify_promo").notNull().default(0),
   updatedAt: integer("updated_at").notNull(),
 });
 
@@ -233,11 +235,15 @@ export const tokenLedger = sqliteTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     delta: integer("delta").notNull(), // +credit / -spend
-    reason: text("reason").notNull(), // daily|topup|reading|referral|refund
+    reason: text("reason").notNull(), // daily|topup|reading|referral|refund|welcome|promo
     ref: text("ref").notNull(),
     source: text("source"), // reading rows: daily|wallet
     day: text("day").notNull(), // Bangkok day at creation
     createdAt: integer("created_at").notNull(),
+    amount: integer("amount"), // top-ups: amount paid, smallest unit (satang)
+    currency: text("currency"), // top-ups: e.g. 'thb'
+    receiptUrl: text("receipt_url"), // top-ups: Stripe receipt URL
+    paymentMethod: text("payment_method"), // top-ups: e.g. 'promptpay' | 'card'
   },
   (t) => ({
     refUnique: uniqueIndex("token_ledger_user_reason_ref").on(t.userId, t.reason, t.ref),
@@ -254,6 +260,36 @@ export const stripeEvents = sqliteTable("stripe_events", {
   status: text("status").notNull(), // claimed|processed|ignored
   createdAt: integer("created_at").notNull(),
 });
+
+// Promotional redeem codes (design boards: Top up / Wallet redeem).
+// Personal invite codes (NICE-XXXX) are NOT stored here; they resolve
+// through invite_codes. A promo code grants bonusTokens once per user.
+export const redeemCodes = sqliteTable("redeem_codes", {
+  code: text("code").primaryKey(), // upper-case, e.g. 'SONGKRAN26'
+  bonusTokens: integer("bonus_tokens").notNull(),
+  expiresAt: integer("expires_at"), // ms epoch; NULL = never expires
+  maxUses: integer("max_uses"), // NULL = unlimited
+  active: integer("active").notNull().default(1),
+  createdAt: integer("created_at").notNull(),
+});
+
+export const redeemRedemptions = sqliteTable(
+  "redeem_redemptions",
+  {
+    id: text("id").primaryKey(),
+    code: text("code")
+      .notNull()
+      .references(() => redeemCodes.code, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    status: text("status").notNull(), // 'redeemed'
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => ({
+    codeUser: uniqueIndex("redeem_redemptions_code_user").on(t.code, t.userId),
+  }),
+);
 
 // Reusable Stripe customer per user (mirrors nicelingo).
 export const stripeCustomers = sqliteTable("stripe_customers", {

@@ -12,7 +12,7 @@ describe("GET /terms, /privacy, /contact", () => {
       const res = await app.request(path);
       expect(res.status).toBe(200);
       const html = await res.text();
-      expect(html).toContain(`<h1>${heading}</h1>`);
+      expect(html).toContain(heading);
       expect(html).toContain("TarotNice");
     }
     const contact = await (await app.request("/contact")).text();

@@ -24,6 +24,12 @@ const STYLE = `<style>
 .auth-note{font-size:.92rem}
 .auth-alt{margin-top:1.25rem;text-align:center}
 .auth-card a.btn{color:var(--on-accent)}
+.pw-row{display:flex;gap:.5rem;align-items:center}
+.pw-row input{flex:1}
+.pw-toggle{white-space:nowrap}
+.auth-or{text-align:center;color:var(--muted);margin:1rem 0 .2rem}
+.social-btn{width:100%;margin-top:.6rem}
+.linklike{background:none;border:none;color:var(--accent);font:inherit;cursor:pointer;text-decoration:underline;padding:0}
 </style>`;
 
 function shell(
@@ -50,30 +56,66 @@ function returnField(ret: string): string {
   return `<input type="hidden" id="return" value="${escapeHtml(ret)}">`;
 }
 
-function googleButton(ret: string, label: string): string {
-  return `<button class="btn btn-outline" id="google" type="button">${escapeHtml(label)}</button>
+export type SocialOpts = { google?: boolean; line?: boolean };
+
+function socialButton(provider: string, label: string): string {
+  return `<button class="btn btn-outline social-btn" data-social="${provider}" type="button">${escapeHtml(label)}</button>`;
+}
+
+function socialButtons(opts: SocialOpts, d: ReturnType<typeof t>): string {
+  const btns: string[] = [];
+  if (opts.google !== false) btns.push(socialButton("google", d.continueWithGoogle));
+  if (opts.line) btns.push(socialButton("line", d.continueWithLine));
+  if (!btns.length) return "";
+  return `${btns.join("\n")}
+<p class="auth-or">${escapeHtml(d.orUseEmail)}</p>
 <script>
-document.getElementById("google").addEventListener("click", async () => {
-  try {
-    const res = await fetch("/api/auth/sign-in/social", {
-      method: "POST", credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ provider: "google", callbackURL: document.getElementById("return").value || "/" }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (data.url) { location.href = data.url; return; }
-  } catch {}
+document.querySelectorAll("[data-social]").forEach(function (b) {
+  b.addEventListener("click", async function () {
+    try {
+      const res = await fetch("/api/auth/sign-in/social", {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: b.getAttribute("data-social"), callbackURL: document.getElementById("return").value || "/" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.url) { location.href = data.url; }
+    } catch {}
+  });
 });
 </script>`;
 }
 
-export function registerPage(returnTo?: string | null, origin = "", uiLang: UiLang = "en"): string {
+const PW_TOGGLE = `<script>
+document.querySelectorAll("[data-pw-toggle]").forEach(function (b) {
+  b.addEventListener("click", function () {
+    var input = document.getElementById(b.getAttribute("data-pw-toggle"));
+    if (!input) return;
+    var show = input.type === "password";
+    input.type = show ? "text" : "password";
+    b.textContent = show ? b.getAttribute("data-hide") : b.getAttribute("data-show");
+  });
+});
+</script>`;
+
+function passwordField(id: string, label: string, d: ReturnType<typeof t>, autocomplete: string): string {
+  return `<label for="${id}">${escapeHtml(label)}</label>
+<div class="pw-row"><input id="${id}" type="password" autocomplete="${autocomplete}" minlength="8" required><button type="button" class="linklike pw-toggle" data-pw-toggle="${id}" data-show="${escapeHtml(d.showPassword)}" data-hide="${escapeHtml(d.hidePassword)}">${escapeHtml(d.showPassword)}</button></div>
+<p class="auth-note">${escapeHtml(d.passwordRule)}</p>`;
+}
+
+function passwordOk(v: string): string {
+  return `(/[A-Za-z]/.test(v) && /[0-9]/.test(v) && v.length >= 8)`;
+}
+
+export function registerPage(returnTo?: string | null, origin = "", uiLang: UiLang = "en", social: SocialOpts = {}): string {
   const d = t(uiLang);
   const ret = safeReturnPath(returnTo);
   const inner = `<h1>${escapeHtml(d.createAccountHeading)}</h1>
-<p>${escapeHtml(d.guestLine)}</p>
+<p>${escapeHtml(d.registerBenefit)}</p>
 <div class="invite-code-box" id="invite-box">
 <p class="invite-applied" id="invite-applied" hidden></p>
+<p class="invite-ask" id="invite-change-row" hidden><button type="button" class="linklike" id="invite-change">${escapeHtml(d.changeCode)}</button></p>
 <p class="invite-ask"><button type="button" class="linklike" id="invite-toggle">${escapeHtml(d.haveInviteCode)}</button></p>
 <div id="invite-fields" hidden>
 <label for="invite-code">${escapeHtml(d.inviteCodeOptional)}</label>
@@ -82,17 +124,20 @@ export function registerPage(returnTo?: string | null, origin = "", uiLang: UiLa
 <p class="auth-err" id="invite-err" role="alert"></p>
 </div>
 </div>
+${socialButtons(social, d)}
 <form id="register-form">
-<label for="name">${escapeHtml(d.nameLabel)}</label>
+<label for="name">${escapeHtml(d.nicknameField)}</label>
 <input id="name" autocomplete="name" required>
+<p class="auth-note">${escapeHtml(d.nicknameHint)}</p>
 <label for="email">${escapeHtml(d.emailLabel)}</label>
 <input id="email" type="email" autocomplete="email" required>
-<label for="password">${escapeHtml(d.passwordLabel)}</label>
-<input id="password" type="password" autocomplete="new-password" minlength="8" required>
+${passwordField("password", d.passwordLabel, d, "new-password")}
 ${returnField(ret)}
 <p class="auth-err" id="err" role="alert"></p>
 <button class="btn" type="submit">${escapeHtml(d.createAccountBtn)}</button>
 </form>
+<p class="auth-note">${escapeHtml(d.agreeLine)}</p>
+${PW_TOGGLE}
 <script>
 (function () {
   var appliedCode = null;
@@ -108,10 +153,18 @@ ${returnField(ret)}
   function showApplied(code, name) {
     var box = document.getElementById("invite-applied");
     box.hidden = false;
-    box.textContent = ${JSON.stringify(d.inviteCodeApplied)}.replace("{code}", code) + (name ? " · " + ${JSON.stringify(d.invitedByLine)}.replace("{name}", name).split("·")[1] : "");
+    box.textContent = ${JSON.stringify(d.inviteCodeApplied)}.replace("{code}", code) + (name ? " · " + name : "");
     document.getElementById("invite-fields").hidden = true;
     document.getElementById("invite-toggle").hidden = true;
+    document.getElementById("invite-change-row").hidden = false;
   }
+  document.getElementById("invite-change").addEventListener("click", function () {
+    appliedCode = null;
+    document.getElementById("invite-applied").hidden = true;
+    document.getElementById("invite-change-row").hidden = true;
+    document.getElementById("invite-fields").hidden = false;
+    document.getElementById("invite-code").value = "";
+  });
   document.getElementById("invite-toggle").addEventListener("click", function () {
     document.getElementById("invite-fields").hidden = false;
     document.getElementById("invite-toggle").hidden = true;
@@ -138,8 +191,6 @@ ${returnField(ret)}
   window.__tarotAppliedCode = function () { return appliedCode; };
 })();
 </script>
-<p class="auth-alt">${escapeHtml(d.continueWithGoogle)}</p>
-${googleButton(ret, d.continueWithGoogle)}
 <p class="auth-alt">${escapeHtml(d.alreadyRegistered)} <a href="/sign-in?return=${encodeURIComponent(ret)}">${escapeHtml(d.signIn)}</a></p>
 <script>
 document.getElementById("register-form").addEventListener("submit", async (e) => {
@@ -149,6 +200,7 @@ document.getElementById("register-form").addEventListener("submit", async (e) =>
   const name = document.getElementById("name").value.trim();
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
+  if (!${passwordOk("password")}) { err.textContent = ${JSON.stringify(d.passwordRule)}; return; }
   const ret = document.getElementById("return").value || "/";
   try {
     const res = await fetch("/api/auth/sign-up/email", {
@@ -161,7 +213,21 @@ document.getElementById("register-form").addEventListener("submit", async (e) =>
       err.textContent = data.message || "Could not create the account. Check your details and try again.";
       return;
     }
+    // Seed the nickname the readings will use.
+    try {
+      await fetch("/api/me/prefs", {
+        method: "PUT", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nickname: name }),
+      });
+    } catch {}
     if (data.user && data.user.emailVerified === false && !data.token) {
+      // No session until the email is confirmed: keep the applied
+      // invite so the sign-in page can redeem it after verification.
+      try {
+        var pendingCode = window.__tarotAppliedCode ? window.__tarotAppliedCode() : null;
+        if (pendingCode) localStorage.setItem("tarotnice:pendingInvite", pendingCode);
+      } catch {}
       err.style.color = "#146c2e";
       err.textContent = "Account created. Check your email to confirm your address, then sign in.";
       return;
@@ -184,24 +250,23 @@ document.getElementById("register-form").addEventListener("submit", async (e) =>
   return shell(`${d.createAccountHeading} \u00b7 TarotNice`, origin, inner, { uiLang });
 }
 
-export function signInPage(returnTo?: string | null, origin = "", uiLang: UiLang = "en"): string {
+export function signInPage(returnTo?: string | null, origin = "", uiLang: UiLang = "en", social: SocialOpts = {}): string {
   const d = t(uiLang);
   const ret = safeReturnPath(returnTo);
-  const inner = `<h1>${escapeHtml(d.signInHeading)}</h1>
-<p>${escapeHtml(d.welcomeBack)}</p>
+  const inner = `<h1>${escapeHtml(d.welcomeBack)}</h1>
+<p>${escapeHtml(d.moveGuestLine)}</p>
+${socialButtons(social, d)}
 <form id="signin-form">
 <label for="email">${escapeHtml(d.emailLabel)}</label>
 <input id="email" type="email" autocomplete="email" required>
-<label for="password">${escapeHtml(d.passwordLabel)}</label>
-<input id="password" type="password" autocomplete="current-password" required>
+<label for="password">${escapeHtml(d.passwordLabel)} <a class="auth-forgot" href="/forgot-password">${escapeHtml(d.forgotPassword)}</a></label>
+<div class="pw-row"><input id="password" type="password" autocomplete="current-password" required><button type="button" class="linklike pw-toggle" data-pw-toggle="password" data-show="${escapeHtml(d.showPassword)}" data-hide="${escapeHtml(d.hidePassword)}">${escapeHtml(d.showPassword)}</button></div>
 ${returnField(ret)}
 <p class="auth-err" id="err" role="alert"></p>
 <button class="btn" type="submit">${escapeHtml(d.signIn)}</button>
 </form>
-<p class="auth-alt">${escapeHtml(d.continueWithGoogle)}</p>
-${googleButton(ret, d.continueWithGoogle)}
-<p class="auth-alt"><a href="/forgot-password">${escapeHtml(d.forgotPassword)}</a></p>
-<p class="auth-alt">${escapeHtml(d.newToTarotNice)} <a href="/register?return=${encodeURIComponent(ret)}">${escapeHtml(d.createAccountBtn)}</a></p>
+${PW_TOGGLE}
+<p class="auth-alt">${escapeHtml(d.newToTarotNice)} <a href="/register?return=${encodeURIComponent(ret)}">${escapeHtml(d.createAccountHeading)}</a></p>
 <script>
 document.getElementById("signin-form").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -220,9 +285,21 @@ document.getElementById("signin-form").addEventListener("submit", async (e) => {
     if (!res.ok) {
       err.textContent = data.code === "EMAIL_NOT_VERIFIED"
         ? "Please confirm your email first \u2014 check your inbox for the confirmation link."
-        : (data.message || "Sign-in failed. Check your email and password.");
+        : ${JSON.stringify(d.signInError)};
       return;
     }
+    // Redeem an invite kept from a verification-first sign-up.
+    try {
+      var pending = localStorage.getItem("tarotnice:pendingInvite");
+      if (pending) {
+        await fetch("/api/me/invite", {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: pending }),
+        });
+        localStorage.removeItem("tarotnice:pendingInvite");
+      }
+    } catch {}
     location.href = ret;
   } catch {
     err.textContent = "Network error. Please try again.";
@@ -234,18 +311,22 @@ document.getElementById("signin-form").addEventListener("submit", async (e) => {
 
 export function forgotPasswordPage(origin = "", uiLang: UiLang = "en"): string {
   const d = t(uiLang);
-  const inner = `<h1>${escapeHtml(d.forgotPassword)}</h1>
-<p>Enter your account email and we will send you a reset link.</p>
+  const inner = `<h1>${escapeHtml(d.forgotHeading)}</h1>
+<p>${escapeHtml(d.forgotLede)}</p>
 <form id="forgot-form">
 <label for="email">${escapeHtml(d.emailLabel)}</label>
 <input id="email" type="email" autocomplete="email" required>
 <p class="auth-err" id="err" role="alert"></p>
-<button class="btn" type="submit">Send reset link</button>
+<button class="btn" type="submit">${escapeHtml(d.sendReset)}</button>
 </form>
-<p class="auth-alt"><a href="/sign-in">${escapeHtml(d.signIn)}</a></p>
+<div id="sent-panel" hidden>
+<h2>${escapeHtml(d.checkInbox)}</h2>
+<p>${escapeHtml(d.resetSentLine)}</p>
+<p><button class="btn btn-outline" id="send-again" type="button">${escapeHtml(d.sendAgain)}</button></p>
+</div>
+<p class="auth-alt"><a href="/sign-in">${escapeHtml(d.backToSignIn)}</a></p>
 <script>
-document.getElementById("forgot-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
+async function sendReset() {
   const err = document.getElementById("err");
   const email = document.getElementById("email").value.trim();
   try {
@@ -255,46 +336,61 @@ document.getElementById("forgot-form").addEventListener("submit", async (e) => {
       body: JSON.stringify({ email, redirectTo: "/reset-password" }),
     });
     if (!res.ok) throw new Error("failed");
-    err.style.color = "#146c2e";
-    err.textContent = "If that email has an account, a reset link is on its way.";
+    document.getElementById("sent-panel").hidden = false;
+    err.textContent = "";
   } catch {
     err.textContent = "Could not send the reset email. Please try again later.";
   }
-});
+}
+document.getElementById("forgot-form").addEventListener("submit", async (e) => { e.preventDefault(); await sendReset(); });
+document.getElementById("send-again").addEventListener("click", sendReset);
 </script>`;
-  return shell(`${d.forgotPassword} \u00b7 TarotNice`, origin, inner, { uiLang });
+  return shell(`${d.forgotHeading} \u00b7 TarotNice`, origin, inner, { uiLang });
 }
 
 export function resetPasswordPage(token: string, origin = "", uiLang: UiLang = "en"): string {
-  const inner = `<h1>Choose a new password</h1>
+  const d = t(uiLang);
+  const inner = !token
+    ? `<h1>${escapeHtml(d.resetHeading)}</h1>
+<p>${escapeHtml(d.linkExpired)}</p>
+<p><a class="btn" href="/forgot-password">${escapeHtml(d.sendReset)}</a></p>
+<p class="auth-alt"><a href="/sign-in">${escapeHtml(d.backToSignIn)}</a></p>`
+    : `<h1>${escapeHtml(d.resetHeading)}</h1>
 <form id="reset-form">
-<label for="password">New password</label>
-<input id="password" type="password" autocomplete="new-password" minlength="8" required>
+${passwordField("password", d.newPassword, d, "new-password")}
+<label for="password2">${escapeHtml(d.confirmPassword)}</label>
+<input id="password2" type="password" autocomplete="new-password" minlength="8" required>
 <input type="hidden" id="token" value="${escapeHtml(token)}">
 <p class="auth-err" id="err" role="alert"></p>
-<button class="btn" type="submit">Save new password</button>
+<button class="btn" type="submit">${escapeHtml(d.saveNewPassword)}</button>
 </form>
+<div id="expired-panel" hidden>
+<p>${escapeHtml(d.linkExpired)}</p>
+<p><a class="btn" href="/forgot-password">${escapeHtml(d.sendReset)}</a></p>
+</div>
+${PW_TOGGLE}
 <script>
 document.getElementById("reset-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const err = document.getElementById("err");
   const token = document.getElementById("token").value;
-  if (!token) { err.textContent = "This reset link is missing its token. Request a new one."; return; }
+  const pw = document.getElementById("password").value;
+  if (!${passwordOk("pw")}) { err.textContent = ${JSON.stringify(d.passwordRule)}; return; }
+  if (pw !== document.getElementById("password2").value) { err.textContent = ${JSON.stringify(d.passwordsMismatch)}; return; }
   try {
     const res = await fetch("/api/auth/reset-password", {
       method: "POST", credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ newPassword: document.getElementById("password").value, token }),
+      body: JSON.stringify({ newPassword: pw, token }),
     });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) { err.textContent = data.message || "This reset link is invalid or has expired."; return; }
+    if (!res.ok) { document.getElementById("expired-panel").hidden = false; err.textContent = ${JSON.stringify(d.linkExpired)}; return; }
     location.href = "/sign-in";
   } catch {
     err.textContent = "Network error. Please try again.";
   }
 });
 </script>`;
-  return shell("Reset password \u00b7 TarotNice", origin, inner, { uiLang });
+  return shell(`${d.resetHeading} \u00b7 TarotNice`, origin, inner, { uiLang });
 }
 
 export function accountPage(

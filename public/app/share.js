@@ -97,6 +97,7 @@
       '<div class="panel" role="dialog" aria-modal="true" aria-label="' + esc(t("title")) + '">' +
       '<h2>' + esc(t("title")) + "</h2>" +
       '<div class="story-wrap"><div class="story-loading" role="status"><span class="spinner" aria-hidden="true"></span><span>' + esc(t("loading")) + '</span></div><img class="story" alt=""></div>' +
+      (kind === "reading" ? '<label class="share-q-toggle"><input type="checkbox" id="share-show-q"> ' + esc(uiLang() === "th" ? "\u0e41\u0e2a\u0e14\u0e07\u0e04\u0e33\u0e16\u0e32\u0e21\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19" : "Show my question") + "</label>" : "") +
       '<div class="targets"></div>' +
       (inAppBrowser() ? '<p class="inapp-note">' + esc(t("inapp")) + "</p>" : "") +
       '<p class="ig-note">' + esc(t("igNote")) + "</p>" +
@@ -114,7 +115,8 @@
 
     async function load() {
       try {
-        share = await createShare(kind, ref, true);
+        var toggle = sheet.querySelector("#share-show-q");
+        share = await createShare(kind, ref, toggle ? toggle.checked : false);
       } catch (e) {
         sheet.remove();
         return;
@@ -123,6 +125,8 @@
       img.alt = "TarotNice";
       renderTargets();
     }
+    var qToggle = sheet.querySelector("#share-show-q");
+    if (qToggle) qToggle.addEventListener("change", load);
 
     function link(href, label, target) {
       var a = document.createElement("a");

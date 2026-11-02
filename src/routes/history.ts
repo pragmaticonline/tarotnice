@@ -38,7 +38,7 @@ export function readingDateLabel(ui: UiLang, createdAt: number): string {
 function stampLabel(ui: UiLang, createdAt: number): string {
   try {
     const f = new Intl.DateTimeFormat(ui === "th" ? "th-TH" : "en-GB", {
-      month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+      month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit",
       hour12: false, timeZone: "Asia/Bangkok",
     });
     return f.format(new Date(createdAt)).replace(",", " \u00b7");
@@ -53,6 +53,10 @@ export function historyPage(opts: {
   streak: StreakInfo;
   items: HistoryItem[];
   nextCursor: number | null;
+  /** True total across all pages (board: "24 readings"). */
+  total?: number;
+  /** Server search term (filters across all readings, not one page). */
+  searchQuery?: string;
 }): string {
   const d = t(opts.ui);
   const head = headerHtml({ ui: opts.ui, streak: opts.streak, path: "/history" });
@@ -101,7 +105,7 @@ export function historyPage(opts: {
     }
     if (lastMonth) parts.push(`</ol></section>`);
     list =
-      `<div class="hist-tools"><label class="hist-search"><span aria-hidden="true">&#128269;</span><input type="search" data-history-search placeholder="${escapeHtml(d.searchQuestions)}" aria-label="${escapeHtml(d.searchQuestions)}"></label>${chips}</div>` +
+      `<div class="hist-tools"><label class="hist-search"><span aria-hidden="true">&#128269;</span><input type="search" data-history-search value="${escapeHtml(opts.searchQuery ?? "")}" placeholder="${escapeHtml(d.searchQuestions)}" aria-label="${escapeHtml(d.searchQuestions)}"></label>${chips}</div>` +
       parts.join("") +
       `<p class="empty" data-history-none hidden>${escapeHtml(d.emptyHistory)}</p>` +
       (opts.nextCursor !== null
@@ -115,7 +119,7 @@ export function historyPage(opts: {
     noindex: true,
     body:
       `${head}<main><div class="hist-head"><div><h1 class="display">${escapeHtml(d.historyTitle)}</h1>` +
-      `<p class="muted">${escapeHtml(fmt(d.readingsCount, { n: opts.items.length }))}</p></div>` +
+      `<p class="muted">${escapeHtml(fmt(d.readingsCount, { n: opts.total ?? opts.items.length }))}</p></div>` +
       `<a class="btn btn-primary" href="/">+ ${escapeHtml(d.newReading)}</a></div>${list}</main>${siteFooterHtml(opts.ui, "/history")}<script type="module" src="/app/history.js"></script>`,
   });
 }
@@ -190,7 +194,9 @@ export function historyDetailPage(opts: {
       `<textarea id="journal" rows="3" maxlength="500">${escapeHtml(r.journal ?? "")}</textarea>` +
       `<button class="btn btn-outline" type="submit">${escapeHtml(d.journalSave)}</button>` +
       `<span class="journal-ok" data-journal-ok hidden>${escapeHtml(d.journalSaved)}</span></form>` +
+      `<p class="muted">${escapeHtml(opts.ui === "th" ? "\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e01\u0e32\u0e23\u0e17\u0e1a\u0e17\u0e27\u0e19\u0e41\u0e25\u0e30\u0e04\u0e27\u0e32\u0e21\u0e1a\u0e31\u0e19\u0e40\u0e17\u0e34\u0e07 \u0e42\u0e1b\u0e23\u0e14\u0e43\u0e0a\u0e49\u0e27\u0e34\u0e08\u0e32\u0e23\u0e13\u0e0d\u0e32\u0e13\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e40\u0e2d\u0e07" : "For reflection and entertainment. Please use your own judgment.")}</p>` +
       `<div class="actions"><button class="btn" type="button" data-share-reading>${escapeHtml(d.share)}</button>` +
+      `<a class="btn btn-outline" href="/?prefill=${encodeURIComponent(r.question)}">${escapeHtml(d.followUpLabel)}</a>` +
       `<button class="btn btn-outline" type="button" data-delete-reading>${escapeHtml(d.deleteReading)}</button></div>` +
       `</main>${siteFooterHtml(opts.ui, "/history")}` +
       `<script src="/app/share.js" defer></script><script type="module" src="/app/history.js"></script>`,

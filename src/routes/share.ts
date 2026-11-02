@@ -3,7 +3,7 @@
 // full reading), the question only when the owner opted in, Ngern,
 // and the "get your own free reading" CTA carrying ?ref=.
 import { escapeHtml } from "../lib/html";
-import { t, type UiLang } from "../lib/i18n";
+import { fmt, t, type UiLang } from "../lib/i18n";
 import { brandHtml, pageShell } from "./shell";
 
 export type LandingCard = {
@@ -23,6 +23,7 @@ export function shareLandingPage(opts: {
   summary: string;
   question: string | null;
   ogImage: string;
+  ownerName?: string | null;
 }): string {
   const d = t(opts.ui);
   const cta = `/?ref=${encodeURIComponent(opts.shareId)}`;
@@ -41,12 +42,16 @@ export function shareLandingPage(opts: {
     ogImage: opts.ogImage,
     ogLocale: opts.ui === "th" ? "th_TH" : "en_US",
     body:
-      `<header class="site-head">${brandHtml()}</header>` +
-      `<main class="landing"><div class="land-cards">${cards}</div>` +
+      `<header class="site-head">${brandHtml()}<span class="head-sp"></span><a class="lang-btn head-auth" href="/sign-in">${escapeHtml(d.signIn)}</a></header>` +
+      `<main class="landing">` +
+      (opts.ownerName ? `<p class="land-shared-by">${escapeHtml(fmt(d.sharedBy, { name: opts.ownerName }))}</p>` : "") +
+      `<div class="land-cards">${cards}</div>` +
       (opts.question ? `<blockquote class="question">&ldquo;${escapeHtml(opts.question)}&rdquo;</blockquote>` : "") +
-      `<p class="land-summary">${escapeHtml(opts.summary)}</p>` +
+      (opts.summary ? `<h2>${escapeHtml(d.atAGlance)}</h2><p class="land-summary">${escapeHtml(opts.summary)}</p>` : "") +
+      (opts.kind === "reading" && opts.ownerName ? `<p class="muted">${escapeHtml(fmt(d.fullPrivate, { name: opts.ownerName }))}</p>` : "") +
       `<div class="land-ngern"><img src="/mascot/ngern-sitting.svg" alt="Ngern the Korat cat" width="96" height="96"></div>` +
-      `<a class="btn btn-primary" href="${cta}" data-share-cta>${escapeHtml(opts.ui === "th" ? "\u0e14\u0e39\u0e14\u0e27\u0e07\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e1f\u0e23\u0e35" : "Get your own free reading")}</a></main>`,
+      `<div class="share-cta"><p>${escapeHtml(d.curiousLine)}</p>` +
+      `<a class="btn btn-primary" href="${cta}" data-share-cta>${escapeHtml(d.drawMyCards)}</a></div></main>`,
   });
 }
 

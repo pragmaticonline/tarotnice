@@ -1,20 +1,14 @@
 // Legal pages: Terms, Privacy, Contact. Linked from every footer.
-// TarotNice is free with no ads and no payments: there is no refunds
-// page. The privacy page states that questions are stored and how to
-// delete them (see /account "delete my data").
-import { analyticsBeacon } from "../lib/analytics";
+// Terms cover the token model (purchased tokens never expire and are
+// non-refundable except where the law requires). The privacy page
+// states that questions are stored and how to delete them.
 import { escapeHtml } from "../lib/html";
-import { LOGO_SVG } from "./shell";
+import { headerHtml, pageShell, siteFooterHtml } from "./shell";
 import { t, type UiLang } from "../lib/i18n";
 
 export const SUPPORT_EMAIL = "support@tarotnice.com";
 
-const STYLE = `body{font-family:system-ui,sans-serif;max-width:40rem;margin:0 auto;padding:0 1rem 3rem;line-height:1.6;color:#2e2547;background:#f6f1fa}
-header.site{padding:1rem 0}
-header.site a{display:inline-flex;align-items:center;gap:.5rem;text-decoration:none;color:#2e2547;font-weight:800}
-header.site svg{width:32px;height:32px}
-a{color:#4a3d78}
-h1{font-size:1.6rem;line-height:1.25}
+const STYLE = `.legal-page{max-width:44rem;margin:0 auto;line-height:1.6}
 p.small{color:#76698f;font-size:.92rem}
 p.lede{color:#76698f;margin-top:-.4rem}
 .faq-h{font-size:1.25rem;margin:1.6rem 0 .7rem}
@@ -28,40 +22,51 @@ p.lede{color:#76698f;margin-top:-.4rem}
 .contact-links{color:#76698f;font-size:.95rem}`;
 
 function shell(title: string, heading: string, inner: string, uiLang: UiLang): string {
-  return `<!DOCTYPE html>
-<html lang="${uiLang}">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${escapeHtml(title)} \u00b7 TarotNice</title>
-<meta name="theme-color" content="#f6f1fa">
-<link rel="icon" href="/mascot/ngern-head-mark.svg" type="image/svg+xml">
-<style>${STYLE}</style>
-</head>
-<body>
-<header class="site"><a href="/" aria-label="TarotNice home">${LOGO_SVG}<span>TarotNice</span></a></header>
-<main>
-<h1>${escapeHtml(heading)}</h1>
-${inner}
-<p><a href="/">\u2190 TarotNice</a></p>
-</main>
-${analyticsBeacon()}
-</body>
-</html>`;
+  const head = headerHtml({
+    ui: uiLang,
+    streak: { current: 0, longest: 0, activeToday: false },
+    path: "/terms",
+  });
+  return pageShell({
+    title: `${title} \u00b7 TarotNice`,
+    lang: uiLang,
+    origin: "",
+    body: `${head}<main class="legal-page"><h1 class="display">${escapeHtml(heading)}</h1>${inner}</main><style>${STYLE}</style>${siteFooterHtml(uiLang, "/terms")}`,
+  });
+}
+
+function legalTabs(active: "terms" | "privacy", uiLang: UiLang): string {
+  const d = t(uiLang);
+  return `<nav class="legal-tabs"><a class="lib-tab${active === "terms" ? " on" : ""}" href="/terms">${escapeHtml(d.terms)}</a><a class="lib-tab${active === "privacy" ? " on" : ""}" href="/privacy">${escapeHtml(d.privacy)}</a></nav>`;
 }
 
 export function termsPage(uiLang: UiLang = "en"): string {
   const d = t(uiLang);
-  const body =
-    uiLang === "th"
-      ? `<p>TarotNice \u0e43\u0e2b\u0e49\u0e1a\u0e23\u0e34\u0e01\u0e32\u0e23\u0e14\u0e39\u0e14\u0e27\u0e07\u0e44\u0e1e\u0e48\u0e17\u0e32\u0e42\u0e23\u0e15\u0e4c\u0e1f\u0e23\u0e35 \u0e17\u0e31\u0e49\u0e07\u0e44\u0e1e\u0e48\u0e1b\u0e23\u0e30\u0e08\u0e33\u0e27\u0e31\u0e19\u0e41\u0e25\u0e30\u0e04\u0e33\u0e16\u0e32\u0e21\u0e27\u0e31\u0e19\u0e25\u0e30 3 \u0e02\u0e49\u0e2d \u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e1a\u0e31\u0e19\u0e40\u0e17\u0e34\u0e07\u0e41\u0e25\u0e30\u0e01\u0e32\u0e23\u0e17\u0e1a\u0e17\u0e27\u0e19\u0e15\u0e19\u0e40\u0e2d\u0e07 \u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33\u0e17\u0e32\u0e07\u0e01\u0e32\u0e23\u0e41\u0e1e\u0e17\u0e22\u0e4c \u0e01\u0e0e\u0e2b\u0e21\u0e32\u0e22 \u0e2b\u0e23\u0e37\u0e2d\u0e01\u0e32\u0e23\u0e40\u0e07\u0e34\u0e19</p>
-<p>\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e1f\u0e23\u0e35\u0e0a\u0e48\u0e27\u0e22\u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e44\u0e27\u0e49\u0e17\u0e38\u0e01\u0e40\u0e04\u0e23\u0e37\u0e48\u0e2d\u0e07 \u0e04\u0e38\u0e13\u0e21\u0e35\u0e2b\u0e19\u0e49\u0e32\u0e17\u0e35\u0e48\u0e23\u0e31\u0e01\u0e29\u0e32\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e01\u0e32\u0e23\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e02\u0e2d\u0e07\u0e15\u0e19\u0e40\u0e2d\u0e07\u0e43\u0e2b\u0e49\u0e1b\u0e25\u0e2d\u0e14\u0e20\u0e31\u0e22</p>
-<p>\u0e40\u0e19\u0e37\u0e49\u0e2d\u0e2b\u0e32\u0e1a\u0e17\u0e04\u0e27\u0e32\u0e21\u0e44\u0e1e\u0e48\u0e41\u0e25\u0e30\u0e20\u0e32\u0e1e\u0e44\u0e1e\u0e48\u0e40\u0e1b\u0e47\u0e19\u0e02\u0e2d\u0e07 TarotNice \u0e40\u0e23\u0e35\u0e22\u0e19\u0e23\u0e39\u0e49\u0e44\u0e14\u0e49\u0e40\u0e15\u0e47\u0e21\u0e17\u0e35\u0e48 \u0e41\u0e15\u0e48\u0e2d\u0e22\u0e48\u0e32\u0e04\u0e31\u0e14\u0e25\u0e2d\u0e01\u0e2b\u0e23\u0e37\u0e2d\u0e41\u0e08\u0e01\u0e08\u0e48\u0e32\u0e22\u0e15\u0e48\u0e2d</p>
-<p>\u0e40\u0e23\u0e32\u0e2d\u0e32\u0e08\u0e1b\u0e23\u0e31\u0e1a\u0e02\u0e49\u0e2d\u0e01\u0e33\u0e2b\u0e19\u0e14\u0e40\u0e2b\u0e25\u0e48\u0e32\u0e19\u0e35\u0e49\u0e40\u0e21\u0e37\u0e48\u0e2d\u0e1a\u0e23\u0e34\u0e01\u0e32\u0e23\u0e40\u0e15\u0e34\u0e1a\u0e42\u0e15\u0e02\u0e36\u0e49\u0e19 \u0e09\u0e1a\u0e31\u0e1a\u0e1a\u0e19\u0e2b\u0e19\u0e49\u0e32\u0e19\u0e35\u0e49\u0e04\u0e37\u0e2d\u0e09\u0e1a\u0e31\u0e1a\u0e17\u0e35\u0e48\u0e43\u0e0a\u0e49\u0e1a\u0e31\u0e07\u0e04\u0e31\u0e1a\u0e40\u0e2a\u0e21\u0e2d</p>`
-      : `<p>TarotNice offers free tarot readings \u2014 a daily card plus 3 questions a day \u2014 for reflection and entertainment. Readings are never medical, legal, or financial advice.</p>
-<p>A free account saves your readings across devices. You are responsible for keeping your sign-in details safe.</p>
-<p>Card meanings and card art belong to TarotNice. Learn with them as much as you like, but do not copy or redistribute them.</p>
-<p>We may change these terms as the service grows; the version on this page always applies.</p>`;
+  const en = [
+    ["what", "What TarotNice is", "TarotNice offers tarot readings for entertainment, reflection and personal insight. Readings are written with the help of AI."],
+    ["advice", "Not professional advice", "Readings are not medical, psychological, legal, financial or business advice. For important matters, please consult a qualified professional."],
+    ["account", "Your account", "Keep your sign-in details safe. You can delete your account and data at any time from Account settings."],
+    ["tokens", "Tokens and payments", "Tokens are used for readings. Purchased tokens do not expire and are non-refundable except where the law requires."],
+    ["privacy", "Your privacy", "We collect only what we need to run the service. Your questions are never sent to analytics or third-party trackers."],
+    ["contact", "Contact", "Questions about these terms? Write to " + SUPPORT_EMAIL + "."],
+  ] as const;
+  const th = [
+    ["what", "TarotNice \u0e04\u0e37\u0e2d\u0e2d\u0e30\u0e44\u0e23", "TarotNice \u0e43\u0e2b\u0e49\u0e1a\u0e23\u0e34\u0e01\u0e32\u0e23\u0e14\u0e39\u0e14\u0e27\u0e07\u0e44\u0e1e\u0e48\u0e17\u0e32\u0e42\u0e23\u0e15\u0e4c\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e1a\u0e31\u0e19\u0e40\u0e17\u0e34\u0e07 \u0e01\u0e32\u0e23\u0e17\u0e1a\u0e17\u0e27\u0e19\u0e41\u0e25\u0e30\u0e40\u0e02\u0e49\u0e32\u0e43\u0e08\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07 \u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e40\u0e02\u0e35\u0e22\u0e19\u0e14\u0e49\u0e27\u0e22\u0e04\u0e27\u0e32\u0e21\u0e0a\u0e48\u0e27\u0e22\u0e40\u0e2b\u0e25\u0e37\u0e2d\u0e02\u0e2d\u0e07 AI"],
+    ["advice", "\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33\u0e17\u0e32\u0e07\u0e27\u0e34\u0e0a\u0e32\u0e0a\u0e35\u0e1e", "\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33\u0e17\u0e32\u0e07\u0e01\u0e32\u0e23\u0e41\u0e1e\u0e17\u0e22\u0e4c \u0e08\u0e34\u0e15\u0e27\u0e34\u0e17\u0e22\u0e32 \u0e01\u0e0e\u0e2b\u0e21\u0e32\u0e22 \u0e01\u0e32\u0e23\u0e40\u0e07\u0e34\u0e19 \u0e2b\u0e23\u0e37\u0e2d\u0e18\u0e38\u0e23\u0e01\u0e34\u0e08 \u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e2a\u0e33\u0e04\u0e31\u0e0d \u0e42\u0e1b\u0e23\u0e14\u0e1b\u0e23\u0e36\u0e01\u0e29\u0e32\u0e1c\u0e39\u0e49\u0e40\u0e0a\u0e35\u0e48\u0e22\u0e27\u0e0a\u0e32\u0e0d"],
+    ["account", "\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13", "\u0e23\u0e31\u0e01\u0e29\u0e32\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e01\u0e32\u0e23\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e43\u0e2b\u0e49\u0e1b\u0e25\u0e2d\u0e14\u0e20\u0e31\u0e22 \u0e04\u0e38\u0e13\u0e2a\u0e32\u0e21\u0e32\u0e23\u0e16\u0e25\u0e1a\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e41\u0e25\u0e30\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e44\u0e14\u0e49\u0e17\u0e38\u0e01\u0e40\u0e21\u0e37\u0e48\u0e2d\u0e08\u0e32\u0e01\u0e01\u0e32\u0e23\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32\u0e1a\u0e31\u0e0d\u0e0a\u0e35"],
+    ["tokens", "\u0e42\u0e17\u0e40\u0e04\u0e19\u0e41\u0e25\u0e30\u0e01\u0e32\u0e23\u0e0a\u0e33\u0e23\u0e30\u0e40\u0e07\u0e34\u0e19", "\u0e42\u0e17\u0e40\u0e04\u0e19\u0e43\u0e0a\u0e49\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e01\u0e32\u0e23\u0e14\u0e39\u0e14\u0e27\u0e07 \u0e42\u0e17\u0e40\u0e04\u0e19\u0e17\u0e35\u0e48\u0e0b\u0e37\u0e49\u0e2d\u0e44\u0e21\u0e48\u0e21\u0e35\u0e27\u0e31\u0e19\u0e2b\u0e21\u0e14\u0e2d\u0e32\u0e22\u0e38 \u0e41\u0e25\u0e30\u0e02\u0e2d\u0e04\u0e37\u0e19\u0e40\u0e07\u0e34\u0e19\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49 \u0e40\u0e27\u0e49\u0e19\u0e41\u0e15\u0e48\u0e01\u0e0e\u0e2b\u0e21\u0e32\u0e22\u0e01\u0e33\u0e2b\u0e19\u0e14"],
+    ["privacy", "\u0e04\u0e27\u0e32\u0e21\u0e40\u0e1b\u0e47\u0e19\u0e2a\u0e48\u0e27\u0e19\u0e15\u0e31\u0e27\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13", "\u0e40\u0e23\u0e32\u0e40\u0e01\u0e47\u0e1a\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e40\u0e17\u0e48\u0e32\u0e17\u0e35\u0e48\u0e08\u0e33\u0e40\u0e1b\u0e47\u0e19\u0e43\u0e19\u0e01\u0e32\u0e23\u0e43\u0e2b\u0e49\u0e1a\u0e23\u0e34\u0e01\u0e32\u0e23 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e08\u0e30\u0e44\u0e21\u0e48\u0e16\u0e39\u0e01\u0e2a\u0e48\u0e07\u0e44\u0e1b\u0e22\u0e31\u0e07\u0e23\u0e30\u0e1a\u0e1a\u0e27\u0e34\u0e40\u0e04\u0e23\u0e32\u0e30\u0e2b\u0e4c\u0e2b\u0e23\u0e37\u0e2d\u0e15\u0e31\u0e27\u0e15\u0e34\u0e14\u0e15\u0e32\u0e21\u0e02\u0e2d\u0e07\u0e1a\u0e38\u0e04\u0e04\u0e25\u0e17\u0e35\u0e48\u0e2a\u0e32\u0e21"],
+    ["contact", "\u0e15\u0e34\u0e14\u0e15\u0e48\u0e2d", "\u0e21\u0e35\u0e04\u0e33\u0e16\u0e32\u0e21\u0e40\u0e01\u0e35\u0e48\u0e22\u0e27\u0e01\u0e31\u0e1a\u0e02\u0e49\u0e2d\u0e01\u0e33\u0e2b\u0e19\u0e14\u0e19\u0e35\u0e49? \u0e40\u0e02\u0e35\u0e22\u0e19\u0e21\u0e32\u0e17\u0e35\u0e48 " + SUPPORT_EMAIL],
+  ] as const;
+  const sections = uiLang === "th" ? th : en;
+  const updated = uiLang === "th"
+    ? "\u0e2d\u0e31\u0e1b\u0e40\u0e14\u0e15\u0e25\u0e48\u0e32\u0e2a\u0e38\u0e14 1 \u0e1e\u0e24\u0e28\u0e08\u0e34\u0e01\u0e32\u0e22\u0e19 2026 \u00b7 \u0e2d\u0e48\u0e32\u0e19 4 \u0e19\u0e32\u0e17\u0e35"
+    : "Last updated 1 November 2026 \u00b7 4 min read";
+  const tocTitle = uiLang === "th" ? "\u0e43\u0e19\u0e2b\u0e19\u0e49\u0e32\u0e19\u0e35\u0e49" : "ON THIS PAGE";
+  const toc = `<div class="legal-toc"><b>${escapeHtml(tocTitle)}</b><ol>${sections.map((x) => `<li><a href="#${x[0]}">${escapeHtml(x[1])}</a></li>`).join("")}</ol></div>`;
+  const body = legalTabs("terms", uiLang) +
+    `<p class="small">${escapeHtml(updated)}</p>` + toc +
+    sections.map((x, i) => `<section id="${x[0]}"><h2>${i + 1}. ${escapeHtml(x[1])}</h2><p>${escapeHtml(x[2])}</p></section>`).join("");
   return shell(d.terms, d.terms, body, uiLang);
 }
 
@@ -77,7 +82,7 @@ export function privacyPage(uiLang: UiLang = "en"): string {
 <p>Your questions are personal. They are never logged to analytics, and there are no third-party trackers. Readings are kept until you delete them.</p>
 <p>Sign-in is handled by our authentication provider with cookies that keep you signed in and remember your language choices.</p>
 <p>To delete everything, visit /account and choose \u201cdelete my data\u201d, or write to <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>.</p>`;
-  return shell(d.privacy, d.privacy, body, uiLang);
+  return shell(d.privacy, d.privacy, legalTabs("privacy", uiLang) + body, uiLang);
 }
 
 export function contactPage(uiLang: UiLang = "en"): string {
@@ -86,7 +91,7 @@ export function contactPage(uiLang: UiLang = "en"): string {
     uiLang === "th"
       ? [
       { q: "\u0e01\u0e32\u0e23\u0e14\u0e39\u0e14\u0e27\u0e07\u0e17\u0e33\u0e07\u0e32\u0e19\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23?", a: "\u0e1e\u0e34\u0e21\u0e1e\u0e4c\u0e04\u0e33\u0e16\u0e32\u0e21\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13 \u0e2a\u0e31\u0e1a\u0e44\u0e1e\u0e48 \u0e41\u0e25\u0e49\u0e27\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e1e\u0e48 3 \u0e43\u0e1a \u0e40\u0e07\u0e34\u0e19\u0e08\u0e30\u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e17\u0e31\u0e49\u0e07\u0e2a\u0e32\u0e21\u0e43\u0e1a\u0e23\u0e27\u0e21\u0e01\u0e31\u0e19\u0e41\u0e25\u0e30\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e01\u0e25\u0e31\u0e1a\u0e21\u0e32\u0e17\u0e35\u0e48\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e04\u0e38\u0e13\u0e16\u0e32\u0e21" },
-      { q: "\u0e09\u0e31\u0e19\u0e16\u0e32\u0e21\u0e44\u0e14\u0e49\u0e01\u0e35\u0e48\u0e04\u0e33\u0e16\u0e32\u0e21?", a: "\u0e04\u0e38\u0e13\u0e44\u0e14\u0e49 1 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e1f\u0e23\u0e35\u0e17\u0e38\u0e01\u0e27\u0e31\u0e19 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e40\u0e1e\u0e34\u0e48\u0e21\u0e40\u0e15\u0e34\u0e21\u0e43\u0e0a\u0e49\u0e40\u0e04\u0e23\u0e14\u0e34\u0e15\u0e43\u0e19\u0e01\u0e23\u0e30\u0e40\u0e1b\u0e4b\u0e32\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13 \u0e41\u0e25\u0e30\u0e01\u0e32\u0e23\u0e0a\u0e27\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e08\u0e30\u0e17\u0e33\u0e43\u0e2b\u0e49\u0e44\u0e14\u0e49\u0e40\u0e1e\u0e34\u0e48\u0e21" },
+      { q: "\u0e09\u0e31\u0e19\u0e16\u0e32\u0e21\u0e44\u0e14\u0e49\u0e01\u0e35\u0e48\u0e04\u0e33\u0e16\u0e32\u0e21?", a: "\u0e04\u0e38\u0e13\u0e44\u0e14\u0e49 1 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e1f\u0e23\u0e35\u0e17\u0e38\u0e01\u0e27\u0e31\u0e19 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e40\u0e1e\u0e34\u0e48\u0e21\u0e40\u0e15\u0e34\u0e21\u0e43\u0e0a\u0e49\u0e42\u0e17\u0e40\u0e04\u0e19\u0e43\u0e19\u0e01\u0e23\u0e30\u0e40\u0e1b\u0e4b\u0e32\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13 \u0e41\u0e25\u0e30\u0e01\u0e32\u0e23\u0e0a\u0e27\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e08\u0e30\u0e17\u0e33\u0e43\u0e2b\u0e49\u0e44\u0e14\u0e49\u0e40\u0e1e\u0e34\u0e48\u0e21" },
       { q: "\u0e04\u0e33\u0e16\u0e32\u0e21\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19\u0e40\u0e1b\u0e47\u0e19\u0e2a\u0e48\u0e27\u0e19\u0e15\u0e31\u0e27\u0e44\u0e2b\u0e21?", a: "\u0e43\u0e0a\u0e48 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e41\u0e25\u0e30\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e40\u0e01\u0e47\u0e1a\u0e44\u0e27\u0e49\u0e43\u0e19\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e40\u0e17\u0e48\u0e32\u0e19\u0e31\u0e49\u0e19 \u0e44\u0e21\u0e48\u0e40\u0e04\u0e22\u0e16\u0e39\u0e01\u0e41\u0e0a\u0e23\u0e4c\u0e41\u0e25\u0e30\u0e44\u0e21\u0e48\u0e40\u0e04\u0e22\u0e43\u0e0a\u0e49\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e01\u0e32\u0e23\u0e42\u0e06\u0e29\u0e13\u0e32" },
       { q: "\u0e09\u0e31\u0e19\u0e25\u0e1a\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e2b\u0e23\u0e37\u0e2d\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e44\u0e14\u0e49\u0e44\u0e2b\u0e21?", a: "\u0e04\u0e38\u0e13\u0e25\u0e1a\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e43\u0e14\u0e01\u0e47\u0e44\u0e14\u0e49\u0e08\u0e32\u0e01\u0e2b\u0e19\u0e49\u0e32\u0e02\u0e2d\u0e07\u0e21\u0e31\u0e19 \u0e2b\u0e23\u0e37\u0e2d\u0e25\u0e1a\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e41\u0e25\u0e30\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14\u0e44\u0e14\u0e49\u0e08\u0e32\u0e01\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e43\u0e19\u0e40\u0e21\u0e19\u0e39" },
       { q: "\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e40\u0e1b\u0e47\u0e19\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33\u0e17\u0e32\u0e07\u0e27\u0e34\u0e0a\u0e32\u0e0a\u0e35\u0e1e\u0e44\u0e2b\u0e21?", a: "\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48 \u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e21\u0e35\u0e44\u0e27\u0e49\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e1a\u0e31\u0e19\u0e40\u0e17\u0e34\u0e07\u0e41\u0e25\u0e30\u0e01\u0e32\u0e23\u0e17\u0e1a\u0e17\u0e27\u0e19\u0e15\u0e19\u0e40\u0e2d\u0e07\u0e40\u0e17\u0e48\u0e32\u0e19\u0e31\u0e49\u0e19 \u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33\u0e17\u0e32\u0e07\u0e01\u0e32\u0e23\u0e41\u0e1e\u0e17\u0e22\u0e4c \u0e01\u0e0e\u0e2b\u0e21\u0e32\u0e22 \u0e01\u0e32\u0e23\u0e40\u0e07\u0e34\u0e19 \u0e2b\u0e23\u0e37\u0e2d\u0e27\u0e34\u0e0a\u0e32\u0e0a\u0e35\u0e1e\u0e2d\u0e37\u0e48\u0e19" },
@@ -94,7 +99,7 @@ export function contactPage(uiLang: UiLang = "en"): string {
     ]
       : [
       { q: "How does a reading work?", a: "Type your question, shuffle, then pick 3 cards. Ngern reads the three cards together and links them back to what you asked." },
-      { q: "How many questions can I ask?", a: "You get 1 free question every day. Extra questions use credits from your wallet, and inviting friends earns more." },
+      { q: "How many questions can I ask?", a: "You get 1 free question every day. Extra questions use tokens from your wallet, and inviting friends earns more." },
       { q: "Are my questions private?", a: "Yes. Your questions and readings are stored only on your account, never shared, and never used for advertising." },
       { q: "Can I delete a reading or my account?", a: "You can delete any reading from its page, or delete your whole account and data from Account settings in the menu." },
       { q: "Is a reading professional advice?", a: "No. Readings are for entertainment and reflection only, never medical, legal, financial, or other professional advice." },

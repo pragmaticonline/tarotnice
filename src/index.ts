@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { setCookie } from "hono/cookie";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { createAuth, isRegisteredUser, type AuthEnv } from "./lib/auth";
+import { createAuth, googleConfigured, isRegisteredUser, lineConfigured, type AuthEnv } from "./lib/auth";
 import * as schema from "./db/schema";
 import { bangkokDay, bangkokHour, nextBangkokMidnight } from "./lib/bangkok";
 import { luckyColour } from "./lib/daily";
@@ -51,9 +51,10 @@ import {
   resetPasswordPage,
   signInPage,
 } from "./routes/auth-pages";
-import { billingCancelPage, billingPage, billingSuccessPage, safeReturnPath } from "./routes/billing";
+import { billingCancelPage, billingPage, billingSuccessPage, invitePage, safeReturnPath } from "./routes/billing";
+import { notFoundPage } from "./routes/shell";
 import { countryOfRequest } from "./lib/geo";
-import { isUiLang, t, uiLangFor, type UiLang } from "./lib/i18n";
+import { fmt, isUiLang, t, uiLangFor, type UiLang } from "./lib/i18n";
 import {
   createPackCheckoutSession,
   isPackId,
@@ -61,6 +62,7 @@ import {
   packForSession,
   packPriceId,
   retrieveCheckoutSession,
+  sessionReceipt,
   tokensConfigured,
   verifyStripeSignature,
   type StripeEnv,
@@ -70,6 +72,7 @@ import {
   inviteCodeFromPngParam,
   inviteRefFor,
   isInviteCode,
+  maskName,
   normalizeInviteCode,
   parseInviteRef,
 } from "./lib/invite";
@@ -79,6 +82,7 @@ import {
   REFERRAL_FRIEND_BONUS_TOKENS,
   REFERRAL_REWARD_TOKENS,
   TOKENS_PER_QUESTION,
+  WELCOME_TOKENS,
   isTransactionFilter,
   planSpend,
   reasonsForFilter,
@@ -150,6 +154,12 @@ app.use("*", async (c, next) => {
       maxAge: 365 * 24 * 3600,
       sameSite: "Lax",
     });
+    // Persist as the account language too, so it follows the user
+    // across devices (drawer language control, design board A3).
+    try {
+      const u = await currentUser(c);
+      if (u && c.env?.DB) await d1PrefsStore(c.env.DB).set(u.id, { lang: ui });
+    } catch { /* cookie still carries it */ }
     const url = new URL(c.req.url);
     url.searchParams.delete("ui");
     return c.redirect(url.pathname + url.search, 302);
@@ -784,7 +794,8 @@ async function badgeAchieved(
 }
 
 // {kind:'reading'|'daily'|'badge', ref, mode} -> share URLs.
-// Shares always include the question asked (owner decision).
+// The question is shared only when the owner opts in (toggle in the
+// share sheet); the full reading text is never shared.
 app.post("/api/share", async (c) => {
   const user = await authedUser(c);
   if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
@@ -794,7 +805,7 @@ app.post("/api/share", async (c) => {
   } catch {
     return c.json({ error: "bad_request" }, 400);
   }
-  const showQuestion = true;
+  const showQuestion = body.showQuestion === true;
   const mode = body.mode === "night" ? "night" : "day";
   const store = d1TarotStore(c.env.DB);
   let shareId: string | null = null;
@@ -926,6 +937,8 @@ app.get("/r/:shareId", async (c) => {
   const store = d1TarotStore(c.env.DB);
   const row = await store.getReadingByShare(shareId);
   if (!row) return c.html(unsharedPage(origin, ui), 410);
+  const ownerPrefs = await d1PrefsStore(c.env.DB).get(row.userId).catch(() => null);
+  const ownerName = ownerPrefs?.nickname ?? t(ui).aFriend;
   const cards = await landingCards(store, row.cards, ui);
   recordEvent(c.env, { name: "share_landing", kind: "reading", ...requestContext(c), userKind: "guest" });
   return c.html(
@@ -937,6 +950,7 @@ app.get("/r/:shareId", async (c) => {
       cards,
       summary: row.aiSummary ?? "",
       question: row.showQuestion ? row.question : null,
+      ownerName,
       ogImage: `${origin}/r/${shareId}/og.png`,
     }),
   );
@@ -1134,6 +1148,16 @@ app.get("/r/:shareId/og.png", (c) => shareImageResponse(c, "reading", c.req.para
 app.get("/d/:shareId/story.png", (c) => shareImageResponse(c, "daily", c.req.param("shareId"), "story"));
 app.get("/d/:shareId/og.png", (c) => shareImageResponse(c, "daily", c.req.param("shareId"), "og"));
 
+// Standalone Invite page (design board). Registered users only.
+app.get("/invite", async (c) => {
+  c.header("Cache-Control", "private, no-store");
+  const user = await currentUser(c);
+  if (!user || !isRegisteredUser(user)) {
+    return c.redirect(`/sign-in?return=${encodeURIComponent("/invite")}`, 302);
+  }
+  return c.html(invitePage({ ui: requestUiLang(c), origin: new URL(c.req.url).origin }));
+});
+
 // Billing: token packs, history, invite panel. Registered users only;
 // guests land on sign-in with a return path (design: account first).
 app.get("/billing", async (c) => {
@@ -1167,15 +1191,36 @@ app.get("/billing/success", async (c) => {
   const returnTo = safeReturnPath(c.req.query("return"));
   const sessionId = c.req.query("session_id") ?? "";
   let state: "verified" | "pending" | "failed" = "failed";
+  let detail: { tokens: number; balance: number; amount: number | null; currency: string | null; paymentMethod: string | null; receiptUrl: string | null; email: string | null } | null = null;
   if (tokensConfigured(c.env) && sessionId) {
     try {
       const session = await retrieveCheckoutSession(c.env, sessionId);
       state = session.payment_status === "paid" ? "verified" : "pending";
+      if (state === "verified") {
+        const pack = packForSession(session);
+        const receipt = sessionReceipt(session);
+        let balance = 0;
+        const user = await currentUser(c);
+        if (user && c.env?.DB) {
+          const store = d1TarotStore(c.env.DB);
+          const bal = await walletState(store, user.id, bangkokDay());
+          balance = bal.wallet + bal.dailyLeft;
+        }
+        detail = {
+          tokens: pack?.tokens ?? Number(session.metadata?.tokens ?? 0),
+          balance,
+          amount: receipt.amount,
+          currency: receipt.currency,
+          paymentMethod: receipt.paymentMethod,
+          receiptUrl: receipt.receiptUrl,
+          email: receipt.email ?? user?.email ?? null,
+        };
+      }
     } catch {
       state = "failed";
     }
   }
-  return c.html(billingSuccessPage({ ui, origin, returnTo, state }));
+  return c.html(billingSuccessPage({ ui, origin, returnTo, state, detail }));
 });
 
 app.get("/billing/cancel", (c) => {
@@ -1185,8 +1230,8 @@ app.get("/billing/cancel", (c) => {
 });
 
 // Account pages (free registration saves readings across devices).
-app.get("/register", (c) => c.html(registerPage(c.req.query("return"), new URL(c.req.url).origin, requestUiLang(c))));
-app.get("/sign-in", (c) => c.html(signInPage(c.req.query("return"), new URL(c.req.url).origin, requestUiLang(c))));
+app.get("/register", (c) => c.html(registerPage(c.req.query("return"), new URL(c.req.url).origin, requestUiLang(c), { google: true, line: lineConfigured(c.env) })));
+app.get("/sign-in", (c) => c.html(signInPage(c.req.query("return"), new URL(c.req.url).origin, requestUiLang(c), { google: true, line: lineConfigured(c.env) })));
 app.get("/forgot-password", (c) => c.html(forgotPasswordPage(new URL(c.req.url).origin, requestUiLang(c))));
 app.get("/reset-password", (c) => c.html(resetPasswordPage(c.req.query("token") ?? "", new URL(c.req.url).origin, requestUiLang(c))));
 app.get("/account", async (c) => {
@@ -1243,11 +1288,16 @@ app.get("/history", async (c) => {
   const lang = ui === "th" ? "th" : "en";
   const rawCursor = c.req.query("cursor");
   const cursor = rawCursor ? Number(rawCursor) : null;
+  const searchQuery = (c.req.query("q") ?? "").trim().slice(0, 100);
   const store = d1TarotStore(c.env.DB);
-  const [items, cards] = await Promise.all([
-    store.listReadings(user.id, cursor !== null && Number.isFinite(cursor) ? cursor : null, 30),
+  const [allItems, cards, stats] = await Promise.all([
+    store.listReadings(user.id, cursor !== null && Number.isFinite(cursor) ? cursor : null, searchQuery ? 200 : 30),
     store.listCards(lang),
+    store.progressStats(user.id).catch(() => ({ readings: 0, topics: [] as string[], dailies: 0 })),
   ]);
+  const items = searchQuery
+    ? allItems.filter((r) => `${r.question} ${r.topic}`.toLowerCase().includes(searchQuery.toLowerCase()))
+    : allItems;
   const byId = new Map(cards.map((card) => [card.id, card]));
   const revLabel = t(ui).reversed;
   return c.html(
@@ -1274,7 +1324,9 @@ app.get("/history", async (c) => {
         status: r.status,
         createdAt: r.createdAt,
       })),
-      nextCursor: items.length === 30 ? items[items.length - 1].createdAt : null,
+      nextCursor: !searchQuery && items.length === 30 ? items[items.length - 1].createdAt : null,
+      total: searchQuery ? items.length : stats.readings,
+      searchQuery,
     }),
   );
 });
@@ -1460,14 +1512,16 @@ app.get("/progress", async (c) => {
   const ui = requestUiLang(c);
   const lang = ui === "th" ? "th" : "en";
   const store = d1TarotStore(c.env.DB);
-  const [stats, days, ownedDaily, referrals, cards, recent] = await Promise.all([
+  const [stats, days, ownedAll, referrals, cards, recent, windowReadings] = await Promise.all([
     store.progressStats(user.id),
     store.activityDays(user.id),
-    store.collectionDaily(user.id),
+    store.collection(user.id),
     store.referralStats(user.id),
     store.listCards(lang),
     store.recentDailies(user.id, 7),
+    store.listReadings(user.id, null, 30),
   ]);
+  const ownedDaily = ownedAll;
   const d = t(ui);
   const streak = computeStreak(days, bangkokDay());
   const byId = new Map(cards.map((card) => [card.id, card]));
@@ -1480,15 +1534,39 @@ app.get("/progress", async (c) => {
       key: `streak-${tier}`,
       label: d.msStreakDays.replace("{n}", String(tier)),
       achieved: streak.longest >= tier,
+      left: streak.longest >= tier ? undefined : fmt(d.leftToGo, { n: tier - streak.longest }),
     })),
-    { key: "collection", label: d.msCollection, achieved: ownedDaily.length >= 78 },
+    {
+      key: "collection", label: d.msCollection, achieved: ownedDaily.length >= 78,
+      left: ownedDaily.length >= 78 ? undefined : fmt(d.leftToGo, { n: 78 - ownedDaily.length }),
+    },
   ];
+  const calDays = lastNDays(days, 35);
+  const monthLabel = (() => {
+    try {
+      return new Intl.DateTimeFormat(ui === "th" ? "th-TH" : "en-GB", {
+        month: "long", year: "numeric", timeZone: "Asia/Bangkok",
+      }).format(new Date(calDays[calDays.length - 1].date + "T00:00:00Z"));
+    } catch { return ""; }
+  })();
+  const entries = windowReadings
+    .filter((r) => calDays.some((day) => day.date === r.day))
+    .map((r) => ({
+      date: r.day,
+      timeLabel: readingDateLabel(ui, r.createdAt),
+      topicLabel: topicLabel(ui, r.topic),
+      question: r.question,
+      cardsLabel: r.cards.map((card) => byId.get(card.id)?.name ?? `#${card.id}`).join(" \u00b7 "),
+      id: r.id,
+    }));
   return c.html(
     progressPage({
       ui,
       origin: new URL(c.req.url).origin,
       streak,
-      days: lastNDays(days, 35),
+      days: calDays,
+      entries,
+      monthLabel,
       owned: ownedDaily,
       cardNames,
       referrals,
@@ -1543,7 +1621,7 @@ async function cardsIndex(c: PageCtx, ui: UiLang, prefix: string, userId: string
   });
   const d = t(ui);
   const groups = [
-    { title: d.majorArcana, cards: cards.filter((x) => x.arcana === "major").map(toCard) },
+    { title: d.majorArcana, key: "major", cards: cards.filter((x) => x.arcana === "major").map(toCard) },
   ];
   const suitTitles: Record<string, string> = {
     wands: d.suitWands,
@@ -1554,6 +1632,7 @@ async function cardsIndex(c: PageCtx, ui: UiLang, prefix: string, userId: string
   for (const suit of ["wands", "cups", "swords", "pentacles"]) {
     groups.push({
       title: suitTitles[suit],
+      key: suit,
       cards: cards.filter((x) => x.suit === suit).map(toCard),
     });
   }
@@ -1584,7 +1663,7 @@ async function cardDetail(
   if (!c.env?.DB) return c.text("Not found", 404);
   const store = d1TarotStore(c.env.DB);
   const card = await store.getCardBySlug(slug, lang);
-  if (!card) return c.text("Not found", 404);
+  if (!card) return new Response(notFoundPage({ ui, origin: new URL(c.req.url).origin }), { status: 404, headers: { "Content-Type": "text/html; charset=utf-8" } });
   const all = await store.listCards(lang);
   const idx = all.findIndex((x) => x.id === card.id);
   const dd = t(ui);
@@ -1605,6 +1684,9 @@ async function cardDetail(
       card: {
         slug: card.slug,
         name: card.name,
+        arcanaLabel: card.arcana === "major"
+          ? `${t(ui).majorArcana} \u00b7 ${card.rank ?? card.id}`.toUpperCase()
+          : `${(card.suit ?? "").toUpperCase()} \u00b7 ${card.rank ?? ""}`,
         image: `/static/${card.imageKey}.webp`,
         image2x: `/static/${card.imageKey}@2x.webp`,
         reviewed: card.reviewed,
@@ -1613,8 +1695,8 @@ async function cardDetail(
         upright: card.upright,
         reversed: card.reversed,
         notes,
-        prev: idx > 0 ? { slug: all[idx - 1].slug, name: all[idx - 1].name } : null,
-        next: idx >= 0 && idx < all.length - 1 ? { slug: all[idx + 1].slug, name: all[idx + 1].name } : null,
+        prev: idx >= 0 && all.length > 1 ? { slug: all[(idx - 1 + all.length) % all.length].slug, name: all[(idx - 1 + all.length) % all.length].name } : null,
+        next: idx >= 0 && all.length > 1 ? { slug: all[(idx + 1) % all.length].slug, name: all[(idx + 1) % all.length].name } : null,
       },
     }),
   );
@@ -1814,7 +1896,7 @@ app.get("/api/me/summary", async (c) => {
   if (!user || !c.env?.DB) {
     return c.json({
       user: null,
-      prefs: { lang: ui, theme: null, nickname: null },
+      prefs: { lang: ui, theme: null, nickname: null, notifyDaily: true, notifyPromo: false },
       streak: { current: 0, longest: 0, activeToday: false },
       quota: { used: 0, limit: questionLimit(c.env), resetsAt: nextBangkokMidnight() },
     });
@@ -1822,6 +1904,14 @@ app.get("/api/me/summary", async (c) => {
   const store = d1TarotStore(c.env.DB);
   const today = bangkokDay();
   await ensureDailyGrant(store, user.id, today);
+  // Welcome grant (board: "+2 free questions on your first sign-in"):
+  // +10 tokens, exactly once per registered account.
+  if (!user.isAnonymous) {
+    await store.postLedger({
+      userId: user.id, delta: WELCOME_TOKENS, reason: "welcome",
+      ref: `welcome:${user.id}`, day: today,
+    }).catch(() => false);
+  }
   // Unwedge a dead stream (claimed >3 min ago, never finished) so the
   // reading becomes resumable instead of stranding the user all day.
   const staleId = await store.staleStreaming(user.id, today, Date.now() - 3 * 60_000).catch(() => null);
@@ -1829,15 +1919,22 @@ app.get("/api/me/summary", async (c) => {
     await store.setReadingResult(staleId, { aiText: "", aiSummary: "", model: "", status: "drawn" }).catch(() => {});
   }
   const openReading = await store.openDrawn(user.id, today).catch(() => null);
-  const [prefs, used, days, balance] = await Promise.all([
+  const [prefs, used, days, balance, account] = await Promise.all([
     d1PrefsStore(c.env.DB).get(user.id),
     store.countReadings(user.id, today),
     store.activityDays(user.id),
     walletState(store, user.id, today),
+    store.accountInfo(user.id).catch(() => null),
   ]);
   return c.json({
-    user: { id: user.id, email: user.email, isAnonymous: user.isAnonymous },
-    prefs: prefs ?? { lang: ui, theme: null, nickname: null },
+    user: {
+      id: user.id, email: user.email, isAnonymous: user.isAnonymous,
+      createdAt: account?.createdAt ?? null,
+      emailVerified: account?.emailVerified ?? false,
+      providers: account?.providers ?? [],
+    },
+    authProviders: { google: googleConfigured(c.env), line: lineConfigured(c.env) },
+    prefs: prefs ?? { lang: ui, theme: null, nickname: null, notifyDaily: true, notifyPromo: false },
     streak: computeStreak(days, today),
     quota: { used, limit: await effectiveLimit(c.env, store, user.id), resetsAt: nextBangkokMidnight() },
     tokens: {
@@ -1863,7 +1960,112 @@ app.get("/api/me/invite/lookup", async (c) => {
   const ownerId = await store.inviteOwner(code);
   if (!ownerId) return c.json({ error: "unknown_code" }, 404);
   const prefs = await d1PrefsStore(c.env.DB).get(ownerId);
-  return c.json({ owner: true, name: prefs?.nickname ?? null });
+  return c.json({ owner: true, name: maskName(prefs?.nickname) });
+});
+
+type RedeemOk = { kind: "invite" | "promo"; code: string; bonus: number };
+type RedeemErr = { error: "invalid_code" | "expired_code" | "already_used" | "own_code" };
+
+/**
+ * Resolve a typed redeem code (Top-up sheet + Wallet redeem boards).
+ * Personal invite codes grant the +5 joining bonus; promo codes come
+ * from redeem_codes and can expire or run out. Distinct error states
+ * are board-visible: invalid / expired / already used / your own code.
+ */
+async function resolveRedeem(
+  store: ReturnType<typeof d1TarotStore>,
+  userId: string,
+  raw: unknown,
+): Promise<RedeemOk | RedeemErr> {
+  const code = typeof raw === "string" ? raw.trim().toUpperCase() : "";
+  if (!code || code.length > 32) return { error: "invalid_code" };
+  if (isInviteCode(code)) {
+    const ownerId = await store.inviteOwner(normalizeInviteCode(code) as string);
+    if (!ownerId) return { error: "invalid_code" };
+    if (ownerId === userId) return { error: "own_code" };
+    if (await store.getReferral(userId)) return { error: "already_used" };
+    return { kind: "invite", code, bonus: REFERRAL_FRIEND_BONUS_TOKENS };
+  }
+  const promo = await store.redeemCode(code);
+  if (!promo || !promo.active) return { error: "invalid_code" };
+  if (promo.expiresAt !== null && promo.expiresAt < Date.now()) return { error: "expired_code" };
+  if (await store.hasRedeemed(code, userId)) return { error: "already_used" };
+  if (promo.maxUses !== null && (await store.redeemCount(code)) >= promo.maxUses) return { error: "expired_code" };
+  return { kind: "promo", code, bonus: promo.bonusTokens };
+}
+
+function redeemErrorStatus(error: RedeemErr["error"]): 400 | 404 | 409 | 410 {
+  if (error === "invalid_code") return 404;
+  if (error === "expired_code") return 410;
+  if (error === "already_used") return 409;
+  return 400;
+}
+
+app.post("/api/me/redeem/validate", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  if (user.isAnonymous) return c.json({ error: "registration_required" }, 403);
+  let body: { code?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "invalid_code" }, 404); }
+  const resolved = await resolveRedeem(d1TarotStore(c.env.DB), user.id, body.code);
+  if ("error" in resolved) return c.json({ error: resolved.error }, redeemErrorStatus(resolved.error));
+  return c.json({ ok: true, code: resolved.code, bonus: resolved.bonus, kind: resolved.kind });
+});
+
+/** Redeem now (Wallet page): credits the bonus immediately, once. */
+app.post("/api/me/redeem", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  if (user.isAnonymous) return c.json({ error: "registration_required" }, 403);
+  let body: { code?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "invalid_code" }, 404); }
+  const store = d1TarotStore(c.env.DB);
+  const resolved = await resolveRedeem(store, user.id, body.code);
+  if ("error" in resolved) return c.json({ error: resolved.error }, redeemErrorStatus(resolved.error));
+  const today = bangkokDay();
+  if (resolved.kind === "invite") {
+    const ownerId = await store.inviteOwner(resolved.code);
+    if (ownerId && !(await store.getReferral(user.id))) {
+      await store.insertReferral(user.id, inviteRefFor(ownerId), ownerId);
+    }
+    const credited = await store.postLedger({
+      userId: user.id, delta: resolved.bonus, reason: "referral",
+      ref: `friend-bonus:${user.id}`, day: today,
+    });
+    if (!credited) return c.json({ error: "already_used" }, 409);
+    return c.json({ ok: true, code: resolved.code, bonus: resolved.bonus, kind: resolved.kind });
+  }
+  if (!(await store.recordRedemption(resolved.code, user.id))) {
+    return c.json({ error: "already_used" }, 409);
+  }
+  await store.postLedger({
+    userId: user.id, delta: resolved.bonus, reason: "promo",
+    ref: `promo:${resolved.code}:${user.id}`, day: today,
+  });
+  return c.json({ ok: true, code: resolved.code, bonus: resolved.bonus, kind: resolved.kind });
+});
+
+/** Download my readings (drawer settings → Your data): full JSON export. */
+app.get("/api/me/export", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  if (user.isAnonymous) return c.json({ error: "registration_required" }, 403);
+  const store = d1TarotStore(c.env.DB);
+  const [readings, prefs] = await Promise.all([
+    store.exportReadings(user.id),
+    d1PrefsStore(c.env.DB).get(user.id),
+  ]);
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    account: { email: user.email, nickname: prefs?.nickname ?? null },
+    readings,
+  };
+  return new Response(JSON.stringify(payload, null, 2), {
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "content-disposition": `attachment; filename="tarotnice-readings.json"`,
+    },
+  });
 });
 
 /**
@@ -1943,15 +2145,26 @@ app.get("/api/me/transactions", async (c) => {
       .filter((r) => r.reason === "reading" && r.source === "daily")
       .map((r) => r.day),
   );
-  const items = rows.map((r) => ({
-    delta: r.delta,
-    reason: r.reason,
-    source: r.source,
-    day: r.day,
-    createdAt: r.createdAt,
-    ...(r.reason === "daily"
-      ? { status: spentDays.has(r.day) ? "used" : r.day === today ? "available" : "expired" }
-      : {}),
+  const items = await Promise.all(rows.map(async (r) => {
+    const reading = r.reason === "reading" ? await store.getReading(r.ref).catch(() => null) : null;
+    return {
+      delta: r.delta,
+      reason: r.reason,
+      ref: r.ref,
+      source: r.source,
+      day: r.day,
+      createdAt: r.createdAt,
+      amount: r.amount,
+      currency: r.currency,
+      receiptUrl: r.receiptUrl,
+      paymentMethod: r.paymentMethod,
+      ...(reading
+        ? { reading: { id: reading.id, topic: reading.topic, question: reading.question, cards: reading.cards } }
+        : {}),
+      ...(r.reason === "daily"
+        ? { status: spentDays.has(r.day) ? "used" : r.day === today ? "available" : "expired" }
+        : {}),
+    };
   }));
   return c.json({
     items,
@@ -1988,7 +2201,7 @@ app.get("/api/me/referrals", async (c) => {
     else if (f.firstReadingAt) status = "read";
     else if (!f.isAnonymous) status = "joined";
     return {
-      name: f.nickname,
+      name: maskName(f.nickname),
       status,
       joinedAt: f.createdAt,
       readAt: f.firstReadingAt,
@@ -2013,13 +2226,19 @@ app.post("/api/billing/checkout", async (c) => {
   if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
   if (user.isAnonymous) return c.json({ error: "registration_required" }, 403);
   if (!tokensConfigured(c.env)) return c.json({ error: "billing_not_configured" }, 503);
-  let body: { pack?: unknown; return?: unknown };
+  let body: { pack?: unknown; return?: unknown; code?: unknown };
   try {
     body = await c.req.json();
   } catch {
     return c.json({ error: "bad_request" }, 400);
   }
   if (!isPackId(body.pack)) return c.json({ error: "unknown_pack" }, 400);
+  let redeem: RedeemOk | null = null;
+  if (typeof body.code === "string" && body.code.trim()) {
+    const resolved = await resolveRedeem(d1TarotStore(c.env.DB), user.id, body.code);
+    if ("error" in resolved) return c.json({ error: resolved.error }, redeemErrorStatus(resolved.error));
+    redeem = resolved;
+  }
   const pack = PACKS[body.pack];
   const priceId = packPriceId(c.env, pack.id);
   if (!priceId) return c.json({ error: "plan_not_configured" }, 503);
@@ -2038,6 +2257,8 @@ app.post("/api/billing/checkout", async (c) => {
       priceId,
       pack,
       customerId,
+      redeemCode: redeem?.code ?? null,
+      redeemBonus: redeem?.bonus ?? null,
     });
     if (checkout.url) return c.json({ url: checkout.url });
     return c.json({ error: "checkout_failed" }, 502);
@@ -2092,13 +2313,40 @@ app.post("/api/billing/webhook", async (c) => {
       if (userId && pack && session.payment_status === "paid") {
         // Key by payment intent (fallback session id) so charge-level
         // refund/dispute events can find this credit later.
+        const receipt = sessionReceipt(session);
         await store.postLedger({
           userId,
           delta: pack.tokens,
           reason: "topup",
-          ref: session.payment_intent ?? session.id,
+          ref: receipt.paymentIntentId ?? session.id,
           day: today,
+          amount: receipt.amount,
+          currency: receipt.currency,
+          receiptUrl: receipt.receiptUrl,
+          paymentMethod: receipt.paymentMethod,
         });
+        // Redeem code applied in the pack sheet: bonus lands with the
+        // pack, exactly once (ref keys by checkout session; a webhook
+        // replay is a no-op).
+        const redeemCode = session.metadata?.redeem_code;
+        const redeemBonus = Number(session.metadata?.redeem_bonus ?? 0);
+        if (redeemCode && redeemBonus > 0) {
+          const isInvite = isInviteCode(redeemCode);
+          if (!isInvite) await store.recordRedemption(redeemCode, userId).catch(() => false);
+          if (isInvite) {
+            const ownerId = await store.inviteOwner(redeemCode).catch(() => null);
+            if (ownerId && ownerId !== userId && !(await store.getReferral(userId))) {
+              await store.insertReferral(userId, inviteRefFor(ownerId), ownerId).catch(() => {});
+            }
+          }
+          await store.postLedger({
+            userId,
+            delta: redeemBonus,
+            reason: isInvite ? "referral" : "promo",
+            ref: `topup-bonus:${session.id}`,
+            day: today,
+          });
+        }
         if (typeof session.customer === "string") {
           await store.setStripeCustomer(userId, session.customer);
         }
@@ -2148,16 +2396,18 @@ app.post("/api/billing/webhook", async (c) => {
 app.put("/api/me/prefs", async (c) => {
   const user = await authedUser(c);
   if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
-  let body: { lang?: unknown; theme?: unknown; nickname?: unknown };
+  let body: { lang?: unknown; theme?: unknown; nickname?: unknown; notifyDaily?: unknown; notifyPromo?: unknown };
   try {
     body = await c.req.json();
   } catch {
     return c.json({ error: "bad_request" }, 400);
   }
-  const prefs: { lang?: string; theme?: string | null; nickname?: string | null } = {};
+  const prefs: { lang?: string; theme?: string | null; nickname?: string | null; notifyDaily?: boolean; notifyPromo?: boolean } = {};
   if (body.lang === "th" || body.lang === "en") prefs.lang = body.lang;
   if (body.theme === "day" || body.theme === "night") prefs.theme = body.theme;
   if (body.theme === null) prefs.theme = null;
+  if (typeof body.notifyDaily === "boolean") prefs.notifyDaily = body.notifyDaily;
+  if (typeof body.notifyPromo === "boolean") prefs.notifyPromo = body.notifyPromo;
   if (typeof body.nickname === "string") {
     const nickname = body.nickname.trim().slice(0, 40);
     prefs.nickname = nickname || null;
@@ -2207,12 +2457,20 @@ app.get("/static/:rest{.+}", async (c) => {
 });
 
 // With run_worker_first, every request reaches the worker: serve anything
-// no route claimed (app shell, fonts, icons) from static assets. Must stay
-// last so API/page routes match first.
+// no route claimed (app shell, fonts, icons) from static assets; a miss
+// on a page path gets the board 404 page. Must stay last so API/page
+// routes match first.
 app.get("*", async (c) => {
   const assets = c.env?.ASSETS;
-  if (!assets) return c.text("Not found", 404);
-  return assets.fetch(c.req.raw);
+  const path = new URL(c.req.url).pathname;
+  const assetLike = /^\/(app|mascot|fonts)\//.test(path) || path === "/sw.js" || path === "/manifest.webmanifest" || path === "/favicon.ico";
+  if (assets) {
+    const res = await assets.fetch(c.req.raw);
+    if (res.status !== 404 || assetLike) return res;
+  } else if (assetLike) {
+    return c.text("Not found", 404);
+  }
+  return c.html(notFoundPage({ ui: requestUiLang(c), origin: new URL(c.req.url).origin }), 404);
 });
 
 export default app;

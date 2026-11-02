@@ -5,6 +5,7 @@
 import { escapeHtml } from "../lib/html";
 import { fmt, t, type UiLang } from "../lib/i18n";
 import { isInviteCode } from "../lib/invite";
+import { PACK_LIST } from "../lib/stripe";
 import { computeStreak, localDayString } from "../lib/streaks";
 import { headerHtml, pageShell, siteFooterHtml } from "./shell";
 
@@ -69,7 +70,21 @@ ${inviteBanner}${steps}
 <div class="guide guide-ask s-idle" id="guide-ask"><span class="ngern-wrap">${NGERN_SITTING_SVG}</span><p class="bubble">${escapeHtml(d.hintIdle)}</p></div>
 <form id="ask-form" action="/api/readings" method="post" data-need="${escapeHtml(d.hintNeed)}">
 <label class="ask-label" for="q">${escapeHtml(d.ask)}</label>
-<textarea id="q" name="question" rows="3" maxlength="200" placeholder="${escapeHtml(d.placeholder)}"></textarea>
+<textarea id="q" name="question" rows="3" maxlength="300" placeholder="${escapeHtml(d.placeholder)}"></textarea>
+<p class="q-count"><span id="q-count">0</span>/300</p>
+<p class="muted">${escapeHtml(d.notSureAsk)}</p>
+<div class="suggest-chips">${TOPICS.map((topic) => {
+    const samples: Record<string, [string, string]> = {
+      love: ["Will my relationship move forward?", "\u0e04\u0e27\u0e32\u0e21\u0e2a\u0e31\u0e21\u0e1e\u0e31\u0e19\u0e18\u0e4c\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19\u0e08\u0e30\u0e40\u0e14\u0e34\u0e19\u0e2b\u0e19\u0e49\u0e32\u0e15\u0e48\u0e2d\u0e44\u0e2b\u0e21"],
+      career: ["Should I take the new job?", "\u0e09\u0e31\u0e19\u0e04\u0e27\u0e23\u0e23\u0e31\u0e1a\u0e07\u0e32\u0e19\u0e43\u0e2b\u0e21\u0e48\u0e44\u0e2b\u0e21"],
+      money: ["Will my finances improve this month?", "\u0e01\u0e32\u0e23\u0e40\u0e07\u0e34\u0e19\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19\u0e40\u0e14\u0e37\u0e2d\u0e19\u0e19\u0e35\u0e49\u0e08\u0e30\u0e14\u0e35\u0e02\u0e36\u0e49\u0e19\u0e44\u0e2b\u0e21"],
+      health: ["How can I feel less stressed?", "\u0e09\u0e31\u0e19\u0e08\u0e30\u0e40\u0e04\u0e23\u0e35\u0e22\u0e14\u0e19\u0e49\u0e2d\u0e22\u0e25\u0e07\u0e44\u0e14\u0e49\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23"],
+      general: ["What should I focus on this week?", "\u0e2a\u0e31\u0e1b\u0e14\u0e32\u0e2b\u0e4c\u0e19\u0e35\u0e49\u0e09\u0e31\u0e19\u0e04\u0e27\u0e23\u0e42\u0e1f\u0e01\u0e31\u0e2a\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e2d\u0e30\u0e44\u0e23"],
+    };
+    const sample = samples[topic.code][ui === "th" ? 1 : 0];
+    return `<button type="button" class="suggest-chip" data-suggest="${escapeHtml(sample)}" data-topic="${topic.code}">${escapeHtml(sample)}</button>`;
+  }).join("")}</div>
+<p class="muted">${escapeHtml(d.eachReadingLine)}</p>
 ${opts.turnstileSiteKey ? `<div class="cf-turnstile" data-sitekey="${escapeHtml(opts.turnstileSiteKey)}" data-size="invisible"></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>` : ""}
 <button class="btn btn-primary" type="submit">${escapeHtml(d.shuffleCards)} <span class="shuffle-cost" aria-hidden="true">| <span class="moonstone"></span> <span class="shuffle-price">5 ${escapeHtml(d.tokensUnit)}</span></span></button>
 </form>
@@ -85,6 +100,38 @@ ${quotaRow(ui)}
 <h1 class="draw-q read-q" id="read-q"></h1>
 <div class="read-cards" id="read-cards"></div>
 <div id="reading" class="reading"></div>
+<div class="followup-box" id="followup-box" hidden>
+<label for="followup-q">${escapeHtml(d.followUpLabel)}</label>
+<textarea id="followup-q" rows="2" maxlength="300"></textarea>
+<button class="btn btn-primary" type="button" id="followup-ask">${escapeHtml(d.askNgernTokens)}</button>
+</div>
+<div class="guest-gate" id="guest-gate" hidden>
+<h2>${escapeHtml(d.guestGateTitle)}</h2>
+<p>${escapeHtml(d.guestGateText)}</p>
+<p><a class="btn btn-primary" href="/sign-in">${escapeHtml(d.signInToKeep)}</a> <a class="btn btn-outline" href="/register">${escapeHtml(d.createAccountHeading)}</a></p>
+</div>
+<div class="sheet" id="pack-sheet" hidden>
+<div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="pack-sheet-title">
+<p class="drawer-back-row"><button type="button" id="pack-sheet-close" aria-label="Close">&times;</button></p>
+<h2 id="pack-sheet-title">${escapeHtml(d.topUpTitle)}</h2>
+<p data-pack-balance></p>
+<p class="muted" data-pack-pending-wrap hidden>${escapeHtml(d.waitingToAsk)} &ldquo;<span data-pack-pending></span>&rdquo;</p>
+<div data-pack-list></div>
+<div class="redeem-box">
+<h3>${escapeHtml(d.redeemTitle)}</h3>
+<p>${escapeHtml(d.redeemHint)}</p>
+<div class="redeem-row"><input id="sheet-code" maxlength="32" autocomplete="off" placeholder="NICE-XXXX"><button type="button" class="btn btn-outline" id="sheet-apply">${escapeHtml(d.redeemBtn)}</button></div>
+<p class="auth-err" id="sheet-code-msg" role="alert"></p>
+<p id="sheet-code-applied" hidden></p>
+<p><button type="button" class="linklike" id="sheet-code-remove" hidden>${escapeHtml(d.removeBtn)}</button></p>
+</div>
+<p><button type="button" class="btn btn-primary" id="pack-pay">${escapeHtml(d.payAndAsk)}</button></p>
+<p class="muted">${escapeHtml(d.secureLine)} \u00b7 PromptPay \u00b7 Visa \u00b7 Mastercard</p>
+<p><a href="/invite">${escapeHtml(d.orInviteFree)}</a></p>
+<p data-pack-guest hidden><a class="btn btn-primary" href="/sign-in">${escapeHtml(d.signInToKeep)}</a></p>
+</div>
+</div>
+<script>window.__tnPacks=${JSON.stringify(PACK_LIST.map((p) => ({ id: p.id, tokens: p.tokens, thb: p.thb })))};window.__tnSheet=${JSON.stringify({ mostPopular: d.mostPopular, redeemOk: d.redeemOk, redeemInvalid: d.redeemInvalid, redeemExpired: d.redeemExpired, redeemUsed: d.redeemUsed, redeemOwn: d.redeemOwn, readingsCount: d.readingsCount, topUpSub: d.topUpSub })};</script>
 </section>
 </main>`;
   const jsonLd = JSON.stringify({

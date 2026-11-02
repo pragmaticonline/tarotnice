@@ -58,6 +58,13 @@ export function inviteRefFor(userId: string): string {
   return `inv:${userId}`;
 }
 
+/** Privacy mask for friend names on invite surfaces: "Pim•••". */
+export function maskName(name: string | null | undefined): string | null {
+  const clean = (name ?? "").trim().split(/\s+/)[0] ?? "";
+  if (!clean) return null;
+  return `${[...clean].slice(0, 3).join("")}•••`;
+}
+
 export function parseInviteRef(ref: string | null | undefined): string | null {
   if (!ref || !ref.startsWith("inv:")) return null;
   const userId = ref.slice(4).trim();

@@ -513,6 +513,12 @@
           return '<div class="sec sec-advice"><h2 class="sec-title">' + esc(title) + "</h2><p>" +
             esc(b.replace(/^\*\*[^*]+\*\*:?\s*/, "")).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>") + "</p></div>";
         }
+        if (/^(\*\*)?(\u0e15\u0e48\u0e2d\u0e44\u0e1b|What next)/.test(b)) {
+          var nTitle = (b.match(/^\*\*([^*]+)\*\*/) || b.match(/^([^:\n]+):/) || [])[1] || "What next";
+          var nBody = b.replace(/^\*\*[^*]+\*\*:?\s*/, "").replace(/^[^:\n]+:\s*/, "");
+          return '<div class="sec sec-guidance"><h2 class="sec-title">' + esc(nTitle) + "</h2><p>" +
+            esc(nBody).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>") + "</p></div>";
+        }
         if (/^(\*\*)?(\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d|Explore further)/.test(b)) {
           var fTitle = (b.match(/^\*\*([^*]+)\*\*/) || b.match(/^([^:\n]+):/) || [])[1] || "Explore further";
           var fItems = b.replace(/^\*\*[^*]+\*\*:?\s*/, "").replace(/^[^:\n]+:\s*/, "")

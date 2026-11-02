@@ -125,7 +125,19 @@ function initHistoryFilter() {
     });
     if (none) none.hidden = anyVisible;
   }
-  search.addEventListener("input", apply);
+  var searchTimer = null;
+  search.addEventListener("input", function () {
+    apply();
+    // Server search covers every reading, not just this page: when
+    // more pages exist, hand the term to the server.
+    var more = document.querySelector(".hist-more a");
+    if (more && search.value.trim()) {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        window.location.href = "/history?q=" + encodeURIComponent(search.value.trim());
+      }, 700);
+    }
+  });
   chips.forEach(function (chip) {
     chip.addEventListener("click", function () {
       chips.forEach(function (c) { c.classList.remove("on"); });

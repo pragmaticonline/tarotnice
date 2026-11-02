@@ -20,9 +20,9 @@
   var lang = document.documentElement.lang === "th" ? "th" : "en";
   var ui = {
     en: {
-      txTopup: "Token top-up", txRefund: "Refund", txDaily: "Daily free credit",
-      txReadingDaily: "Question (free credit)", txReadingWallet: "Question (tokens)",
-      txReferral: "Invite bonus", txReferralFriend: "Joining bonus",
+      txTopup: "Token top-up", txRefund: "Refund", txDaily: "Daily free tokens",
+      txReadingDaily: "Question (free tokens)", txReadingWallet: "Question (tokens)",
+      txReferral: "Invite bonus", txReferralFriend: "Joining bonus", txWelcome: "Welcome bonus", txPromo: "Promo bonus",
       available: "Available", used: "Used", expired: "Expired",
       friend: "Friend", waiting: "Waiting for first reading",
       rewarded: "First reading · +1", joined: "Joined", read: "First reading done",
@@ -30,9 +30,9 @@
       copied: "Copied",
     },
     th: {
-      txTopup: "\u0e40\u0e15\u0e34\u0e21\u0e42\u0e17\u0e40\u0e04\u0e19", txRefund: "\u0e04\u0e37\u0e19\u0e40\u0e07\u0e34\u0e19", txDaily: "\u0e40\u0e04\u0e23\u0e14\u0e34\u0e15\u0e1f\u0e23\u0e35\u0e23\u0e32\u0e22\u0e27\u0e31\u0e19",
-      txReadingDaily: "\u0e04\u0e33\u0e16\u0e32\u0e21 (\u0e40\u0e04\u0e23\u0e14\u0e34\u0e15\u0e1f\u0e23\u0e35)", txReadingWallet: "\u0e04\u0e33\u0e16\u0e32\u0e21 (\u0e42\u0e17\u0e40\u0e04\u0e19)",
-      txReferral: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e0a\u0e27\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19", txReferralFriend: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e2a\u0e21\u0e31\u0e04\u0e23",
+      txTopup: "\u0e40\u0e15\u0e34\u0e21\u0e42\u0e17\u0e40\u0e04\u0e19", txRefund: "\u0e04\u0e37\u0e19\u0e40\u0e07\u0e34\u0e19", txDaily: "\u0e42\u0e17\u0e40\u0e04\u0e19\u0e1f\u0e23\u0e35\u0e23\u0e32\u0e22\u0e27\u0e31\u0e19",
+      txReadingDaily: "\u0e04\u0e33\u0e16\u0e32\u0e21 (\u0e42\u0e17\u0e40\u0e04\u0e19\u0e1f\u0e23\u0e35)", txReadingWallet: "\u0e04\u0e33\u0e16\u0e32\u0e21 (\u0e42\u0e17\u0e40\u0e04\u0e19)",
+      txReferral: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e0a\u0e27\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19", txReferralFriend: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e2a\u0e21\u0e31\u0e04\u0e23", txWelcome: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e15\u0e49\u0e2d\u0e19\u0e23\u0e31\u0e1a", txPromo: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e42\u0e1b\u0e23\u0e42\u0e21\u0e0a\u0e31\u0e19",
       available: "\u0e43\u0e0a\u0e49\u0e44\u0e14\u0e49", used: "\u0e43\u0e0a\u0e49\u0e41\u0e25\u0e49\u0e27", expired: "\u0e2b\u0e21\u0e14\u0e2d\u0e32\u0e22\u0e38",
       friend: "\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19", waiting: "\u0e23\u0e2d\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e14\u0e39\u0e14\u0e27\u0e07\u0e04\u0e23\u0e31\u0e49\u0e07\u0e41\u0e23\u0e01",
       rewarded: "\u0e14\u0e39\u0e14\u0e27\u0e07\u0e04\u0e23\u0e31\u0e49\u0e07\u0e41\u0e23\u0e01\u0e41\u0e25\u0e49\u0e27 \u00b7 +1", joined: "\u0e2a\u0e21\u0e31\u0e04\u0e23\u0e41\u0e25\u0e49\u0e27", read: "\u0e14\u0e39\u0e14\u0e27\u0e07\u0e41\u0e23\u0e01\u0e41\u0e25\u0e49\u0e27",
@@ -56,16 +56,40 @@
   });
 
   // --- Tabs ---
-  document.querySelectorAll("[data-tab]").forEach(function (tab) {
-    tab.addEventListener("click", function () {
-      document.querySelectorAll("[data-tab]").forEach(function (t) {
-        t.setAttribute("aria-selected", t === tab ? "true" : "false");
-      });
-      document.querySelectorAll("[data-panel]").forEach(function (p) {
-        p.hidden = p.getAttribute("data-panel") !== tab.getAttribute("data-tab");
-      });
+  function activateTab(name) {
+    document.querySelectorAll("[data-tab]").forEach(function (t) {
+      t.setAttribute("aria-selected", t.getAttribute("data-tab") === name ? "true" : "false");
     });
+    document.querySelectorAll("[data-panel]").forEach(function (p) {
+      p.hidden = p.getAttribute("data-panel") !== name;
+    });
+  }
+  document.querySelectorAll("[data-tab]").forEach(function (tab) {
+    tab.addEventListener("click", function () { activateTab(tab.getAttribute("data-tab")); });
   });
+  if (location.hash === "#ref") activateTab("ref");
+  if (location.hash === "#activity" && $("activity")) $("activity").scrollIntoView();
+
+  // --- Redeem code (wallet) ---
+  var redeemBtn = $("redeem-apply");
+  if (redeemBtn) {
+    redeemBtn.addEventListener("click", function () {
+      var input = $("redeem-code");
+      var msg = $("redeem-msg");
+      var s = window.__tnRedeemStrings || {};
+      api("/api/me/redeem", { method: "POST", body: JSON.stringify({ code: input ? input.value : "" }) }).then(function (r) {
+        if (!msg) return;
+        if (r.status === 200) {
+          msg.style.color = "#146c2e";
+          msg.textContent = (s.ok || "{code} redeemed · +{bonus} bonus tokens").replace("{code}", r.data.code).replace("{bonus}", r.data.bonus);
+          setTimeout(function () { location.reload(); }, 900);
+          return;
+        }
+        msg.style.color = "";
+        msg.textContent = r.data.error === "expired_code" ? (s.expired || "Expired") : r.data.error === "already_used" ? (s.used || "Already used") : r.data.error === "own_code" ? (s.own || "Own code") : (s.invalid || "Invalid code");
+      }).catch(function () {});
+    });
+  }
 
   // --- Transactions ---
   var txList = $("tx-list");
@@ -79,18 +103,39 @@
     if (item.reason === "refund") return ui.txRefund;
     if (item.reason === "daily") return ui.txDaily;
     if (item.reason === "reading") return item.source === "daily" ? ui.txReadingDaily : ui.txReadingWallet;
+    if (item.reason === "welcome") return ui.txWelcome;
+    if (item.reason === "promo") return ui.txPromo;
     if (item.reason === "referral") return item.ref && item.ref.indexOf("friend-bonus:") === 0 ? ui.txReferralFriend : ui.txReferral;
     return item.reason;
   }
 
   function renderTx(items, append) {
     if (!append) txList.innerHTML = "";
+    var lastDay = null;
+    var prior = txList.querySelectorAll(".tx-group");
+    if (prior.length) lastDay = prior[prior.length - 1].textContent;
     items.forEach(function (item) {
+      if (item.day && item.day !== lastDay) {
+        lastDay = item.day;
+        var head = document.createElement("li");
+        head.className = "tx-group";
+        head.textContent = item.day;
+        txList.appendChild(head);
+      }
       var li = document.createElement("li");
       li.className = "tx-row";
       var sign = item.delta > 0 ? "+" : "";
       var status = item.status ? ' <span class="tx-status">' + esc(ui[item.status] || item.status) + "</span>" : "";
-      li.innerHTML = "<span class=\"tx-label\">" + esc(txLabel(item)) + status + "</span>" +
+      var sub = "";
+      if (item.reading) {
+        sub = "<span class=\"tx-sub\">" + esc(item.reading.topic || "") + " · &ldquo;" + esc(item.reading.question || "") + "&rdquo; " +
+          "<a href=\"/history/" + encodeURIComponent(item.reading.id) + "\">" + esc(window.__tnTxStrings ? window.__tnTxStrings.read || "Read this reading" : "Read this reading") + "</a></span>";
+      }
+      if (item.reason === "topup" && item.amount) {
+        sub = "<span class=\"tx-sub\">\u0e3f" + (item.amount / 100).toLocaleString() + (item.paymentMethod ? " · " + esc(item.paymentMethod) : "") +
+          (item.receiptUrl ? " · <a href=\"" + esc(item.receiptUrl) + "\" target=\"_blank\" rel=\"noopener\">" + esc(window.__tnTxStrings ? window.__tnTxStrings.receipt || "View receipt" : "View receipt") + "</a>" : "") + "</span>";
+      }
+      li.innerHTML = "<span class=\"tx-label\">" + esc(txLabel(item)) + status + sub + "</span>" +
         "<span class=\"tx-day\">" + esc(item.day) + "</span>" +
         "<b class=\"tx-delta" + (item.delta < 0 ? " neg" : "") + "\">" + sign + item.delta + "</b>";
       txList.appendChild(li);
@@ -154,6 +199,9 @@
     var read = friends.filter(function (f) { return f.status === "read" || f.status === "rewarded"; }).length;
     if (countsEl) countsEl.textContent = "(" + friends.length + ")";
     if (progEl) progEl.textContent = ui.counts(joined, read, inviteData.rewardToday || 0, inviteData.rewardCap || 3);
+    var statJoined = $("stat-joined"); if (statJoined) statJoined.textContent = String(friends.length);
+    var statRead = $("stat-read"); if (statRead) statRead.textContent = String(read);
+    var statEarned = $("stat-earned"); if (statEarned) statEarned.textContent = String(inviteData.totalEarned || 0);
     var list = $("friend-list");
     if (list) {
       list.innerHTML = friends.map(function (f) {

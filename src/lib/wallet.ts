@@ -12,7 +12,9 @@ export const REFERRAL_FRIEND_BONUS_TOKENS = 5;
 /** Max rewarded friends per referrer per Bangkok day (+3 questions). */
 export const REFERRAL_DAILY_CAP = 3;
 
-export type LedgerReason = "daily" | "topup" | "reading" | "referral" | "refund";
+export type LedgerReason = "daily" | "topup" | "reading" | "referral" | "refund" | "welcome" | "promo";
+/** One-off welcome grant for a first registered sign-in (+2 questions). */
+export const WELCOME_TOKENS = 10;
 export type LedgerSource = "daily" | "wallet";
 
 export type LedgerRow = {

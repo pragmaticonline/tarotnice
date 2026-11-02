@@ -8,9 +8,11 @@ describe("GET / (draw screen)", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toContain("text/html");
     const html = await res.text();
-    // Ask form: label, 200-char textarea, Shuffle. No topic chips.
+    // Ask form: label, 300-char textarea with board counter, Shuffle.
     expect(html).toContain("What would you like to ask today?");
-    expect(html).toContain('maxlength="200"');
+    expect(html).toContain('maxlength="300"');
+    expect(html).toContain('id="q-count"');
+    expect(html).toContain('data-suggest');
     expect(html).not.toContain('name="topic"');
     expect(html).toContain("Shuffle");
     // Quota row: loading line (never a wrong count) until home.js
@@ -106,6 +108,15 @@ describe("GET / (draw screen)", () => {
     expect(en).not.toContain("\u2192</button>");
     const th = homePage({ uiLang: "th" });
     expect(th).toContain("5 \u0e42\u0e17\u0e40\u0e04\u0e19");
+  });
+
+  it("uses tokens wording, not credits", () => {
+    const en = homePage({ uiLang: "en" });
+    expect(en).toContain(">Tokens</small>");
+    expect(en).not.toContain("Credits");
+    expect(en).not.toContain("free credit");
+    const th = homePage({ uiLang: "th" });
+    expect(th).not.toContain("\u0e40\u0e04\u0e23\u0e14\u0e34\u0e15");
   });
 
   it("homePage() renders both languages directly", () => {

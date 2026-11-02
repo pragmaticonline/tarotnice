@@ -6,7 +6,12 @@ import { fmt, t, type UiLang } from "../lib/i18n";
 import { brandHtml, headerHtml, pageShell, siteFooterHtml } from "./shell";
 import type { StreakInfo } from "../lib/streaks";
 
-export type Milestone = { key: string; label: string; achieved: boolean };
+export type Milestone = { key: string; label: string; achieved: boolean; left?: string };
+
+export type JourneyEntry = {
+  date: string; timeLabel: string; topicLabel: string;
+  question: string; cardsLabel: string; id: string;
+};
 
 export function progressPage(opts: {
   ui: UiLang;
@@ -21,6 +26,9 @@ export function progressPage(opts: {
   readings: number;
   /** Last 7 daily-card thumbnails (SPEC §5.4), newest first. */
   recentDaily?: { name: string; image: string; day: string }[];
+  /** Readings in the calendar window, for the selected-day list. */
+  entries?: JourneyEntry[];
+  monthLabel?: string;
 }): string {
   const d = t(opts.ui);
   const head = headerHtml({ ui: opts.ui, streak: opts.streak, path: "/progress" });
@@ -33,9 +41,15 @@ export function progressPage(opts: {
     opts.days
       .map(
         (day) =>
-          `<span class="cal-cell${day.active ? " on" : ""}" title="${escapeHtml(day.date)}" aria-label="${escapeHtml(day.date)}${day.active ? " ✓" : ""}"></span>`,
+          `<button type="button" class="cal-cell${day.active ? " on" : ""}" data-cal-day="${escapeHtml(day.date)}" title="${escapeHtml(day.date)}" aria-label="${escapeHtml(day.date)}${day.active ? " ✓" : ""}">${Number(day.date.slice(8, 10))}</button>`,
       )
       .join("");
+  const entries = (opts.entries ?? [])
+    .map(
+      (e) =>
+        `<li class="journey-entry" data-entry-day="${escapeHtml(e.date)}" hidden><span class="hist-meta"><span class="topic-pill">${escapeHtml(e.topicLabel)}</span><span class="hist-date">${escapeHtml(e.timeLabel)}</span></span> <a href="/history/${escapeHtml(e.id)}">&ldquo;${escapeHtml(e.question)}&rdquo;</a> <span class="hist-cards">${escapeHtml(e.cardsLabel)}</span> <a href="/history/${escapeHtml(e.id)}" aria-label="Open">&rsaquo;</a></li>`,
+    )
+    .join("");
   const ownedPct = Math.round((new Set(opts.owned).size / 78) * 100);
   const owned = new Set(opts.owned);
   const deck = Array.from({ length: 78 }, (_, id) => {
@@ -49,6 +63,7 @@ export function progressPage(opts: {
       (m) =>
         `<li class="ms${m.achieved ? " on" : ""}"><span class="ms-mark" aria-hidden="true">${m.achieved ? "✓" : "○"}</span> ${escapeHtml(m.label)}` +
         (m.achieved ? ` <button type="button" class="ms-share" data-share-badge="${escapeHtml(m.key)}">${escapeHtml(d.shareBadge)}</button>` : "") +
+        (!m.achieved && m.left ? ` <span class="muted">${escapeHtml(m.left)}</span>` : "") +
         `</li>`,
     )
     .join("");
@@ -65,10 +80,12 @@ export function progressPage(opts: {
       `<p class="journey-note">${escapeHtml(d.freezeNote)}</p></div>` +
       `<div class="journey-stats"><span><small>${escapeHtml(d.bestTitle)}</small><b>${opts.streak.longest}</b></span>` +
       `<span><small>${escapeHtml(d.historyTitle)}</small><b>${opts.readings}</b></span></div></section>` +
-      `<section class="panel-card"><h2>${escapeHtml(d.lastWeeksTitle)}</h2>` +
-      `<div class="cal-head" aria-hidden="true"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>` +
-      `<div class="cal cal-5wk" role="img" aria-label="${escapeHtml(d.calendarTitle)}">${cells}</div>` +
-      `<p class="cal-legend"><span class="cal-cell on mini" aria-hidden="true"></span> ${escapeHtml(d.drewCardsLegend)} <span class="cal-cell mini" aria-hidden="true"></span> ${escapeHtml(d.noReadingLegend)}</p></section>` +
+      `<section class="panel-card"><h2>${escapeHtml(opts.monthLabel ?? d.lastWeeksTitle)}</h2>` +
+      `<div class="cal-head" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>` +
+      `<div class="cal cal-5wk" aria-label="${escapeHtml(d.calendarTitle)}">${cells}</div>` +
+      `<p class="cal-legend"><span class="cal-cell on mini" aria-hidden="true"></span> ${escapeHtml(d.drewCardsLegend)} <span class="cal-cell mini" aria-hidden="true"></span> ${escapeHtml(d.noReadingLegend)}</p>` +
+      `<h3 data-journey-day-title></h3><ul class="journey-entries">${entries}</ul><p class="muted" data-journey-empty hidden>${escapeHtml(d.emptyHistory)}</p>` +
+      `<p><a href="/history">${escapeHtml(d.allReadingsList)}</a></p></section>` +
       (opts.recentDaily && opts.recentDaily.length
         ? `<section class="panel-card"><h2>${escapeHtml(d.recentDailyTitle)}</h2><div class="recent-strip">` +
           opts.recentDaily
@@ -81,7 +98,7 @@ export function progressPage(opts: {
         : "") +
       `<section class="panel-card"><div class="collection-head"><h2>${escapeHtml(d.collectionTitle)}</h2><span class="muted">${escapeHtml(fmt(d.collectedOf, { owned: owned.size, total: 78 }))}</span></div>` +
       `<div class="collection-bar" role="img" aria-label="${ownedPct}%"><span style="width:${ownedPct}%"></span></div>` +
-      `<p class="muted">${escapeHtml(d.collectionNote)}</p><div class="deck" role="list">${deck}</div></section>` +
+      `<p class="muted">${escapeHtml(d.collectionNote)} ${escapeHtml(d.collectionFullNote)}</p><p><a href="/cards">${escapeHtml(d.browseLibrary)}</a></p><div class="deck" role="list">${deck}</div></section>` +
       `<section class="panel-card"><h2>${escapeHtml(d.referralTitle)}</h2>` +
       `<p>${escapeHtml(fmt(d.referralLine, { invited: opts.referrals.invited, converted: opts.referrals.converted }))}</p>` +
       `<p class="muted">${escapeHtml(opts.bonusOn ? d.referralBonusOn : d.referralBonusOff)}</p></section>` +

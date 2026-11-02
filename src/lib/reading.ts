@@ -15,12 +15,13 @@ export function isLang(value: unknown): value is "th" | "en" {
   return value === "th" || value === "en";
 }
 
-/** Trimmed question, or null when it must be rejected. Max 200 chars,
- *  non-empty, no HTML tags (everything is escaped on render anyway). */
+/** Trimmed question, or null when it must be rejected. Max 300 chars
+ *  (design board counter "{{count}}/300"), non-empty, no HTML tags
+ *  (everything is escaped on render anyway). */
 export function cleanQuestion(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
   const question = raw.trim().replace(/\s+/g, " ");
-  if (question.length < 1 || question.length > 200) return null;
+  if (question.length < 1 || question.length > 300) return null;
   if (/<[a-zA-Z][^>]*>/.test(question)) return null;
   return question;
 }
@@ -387,6 +388,7 @@ Overview: start straight away with the core message of the spread (one short war
 For each card, in draw order: write one paragraph starting with the position number, the position name, and the card name in bold (English names always), like "1 · What are my options — **Two of Wands**", add short keywords, and read the card as its position, connected to the question and choosing the dimension that suits their emotional state. State this card's role in the whole three-card picture and connect it to its neighbours — do not interpret it in isolation. End the paragraph with one sentence that summarizes this card's message for the question. Do not repeat the card name as the first words of the paragraph. Each card line carries an Imagery note describing its Rider-Waite-Smith scene: ground the card in one or two concrete visual details from it (a figure, object, or landscape element), tied to the question — never a standalone picture description.
 Guidance: start with the bold label **Guidance:** and base it mainly on cards 2 and 3 — what the user is working with now, and what is coming or needed. Explain how to respond (what to lean into, what to watch out for, how to prepare) in possibility language; reaffirm the decision is theirs. Derive it from the combined message of the spread, not from any single card's meaning and not as generic advice.
 Label **What to do:** then 2-3 concrete, practical steps, each tied to a specific card, that they can take on their own, free, never a ritual, as a bullet list starting each item with "- ".
+Label **What next:** then 1-2 sentences on what to expect or watch for next, grounded in the cards (never a dated prediction).
 Label **Explore further:** then exactly 3 follow-up questions in the user's own voice, one per line starting with "- ", that build on this reading (a card, a warning, or an open point) and help them understand themselves or their situation better; for vulnerable users make them self-care questions, never leading toward hopelessness, death or loss.
 Final line starting with "Summary: " of at most 140 characters, with no private details.
 Length and style: detailed but not an essay. Overview 4-6 sentences, each card 3-5 sentences, Guidance 4-6 sentences. Tell it as a story: bring each card's scene into the user's situation, then explain what it means for the question. Be specific to the question; never answer in one-line fragments. For light everyday questions, scale down: Overview 2-3 sentences, each card 1-2 sentences, Guidance 2-3 sentences, cheerful throughout.`;

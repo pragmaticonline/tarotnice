@@ -15,7 +15,7 @@ export type LibraryCard = {
   reviewed: boolean;
 };
 
-export type LibraryGroup = { title: string; cards: LibraryCard[] };
+export type LibraryGroup = { title: string; key: string; cards: LibraryCard[] };
 
 export function cardsPage(opts: {
   ui: UiLang;
@@ -28,32 +28,70 @@ export function cardsPage(opts: {
   const d = t(opts.ui);
   const prefix = opts.prefix ?? "";
   const head = headerHtml({ ui: opts.ui, streak: opts.streak, path: `${prefix}/cards` });
+  const total = opts.groups.reduce((n, g) => n + g.cards.length, 0);
+  const tabs =
+    `<button type="button" class="lib-tab on" data-lib-tab="all">${escapeHtml(d.allCards)} ${total}</button>` +
+    opts.groups
+      .map((g) => `<button type="button" class="lib-tab" data-lib-tab="${escapeHtml(g.key)}">${escapeHtml(g.title)} ${g.cards.length}</button>`)
+      .join("");
   const groups = opts.groups
     .map(
       (g) =>
-        `<section class="lib-group"><h2>${escapeHtml(g.title)}</h2><div class="lib-grid">` +
+        `<section class="lib-group" data-lib-group="${escapeHtml(g.key)}"><h2>${escapeHtml(g.title)}</h2><div class="lib-grid">` +
         g.cards
           .map(
             (card) =>
-              `<a class="lib-card" href="${prefix}/cards/${escapeHtml(card.slug)}"><img src="${escapeHtml(card.image)}" loading="lazy" alt="${escapeHtml(card.name)}"><span>${escapeHtml(card.name)}</span>${card.reviewed ? "" : ` <em class="draft">${escapeHtml(d.draftNote)}</em>`}</a>`,
+              `<a class="lib-card" data-lib-card data-name="${escapeHtml(card.name.toLowerCase())}" href="${prefix}/cards/${escapeHtml(card.slug)}"><img src="${escapeHtml(card.image)}" loading="lazy" alt="${escapeHtml(card.name)}"><span>${escapeHtml(card.name)}</span>${card.reviewed ? "" : ` <em class="draft">${escapeHtml(d.draftNote)}</em>`}</a>`,
           )
           .join("") +
         `</div></section>`,
     )
     .join("");
+  const script = `<script>
+(function () {
+  var tab = "all";
+  var input = document.getElementById("lib-search");
+  function apply() {
+    var q = (input.value || "").trim().toLowerCase();
+    var visible = 0;
+    document.querySelectorAll("[data-lib-card]").forEach(function (card) {
+      var group = card.closest("[data-lib-group]").getAttribute("data-lib-group");
+      var show = (tab === "all" || group === tab) && (!q || card.getAttribute("data-name").indexOf(q) >= 0);
+      card.hidden = !show;
+      if (show) visible++;
+    });
+    document.querySelectorAll("[data-lib-group]").forEach(function (g) {
+      g.hidden = !g.querySelector("[data-lib-card]:not([hidden])");
+    });
+    var empty = document.getElementById("lib-empty");
+    empty.hidden = visible > 0;
+    empty.textContent = ${JSON.stringify(d.noCardsMatch)}.replace("{q}", input.value.trim());
+  }
+  document.querySelectorAll("[data-lib-tab]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      tab = b.getAttribute("data-lib-tab");
+      document.querySelectorAll("[data-lib-tab]").forEach(function (x) { x.classList.toggle("on", x === b); });
+      apply();
+    });
+  });
+  input.addEventListener("input", apply);
+})();
+</script>`;
   return pageShell({
     title: `${d.cardsTitle} · TarotNice`,
     lang: opts.ui,
     origin: opts.origin,
     canonicalPath: `${prefix}/cards`,
     description: d.cardsLede,
-    body: `${head}<main><h1 class="display">${escapeHtml(d.cardsTitle)}</h1><p class="muted">${escapeHtml(d.cardsLede)}</p>${groups}</main>${siteFooterHtml(opts.ui, `${prefix}/cards`)}`,
+    body: `${head}<main><h1 class="display">${escapeHtml(d.cardsTitle)}</h1><p class="muted">${escapeHtml(d.cardsLede)}</p><div class="lib-search"><input id="lib-search" type="search" placeholder="${escapeHtml(d.searchCards)}" aria-label="${escapeHtml(d.searchCards)}"></div><div class="lib-tabs">${tabs}</div>${groups}<p class="lib-empty" id="lib-empty" hidden></p></main>${script}${siteFooterHtml(opts.ui, `${prefix}/cards`)}`,
   });
 }
 
 export type LibraryDetail = {
   slug: string;
   name: string;
+  /** Board eyebrow, e.g. "MAJOR ARCANA · 0". */
+  arcanaLabel?: string;
   image: string;
   image2x: string;
   reviewed: boolean;
@@ -103,13 +141,17 @@ export function cardDetailPage(opts: {
     jsonLd,
     body:
       `${head}<main class="card-detail"><p><a class="btn-outline btn" href="${prefix}/cards">&larr; ${escapeHtml(d.cardsTitle)}</a></p>` +
+      (card.arcanaLabel ? `<p class="detail-pos">${escapeHtml(card.arcanaLabel)}</p>` : "") +
       `<h1 class="display">${escapeHtml(card.name)}</h1>` +
       (card.reviewed ? "" : `<p class="draft-line">${escapeHtml(d.draftNote)}</p>`) +
       `<img class="detail-art" src="${escapeHtml(card.image)}" srcset="${escapeHtml(card.image2x)} 2x" alt="${escapeHtml(card.name)}">` +
-      `<section class="meaning-note"><h2>${escapeHtml(d.upright)}</h2><p>${escapeHtml(card.upright)}</p><p class="keywords">${escapeHtml(card.keywordsUpright.join(" · "))}</p></section>` +
-      `<section class="meaning-note"><h2>${escapeHtml(d.reversed)}</h2><p>${escapeHtml(card.reversed)}</p><p class="keywords">${escapeHtml(card.keywordsReversed.join(" · "))}</p></section>` +
+      `<div class="card-orient" role="group"><button type="button" class="lib-tab on" data-orient="upright">${escapeHtml(d.upright)}</button><button type="button" class="lib-tab" data-orient="reversed">${escapeHtml(d.reversed)}</button></div>` +
+      `<section class="meaning-note" data-orient-panel="upright"><p>${escapeHtml(card.upright)}</p><p class="kw-chips">${card.keywordsUpright.map((k) => `<span class="kw-chip">${escapeHtml(k)}</span>`).join("")}</p></section>` +
+      `<section class="meaning-note" data-orient-panel="reversed" hidden><p>${escapeHtml(card.reversed)}</p><p class="kw-chips">${card.keywordsReversed.map((k) => `<span class="kw-chip">${escapeHtml(k)}</span>`).join("")}</p></section>` +
       notes +
+      `<div class="guest-gate"><p>${escapeHtml(d.drewThisCard)}</p><p><a class="btn btn-primary" href="/">${escapeHtml(d.askNgern)}</a></p></div>` +
       nav +
+      `<script>(function(){document.querySelectorAll("[data-orient]").forEach(function(b){b.addEventListener("click",function(){document.querySelectorAll("[data-orient]").forEach(function(x){x.classList.toggle("on",x===b)});document.querySelectorAll("[data-orient-panel]").forEach(function(p){p.hidden=p.getAttribute("data-orient-panel")!==b.getAttribute("data-orient")})})})})();</script>` +
       `</main>${siteFooterHtml(opts.ui, `${prefix}/cards`)}`,
   });
 }

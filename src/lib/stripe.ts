@@ -92,9 +92,36 @@ export type CheckoutSession = {
   currency?: string;
   client_reference_id?: string;
   customer?: string;
-  payment_intent?: string;
+  customer_details?: { email?: string };
+  payment_intent?: string | {
+    id: string;
+    latest_charge?: {
+      receipt_url?: string;
+      amount?: number;
+      currency?: string;
+      payment_method_details?: { type?: string };
+    } | string;
+  };
   metadata?: Record<string, string>;
 };
+
+/** Receipt facts for the payment-result page and wallet activity. */
+export function sessionReceipt(session: CheckoutSession): {
+  amount: number | null; currency: string | null;
+  paymentMethod: string | null; receiptUrl: string | null; email: string | null;
+  paymentIntentId: string | null;
+} {
+  const pi = typeof session.payment_intent === "object" ? session.payment_intent : null;
+  const charge = pi && typeof pi.latest_charge === "object" ? pi.latest_charge : null;
+  return {
+    amount: charge?.amount ?? session.amount_total ?? null,
+    currency: charge?.currency ?? session.currency ?? null,
+    paymentMethod: charge?.payment_method_details?.type ?? null,
+    receiptUrl: charge?.receipt_url ?? null,
+    email: session.customer_details?.email ?? null,
+    paymentIntentId: pi ? pi.id : (typeof session.payment_intent === "string" ? session.payment_intent : null),
+  };
+}
 
 /** Resolve the pack a completed session paid for (metadata fallback). */
 export function packForSession(session: CheckoutSession): Pack | null {
@@ -111,7 +138,7 @@ export function retrieveCheckoutSession(env: StripeEnv, sessionId: string) {
     throw new Error("Invalid checkout session.");
   return stripeGet<CheckoutSession>(
     env,
-    `checkout/sessions/${encodeURIComponent(sessionId)}`,
+    `checkout/sessions/${encodeURIComponent(sessionId)}?expand[]=payment_intent.latest_charge`,
   );
 }
 
@@ -128,6 +155,8 @@ export function createPackCheckoutSession(
     priceId: string;
     pack: Pack;
     customerId?: string | null;
+    redeemCode?: string | null;
+    redeemBonus?: number | null;
   },
 ) {
   const params = new URLSearchParams();
@@ -148,6 +177,10 @@ export function createPackCheckoutSession(
   params.set("metadata[kind]", "token_pack");
   params.set("metadata[pack]", input.pack.id);
   params.set("metadata[tokens]", String(input.pack.tokens));
+  if (input.redeemCode) {
+    params.set("metadata[redeem_code]", input.redeemCode);
+    params.set("metadata[redeem_bonus]", String(input.redeemBonus ?? 0));
+  }
   return stripeRequest<{ id: string; url: string }>(
     env,
     "checkout/sessions",

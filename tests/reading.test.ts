@@ -22,13 +22,13 @@ import {
 } from "../src/lib/reading";
 
 describe("question validation", () => {
-  it("trims, collapses space, enforces 1..200 chars", () => {
+  it("trims, collapses space, enforces 1..300 chars (board counter)", () => {
     expect(cleanQuestion("  how will my week go?  ")).toBe("how will my week go?");
     expect(cleanQuestion("a  b")).toBe("a b");
     expect(cleanQuestion("")).toBeNull();
     expect(cleanQuestion("   ")).toBeNull();
-    expect(cleanQuestion("x".repeat(200))).toHaveLength(200);
-    expect(cleanQuestion("x".repeat(201))).toBeNull();
+    expect(cleanQuestion("x".repeat(300))).toHaveLength(300);
+    expect(cleanQuestion("x".repeat(301))).toBeNull();
     expect(cleanQuestion(null)).toBeNull();
   });
 

@@ -627,6 +627,8 @@ export function d1TarotStore(db: D1Database) {
     async postLedger(row: {
       userId: string; delta: number; reason: string; ref: string;
       source?: string | null; day: string;
+      amount?: number | null; currency?: string | null;
+      receiptUrl?: string | null; paymentMethod?: string | null;
     }): Promise<boolean> {
       const inserted = await orm
         .insert(schema.tokenLedger)
@@ -639,6 +641,10 @@ export function d1TarotStore(db: D1Database) {
           source: row.source ?? null,
           day: row.day,
           createdAt: Date.now(),
+          amount: row.amount ?? null,
+          currency: row.currency ?? null,
+          receiptUrl: row.receiptUrl ?? null,
+          paymentMethod: row.paymentMethod ?? null,
         })
         .onConflictDoNothing()
         .returning({ id: schema.tokenLedger.id });
@@ -671,6 +677,8 @@ export function d1TarotStore(db: D1Database) {
     }): Promise<{
       delta: number; reason: string; ref: string; source: string | null;
       day: string; createdAt: number;
+      amount: number | null; currency: string | null;
+      receiptUrl: string | null; paymentMethod: string | null;
     }[]> {
       const conds = [eq(schema.tokenLedger.userId, opts.userId)];
       if (opts.reasons) conds.push(inArray(schema.tokenLedger.reason, opts.reasons));
@@ -683,6 +691,10 @@ export function d1TarotStore(db: D1Database) {
           source: schema.tokenLedger.source,
           day: schema.tokenLedger.day,
           createdAt: schema.tokenLedger.createdAt,
+          amount: schema.tokenLedger.amount,
+          currency: schema.tokenLedger.currency,
+          receiptUrl: schema.tokenLedger.receiptUrl,
+          paymentMethod: schema.tokenLedger.paymentMethod,
         })
         .from(schema.tokenLedger)
         .where(and(...conds))
@@ -724,6 +736,95 @@ export function d1TarotStore(db: D1Database) {
           target: schema.stripeCustomers.userId,
           set: { customerId, updatedAt: Date.now() },
         });
+    },
+
+    /** Account facts for the drawer settings head (member since,
+     *  verified pill, connected sign-in providers). */
+    async accountInfo(userId: string): Promise<{
+      createdAt: number; emailVerified: boolean; providers: string[];
+    } | null> {
+      const rows = await orm
+        .select({ createdAt: schema.user.createdAt, emailVerified: schema.user.emailVerified })
+        .from(schema.user)
+        .where(eq(schema.user.id, userId))
+        .limit(1);
+      if (!rows[0]) return null;
+      const accts = await orm
+        .select({ providerId: schema.account.providerId })
+        .from(schema.account)
+        .where(eq(schema.account.userId, userId));
+      return {
+        createdAt: rows[0].createdAt instanceof Date ? rows[0].createdAt.getTime() : Number(rows[0].createdAt),
+        emailVerified: rows[0].emailVerified === true,
+        providers: [...new Set(accts.map((a) => a.providerId))],
+      };
+    },
+
+    /** Every reading for the data export (no 30-row page cap). */
+    async exportReadings(userId: string): Promise<{
+      id: string; day: string; topic: string; question: string; lang: string;
+      cards: { id: number; reversed: boolean }[]; aiText: string | null;
+      aiSummary: string | null; journal: string | null; status: string; createdAt: number;
+    }[]> {
+      const rows = await orm
+        .select()
+        .from(schema.readings)
+        .where(eq(schema.readings.userId, userId))
+        .orderBy(desc(schema.readings.createdAt));
+      return rows.map((row) => {
+        let cards: { id: number; reversed: boolean }[] = [];
+        try {
+          const parsed: unknown = JSON.parse(row.cards);
+          if (Array.isArray(parsed)) cards = parsed as { id: number; reversed: boolean }[];
+        } catch { cards = []; }
+        return {
+          id: row.id, day: row.bangkokDay, topic: row.topic, question: row.question,
+          lang: row.lang, cards, aiText: row.aiText, aiSummary: row.aiSummary,
+          journal: row.journal, status: row.status, createdAt: row.createdAt,
+        };
+      });
+    },
+
+    /** Promo redeem code by normalized code. */
+    async redeemCode(code: string): Promise<{
+      code: string; bonusTokens: number; expiresAt: number | null;
+      maxUses: number | null; active: boolean;
+    } | null> {
+      const rows = await orm
+        .select()
+        .from(schema.redeemCodes)
+        .where(eq(schema.redeemCodes.code, code))
+        .limit(1);
+      const r = rows[0];
+      if (!r) return null;
+      return { code: r.code, bonusTokens: r.bonusTokens, expiresAt: r.expiresAt, maxUses: r.maxUses, active: r.active === 1 };
+    },
+
+    async redeemCount(code: string): Promise<number> {
+      const rows = await orm
+        .select({ id: schema.redeemRedemptions.id })
+        .from(schema.redeemRedemptions)
+        .where(eq(schema.redeemRedemptions.code, code));
+      return rows.length;
+    },
+
+    async hasRedeemed(code: string, userId: string): Promise<boolean> {
+      const rows = await orm
+        .select({ id: schema.redeemRedemptions.id })
+        .from(schema.redeemRedemptions)
+        .where(and(eq(schema.redeemRedemptions.code, code), eq(schema.redeemRedemptions.userId, userId)))
+        .limit(1);
+      return rows.length > 0;
+    },
+
+    /** Record a redemption; false when this user already redeemed it. */
+    async recordRedemption(code: string, userId: string): Promise<boolean> {
+      const rows = await orm
+        .insert(schema.redeemRedemptions)
+        .values({ id: crypto.randomUUID(), code, userId, status: "redeemed", createdAt: Date.now() })
+        .onConflictDoNothing()
+        .returning({ id: schema.redeemRedemptions.id });
+      return rows.length > 0;
     },
 
     /** Verification/ anonymity flags for a user (referral reward gate). */

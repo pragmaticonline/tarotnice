@@ -147,7 +147,7 @@
       noModel: "Readings are warming up. Your cards are drawn \u2014 please try again in a bit.",
       newIn: "New questions in ",
       shareToday: "Share today's reading",
-      needTokens: "You're out of free credit for today",
+      needTokens: "You're out of free tokens for today",
       needTokensText: "Each question costs 5 tokens. Packs start at 50 tokens — pay by PromptPay QR or card.",
       buyTokens: "Get tokens",
       registerFirst: "Create a free account to keep asking",
@@ -171,7 +171,7 @@
       noModel: "\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e01\u0e33\u0e25\u0e31\u0e07\u0e40\u0e15\u0e23\u0e35\u0e22\u0e21\u0e15\u0e31\u0e27 \u0e44\u0e1e\u0e48\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e08\u0e31\u0e48\u0e27\u0e41\u0e25\u0e49\u0e27 \u0e25\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07\u0e43\u0e19\u0e2d\u0e35\u0e01\u0e2a\u0e31\u0e01\u0e04\u0e23\u0e39\u0e48",
       newIn: "\u0e04\u0e33\u0e16\u0e32\u0e21\u0e43\u0e2b\u0e21\u0e48\u0e43\u0e19\u0e2d\u0e35\u0e01 ",
       shareToday: "\u0e41\u0e0a\u0e23\u0e4c\u0e14\u0e27\u0e07\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49",
-      needTokens: "\u0e43\u0e0a\u0e49\u0e40\u0e04\u0e23\u0e14\u0e34\u0e15\u0e1f\u0e23\u0e35\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49\u0e2b\u0e21\u0e14\u0e41\u0e25\u0e49\u0e27 \u0e40\u0e15\u0e34\u0e21\u0e42\u0e17\u0e40\u0e04\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22",
+      needTokens: "\u0e43\u0e0a\u0e49\u0e42\u0e17\u0e40\u0e04\u0e19\u0e1f\u0e23\u0e35\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49\u0e2b\u0e21\u0e14\u0e41\u0e25\u0e49\u0e27 \u0e40\u0e15\u0e34\u0e21\u0e42\u0e17\u0e40\u0e04\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22",
       needTokensText: "\u0e04\u0e33\u0e16\u0e32\u0e21\u0e25\u0e30 5 \u0e42\u0e17\u0e40\u0e04\u0e19 \u0e41\u0e1e\u0e47\u0e01\u0e40\u0e23\u0e34\u0e48\u0e21\u0e15\u0e49\u0e19 50 \u0e42\u0e17\u0e40\u0e04\u0e19 \u0e08\u0e48\u0e32\u0e22\u0e14\u0e49\u0e27\u0e22 PromptPay \u0e2b\u0e23\u0e37\u0e2d\u0e1a\u0e31\u0e15\u0e23\u0e44\u0e14\u0e49",
       buyTokens: "\u0e40\u0e15\u0e34\u0e21\u0e42\u0e17\u0e40\u0e04\u0e19",
       registerFirst: "\u0e2a\u0e21\u0e31\u0e04\u0e23\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e01\u0e48\u0e2d\u0e19\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d\u0e19\u0e30",
@@ -274,9 +274,58 @@
   }
   function gateInsufficient() {
     savePendingQuestion();
+    var sheet = document.getElementById("pack-sheet");
+    if (sheet) { openPackSheet(); return; }
     var d = summaryData();
     var reg = (d && d.user && !d.user.isAnonymous) || window.__tnRegistered;
     location.href = reg ? "/billing" : "/sign-in?return=%2Fbilling";
+  }
+
+  // --- Top-up pack sheet (design boards: Top up / pack dialog) ---
+  var sheetPack = "standard";
+  var sheetCode = null;
+  function openPackSheet() {
+    var sheet = document.getElementById("pack-sheet");
+    if (!sheet) return;
+    var d = summaryData();
+    var reg = (d && d.user && !d.user.isAnonymous) || window.__tnRegistered;
+    var strings = window.__tnSheet || {};
+    var balance = d && d.tokens ? Math.max(0, (d.tokens.balance || 0)) : 0;
+    var bal = sheet.querySelector("[data-pack-balance]");
+    if (bal) bal.textContent = (strings.topUpSub || "You have {n} tokens.").replace("{n}", String(balance));
+    var pending = "";
+    try { pending = window.sessionStorage.getItem("tarotnice:pending-question") || ""; } catch (e) {}
+    var fq = document.getElementById("followup-q");
+    if (!pending && fq && fq.value.trim()) pending = fq.value.trim();
+    var wrap = sheet.querySelector("[data-pack-pending-wrap]");
+    var pEl = sheet.querySelector("[data-pack-pending]");
+    if (wrap && pEl) { wrap.hidden = !pending; pEl.textContent = pending; }
+    var guest = sheet.querySelector("[data-pack-guest]");
+    if (guest) guest.hidden = !!reg;
+    var pay = document.getElementById("pack-pay");
+    if (pay) pay.hidden = !reg;
+    var list = sheet.querySelector("[data-pack-list]");
+    if (list && window.__tnPacks) {
+      list.innerHTML = window.__tnPacks.map(function (p) {
+        var popular = p.id === "standard";
+        return '<label class="pack-radio' + (sheetPack === p.id ? " on" : "") + '">' +
+          '<input type="radio" name="sheet-pack" value="' + esc(p.id) + '"' + (sheetPack === p.id ? " checked" : "") + ">" +
+          "<span><b>" + p.tokens + " tokens</b> \u00b7 " + (strings.readingsCount || "{n} readings").replace("{n}", String(p.tokens / 5)) +
+          (popular ? ' <span class="pack-badge">' + esc(strings.mostPopular || "Most popular") + "</span>" : "") +
+          "</span><b>\u0e3f" + p.thb + "</b></label>";
+      }).join("");
+      list.querySelectorAll('input[name="sheet-pack"]').forEach(function (r) {
+        r.addEventListener("change", function () {
+          sheetPack = r.value;
+          list.querySelectorAll(".pack-radio").forEach(function (x) { x.classList.toggle("on", x.contains(r)); });
+        });
+      });
+    }
+    sheet.hidden = false;
+  }
+  function closePackSheet() {
+    var sheet = document.getElementById("pack-sheet");
+    if (sheet) sheet.hidden = true;
   }
   function restorePendingQuestion() {
     try {
@@ -356,6 +405,12 @@
     });
     row.appendChild(btn);
     mount.appendChild(row);
+    var sd = summaryData();
+    var guest = !sd || !sd.user || sd.user.isAnonymous;
+    var fb = document.getElementById("followup-box");
+    if (fb) fb.hidden = guest;
+    var gg = document.getElementById("guest-gate");
+    if (gg) gg.hidden = !guest;
     if (remaining <= 0) sleepMode(null);
   }
 
@@ -507,7 +562,7 @@
       return;
     }
     var topicInput = form.querySelector('input[name="topic"]:checked');
-    var topic = topicInput ? topicInput.value : "general";
+    var topic = topicInput ? topicInput.value : (window.__tnTopic || "general");
     var lang = uiLang();
     var btn = form.querySelector('button[type="submit"]');
     if (btn) btn.disabled = true;
@@ -706,6 +761,86 @@
       applyOutOfQuestions(data);
     }
     restorePendingQuestion();
+    // History-detail follow-up prefill (/?prefill=...).
+    try {
+      var pre = new URLSearchParams(location.search).get("prefill");
+      var qPre = document.getElementById("q");
+      if (pre && qPre && !qPre.value) qPre.value = pre;
+    } catch (e) {}
+    // Suggestion chips + 300-char counter + topic tracking.
+    var qEl = document.getElementById("q");
+    var countEl = document.getElementById("q-count");
+    function syncCount() { if (countEl && qEl) countEl.textContent = String(qEl.value.length); }
+    if (qEl) { qEl.addEventListener("input", syncCount); syncCount(); }
+    document.querySelectorAll("[data-suggest]").forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        document.querySelectorAll("[data-suggest]").forEach(function (x) { x.classList.toggle("on", x === chip); });
+        window.__tnTopic = chip.getAttribute("data-topic") || "general";
+        if (qEl) { qEl.value = chip.getAttribute("data-suggest") || ""; syncCount(); qEl.focus(); }
+      });
+    });
+    // Pack sheet controls.
+    var sheetClose = document.getElementById("pack-sheet-close");
+    if (sheetClose) sheetClose.addEventListener("click", closePackSheet);
+    var sheetEl = document.getElementById("pack-sheet");
+    if (sheetEl) sheetEl.addEventListener("click", function (e) { if (e.target === sheetEl) closePackSheet(); });
+    var applyBtn = document.getElementById("sheet-apply");
+    if (applyBtn) applyBtn.addEventListener("click", async function () {
+      var input = document.getElementById("sheet-code");
+      var msg = document.getElementById("sheet-code-msg");
+      var strings = window.__tnSheet || {};
+      try {
+        var res = await fetch("/api/me/redeem/validate", {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: input ? input.value : "" }),
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (res.ok && data.ok) {
+          sheetCode = data.code;
+          var applied = document.getElementById("sheet-code-applied");
+          if (applied) { applied.hidden = false; applied.textContent = (strings.redeemOk || "{code} redeemed").replace("{code}", data.code).replace("{bonus}", String(data.bonus)); }
+          var rm = document.getElementById("sheet-code-remove"); if (rm) rm.hidden = false;
+          if (msg) msg.textContent = "";
+        } else if (msg) {
+          msg.textContent = data.error === "expired_code" ? (strings.redeemExpired || "Expired") : data.error === "already_used" ? (strings.redeemUsed || "Already used") : data.error === "own_code" ? (strings.redeemOwn || "Own code") : (strings.redeemInvalid || "Invalid code");
+        }
+      } catch (e) {}
+    });
+    var removeBtn = document.getElementById("sheet-code-remove");
+    if (removeBtn) removeBtn.addEventListener("click", function () {
+      sheetCode = null;
+      var applied = document.getElementById("sheet-code-applied"); if (applied) applied.hidden = true;
+      removeBtn.hidden = true;
+      var input = document.getElementById("sheet-code"); if (input) input.value = "";
+    });
+    var payBtn = document.getElementById("pack-pay");
+    if (payBtn) payBtn.addEventListener("click", async function () {
+      savePendingQuestion();
+      payBtn.disabled = true;
+      try {
+        var res = await fetch("/api/billing/checkout", {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pack: sheetPack, code: sheetCode || undefined, return: "/?paid=1" }),
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (data.url) { location.href = data.url; return; }
+      } catch (e) {}
+      payBtn.disabled = false;
+    });
+    // Follow-up box under a finished reading.
+    var followBtn = document.getElementById("followup-ask");
+    if (followBtn) followBtn.addEventListener("click", function () {
+      var fq = document.getElementById("followup-q");
+      var q = document.getElementById("q");
+      if (fq && q && fq.value.trim()) {
+        q.value = fq.value.trim();
+        var form2 = document.getElementById("ask-form");
+        showStep(1);
+        if (form2) submit(form2);
+      }
+    });
     document.addEventListener("click", function (e) {
       if (!cannotAfford()) return;
       var inForm = e.target && e.target.closest && e.target.closest("#ask-form");
@@ -714,6 +849,21 @@
     document.addEventListener("tarot:summary", function (e) {
       var d = (e && e.detail) || {};
       if (d && (d.tokens || d.user)) lastSummary = d;
+      // Returning from a pack purchase with a question waiting: ask it.
+      if (/[?&]paid=1/.test(location.search) && !window.__tnAutoAsked) {
+        window.__tnAutoAsked = true;
+        try {
+          var pendingQ = window.sessionStorage.getItem("tarotnice:pending-question");
+          var qPaid = document.getElementById("q");
+          if (pendingQ && qPaid) {
+            qPaid.value = pendingQ;
+            if (!outOfQuestions(d)) {
+              var paidForm = document.getElementById("ask-form");
+              if (paidForm) submit(paidForm);
+            }
+          }
+        } catch (err) {}
+      }
       if (!d.quota || !document.getElementById("ask-form")) return;
       if (outOfQuestions(d)) {
         applyOutOfQuestions(d);
