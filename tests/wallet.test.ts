@@ -44,7 +44,7 @@ describe("walletBalance", () => {
 });
 
 describe("planSpend", () => {
-  it("spends the free daily credit first, for anyone", () => {
+  it("spends the free daily tokens first, for anyone", () => {
     expect(planSpend({ wallet: 0, dailyLeft: 5 }, "anon")).toEqual({ ok: true, source: "daily" });
     expect(planSpend({ wallet: 100, dailyLeft: 5 }, "registered")).toEqual({ ok: true, source: "daily" });
   });
@@ -54,7 +54,7 @@ describe("planSpend", () => {
     expect(planSpend({ wallet: 50, dailyLeft: 0 }, "anon")).toEqual({ ok: false, error: "registration_required" });
   });
 
-  it("blocks when neither credit nor balance covers a question", () => {
+  it("blocks when neither free tokens nor balance covers a question", () => {
     expect(planSpend({ wallet: 3, dailyLeft: 0 }, "registered")).toEqual({ ok: false, error: "insufficient_tokens" });
     expect(planSpend({ wallet: -5, dailyLeft: 0 }, "registered")).toEqual({ ok: false, error: "insufficient_tokens" });
   });

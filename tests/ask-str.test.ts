@@ -90,7 +90,7 @@ describe("ask.js STR parity", () => {
     expect(src).toContain("d.openReading");
   });
 
-  it("sends guests with insufficient credits to sign-in, then billing", () => {
+  it("sends guests with insufficient tokens to sign-in, then billing", () => {
     expect(src).toContain('res.data.error === "registration_required"');
     expect(src).toContain('"/sign-in?return=%2Fbilling"');
   });

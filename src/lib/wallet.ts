@@ -3,7 +3,7 @@
 // balance the UI shows derives from these — never a stored counter.
 
 export const TOKENS_PER_QUESTION = 5;
-/** Free credit per Bangkok day (one free question), use-it-or-lose-it. */
+/** Free tokens per Bangkok day (one free question), use-it-or-lose-it. */
 export const DAILY_FREE_TOKENS = 5;
 /** Referral reward when a friend finishes their first reading. */
 export const REFERRAL_REWARD_TOKENS = 5;
@@ -44,7 +44,7 @@ export function walletBalance(
   return { wallet, dailyLeft: Math.max(0, dailyLeft) };
 }
 
-/** Decide how a new question is paid for (free credit always first). */
+/** Decide how a new question is paid for (free tokens always first). */
 export function planSpend(
   balance: { wallet: number; dailyLeft: number },
   userKind: "anon" | "registered",
@@ -65,7 +65,7 @@ export function dailyStatus(
   return grantDay === today ? "available" : "expired";
 }
 
-/** Referral rewards credited inside the given Bangkok day. */
+/** Referral rewards granted inside the given Bangkok day. */
 export function rewardsTodayCount(rows: LedgerRow[], today: string): number {
   return rows.filter((r) => r.reason === "referral" && r.day === today).length;
 }

@@ -229,7 +229,7 @@ describe("ask flow step-1 bubble", () => {
     expect(guideAskBubble.textContent).not.toBe(WAIT_LINE);
   }, 15000);
 
-  it("under 5 credits: guest is sent to sign-in then billing, question preserved, no draw POST", async () => {
+  it("under 5 tokens: guest is sent to sign-in then billing, question preserved, no draw POST", async () => {
     const summary = {
       quota: { used: 1, limit: 1, resetsAt: null },
       tokens: { remaining: 0, freeLeft: 0, balance: 3 },

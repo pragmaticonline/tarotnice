@@ -362,7 +362,7 @@ app.post("/api/readings", async (c) => {
   const store = d1TarotStore(c.env.DB);
   await attributeReferral(c, store, user.id);
   const today = bangkokDay();
-  // Token metering: today's free credit (5 tokens = 1 question) spends
+  // Token metering: today's free tokens (5 tokens = 1 question) spend
   // first; beyond it, registered users spend wallet tokens. The daily
   // grant is an idempotent ledger row, so a day never double-grants.
   await ensureDailyGrant(store, user.id, today);
@@ -737,7 +737,7 @@ app.get("/api/readings/:id/stream", async (c) => {
 });
 
 // Retry a failed reading on the same cards. The failure refunded the
-// spend, so retry re-plans it against today's wallet (free credit first).
+// spend, so retry re-plans it against today's wallet (free tokens first).
 app.post("/api/readings/:id/retry", async (c) => {
   const user = await authedUser(c);
   if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
@@ -1182,7 +1182,7 @@ app.get("/billing", async (c) => {
   );
 });
 
-// Post-checkout landing: verify the session server-side (credits only
+// Post-checkout landing: verify the session server-side (tokens only
 // ever land via the webhook; this page just reports honestly).
 app.get("/billing/success", async (c) => {
   c.header("Cache-Control", "private, no-store");
@@ -1827,7 +1827,7 @@ async function walletState(store: WalletStore, userId: string, today: string) {
   );
 }
 
-/** Lazily grant today's free credit (idempotent per Bangkok day). */
+/** Lazily grant today's free tokens (idempotent per Bangkok day). */
 async function ensureDailyGrant(store: WalletStore, userId: string, today: string): Promise<void> {
   try {
     await store.postLedger({
@@ -2012,7 +2012,7 @@ app.post("/api/me/redeem/validate", async (c) => {
   return c.json({ ok: true, code: resolved.code, bonus: resolved.bonus, kind: resolved.kind });
 });
 
-/** Redeem now (Wallet page): credits the bonus immediately, once. */
+/** Redeem now (Wallet page): grants the bonus immediately, once. */
 app.post("/api/me/redeem", async (c) => {
   const user = await authedUser(c);
   if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
@@ -2028,11 +2028,11 @@ app.post("/api/me/redeem", async (c) => {
     if (ownerId && !(await store.getReferral(user.id))) {
       await store.insertReferral(user.id, inviteRefFor(ownerId), ownerId);
     }
-    const credited = await store.postLedger({
+    const granted = await store.postLedger({
       userId: user.id, delta: resolved.bonus, reason: "referral",
       ref: `friend-bonus:${user.id}`, day: today,
     });
-    if (!credited) return c.json({ error: "already_used" }, 409);
+    if (!granted) return c.json({ error: "already_used" }, 409);
     return c.json({ ok: true, code: resolved.code, bonus: resolved.bonus, kind: resolved.kind });
   }
   if (!(await store.recordRedemption(resolved.code, user.id))) {
@@ -2070,7 +2070,7 @@ app.get("/api/me/export", async (c) => {
 
 /**
  * Redeem an invite code (design board 3): attribute this registered
- * user to the code's owner (first touch wins) and credit the one-off
+ * user to the code's owner (first touch wins) and grant the one-off
  * +5-token joining bonus. Called after sign-up with the applied code,
  * or with the saved ref cookie when no code is typed.
  */
@@ -2109,14 +2109,14 @@ app.post("/api/me/invite", async (c) => {
     }
     const referral = await store.getReferral(user.id);
     if (!referral) return c.json({ attributed: false, bonus: 0 });
-    const credited = await store.postLedger({
+    const granted = await store.postLedger({
       userId: user.id,
       delta: REFERRAL_FRIEND_BONUS_TOKENS,
       reason: "referral",
       ref: `friend-bonus:${user.id}`,
       day: today,
     });
-    return c.json({ attributed: true, bonus: credited ? REFERRAL_FRIEND_BONUS_TOKENS : 0 });
+    return c.json({ attributed: true, bonus: granted ? REFERRAL_FRIEND_BONUS_TOKENS : 0 });
   } catch {
     return c.json({ error: "invite_failed" }, 500);
   }
@@ -2282,7 +2282,7 @@ type StripeEvent = {
 };
 
 // Stripe webhook (nicelingo model): claim the event id first (exactly
-// once), verify payment server-side, then credit the ledger. Credits
+// once), verify payment server-side, then grant tokens to the ledger. Tokens
 // never come from the browser redirect.
 app.post("/api/billing/webhook", async (c) => {
   const raw = await c.req.text();
@@ -2312,7 +2312,7 @@ app.post("/api/billing/webhook", async (c) => {
       const pack = packForSession(session);
       if (userId && pack && session.payment_status === "paid") {
         // Key by payment intent (fallback session id) so charge-level
-        // refund/dispute events can find this credit later.
+        // refund/dispute events can find this top-up later.
         const receipt = sessionReceipt(session);
         await store.postLedger({
           userId,
@@ -2352,7 +2352,7 @@ app.post("/api/billing/webhook", async (c) => {
         }
         await store.markStripeEvent(event.id, "processed", userId);
       } else {
-        // QR methods can complete unpaid; the async event credits later.
+        // QR methods can complete unpaid; the async event grants the tokens later.
         await store.markStripeEvent(event.id, "ignored", userId);
       }
     } else if (event.type === "charge.refunded" || event.type === "charge.dispute.closed") {

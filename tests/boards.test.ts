@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { t, type UiLang } from "../src/lib/i18n";
 import { maskName } from "../src/lib/invite";
 import { sessionReceipt, type CheckoutSession } from "../src/lib/stripe";
 import { forgotPasswordPage, resetPasswordPage, signInPage } from "../src/routes/auth-pages";
@@ -205,5 +206,77 @@ describe("invite + 404 boards", () => {
     expect(html).toContain("ngern-sleeping.svg");
     expect(html).toContain("Ask a question");
     expect(html).toContain("Browse the cards");
+  });
+});
+
+describe("tokens wording everywhere, never credits", () => {
+  const langs: UiLang[] = ["en", "th"];
+  const card: LibraryDetail = {
+    slug: "the-fool",
+    name: "The Fool",
+    arcanaLabel: "MAJOR ARCANA · 0",
+    image: "/x.webp",
+    image2x: "/x2.webp",
+    reviewed: true,
+    upright: "New beginnings.",
+    reversed: "Recklessness.",
+    keywordsUpright: ["beginnings"],
+    keywordsReversed: ["haste"],
+    notes: [],
+    prev: { slug: "the-world", name: "The World" },
+    next: { slug: "the-magician", name: "The Magician" },
+  };
+  const groups = [
+    { title: "Major Arcana", key: "major", cards: [{ slug: "the-fool", name: "The Fool", image: "/x.webp", reviewed: true }] },
+    { title: "Cups", key: "cups", cards: [{ slug: "ace-of-cups", name: "Ace of Cups", image: "/y.webp", reviewed: true }] },
+  ];
+
+  for (const ui of langs) {
+    it(`no credits wording on any board (${ui})`, () => {
+      const pages = [
+        signInPage(null, "", ui, { google: true, line: true }),
+        forgotPasswordPage("", ui),
+        resetPasswordPage("", "", ui),
+        cardsPage({ ui, origin: "", groups, streak: { current: 0, longest: 0, activeToday: false } }),
+        cardDetailPage({ ui, origin: "", card, streak: { current: 0, longest: 0, activeToday: false } }),
+        shareLandingPage({
+          kind: "reading",
+          origin: "https://tarotnice.com",
+          shareId: "s1",
+          ui,
+          cards: [{ id: 0, slug: "the-fool", name: "The Fool", image: "/f.webp", image2x: "/f2.webp", reversed: false }],
+          summary: "A fresh start is forming.",
+          question: null,
+          ogImage: "/og.png",
+          ownerName: "Maew",
+        }),
+        termsPage(ui),
+        billingSuccessPage({
+          ui,
+          origin: "",
+          returnTo: "/",
+          state: "verified",
+          detail: {
+            tokens: 200, balance: 225, amount: 19900, currency: "thb",
+            paymentMethod: "promptpay", receiptUrl: "https://pay.stripe.com/receipts/r1", email: "a@example.com",
+          },
+        }),
+        billingCancelPage({ ui, origin: "", returnTo: "/" }),
+        invitePage({ ui, origin: "" }),
+        notFoundPage({ ui, origin: "" }),
+      ];
+      for (const html of pages) {
+        expect(html).not.toMatch(/credit/i);
+        // Thai loanword for "credit", escaped like all TH copy.
+        expect(html).not.toContain("\u0e40\u0e04\u0e23\u0e40\u0e14\u0e34\u0e15");
+      }
+    });
+  }
+
+  it("billing invite tab uses the board copy: +5 tokens per first reading", () => {
+    expect(t("en").inviteSub).toBe(
+      "Your friend gets a bonus question. You get +5 tokens when they finish their first reading.",
+    );
+    expect(t("th").inviteSub).toContain("+5 \u0e42\u0e17\u0e40\u0e04\u0e19");
   });
 });

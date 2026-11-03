@@ -234,7 +234,7 @@ export const tokenLedger = sqliteTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    delta: integer("delta").notNull(), // +credit / -spend
+    delta: integer("delta").notNull(), // +grant / -spend
     reason: text("reason").notNull(), // daily|topup|reading|referral|refund|welcome|promo
     ref: text("ref").notNull(),
     source: text("source"), // reading rows: daily|wallet

@@ -249,7 +249,7 @@
     form.replaceWith(wrap);
   }
 
-  // Under-5-credits gate: with no question left (tokens remaining < 1
+  // Under-5-tokens gate: with no question left (tokens remaining < 1
   // question), trying to ask routes out instead of failing at the
   // server. Guests go to sign-in with billing as the return (after
   // login they land on billing to top up); registered users go
@@ -595,7 +595,7 @@
     }
     stopWait();
     if (res.status === 403 && res.data && res.data.error === "registration_required") {
-      // Out of free credit as a guest: sign-in, then billing to top up.
+      // Out of free tokens as a guest: sign-in, then billing to top up.
       savePendingQuestion();
       location.href = "/sign-in?return=%2Fbilling";
       return;
@@ -623,7 +623,7 @@
     }
     stopWait();
     if (res.status === 402 || res.status === 403) {
-      // Token metering: out of free credit. 402 = registered but the
+      // Token metering: out of free tokens. 402 = registered but the
       // wallet is short (buy prompt); 403 = needs an account first.
       // Show the upsell instead of parking the cat for the day.
       var mount3 = readingMount();
@@ -733,8 +733,8 @@
       if (q0) q0.focus();
     }
     // Sleep state from the start when no questions remain. Token
-    // balances count too: an out-of-free-credit user with tokens (or
-    // referral credit) can still ask — the server charges at draw time.
+    // balances count too: an out-of-free-tokens user with tokens (or
+    // referral balance) can still ask — the server charges at draw time.
     function outOfQuestions(d) {
       if (!d || !d.quota) return false;
       // An unfinished reading from today is always resumable — never

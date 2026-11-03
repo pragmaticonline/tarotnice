@@ -40,10 +40,10 @@ describe("GET / (draw screen)", () => {
     expect(header).not.toContain("ui=th");
     expect(html).toContain("data-theme-toggle");
     // Account drawer (design update): header menu button opens it;
-    // profile, credits/streak, menu, preferences, settings sub-view.
+    // profile, tokens/streak, menu, preferences, settings sub-view.
     expect(html).toContain("data-drawer-open");
     expect(html).toContain("data-drawer");
-    expect(html).toContain("data-drawer-credits");
+    expect(html).toContain("data-drawer-tokens");
     expect(html).toContain("data-drawer-settings");
     expect(html).not.toContain("data-auth-link");
     // Token amount chip at the top of the screen (count filled client-side).

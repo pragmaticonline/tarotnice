@@ -26,7 +26,7 @@ const THEME_TOGGLE = `<script>(function(){function paint(){try{var night=documen
 const AUTH_LINK = `<script>(function(){
 function q(s){return document.querySelector(s)}function qa(s){return document.querySelectorAll(s)}
 function paint(d){try{
- if(d.tokens){var total=Math.max(0,d.tokens.freeLeft||0)+Math.max(0,d.tokens.balance||0);var chips=qa("[data-token-chip]");for(var j=0;j<chips.length;j++){chips[j].hidden=false;var n=chips[j].querySelector("[data-token-count]");if(n)n.textContent=String(total)}var c=q("[data-drawer-credits]");if(c)c.textContent=String(total);var w=q("[data-drawer-wallet-count]");if(w)w.textContent=String(total)}
+ if(d.tokens){var total=Math.max(0,d.tokens.freeLeft||0)+Math.max(0,d.tokens.balance||0);var chips=qa("[data-token-chip]");for(var j=0;j<chips.length;j++){chips[j].hidden=false;var n=chips[j].querySelector("[data-token-count]");if(n)n.textContent=String(total)}var c=q("[data-drawer-tokens]");if(c)c.textContent=String(total);var w=q("[data-drawer-wallet-count]");if(w)w.textContent=String(total)}
  if(d.streak){var sc=d.streak.current||0;var st=q("[data-drawer-streak]");if(st)st.textContent=String(sc);var un=q("[data-drawer-day-unit]");if(un)un.textContent=sc===1?un.getAttribute("data-one"):un.getAttribute("data-many")}
  if(typeof d.historyCount==="number"){var hc=q("[data-drawer-history-count]");if(hc){hc.hidden=d.historyCount===0;hc.textContent=String(d.historyCount)}}
  var reg=d.user&&!d.user.isAnonymous;window.__tnRegistered=!!reg;
@@ -230,7 +230,7 @@ export function headerHtml(opts: {
   return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${tokenChipHtml(opts.ui)}${drawerButtonHtml(opts.ui)}</header>`;
 }
 
-/** Account drawer (design boards A-C): profile, credits/streak, menu,
+/** Account drawer (design boards A-C): profile, tokens/streak, menu,
  *  preferences, and an account-settings sub-view. Values are painted
  *  client-side from /api/me/summary by the AUTH_LINK script. */
 export function drawerHtml(ui: UiLang): string {
@@ -249,7 +249,7 @@ export function drawerHtml(ui: UiLang): string {
   </div>
   <p><a class="btn btn-primary drawer-ask" href="/">&#10038; ${escapeHtml(d.drawerAsk)}</a></p>
   <div class="drawer-stats">
-    <button type="button" class="drawer-stat" data-drawer-wallet-open><small>${escapeHtml(d.drawerCredits)}</small><b><span class="moonstone" aria-hidden="true"></span><span data-drawer-credits>0</span></b></button>
+    <button type="button" class="drawer-stat" data-drawer-wallet-open><small>${escapeHtml(d.drawerTokens)}</small><b><span class="moonstone" aria-hidden="true"></span><span data-drawer-tokens>0</span></b></button>
     <a class="drawer-stat" href="/progress"><small>${escapeHtml(d.drawerStreak)}</small><b><span data-drawer-streak>0</span> <span data-drawer-day-unit data-one="${escapeHtml(d.drawerDayUnit)}" data-many="${escapeHtml(d.drawerDays)}">${escapeHtml(d.drawerDays)}</span></b></a>
   </div>
   <nav class="drawer-nav">
