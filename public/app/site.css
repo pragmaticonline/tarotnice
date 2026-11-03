@@ -556,9 +556,11 @@ button.cal-cell.sel{outline:2px solid var(--accent);outline-offset:1px}
 .tx-sub a{color:var(--accent)}
 .share-q-toggle{display:flex;gap:.5rem;align-items:center;margin:.7rem 0}
 .tx-group{font-weight:700;color:var(--muted);list-style:none;padding:.7rem 0 .2rem}
-.suggest-chips{display:flex;gap:.45rem;flex-wrap:wrap;margin:.5rem 0}
-.suggest-chip{border:1.5px solid var(--gold-dim);background:transparent;color:inherit;border-radius:999px;padding:.35rem .85rem;font:inherit;font-size:.92rem;cursor:pointer;text-align:left}
-.suggest-chip.on{background:var(--accent);color:var(--on-accent)}
+.suggest-chips{display:flex;flex-direction:column;align-items:stretch;gap:.6rem;margin:.5rem 0}
+.suggest-chip{display:flex;align-items:center;width:100%;min-height:52px;background:var(--card-face);color:var(--card-ink);border:1px solid var(--gold-dim);border-radius:14px;box-shadow:0 1px 4px rgba(46,37,71,.12);padding:.85rem 1.1rem;font:inherit;font-size:1rem;cursor:pointer;text-align:left}
+.suggest-chip:hover{border-color:var(--gold)}
+.suggest-chip:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.suggest-chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .q-count{text-align:right;color:var(--muted);font-size:.85rem;margin:.2rem 0}
 .shuffle-cost{opacity:.88;font-size:.92em;white-space:nowrap}
 .shuffle-cost .moonstone{position:relative;top:.15em;margin:0 .1em}
