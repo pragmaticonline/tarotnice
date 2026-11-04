@@ -67,12 +67,14 @@ async function runFollowUpFlow(postRemaining = 2, summary: unknown = null) {
     "3": makeEl({ hidden: true }),
   };
   const formHandlers: Record<string, (e: unknown) => unknown> = {};
+  const formControls: Record<string, unknown>[] = [];
+  const docListeners: Record<string, ((e: unknown) => void)[]> = {};
   const form = makeEl({
     addEventListener: (type: string, fn: (e: unknown) => unknown) => {
       formHandlers[type] = fn;
     },
     querySelector: () => null,
-    querySelectorAll: () => [],
+    querySelectorAll: () => formControls,
   });
   const question = makeEl({ value: "Will tomorrow go well?" });
   const askLabel = makeEl({ textContent: "What would you like to ask today?" });
@@ -158,7 +160,9 @@ async function runFollowUpFlow(postRemaining = 2, summary: unknown = null) {
       },
       querySelectorAll: () => [],
       getElementById: (id: string) => byId[id] ?? null,
-      addEventListener: () => {},
+      addEventListener: (type: string, fn: (e: unknown) => void) => {
+        (docListeners[type] ||= []).push(fn);
+      },
       createElement: () => {
         const e = makeEl();
         const handlers: Record<string, (e: unknown) => unknown> = {};
@@ -222,7 +226,7 @@ async function runFollowUpFlow(postRemaining = 2, summary: unknown = null) {
   if (!followUp) throw new Error("renderReading never ran");
   (followUp as { onFollowUp: (q: string) => void }).onFollowUp("Is it serious?");
   await new Promise((r) => setTimeout(r, 400));
-  return { guideAskBubble, guideBubble, question, created, askLabel, readQ, freshRow, freshHandlers, readingOpts: followUp, win: sandbox.window };
+  return { guideAskBubble, guideBubble, question, created, askLabel, readQ, freshRow, freshHandlers, readingOpts: followUp, win: sandbox.window, location: sandbox.location as { href?: string }, formControls, docListeners };
 }
 
 describe("ask flow step-1 bubble", () => {
@@ -285,7 +289,9 @@ describe("ask flow step-1 bubble", () => {
   }, 15000);
 
   it("offers a fresh-question escape under the follow-up label", async () => {
-    const { created, question, askLabel, readQ, freshRow, freshHandlers, guideAskBubble, win } = await runFollowUpFlow(0) as unknown as {
+    // remaining 1: the reading did not exhaust quota, so the cat is
+    // awake and a fresh start returns the full idle state.
+    const { created, question, askLabel, readQ, freshRow, freshHandlers, guideAskBubble, win } = await runFollowUpFlow(1) as unknown as {
       created: Record<string, unknown>[];
       question: Record<string, unknown>;
       askLabel: Record<string, unknown>;
@@ -312,7 +318,9 @@ describe("ask flow step-1 bubble", () => {
   }, 15000);
 
   it("Ask something new under Explore further starts a fresh question", async () => {
-    const { created, question, askLabel, readQ, freshRow, readingOpts, guideAskBubble, win } = await runFollowUpFlow(0) as unknown as {
+    // remaining 1: the reading did not exhaust quota, so the cat is
+    // awake and a fresh start returns the full idle state.
+    const { created, question, askLabel, readQ, freshRow, readingOpts, guideAskBubble, win } = await runFollowUpFlow(1) as unknown as {
       created: Record<string, unknown>[];
       question: Record<string, unknown>;
       askLabel: Record<string, unknown>;
@@ -336,5 +344,66 @@ describe("ask flow step-1 bubble", () => {
     expect(freshRow.hidden).toBe(true);
     expect(win.__tnTopic).toBe("general");
     expect(guideAskBubble.textContent).toBe("Hi, I'm Ngern. Ask me anything.");
+  }, 15000);
+
+  it("sleep mode leaves the fresh-question link clickable while the rest of the form sleeps", async () => {
+    const r = await runFollowUpFlow(0) as unknown as {
+      formControls: Record<string, unknown>[];
+      docListeners: Record<string, ((e: unknown) => void)[]>;
+    };
+    const ta = makeEl({});
+    const submit = makeEl({});
+    const fresh = makeEl({});
+    (fresh as Record<string, unknown>).id = "fresh-ask-link";
+    r.formControls.push(ta, submit, fresh);
+    const onSummary = (r.docListeners["tarot:summary"] || [])[0];
+    expect(onSummary).toBeTruthy();
+    onSummary({ detail: { quota: { used: 3, limit: 3, resetsAt: null } } });
+    expect(ta.disabled).toBe(true);
+    expect(submit.disabled).toBe(true);
+    expect(fresh.disabled).toBeFalsy();
+  }, 15000);
+
+  it("fresh start while asleep clears the staged question but keeps the resting cat and does not navigate", async () => {
+    const r = await runFollowUpFlow(0) as unknown as {
+      question: Record<string, unknown>;
+      askLabel: Record<string, unknown>;
+      freshHandlers: Record<string, (e: unknown) => unknown>;
+      guideAskBubble: Record<string, unknown>;
+      location: { href?: string };
+      docListeners: Record<string, ((e: unknown) => void)[]>;
+    };
+    const onSummary = (r.docListeners["tarot:summary"] || [])[0];
+    onSummary({ detail: { quota: { used: 3, limit: 3, resetsAt: null } } });
+    expect(r.guideAskBubble.textContent).toBe("Ngern is resting now. New questions tomorrow.");
+    r.freshHandlers.click({});
+    expect(r.question.value).toBe("");
+    expect(r.askLabel.textContent).toBe("What would you like to ask today?");
+    // Resting state is preserved: no idle bubble over the sleeping cat,
+    // and no navigation anywhere.
+    expect(r.guideAskBubble.textContent).toBe("Ngern is resting now. New questions tomorrow.");
+    expect(r.location.href).toBeUndefined();
+  }, 15000);
+
+  it("fresh start with no tokens routes to top-up and leaves the resting UI alone", async () => {
+    const r = await runFollowUpFlow(0) as unknown as {
+      question: Record<string, unknown>;
+      askLabel: Record<string, unknown>;
+      freshHandlers: Record<string, (e: unknown) => unknown>;
+      guideAskBubble: Record<string, unknown>;
+      location: { href?: string };
+      win: Record<string, unknown>;
+    };
+    (r.win.TarotHome as { data: unknown }).data = {
+      tokens: { remaining: 0, freeTotal: 0 },
+      quota: { used: 3, limit: 3, resetsAt: null },
+      user: { isAnonymous: true },
+    };
+    r.guideAskBubble.textContent = "stale bubble";
+    r.freshHandlers.click({});
+    expect(r.question.value).toBe("");
+    expect(r.askLabel.textContent).toBe("What would you like to ask today?");
+    expect(r.guideAskBubble.textContent).toBe("stale bubble");
+    expect(r.location.href).toBe("/sign-in?return=%2Fbilling");
   }, 15000);
 });

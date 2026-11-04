@@ -221,8 +221,21 @@
     if (qf) { qf.value = ""; qf.focus(); }
     var ce = document.getElementById("q-count");
     if (ce) ce.textContent = "0";
-    if (idleBubble) bubble(idleBubble);
     if (window.TarotHome) window.TarotHome.refresh();
+    if (cannotAfford()) {
+      // No tokens to ask with: leave the resting state alone (no idle
+      // bubble over a sleeping cat) and route to top-up like any other
+      // ask attempt. The box above is already empty, so nothing is
+      // saved as a pending question.
+      gateInsufficient();
+      return;
+    }
+    if (sleeping) {
+      // Quota-exhausted with tokens in hand: the staged question above
+      // is clean; the resting cat, bubble and countdown stay as they are.
+      return;
+    }
+    if (idleBubble) bubble(idleBubble);
   }
   function currentReadingQuestion() {
     var rq = document.getElementById("read-q");
@@ -249,7 +262,10 @@
     var form = document.getElementById("ask-form");
     if (form) {
       form.querySelectorAll("textarea,button,input").forEach(function (n) {
-        n.disabled = true;
+        // The fresh-start link stays clickable while asleep: a tap
+        // routes to top-up (or just clears the staged question) instead
+        // of landing on a dead control.
+        if (n.id !== "fresh-ask-link") n.disabled = true;
       });
     }
     sleepNgern();
