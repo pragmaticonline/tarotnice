@@ -448,4 +448,28 @@ describe("renderReading positions", () => {
     expect(html).not.toContain("<p>Card 1");
     expect(html).not.toContain("<p>2)");
   });
+
+  it("Explore further shows an Ask something new link below the third question", () => {
+    const html = renderOnce(
+      "Together these cards tell a story of change.\n\n" +
+        "Explore further:\n- First question?\n- Second question?\n- Third question?\n\n" +
+        "Summary: done.",
+    );
+    expect(html).toContain("data-fresh-ask");
+    expect(html).toContain("Ask something new");
+    const third = html.indexOf("Third question?");
+    expect(third).toBeGreaterThan(-1);
+    expect(html.indexOf("Ask something new")).toBeGreaterThan(third);
+  });
+
+  it("Thai readings offer the fresh-question link in Thai", () => {
+    const html = renderOnce(
+      "Together these cards tell a story of change.\n\n" +
+        "\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d:\n- \u0e04\u0e33\u0e16\u0e32\u0e21\u0e41\u0e23\u0e01?\n\n" +
+        "\u0e2a\u0e23\u0e38\u0e1b: done.",
+      "th",
+    );
+    expect(html).toContain("data-fresh-ask");
+    expect(html).toContain("\u0e16\u0e32\u0e21\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e43\u0e2b\u0e21\u0e48");
+  });
 });

@@ -222,7 +222,7 @@ async function runFollowUpFlow(postRemaining = 2, summary: unknown = null) {
   if (!followUp) throw new Error("renderReading never ran");
   (followUp as { onFollowUp: (q: string) => void }).onFollowUp("Is it serious?");
   await new Promise((r) => setTimeout(r, 400));
-  return { guideAskBubble, guideBubble, question, created, askLabel, readQ, freshRow, freshHandlers };
+  return { guideAskBubble, guideBubble, question, created, askLabel, readQ, freshRow, freshHandlers, readingOpts: followUp };
 }
 
 describe("ask flow step-1 bubble", () => {
@@ -299,6 +299,27 @@ describe("ask flow step-1 bubble", () => {
     expect(askLabel.textContent).toContain("follow-up on");
     expect(freshRow.hidden).toBe(false);
     freshHandlers.click({});
+    expect(question.value).toBe("");
+    expect(askLabel.textContent).toBe("What would you like to ask today?");
+    expect(freshRow.hidden).toBe(true);
+  }, 15000);
+
+  it("Ask something new under Explore further starts a fresh question", async () => {
+    const { created, question, askLabel, readQ, freshRow, readingOpts } = await runFollowUpFlow(0) as unknown as {
+      created: Record<string, unknown>[];
+      question: Record<string, unknown>;
+      askLabel: Record<string, unknown>;
+      readQ: Record<string, unknown>;
+      freshRow: Record<string, unknown>;
+      readingOpts: { onFreshAsk: () => void } | null;
+    };
+    readQ.textContent = "\u201cWill tomorrow go well?\u201d";
+    // Enter follow-up mode first so there is context to drop.
+    const btn = created.find((e) => String(e.textContent || "").startsWith("Follow up"));
+    ((btn as Record<string, unknown>).handlers as Record<string, (e: unknown) => unknown>).click({});
+    expect(freshRow.hidden).toBe(false);
+    expect(readingOpts).toBeTruthy();
+    readingOpts!.onFreshAsk();
     expect(question.value).toBe("");
     expect(askLabel.textContent).toBe("What would you like to ask today?");
     expect(freshRow.hidden).toBe(true);

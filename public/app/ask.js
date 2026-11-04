@@ -473,6 +473,17 @@
         if (submitBtn) submitBtn.disabled = false;
         if (window.TarotHome) window.TarotHome.refresh();
       },
+      // "Ask something new" under Explore further: leave the reading
+      // behind and start a fresh question (no follow-up context).
+      onFreshAsk: function () {
+        showStep(1);
+        resetAskLabel();
+        var qf = document.getElementById("q");
+        if (qf) { qf.value = ""; qf.focus(); }
+        var ce = document.getElementById("q-count");
+        if (ce) ce.textContent = "0";
+        if (window.TarotHome) window.TarotHome.refresh();
+      },
       onError: function (kind) {
         var msg = document.createElement("p");
         msg.className = "reading-err";

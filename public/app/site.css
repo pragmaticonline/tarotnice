@@ -57,6 +57,7 @@ main>*+*{margin-top:16px}
 .pip.on{background:var(--gold);border-color:var(--gold)}
 .ask-label{font-family:var(--f-display);font-size:1.4rem;color:var(--accent);display:block;margin:.5rem 0}
 .fresh-ask-row{margin:-.2rem 0 .6rem;font-size:.9rem}
+.fresh-link-row{margin:.6rem 0 0;font-size:.9rem}
 #ask-form textarea{width:100%;box-sizing:border-box;font-family:var(--f-body);font-size:1rem;color:var(--card-ink);background:var(--card-face);border:2px solid var(--gold-dim);border-radius:12px;padding:1rem;resize:vertical}
 #ask-form textarea.need{border-color:#b3261e;background:#fff}
 .topics{display:flex;flex-wrap:wrap;gap:.6rem;margin:1rem 0 1.1rem}

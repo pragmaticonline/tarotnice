@@ -411,6 +411,8 @@
     mount.appendChild(el("h2", "sec-h", lang === "th" ? "\u0e1c\u0e25\u0e25\u0e31\u0e1e\u0e18\u0e4c\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13" : "Your results"));
     var synth = el("div", "rc rtext", "");
     synth.addEventListener("click", function (e) {
+      var f = e.target && e.target.closest ? e.target.closest("[data-fresh-ask]") : null;
+      if (f && opts.onFreshAsk) { opts.onFreshAsk(); return; }
       var b = e.target && e.target.closest ? e.target.closest("[data-fq]") : null;
       if (b && opts.onFollowUp) opts.onFollowUp(decodeURIComponent(b.getAttribute("data-fq") || ""));
     });
@@ -643,7 +645,9 @@
           return '<div class="sec sec-follow"><h2 class="sec-title">' + esc(fTitle) + '</h2><div class="follow-btns">' +
             fItems.map(function (q) {
               return '<button type="button" class="follow-btn" data-fq="' + encodeURIComponent(q) + '">' + esc(q) + "</button>";
-            }).join("") + "</div></div>";
+            }).join("") + "</div>" +
+            '<p class="fresh-link-row"><button type="button" class="linklike" data-fresh-ask>' +
+            esc(lang === "th" ? "\u0e16\u0e32\u0e21\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e43\u0e2b\u0e21\u0e48" : "Ask something new") + "</button></p></div>";
         }
         if (/^\*\*(\u0e04\u0e33\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e08\u0e32\u0e01\u0e44\u0e1e\u0e48|Warning)/.test(b)) {
           return '<p class="sec sec-warning">' + html + "</p>";
