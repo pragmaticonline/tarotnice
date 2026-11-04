@@ -12,6 +12,7 @@ import {
   isTopic,
   hasSummaryLine,
   isCompleteReading,
+  missingCardNames,
   parseSummary,
   pickSpread,
   sseEvent,
@@ -372,6 +373,37 @@ describe("pickSpread", () => {
     expect(th.system).toContain("\u0e15\u0e31\u0e49\u0e07\u0e2b\u0e25\u0e31\u0e01\u0e08\u0e32\u0e01\u0e44\u0e1e\u0e48\u0e43\u0e1a\u0e17\u0e35\u0e48 2 \u0e41\u0e25\u0e30 3");
   });
 
+  it("teaches narrative card relationships with integrity in both languages", () => {
+    const en = buildReadingPrompt({
+      lang: "en", topic: "general", question: "Should I quit my job?",
+      cards: [], prev: [], nickname: null,
+    });
+    for (const phrase of [
+      "reinforcement",
+      "cause and effect",
+      "progression",
+      "resolution",
+      "Never invent a connection",
+      "blocked, internalized, delayed",
+      "strengthen, balance, or challenge",
+      "mixed messages",
+      "distinct layer",
+      "guaranteed event",
+    ]) expect(en.system).toContain(phrase);
+    const th = buildReadingPrompt({
+      lang: "th", topic: "general", question: "Should I quit my job?",
+      cards: [], prev: [], nickname: null,
+    });
+    for (const phrase of [
+      "\u0e01\u0e32\u0e23\u0e40\u0e2a\u0e23\u0e34\u0e21\u0e01\u0e31\u0e19",
+      "\u0e40\u0e2b\u0e15\u0e38\u0e41\u0e25\u0e30\u0e1c\u0e25",
+      "\u0e2b\u0e49\u0e32\u0e21\u0e41\u0e15\u0e48\u0e07\u0e04\u0e27\u0e32\u0e21\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e42\u0e22\u0e07",
+      "\u0e44\u0e1e\u0e48\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27",
+      "\u0e44\u0e21\u0e48\u0e17\u0e27\u0e19\u0e04\u0e27\u0e32\u0e21\u0e2b\u0e21\u0e32\u0e22",
+      "\u0e15\u0e2d\u0e1a\u0e1b\u0e23\u0e30\u0e40\u0e14\u0e47\u0e19\u0e2b\u0e25\u0e31\u0e01\u0e15\u0e23\u0e07",
+    ]) expect(th.system).toContain(phrase);
+  });
+
   it("uses the central interpretation framework in both languages", () => {
     const en = buildReadingPrompt({
       lang: "en", topic: "general", question: "Should I quit my job?",
@@ -459,6 +491,28 @@ describe("parseSummary", () => {
     expect(isCompleteReading("Body.\nSummary: done.")).toBe(true);
     expect(isCompleteReading("Overview only, stopped early. ")).toBe(false);
     expect(isCompleteReading("short")).toBe(false);
+  });
+
+  it("missingCardNames flags a transliterated card name, passes kept ones", () => {
+    const names = ["King of Pentacles", "Two of Wands", "The Fool"];
+    const src =
+      "3 · Advice — **King of Pentacles**: steady hands build wealth.\n\n" +
+      "1 · Options — **Two of Wands**: a wide world.\n\n" +
+      "2 · Past — **The Fool**: a fresh start.";
+    // Exact copies pass, "The"-forms dedupe to the full name.
+    expect(missingCardNames(src, src, names)).toEqual([]);
+    // Live bug: Thai paragraph kept the suit word elsewhere but not
+    // the card name — the bare suit must not satisfy the check.
+    const mangled =
+      "3 · Advice: the king paragraph in Thai with no English name.\n\n" +
+      "The mix suits you: Pentacles ground the spread.";
+    expect(missingCardNames(src, mangled, names)).toEqual([
+      "King of Pentacles",
+      "Two of Wands",
+      "The Fool",
+    ]);
+    // Cards absent from the source block are not required.
+    expect(missingCardNames("No cards here.", "No cards here.", names)).toEqual([]);
   });
 
   it("isCompleteReading requires every drawn card to be interpreted", () => {

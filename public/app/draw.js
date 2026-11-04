@@ -363,7 +363,13 @@
       }
       var usedCard = {};
       var glanceDone = false;
+      // Once a Guidance/Actions-type section header has passed, later
+      // numbered lines are steps ("1. Write down..."), never card
+      // paragraphs — the positional fallback below must not claim them.
+      var pastActions = false;
+      var ACTION_HEAD_RE = /^(?:\*\*)?(?:Guidance|What to do|What next|Explore further|Summary|Warning|\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33|\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22|\u0e15\u0e48\u0e2d\u0e44\u0e1b|\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d|\u0e2a\u0e23\u0e38\u0e1b|\u0e04\u0e33\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e08\u0e32\u0e01\u0e44\u0e1e\u0e48)/;
       var out = blocks.map(function (b, bi) {
+        if (ACTION_HEAD_RE.test(b.trim())) pastActions = true;
         var html = esc(b).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
         // Position-led card paragraphs ("1 · What are my options —
         // **Two of Wands**..."): anchor on the card name itself and
@@ -412,6 +418,21 @@
             card = at.card;
             pos = preClean.replace(/[\s—–\-:·•|\/]+$/, "").trim() || null;
             bodyPlain = rest.slice(at.idx + at.len);
+          }
+          if (!card && !pastActions) {
+            // Positional fallback: "3 · ..." still claims the 3rd
+            // card when its name got mangled or dropped, so the art
+            // shows next to the writing. List-style "1. ..."/"1) ..."
+            // never qualifies, and section steps are guarded above.
+            var cardSep = /[·—–:|/]\s*$/.test(lead[0]);
+            var nth = parseInt(lead[1], 10);
+            var deck = reading.cards || [];
+            var cand = cardSep && nth >= 1 && nth <= deck.length ? deck[nth - 1] : null;
+            if (cand && cand.name && !usedCard[cand.name]) {
+              card = cand;
+              pos = null;
+              bodyPlain = rest;
+            }
           }
         } else {
           var at0 = findCard(plain);
@@ -491,6 +512,7 @@
           return '<div class="sec sec-glance"><h2 class="sec-title">' +
             (lang === "th" ? "\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21" : "At a glance") + "</h2>" +
             (summaryText ? '<p class="glance-lead">' + esc(summaryText) + "</p>" :
+              failed ? "" :
               '<p class="glance-lead is-waiting" aria-hidden="true"><img class="lead-ngern" src="/mascot/ngern-sitting.svg" alt="">' +
               '<span class="lead-msg">' + (lang === "th" ? "\u0e01\u0e33\u0e25\u0e31\u0e07\u0e23\u0e27\u0e1a\u0e23\u0e27\u0e21\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22" : "Putting it all together") +
               '<span class="wdots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span></span><span class="lead-bar"></span></p>') +
@@ -543,6 +565,10 @@
     var doneSummary = "";
     var es = null;
     var finished = false;
+    // Terminal stream failure: re-render without the waiting cat so
+    // Ngern stops bouncing once the error is shown (ask.js appends
+    // the retry panel below the partial reading).
+    var failed = false;
     var lastProgress = Date.now();
     var reconnects = 0;
     // Watchdog: a stream that goes silent for 60s (dead connection the
@@ -555,6 +581,8 @@
       if (reconnects >= 5) {
         clearInterval(watchdog);
         finished = true;
+        failed = true;
+        renderSynth();
         (opts.onError || function () {})(full ? "interrupted" : "reading_failed");
         return;
       }
@@ -617,6 +645,8 @@
           finished = true;
           clearInterval(watchdog);
           es.close();
+          failed = true;
+          renderSynth();
           (opts.onError || function () {})(err.error);
           return;
         }

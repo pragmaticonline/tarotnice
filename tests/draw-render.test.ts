@@ -389,6 +389,53 @@ describe("renderReading positions", () => {
     expect(errors).toEqual(["reading_failed"]);
   });
 
+  it("server error clears the waiting cat but keeps the partial reading", () => {
+    const { TarotDraw, handlers } = loadDraw();
+    const mount = makeEl();
+    const reading = { id: "r1", cards: [] };
+    const errors: string[] = [];
+    TarotDraw.renderReading(mount, reading, "en", "/stream", {
+      onError: (k: string) => errors.push(k),
+    });
+    handlers["delta"]({ data: JSON.stringify("Together these cards tell a story of change.") });
+    const synthOf = () =>
+      (mount.children as ReturnType<typeof makeEl>[]).find((c) =>
+        String(c.className).includes("rtext"),
+      );
+    // Waiting cat bounces while the stream is alive...
+    expect(String(synthOf()!.innerHTML)).toContain("is-waiting");
+    handlers["error"]({ data: JSON.stringify({ error: "reading_failed" }) });
+    // ...and stops once the stream terminally fails.
+    const html = String(synthOf()!.innerHTML);
+    expect(errors).toEqual(["reading_failed"]);
+    expect(html).toContain("Together these cards tell a story of change.");
+    expect(html).not.toContain("is-waiting");
+  });
+
+  it("positional fallback keeps the art when the card name is mangled", () => {
+    // Live bug: Thai transliteration instead of "King of Pentacles".
+    const html = renderOnce(
+      "Together these cards tell a story of change.\n\n" +
+        "1 · What are my options — **Two of Wands**: plan well.\n\n" +
+        "3 · Advice — King of Kanta: steady wealth advice.\n\n" +
+        "Summary: done.",
+    );
+    expect(html.match(/card-thumb/g)).toHaveLength(2);
+    expect(html).toContain("/c.png");
+    expect(html).toContain("The Star");
+  });
+
+  it("numbered action steps never steal card art, even card-style ones", () => {
+    const html = renderOnce(
+      "Together these cards tell a story of change.\n\n" +
+        "**Guidance:** be kind.\n\n" +
+        "1 · Write down two ideas.\n\n" +
+        "2 · Study two rivals.\n\n" +
+        "Summary: done.",
+    );
+    expect(html).not.toContain("card-thumb");
+  });
+
   it("tolerates Card N, paren and bolded leads", () => {
     const html = renderOnce(
       "Together these cards tell a story of change.\n\n" +

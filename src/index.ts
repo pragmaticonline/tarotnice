@@ -17,6 +17,7 @@ import {
   isLang,
   isTopic,
   isCompleteReading,
+  missingCardNames,
   parseSummary,
   pickSpread,
   proofreadThai,
@@ -25,6 +26,7 @@ import {
   sseEvent,
   streamDeltas,
   toPromptCard,
+  type PromptCard,
   type Topic,
 } from "./lib/reading";
 import { computeStreak } from "./lib/streaks";
@@ -596,7 +598,7 @@ app.get("/api/readings/:id/stream", async (c) => {
           // the summary, and drifting in tone; the master keeps the
           // interpretation identical across languages.
           const topic = isTopic(row.topic) ? row.topic : "general";
-          const enViews = [];
+          const enViews: PromptCard[] = [];
           for (const card of row.cards) {
             const view = await store.getCard(card.id, "en");
             if (!view) throw new Error("unknown_card");
@@ -612,10 +614,23 @@ app.get("/api/readings/:id/stream", async (c) => {
           const translator = c.env.PROOFREAD_MODEL?.trim() || "@cf/qwen/qwen3-30b-a3b-fp8";
           const thaiBlocks: string[] = [];
           const emitBlock = async (blockEn: string) => {
-            const th =
+            const needed = enViews.map((v) => v.name);
+            let th =
               (await translateBlockToThai(aiRun, translator, blockEn, positionMap)) ??
               (await translateBlockToThai(aiRun, model, blockEn, positionMap));
-            if (!th) throw new Error("translation_failed");
+            if (th && missingCardNames(blockEn, th, needed).length > 0) {
+              // One retry: the translator sometimes transliterates a
+              // card name instead of copying it (live: a Thai
+              // "King of Pentacles" paragraph matched no card, so no
+              // art rendered). A still-bad block fails the reading for
+              // refund + retry instead of storing a wrong reading.
+              th =
+                (await translateBlockToThai(aiRun, translator, blockEn, positionMap)) ??
+                (await translateBlockToThai(aiRun, model, blockEn, positionMap));
+            }
+            if (!th || missingCardNames(blockEn, th, needed).length > 0) {
+              throw new Error("translation_failed");
+            }
             const joined = (thaiBlocks.length ? "\n\n" : "") + th;
             thaiBlocks.push(th);
             // Paced typing animation (~25 chunks/sec, first promptly).
