@@ -346,8 +346,6 @@
     if (bal) bal.textContent = (strings.topUpSub || "You have {n} tokens.").replace("{n}", String(balance));
     var pending = "";
     try { pending = window.sessionStorage.getItem("tarotnice:pending-question") || ""; } catch (e) {}
-    var fq = document.getElementById("followup-q");
-    if (!pending && fq && fq.value.trim()) pending = fq.value.trim();
     var wrap = sheet.querySelector("[data-pack-pending-wrap]");
     var pEl = sheet.querySelector("[data-pack-pending]");
     if (wrap && pEl) { wrap.hidden = !pending; pEl.textContent = pending; }
@@ -460,8 +458,6 @@
     mount.appendChild(row);
     var sd = summaryData();
     var guest = !sd || !sd.user || sd.user.isAnonymous;
-    var fb = document.getElementById("followup-box");
-    if (fb) fb.hidden = guest;
     var gg = document.getElementById("guest-gate");
     if (gg) gg.hidden = !guest;
     if (remaining <= 0) sleepMode(null);
@@ -893,20 +889,6 @@
         if (data.url) { location.href = data.url; return; }
       } catch (e) {}
       payBtn.disabled = false;
-    });
-    // Follow-up box under a finished reading.
-    var followBtn = document.getElementById("followup-ask");
-    if (followBtn) followBtn.addEventListener("click", function () {
-      var fq = document.getElementById("followup-q");
-      var q = document.getElementById("q");
-      if (fq && q && fq.value.trim()) {
-        var orig = currentReadingQuestion();
-        q.value = fq.value.trim();
-        var form2 = document.getElementById("ask-form");
-        showStep(1);
-        setFollowupLabel(orig);
-        if (form2) submit(form2);
-      }
     });
     document.addEventListener("click", function (e) {
       // Shuffle, the input box, and the suggested-question chips all

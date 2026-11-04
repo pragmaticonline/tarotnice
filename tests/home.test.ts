@@ -141,4 +141,13 @@ describe("GET / (draw screen)", () => {
     expect(homePage({ uiLang: "en" })).toContain("What would you like to ask today?");
     expect(homePage({ uiLang: "th" })).toContain("\u0e2d\u0e22\u0e32\u0e01\u0e16\u0e32\u0e21\u0e2d\u0e30\u0e44\u0e23\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49?");
   });
+
+  it("has no standalone follow-up input box (Follow up button covers it)", () => {
+    for (const ui of ["en", "th"] as const) {
+      const html = homePage({ uiLang: ui });
+      expect(html).not.toContain("followup-box");
+      expect(html).not.toContain('id="followup-q"');
+      expect(html).not.toContain('id="followup-ask"');
+    }
+  });
 });

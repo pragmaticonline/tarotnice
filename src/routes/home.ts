@@ -102,11 +102,6 @@ ${opts.turnstileSiteKey ? `<div class="cf-turnstile" data-sitekey="${escapeHtml(
 <h1 class="draw-q read-q" id="read-q"></h1>
 <div class="read-cards" id="read-cards"></div>
 <div id="reading" class="reading"></div>
-<div class="followup-box" id="followup-box" hidden>
-<label for="followup-q">${escapeHtml(d.followUpLabel)}</label>
-<textarea id="followup-q" rows="2" maxlength="300"></textarea>
-<button class="btn btn-primary" type="button" id="followup-ask">${escapeHtml(d.askNgernTokens)}</button>
-</div>
 <div class="guest-gate" id="guest-gate" hidden>
 <h2>${escapeHtml(d.guestGateTitle)}</h2>
 <p>${escapeHtml(d.guestGateText)}</p>

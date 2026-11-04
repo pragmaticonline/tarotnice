@@ -543,8 +543,6 @@ button.token-chip{font:inherit;cursor:pointer;background:none}
 .pack-radio input{accent-color:var(--accent)}
 .guest-gate{border:1.5px solid var(--gold-dim);border-radius:16px;padding:1.1rem 1.2rem;margin:1.2rem 0;background:var(--card-face);color:var(--card-ink)}
 .guest-gate-actions{display:flex;flex-direction:column;gap:.6rem}
-.followup-box{margin:1.2rem 0}
-.followup-box textarea{width:100%;box-sizing:border-box;font:inherit;padding:.8rem;border:2px solid var(--gold-dim);border-radius:12px;min-height:64px}
 .legal-tabs{display:flex;gap:.5rem;margin:1rem 0}
 .legal-toc{border:1px solid var(--gold-dim);border-radius:14px;padding:.8rem 1.1rem;margin:1rem 0}
 .share-cta{text-align:center;padding:1.5rem 0}
