@@ -72,8 +72,8 @@ ${inviteBanner}${steps}
 <div class="guide guide-ask s-idle" id="guide-ask"><span class="ngern-wrap">${NGERN_SITTING_SVG}</span><p class="bubble">${escapeHtml(d.hintIdle)}</p></div>
 <form id="ask-form" action="/api/readings" method="post" data-need="${escapeHtml(d.hintNeed)}">
 <label class="ask-label" for="q">${escapeHtml(d.ask)}</label>
-<textarea id="q" name="question" rows="3" maxlength="300" placeholder="${escapeHtml(d.placeholder)}"></textarea>
-<p class="q-count">${quotaRow(ui)}<span><span id="q-count">0</span>/300</span></p>
+<div class="q-wrap"><textarea id="q" name="question" rows="3" maxlength="300" placeholder="${escapeHtml(d.placeholder)}"></textarea><span class="q-inside"><span id="q-count">0</span>/300</span></div>
+<p class="quota-line">${quotaRow(ui)}</p>
 <p class="muted">${escapeHtml(d.eachReadingLine)}</p>
 <button class="btn btn-primary" type="submit">${escapeHtml(d.shuffleCards)} <span class="shuffle-cost" aria-hidden="true">| <span class="moonstone"></span> <span class="shuffle-price">5 ${escapeHtml(d.tokensUnit)}</span></span></button>
 <p class="muted">${escapeHtml(d.notSureAsk)}</p>

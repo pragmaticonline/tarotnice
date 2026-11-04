@@ -585,7 +585,10 @@ button.cal-cell.sel{outline:2px solid var(--accent);outline-offset:1px}
 .suggest-chip:hover{border-color:var(--gold)}
 .suggest-chip:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .suggest-chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
-.q-count{display:flex;justify-content:space-between;align-items:center;gap:.6rem;color:var(--muted);font-size:.85rem;margin:.2rem 0}
+.q-wrap{position:relative}
+.q-inside{position:absolute;right:.8rem;bottom:.7rem;color:var(--muted);font-size:.8rem;pointer-events:none}
+#ask-form .q-wrap textarea{padding-bottom:1.9rem}
+.quota-line{margin:.2rem 0}
 .shuffle-cost{opacity:.88;font-size:.92em;white-space:nowrap}
 .shuffle-cost .moonstone{position:relative;top:.15em;margin:0 .1em}
 .shuffle-price{color:var(--gold)}
