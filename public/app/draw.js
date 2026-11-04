@@ -48,6 +48,58 @@
     return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
+  // Fold a model-echoed per-card closer ("Summary of this card's
+  // message for the question: ...") into a plain "Summary:" closer on
+  // its own block, both languages. Idempotent.
+  var TH_SUMMARY = String.fromCharCode(0x0e2a, 0x0e23, 0x0e38, 0x0e1b);
+  var TH_FOR_QUESTION = String.fromCharCode(0x0e2a, 0x0e33, 0x0e2b, 0x0e23, 0x0e31, 0x0e1a, 0x0e04, 0x0e33, 0x0e16, 0x0e32, 0x0e21);
+  var TH_CARD = String.fromCharCode(0x0e44, 0x0e1e, 0x0e48);
+  var TH_REVERSED = String.fromCharCode(0x0e01, 0x0e25, 0x0e31, 0x0e1a, 0x0e2b, 0x0e31, 0x0e27);
+  var CARD_SUMMARY_LINE_RE = /^(?:[*][*])? *summary +of +this +card'?s +message +for +the +question *(?:[*][*])? *: *(.+)$/i;
+  var TH_CARD_SUMMARY_RE = new RegExp('^(?:[*][*])? *' + TH_SUMMARY + '[^:]*?' + TH_FOR_QUESTION + ' *(?:[*][*])? *: *(.+)$');
+  function normalizeCardSummaries(text) {
+    var NL = String.fromCharCode(10);
+    var lines = String(text == null ? '' : text).replace(/([.?!] +)summary of this card's message for the question: */gi, '$1' + NL + NL + 'Summary: ').split(NL);
+    var out = [];
+    for (var i = 0; i < lines.length; i++) {
+      var t = lines[i].trim();
+      var m = CARD_SUMMARY_LINE_RE.exec(t) || TH_CARD_SUMMARY_RE.exec(t);
+      if (m && m[1].trim()) {
+        if (out.length && out[out.length - 1].trim() !== '') out.push('');
+        out.push((t.indexOf(TH_SUMMARY) >= 0 ? TH_SUMMARY : 'Summary') + ': ' + m[1].trim());
+      } else {
+        out.push(lines[i]);
+      }
+    }
+    return out.join(NL);
+  }
+
+  var TH_EXPLORE = String.fromCharCode(0x0e25, 0x0e2d, 0x0e07, 0x0e16, 0x0e32, 0x0e21, 0x0e15, 0x0e48, 0x0e2d);
+  var TH_SOMETHING_NEW = String.fromCharCode(0x0e16, 0x0e32, 0x0e21, 0x0e40, 0x0e23, 0x0e37, 0x0e48, 0x0e2d, 0x0e07, 0x0e44, 0x0e2b, 0x0e21, 0x0e48);
+
+  // A block that is only a card-name mention of a card outside this
+  // reading (live: hallucinated Thai card lines) carries no reading —
+  // drop it instead of rendering a stray line.
+  function junkCardBlock(t, drawn) {
+    if (t.indexOf("\n") >= 0) return false;
+    var body = t.replace(/^\*\*/, "").trim();
+    var ci = body.indexOf(":");
+    if (ci > 0 && ci < 40) body = body.slice(ci + 1).trim();
+    if (/[.?!]/.test(body)) return false;
+    var core = body;
+    var cardWord = TH_CARD + " ";
+    if (core.indexOf(cardWord) === 0) core = core.slice(cardWord.length);
+    core = core.replace(/^\*\*/, "").replace(/\*\*$/, "").trim();
+    var rp = core.lastIndexOf(" (");
+    if (rp > 0 && core.charAt(core.length - 1) === ")") core = core.slice(0, rp);
+    var m = core.match(/^[A-Za-z][A-Za-z']*(?: +(?:of|the|and|[A-Za-z][A-Za-z']*))*$/);
+    if (!m) return false;
+    if (core.indexOf(" ") < 0 && body.indexOf(TH_CARD) !== 0 && !/^\*\*/.test(t)) return false;
+    var low = core.toLowerCase();
+    for (var i = 0; i < drawn.length; i++) if (drawn[i] === low) return false;
+    return true;
+  }
+
   function place(card, x, y, r, s, z, instant) {
     var inner = card.firstChild;
     card.style.zIndex = z == null ? 10 : z;
@@ -320,12 +372,34 @@
       for (var d = 1; !list.length && d < G.rows; d++) {
         list = candidates(row - d).concat(candidates(row + d));
       }
+      // Anchor on the visible strip, not the card center. Neighbours
+      // overlap each card (right neighbour on top, front rows on top),
+      // so the center is usually buried under another card — hovering
+      // the exposed sliver then highlighted the hidden neighbour.
+      // Each card's selection point is the middle of its exposed strip
+      // mapped through the fan rotation, so the card you see is the
+      // card you get. Sorted by layer; the covering neighbour is the
+      // next same-row card above.
+      var sorted = list.slice().sort(function (p, q) { return p._fan.z - q._fan.z; });
       var best = null;
       var bd = Infinity;
-      list.forEach(function (c) {
-        var d = Math.abs(c._fan.x + G.cw / 2 - px);
-        if (d < bd) {
-          bd = d;
+      sorted.forEach(function (c, idx) {
+        var edge = c._fan.x + G.cw;
+        for (var j = idx + 1; j < sorted.length; j++) {
+          if (sorted[j]._row === c._row) {
+            if (sorted[j]._fan.x < edge) edge = sorted[j]._fan.x;
+            break;
+          }
+        }
+        var lx = (c._fan.x + edge) / 2 - c._fan.x;
+        var ly = (c._row < G.rows - 1 ? G.rowGap : G.ch) / 2;
+        var dx = lx - G.cw / 2;
+        var dy = ly - G.ch / 2;
+        var rad = c._fan.a * Math.PI / 180;
+        var ax = c._fan.x + G.cw / 2 + dx * Math.cos(rad) - dy * Math.sin(rad);
+        var dd = Math.abs(ax - px);
+        if (dd < bd) {
+          bd = dd;
           best = c;
         }
       });
@@ -431,7 +505,15 @@
     // blocks become <p>, **bold** markers become <b>. Falls back to
     // single-newline splits when the model forgets the blank lines.
     function renderSynth() {
-      var blocks = full.split(/\n\s*\n/).map(function (b) { return b.trim(); }).filter(Boolean);
+      var text = normalizeCardSummaries(full);
+      var blocks = text.split(/\n\s*\n/).map(function (b) { return b.trim(); }).filter(Boolean);
+      var drawnNames = [];
+      (reading.cards || []).forEach(function (c) {
+        if (c && c.name) {
+          drawnNames.push(String(c.name).toLowerCase());
+          drawnNames.push(String(c.name).replace(/^The\s+/i, "").toLowerCase());
+        }
+      });
       if (blocks.length <= 1) {
         blocks = full.split(/\n/).map(function (b) { return b.trim(); }).filter(Boolean);
       }
@@ -445,6 +527,12 @@
         var m = b.match(/^\s*(?:\*\*)?(?:SUMMARY|\u0e2a\u0e23\u0e38\u0e1b)\s*(?:\*\*)?\s*:\s*(?:\*\*)?\s*(.+)$/i);
         if (m) { sIdx = i; summaryText = m[1].replace(/\*\*\s*$/, "").trim(); }
       });
+      if (sIdx >= 0 && sIdx !== blocks.length - 1) {
+        // A "Summary:" anywhere but the last block is a per-card closer,
+        // not the closing summary — never promote it to the lead.
+        sIdx = -1;
+        summaryText = "";
+      }
       if (sIdx >= 0) blocks.splice(sIdx, 1);
       if (!summaryText && doneSummary) summaryText = doneSummary;
       // Server fallback summaries can carry the section header and the
@@ -466,7 +554,36 @@
       var pastActions = false;
       var ACTION_HEAD_RE = /^(?:\*\*)?(?:Guidance|What to do|What next|Explore further|Summary|Warning|\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33|\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22|\u0e15\u0e48\u0e2d\u0e44\u0e1b|\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d|\u0e2a\u0e23\u0e38\u0e1b|\u0e04\u0e33\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e08\u0e32\u0e01\u0e44\u0e1e\u0e48)/;
       var out = blocks.map(function (b, bi) {
-        if (ACTION_HEAD_RE.test(b.trim())) pastActions = true;
+        var bt = b.trim();
+        // A per-card closer renders on its own line with a gap, summary
+        // text in italic. (The closing Summary was already lifted out.)
+        var sumBody = null;
+        var sumLang = "Summary";
+        var mSum = bt.match(/^(?:\*\*)?(Summary)\s*(?:\*\*)?\s*:\s*([\s\S]*)$/i);
+        if (mSum && mSum[2].trim()) {
+          sumBody = mSum[2].trim();
+        } else {
+          var t2 = bt.replace(/^\*\*/, "").trim();
+          if (t2.indexOf(TH_SUMMARY) === 0) {
+            var afterSum = t2.slice(TH_SUMMARY.length).replace(/^\*\*/, "").trim();
+            if (afterSum.charAt(0) === ":") {
+              sumBody = afterSum.slice(1).trim();
+              sumLang = TH_SUMMARY;
+            }
+          }
+        }
+        if (sumBody) {
+          var sHtml = esc(sumBody).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+          return '<p class="sec sec-card-sum">' + sumLang + ': <i>' + sHtml + "</i></p>";
+        }
+        var noStars = bt.replace(/^\*\*/, "").replace(/\*\*$/, "").trim();
+        var isExploreHead = /^(?:\*\*)?Explore further/i.test(bt) || noStars.indexOf(TH_EXPLORE) === 0;
+        // Orphan section headers and lone mentions of cards outside this
+        // reading never render (live: hallucinated card-name lines and
+        // an empty follow-up header).
+        if (!isExploreHead && /^[^:\n]{1,40}:$/.test(noStars)) return "";
+        if (!isExploreHead && junkCardBlock(bt, drawnNames)) return "";
+        if (ACTION_HEAD_RE.test(bt)) pastActions = true;
         var html = esc(b).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
         // Position-led card paragraphs ("1 · What are my options —
         // **Two of Wands**..."): anchor on the card name itself and
@@ -642,12 +759,16 @@
           var fTitle = (b.match(/^\*\*([^*]+)\*\*/) || b.match(/^([^:\n]+):/) || [])[1] || "Explore further";
           var fItems = b.replace(/^\*\*[^*]+\*\*:?\s*/, "").replace(/^[^:\n]+:\s*/, "")
             .split(/\n/).map(function (x) { return x.replace(/^-\s*/, "").trim(); }).filter(Boolean);
+          if (!fItems.length) {
+            return '<div class="sec sec-follow"><h2 class="sec-title">' + esc(fTitle) + '</h2><p class="fresh-link-row"><button type="button" class="linklike" data-fresh-ask>' +
+              esc(lang === "th" ? TH_SOMETHING_NEW : "Ask something new") + "</button></p></div>";
+          }
           return '<div class="sec sec-follow"><h2 class="sec-title">' + esc(fTitle) + '</h2><div class="follow-btns">' +
             fItems.map(function (q) {
               return '<button type="button" class="follow-btn" data-fq="' + encodeURIComponent(q) + '">' + esc(q) + "</button>";
             }).join("") + "</div>" +
             '<p class="fresh-link-row"><button type="button" class="linklike" data-fresh-ask>' +
-            esc(lang === "th" ? "\u0e16\u0e32\u0e21\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e43\u0e2b\u0e21\u0e48" : "Ask something new") + "</button></p></div>";
+            esc(lang === "th" ? "\u0e16\u0e32\u0e21\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e44\u0e2b\u0e21\u0e48" : "Ask something new") + "</button></p></div>";
         }
         if (/^\*\*(\u0e04\u0e33\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e08\u0e32\u0e01\u0e44\u0e1e\u0e48|Warning)/.test(b)) {
           return '<p class="sec sec-warning">' + html + "</p>";

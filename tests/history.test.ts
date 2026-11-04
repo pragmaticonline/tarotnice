@@ -145,6 +145,49 @@ describe("historyDetailPage", () => {
     expect(summaryPreview(null)).toBeNull();
     expect(summaryPreview("  ")).toBeNull();
   });
+
+  it("renders per-card closers italic and strips only the closing Summary", () => {
+    const aiText = [
+      "Overview: You stand at a crossroads.",
+      "1 \u00b7 Situation \u2014 **The Lovers**\nA choice calls.\nSummary of this card's message for the question: embrace it.",
+      "Summary: Trust the slow build.",
+    ].join("\n\n");
+    const html = historyDetailPage({
+      ui: "en", origin: "https://tarotnice.com", streak: STREAK,
+      reading: { ...reading, aiText, summary: "Trust the slow build." },
+    });
+    expect(html).toContain('<p class="sec sec-card-sum">Summary: <i>embrace it.</i></p>');
+    expect(html).toContain("Trust the slow build.");
+    expect(html.match(/sec-card-sum/g)).toHaveLength(1);
+    expect(html).not.toContain("Summary of this card");
+  });
+
+  it("drops orphan headers and lone mentions of undrawn cards", () => {
+    const cardWord = String.fromCharCode(0x0e44, 0x0e1e, 0x0e48);
+    const aiText = [
+      "Overview: You stand at a crossroads.",
+      "1 \u00b7 Situation \u2014 **The Lovers**\nA choice calls.",
+      "Guidance:",
+      cardWord + " The Fool",
+      "Summary: Trust the slow build.",
+    ].join("\n\n");
+    const html = historyDetailPage({
+      ui: "en", origin: "https://tarotnice.com", streak: STREAK,
+      reading: { ...reading, aiText, summary: "Trust the slow build." },
+    });
+    expect(html).not.toContain("The Fool");
+    expect(html).not.toContain("sec-guidance");
+    expect(html).toContain("The Lovers");
+  });
+
+  it("drops empty follow-up sections", () => {
+    const aiText = ["Overview: You stand at a crossroads.", "Explore further:", "Summary: done."].join("\n\n");
+    const html = historyDetailPage({
+      ui: "en", origin: "https://tarotnice.com", streak: STREAK,
+      reading: { ...reading, aiText, summary: "done." },
+    });
+    expect(html).not.toContain("sec-follow");
+  });
 });
 
 describe("progressPage", () => {

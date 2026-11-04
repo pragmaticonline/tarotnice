@@ -463,13 +463,63 @@ describe("renderReading positions", () => {
   });
 
   it("Thai readings offer the fresh-question link in Thai", () => {
+    const TH = (...codes: number[]) => String.fromCharCode(...codes);
+    const askNew = TH(0x0e16, 0x0e32, 0x0e21, 0x0e40, 0x0e23, 0x0e37, 0x0e48, 0x0e2d, 0x0e07, 0x0e44, 0x0e2b, 0x0e21, 0x0e48);
     const html = renderOnce(
       "Together these cards tell a story of change.\n\n" +
-        "\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d:\n- \u0e04\u0e33\u0e16\u0e32\u0e21\u0e41\u0e23\u0e01?\n\n" +
-        "\u0e2a\u0e23\u0e38\u0e1b: done.",
+        TH(0x0e25, 0x0e2d, 0x0e07, 0x0e16, 0x0e32, 0x0e21, 0x0e15, 0x0e48, 0x0e2d) + ":\n- " +
+        TH(0x0e04, 0x0e33, 0x0e16, 0x0e32, 0x0e21, 0x0e41, 0x0e23, 0x0e01) + "?\n\n" +
+        TH(0x0e2a, 0x0e23, 0x0e38, 0x0e1b) + ": done.",
       "th",
     );
     expect(html).toContain("data-fresh-ask");
-    expect(html).toContain("\u0e16\u0e32\u0e21\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e43\u0e2b\u0e21\u0e48");
+    expect(html).toContain(askNew);
+  });
+
+  it("renders per-card closers as italic Summary lines with a gap", () => {
+    const html = renderOnce(
+      "Together these cards tell a story of change.\n\n" +
+        "1 · What are my options — **Two of Wands**: You stand between security and a wider world.\nSummary of this card's message for the question: map your options first.\n\n" +
+        "Summary: Map options before stepping out.",
+    );
+    expect(html).not.toContain("Summary of this card");
+    expect(html).toContain('<p class="sec sec-card-sum">Summary: <i>map your options first.</i></p>');
+    // The closing summary still becomes the lead; card art is not duplicated.
+    expect(html).toContain("glance-lead");
+    expect(html).toContain("Map options before stepping out.");
+    expect(html.match(/card-thumb/g)).toHaveLength(1);
+    expect(html.indexOf("sec-card-sum")).toBeGreaterThan(html.indexOf("card-thumb"));
+  });
+
+  it("never promotes a per-card closer to the glance lead", () => {
+    const html = renderOnce(
+      "Together these cards tell a story of change.\n\n" +
+        "1 · What are my options — **Two of Wands**: You stand between security and a wider world.\nSummary of this card's message for the question: map your options first.\n\n" +
+        "Guidance: keep going.",
+    );
+    expect(html).toContain("sec-card-sum");
+    expect(html).not.toContain('<p class="glance-lead">');
+  });
+
+  it("drops empty follow-up sections but keeps the fresh-start link", () => {
+    const html = renderOnce("Overview text here.\n\nExplore further:\n\nSummary: done.");
+    expect(html).toContain("Ask something new");
+    expect(html).not.toContain("follow-btn");
+    expect(html).toContain("sec-follow");
+  });
+
+  it("drops lone mentions of cards outside the reading", () => {
+    const TH_CARD = String.fromCharCode(0x0e44, 0x0e1e, 0x0e48);
+    const html = renderOnce(
+      "Overview text here.\n\n" +
+        "1 · What are my options — **Two of Wands**: You stand between security and a wider world.\n\n" +
+        "Guidance:\n\n" +
+        TH_CARD + " The Fool\n\n" +
+        "Summary: done.",
+    );
+    expect(html).not.toContain("The Fool");
+    expect(html).not.toContain("sec-guidance");
+    expect(html).toContain("Two of Wands");
+    expect(html).toContain("glance-lead");
   });
 });

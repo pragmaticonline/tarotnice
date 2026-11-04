@@ -465,10 +465,68 @@ export function buildReadingPrompt(input: {
  *  Falls back to the first sentence, truncated. */
 const SUMMARY_LINE_RE = /^(?:\*\*)?(?:summary|\u0e2a\u0e23\u0e38\u0e1b)\s*(?:\*\*)?\s*:\s*(?:\*\*)?\s*(.+?)(?:\*\*)?$/i;
 
-/** True when the text carries a real closing Summary line. A reading
- *  without one stopped early — it must not be stored as complete. */
+/** True when the CLOSING line is a Summary line. Per-card "Summary:"
+ *  closers mid-text don't count — only the final non-empty line does,
+ *  so a truncated reading is never mistaken for complete. */
 export function hasSummaryLine(text: string): boolean {
-  return text.split("\n").some((l) => SUMMARY_LINE_RE.test(l.trim()));
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) return false;
+  return SUMMARY_LINE_RE.test(lines[lines.length - 1]);
+}
+
+/**
+ * The model echoes the prompt's per-card closing instruction as a
+ * heading ("Summary of this card's message for the question: ...").
+ * Rewrite it to a plain "Summary:" closer on its own block so it
+ * renders with a gap, in both languages. Inline echoes after a
+ * sentence are split out the same way. Idempotent.
+ */
+const CARD_SUMMARY_LINE_RE =
+  /^(?:\*\*)?\s*summary of this card'?s message for the question\s*(?:\*\*)?\s*:\s*(.+?)\s*$/i;
+const CARD_SUMMARY_TH_RE =
+  /^(?:\*\*)?\s*\u0e2a\u0e23\u0e38\u0e1b[^:\n]*?\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21\s*(?:\*\*)?\s*:\s*(.+?)\s*$/;
+const CARD_SUMMARY_INLINE_RE =
+  /([.?!…])\s*summary of this card'?s message for the question:\s*/gi;
+
+export function normalizeCardSummaries(text: string): string {
+  const lines = text.replace(CARD_SUMMARY_INLINE_RE, "$1\n\nSummary: ").split("\n");
+  const out: string[] = [];
+  for (const line of lines) {
+    const t = line.trim();
+    const m = CARD_SUMMARY_LINE_RE.exec(t) ?? CARD_SUMMARY_TH_RE.exec(t);
+    if (m && m[1].trim()) {
+      if (out.length > 0 && out[out.length - 1].trim() !== "") out.push("");
+      const label = /\u0e2a\u0e23\u0e38\u0e1b/.test(t) ? "\u0e2a\u0e23\u0e38\u0e1b" : "Summary";
+      out.push(`${label}: ${m[1].trim()}`);
+    } else {
+      out.push(line);
+    }
+  }
+  return out.join("\n");
+}
+
+/** Card names the Thai translation introduced that the English source
+ *  block never mentioned (live bug: "The Fool" card lines for cards
+ *  never drawn). A translation must preserve the source's card-name
+ *  set exactly — anything added is a hallucination. */
+const THAI_CARD_MENTION_RE =
+  /(?:\*\*)?\s*\u0e44\u0e1e\u0e48\s+([A-Z][\w'’\-]*(?:\s+(?:of|the|and|[A-Z][\w'’\-]*))*)/g;
+
+export function alienCardNames(source: string, translated: string): string[] {
+  const found: string[] = [];
+  const re = new RegExp(THAI_CARD_MENTION_RE.source, "g");
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(translated)) !== null) {
+    const name = m[1].replace(/[\s*]+$/, "").trim();
+    if (
+      name &&
+      !source.toLowerCase().includes(name.toLowerCase()) &&
+      !found.some((f) => f.toLowerCase() === name.toLowerCase())
+    ) {
+      found.push(name);
+    }
+  }
+  return found;
 }
 
 /** Card names from the English source block that the Thai translation

@@ -4,6 +4,7 @@
 // flush in order when the network returns.
 import { escapeHtml } from "../lib/html";
 import { fmt, t, type UiLang } from "../lib/i18n";
+import { normalizeCardSummaries } from "../lib/reading";
 import { headerHtml, pageShell, siteFooterHtml, type HeaderAccount } from "./shell";
 import type { StreakInfo } from "../lib/streaks";
 
@@ -159,8 +160,42 @@ function sectionBody(block: string): string {
 
 type HistorySection = { kind: "card" | "section" | "strip"; html: string };
 
-function renderHistorySection(block: string): HistorySection {
+function junkCardBlock(t: string, drawn: string[]): boolean {
+  if (t.includes("\n")) return false;
+  let body = t.replace(/^\*\*/, "").trim();
+  const ci = body.indexOf(":");
+  if (ci > 0 && ci < 40) body = body.slice(ci + 1).trim();
+  if (/[.?!]/.test(body)) return false;
+  let core = body;
+  const cardWord = "\u0e44\u0e1e\u0e48 ";
+  if (core.startsWith(cardWord)) core = core.slice(cardWord.length);
+  core = core.replace(/^\*\*/, "").replace(/\*\*$/, "").trim();
+  const rp = core.lastIndexOf(" (");
+  if (rp > 0 && core.endsWith(")")) core = core.slice(0, rp);
+  const m = core.match(/^[A-Za-z][A-Za-z']*(?: +(?:of|the|and|[A-Za-z][A-Za-z']*))*$/);
+  if (!m) return false;
+  if (!core.includes(" ") && !body.startsWith("\u0e44\u0e1e\u0e48") && !/^\*\*/.test(t)) return false;
+  const low = core.toLowerCase();
+  return !drawn.some((d) => d === low);
+}
+
+function renderHistorySection(block: string, isLastSummary: boolean, drawn: string[]): HistorySection {
   const b = block;
+  const sumHead = b.match(/^(?:\*\*)?(Summary|\u0e2a\u0e23\u0e38\u0e1b)\s*(?:\*\*)?\s*:\s*([\s\S]*)$/i);
+  if (sumHead && sumHead[2].trim()) {
+    // The closing Summary already shows as the lead; earlier
+    // per-card closers render with a gap and italic text.
+    if (!isLastSummary) {
+      const sumLabel = /\u0e2a\u0e23\u0e38\u0e1b/.test(sumHead[1]) ? "\u0e2a\u0e23\u0e38\u0e1b" : "Summary";
+      return { kind: "section", html: `<p class="sec sec-card-sum">${sumLabel}: <i>${richText(sumHead[2].trim())}</i></p>` };
+    }
+  }
+  const noStars = b.trim().replace(/^\*\*/, "").replace(/\*\*$/, "").trim();
+  // Orphan section headers and lone mentions of cards outside this
+  // reading never render (live: hallucinated Thai card-name lines and
+  // an empty follow-up header).
+  if (/^[^:\n]{1,40}:$/.test(noStars)) return { kind: "strip", html: "" };
+  if (junkCardBlock(b.trim(), drawn)) return { kind: "strip", html: "" };
   if (/^(?:\*\*)?(?:Summary|\u0e2a\u0e23\u0e38\u0e1b)\s*(?:\*\*)?\s*:/i.test(b)) {
     // Already shown as the bold lead: never render twice.
     return { kind: "strip", html: "" };
@@ -250,15 +285,24 @@ export function historyDetailPage(opts: {
     .join("");
   let readingHtml = "";
   if (r.aiText) {
-    const blocks = r.aiText.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
+    // Normalize here too, so readings stored before the closer
+    // rewrite still render with gaps and italics.
+    const blocks = normalizeCardSummaries(r.aiText).split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
     const overview = (blocks[0] ?? "").replace(
       /^\s*(?:\*\*)?(?:Overview|\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21)\s*(?:\*\*)?\s*:?\s*(?:\*\*)?\s*\n?/i,
       "",
     );
     const cards: string[] = [];
     const sections: string[] = [];
-    for (const b of blocks.slice(1)) {
-      const s = renderHistorySection(b);
+    const drawn = r.cards
+      .map((c) => c.name)
+      .flatMap((n) => [n.toLowerCase(), n.replace(/^The\s+/i, "").toLowerCase()]);
+    let lastSummaryIdx = -1;
+    blocks.forEach((b, i) => {
+      if (/^(?:\*\*)?(?:Summary|\u0e2a\u0e23\u0e38\u0e1b)\s*(?:\*\*)?\s*:/i.test(b.trim())) lastSummaryIdx = i;
+    });
+    for (let i = 1; i < blocks.length; i++) {
+      const s = renderHistorySection(blocks[i], i === lastSummaryIdx, drawn);
       if (s.kind === "card") cards.push(s.html);
       else if (s.html) sections.push(s.html);
     }

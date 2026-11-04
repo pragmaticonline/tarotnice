@@ -7,6 +7,7 @@ import * as schema from "./db/schema";
 import { bangkokDay, bangkokHour, nextBangkokMidnight } from "./lib/bangkok";
 import { luckyColour } from "./lib/daily";
 import {
+  alienCardNames,
   buildReadingPrompt,
   classifyCrisis,
   cleanQuestion,
@@ -19,6 +20,7 @@ import {
   isTopic,
   isCompleteReading,
   missingCardNames,
+  normalizeCardSummaries,
   parseSummary,
   pickSpread,
   proofreadThai,
@@ -618,20 +620,26 @@ app.get("/api/readings/:id/stream", async (c) => {
           const thaiBlocks: string[] = [];
           const emitBlock = async (blockEn: string) => {
             const needed = enViews.map((v) => v.name);
+            // A translated block must preserve the source's card-name
+            // set exactly: dropped names break card art, added names
+            // are hallucinations (live: "The Fool" card lines for
+            // cards never drawn).
+            const badBlock = (t: string | null) =>
+              !t ||
+              missingCardNames(blockEn, t, needed).length > 0 ||
+              alienCardNames(blockEn, t).length > 0;
             let th =
               (await translateBlockToThai(aiRun, translator, blockEn, positionMap)) ??
               (await translateBlockToThai(aiRun, model, blockEn, positionMap));
-            if (th && missingCardNames(blockEn, th, needed).length > 0) {
-              // One retry: the translator sometimes transliterates a
-              // card name instead of copying it (live: a Thai
-              // "King of Pentacles" paragraph matched no card, so no
-              // art rendered). A still-bad block fails the reading for
-              // refund + retry instead of storing a wrong reading.
+            if (badBlock(th)) {
+              // One retry with each model. A still-bad block fails the
+              // reading for refund + retry instead of storing a wrong
+              // reading.
               th =
                 (await translateBlockToThai(aiRun, translator, blockEn, positionMap)) ??
                 (await translateBlockToThai(aiRun, model, blockEn, positionMap));
             }
-            if (!th || missingCardNames(blockEn, th, needed).length > 0) {
+            if (!th || badBlock(th)) {
               throw new Error("translation_failed");
             }
             const joined = (thaiBlocks.length ? "\n\n" : "") + th;
@@ -706,11 +714,17 @@ app.get("/api/readings/:id/stream", async (c) => {
           // gets dropped by proxies and strands the client mid-reading.
           const beat = setInterval(() => { try { send(": ping\n\n"); } catch { /* closed */ } }, 10_000);
           const checked = await proofreadThai(aiRun, c.env.PROOFREAD_MODEL?.trim() || "@cf/qwen/qwen3-30b-a3b-fp8", full).finally(() => clearInterval(beat));
-          if (checked !== full) {
-            full = checked;
-            send(sseEvent("final", JSON.stringify(checked)));
+          // Never adopt a proofread that invents cards the reading
+          // never drew — keep the streamed text instead.
+          const adopted = checked !== full && alienCardNames(full, checked).length > 0 ? full : checked;
+          if (adopted !== full) {
+            full = adopted;
+            send(sseEvent("final", JSON.stringify(adopted)));
           }
         }
+        // Fold echoed per-card closers into plain "Summary:" lines so
+        // both views render them with a gap and italic text.
+        full = normalizeCardSummaries(full);
         const summary = parseSummary(full);
         await store.setReadingResult(row.id, { aiText: full, aiSummary: summary, model, status: "complete" });
         recordEvent(c.env, {

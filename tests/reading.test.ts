@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  alienCardNames,
   proofreadThai,
   buildReadingPrompt,
   cleanQuestion,
@@ -14,6 +15,7 @@ import {
   hasSummaryLine,
   isCompleteReading,
   missingCardNames,
+  normalizeCardSummaries,
   parseSummary,
   pickSpread,
   sseEvent,
@@ -523,6 +525,50 @@ describe("parseSummary", () => {
     expect(hasSummaryLine("Body with no closing line at all")).toBe(false);
   });
 
+  it("hasSummaryLine only counts the closing line, not per-card closers", () => {
+    expect(hasSummaryLine("Card text.\nSummary: per-card closer.\nMore text.")).toBe(false);
+    expect(hasSummaryLine("Card text.\nSummary: per-card closer.\nSummary: final.")).toBe(true);
+  });
+
+  it("normalizeCardSummaries folds echoed closers into Summary lines with a gap", () => {
+    expect(
+      normalizeCardSummaries(
+        "1 · Q — **The Star**: Hope returns.\nSummary of this card's message for the question: keep hoping.",
+      ),
+    ).toBe("1 · Q — **The Star**: Hope returns.\n\nSummary: keep hoping.");
+    expect(
+      normalizeCardSummaries("Hope returns. Summary of this card's message for the question: keep going."),
+    ).toBe("Hope returns.\n\nSummary: keep going.");
+  });
+
+  it("normalizeCardSummaries is idempotent and leaves real closings alone", () => {
+    expect(normalizeCardSummaries("Body.\n\nSummary: done.")).toBe("Body.\n\nSummary: done.");
+    const once = normalizeCardSummaries("Para one.\nSummary of this card's message for the question: x.");
+    expect(normalizeCardSummaries(once)).toBe(once);
+  });
+
+  it("normalizeCardSummaries handles the Thai closer", () => {
+    const TH = (...codes: number[]) => String.fromCharCode(...codes);
+    const sum = TH(0x0e2a, 0x0e23, 0x0e38, 0x0e1b);
+    const forQ = TH(0x0e2a, 0x0e33, 0x0e2b, 0x0e23, 0x0e31, 0x0e1a, 0x0e04, 0x0e33, 0x0e16, 0x0e32, 0x0e21);
+    expect(normalizeCardSummaries("Para one.\n" + sum + " test " + forQ + ": ok")).toBe(
+      "Para one.\n\n" + sum + ": ok",
+    );
+  });
+
+  it("alienCardNames flags translated card names absent from the source", () => {
+    const cardWord = String.fromCharCode(0x0e44, 0x0e1e, 0x0e48);
+    expect(alienCardNames("Guidance: trust the process.", cardWord + " The Fool brings change.")).toEqual([
+      "The Fool",
+    ]);
+  });
+
+  it("alienCardNames ignores drawn names and plain prose", () => {
+    const cardWord = String.fromCharCode(0x0e44, 0x0e1e, 0x0e48);
+    expect(alienCardNames("The Star brings hope.", cardWord + " The Star brings hope.")).toEqual([]);
+    expect(alienCardNames("Trust the process.", "Trust the process.")).toEqual([]);
+  });
+
   it("isCompleteReading accepts a full structure without a Summary line, rejects early stops", () => {
     const full = "Overview text. ".repeat(60) + "\n\n**Guidance:** do this.\n\n**What to do:**\n- one\n- two";
     expect(isCompleteReading(full)).toBe(true);
@@ -555,12 +601,17 @@ describe("parseSummary", () => {
 
   it("isCompleteReading requires every drawn card to be interpreted", () => {
     const names = ["Page of Cups", "The High Priestess", "Ace of Wands"];
+    // Card paragraphs sit before the closing Summary, matching the
+    // prompt's fixed section order (overview, cards, then the close).
     const noCards =
       "Overview only, no card paragraphs at all, but a tidy ending. ".repeat(4) +
-      "\n\n**Guidance:** start gently.\n\n**What to do:**\n- one\n\nSummary: You are ready.";
+      "\n\n**Page of Cups**: new feelings.\n\n**Guidance:** start gently.\n\n**What to do:**\n- one\n\nSummary: You are ready.";
     expect(isCompleteReading(noCards, names)).toBe(false);
     const withCards =
-      noCards + "\n\n**Page of Cups**: new feelings.\n\n**The High Priestess**: listen in.\n\n**Ace of Wands**: begin.";
+      noCards.replace(
+        "**Page of Cups**: new feelings.",
+        "**Page of Cups**: new feelings.\n\n**The High Priestess**: listen in.\n\n**Ace of Wands**: begin.",
+      );
     expect(isCompleteReading(withCards, names)).toBe(true);
   });
 
