@@ -25,9 +25,13 @@
     // Step 2 (wizard): three slots at the top, deck/fan below them;
     // picked cards are dealt up into the slots.
     var slotY = 10;
-    var deckY = slotY + ch + 18 + ch * 0.62;
+    // Three fan rows (was two) so each row's touch band is taller and
+    // each card's visible sliver is wider (26 per row instead of 39).
+    var rows = 3;
+    var rowGap = ch * 0.5;
+    var deckY = slotY + ch + 18 + rowGap * (rows - 1);
     return {
-      cw: cw, ch: ch, slotY: slotY, deckY: deckY, droop: droop,
+      cw: cw, ch: ch, slotY: slotY, deckY: deckY, droop: droop, rows: rows, rowGap: rowGap,
       H: deckY + ch + droop + 16,
       slotX: [W / 2 - cw * 1.75, W / 2, W / 2 + cw * 1.75],
     };
@@ -106,9 +110,8 @@
         card.setAttribute("aria-label", lang === "th" ? "\u0e44\u0e1e\u0e48\u0e43\u0e1a\u0e17\u0e35\u0e48 " + (i + 1) + " \u0e08\u0e32\u0e01 78" : "Card " + (i + 1) + " of 78");
         var p = deckPos(card, i);
         place(card, p.x, p.y, 0, 1, 10 + i, true);
-        card.addEventListener("click", function () {
-          pick(card);
-        });
+        // No click handler: picks land on pointerup of a press-and-slide
+        // (below), and on Enter/Space for keyboards.
         stage.appendChild(card);
         deck.push(card);
       })(i);
@@ -185,24 +188,25 @@
       state = "fan";
       // Prototype geometry (designs/prototype.html): two arcs of 39,
       // span 110\u00b0, edges normalised by sin(span/2) so the outermost
-      // cards stay inside the stage; back row sits 0.62*ch higher,
+      // cards stay inside the stage; each row sits rowGap above the one in front,
       // both arcs sag by droop toward the edges.
       var span = 110 * (Math.PI / 180);
       var maxX = (W - G.cw * 1.75) / 2;
       var smax = Math.sin(span / 2);
       var droopDenom = 1 - Math.cos(span / 2);
       var n = deck.length;
-      var half = Math.ceil(n / 2);
+      var per = Math.ceil(n / G.rows);
       deck.forEach(function (card, i) {
-        var row = i < half ? 0 : 1;
-        var k = row === 0 ? i : i - half;
-        var m = row === 0 ? half : n - half;
+        var row = Math.floor(i / per);
+        var k = i - row * per;
+        var m = Math.min(per, n - row * per);
         var a = -span / 2 + (span * k) / (m - 1);
         var x = cx - G.cw / 2 + (maxX * Math.sin(a)) / smax;
-        var y = G.deckY - (row === 0 ? G.ch * 0.62 : 0) + (G.droop * (1 - Math.cos(a))) / droopDenom;
-        card._fan = { x: x, y: y, a: (a * 180) / Math.PI / 2 };
+        var y = G.deckY - (G.rows - 1 - row) * G.rowGap + (G.droop * (1 - Math.cos(a))) / droopDenom;
+        card._fan = { x: x, y: y, a: (a * 180) / Math.PI / 2, z: row * 100 + k };
+        card._row = row;
         if (!REDUCED) card.style.transitionDelay = i * 7 + "ms";
-        place(card, x, y, card._fan.a, 1, row * 100 + k);
+        place(card, x, y, card._fan.a, 1, card._fan.z);
         card.classList.add("pickable");
         card.tabIndex = 0;
       });
@@ -212,6 +216,7 @@
           card.style.transitionDelay = "";
         });
         state = "picking";
+        stage.classList.add("pick-on");
         setGuide("picking");
         updatePickHint(3);
       }, total);
@@ -222,6 +227,11 @@
       var msg = lang === "th"
         ? (first ? "\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e1e\u0e48 " + left + " \u0e43\u0e1a" : "\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e1e\u0e48\u0e2d\u0e35\u0e01 " + left + " \u0e43\u0e1a")
         : (first ? "Choose 3 cards" : "Choose " + left + " more card" + (left === 1 ? "" : "s"));
+      if (first) {
+        msg += lang === "th"
+          ? " \u2014 \u0e41\u0e15\u0e30\u0e04\u0e49\u0e32\u0e07\u0e41\u0e25\u0e49\u0e27\u0e40\u0e25\u0e37\u0e48\u0e2d\u0e19 \u0e1b\u0e25\u0e48\u0e2d\u0e22\u0e19\u0e34\u0e49\u0e27\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e40\u0e25\u0e37\u0e2d\u0e01"
+          : " \u2014 press, slide, and let go to pick";
+      }
       bubble(msg);
       announce(stage, msg);
     }
@@ -258,6 +268,7 @@
 
     async function reveal() {
       state = "reveal";
+      stage.classList.remove("pick-on");
       setGuide("reveal");
       bubble(lang === "th" ? "\u0e01\u0e33\u0e25\u0e31\u0e07\u0e40\u0e1b\u0e34\u0e14\u0e44\u0e1e\u0e48\u2026" : "Turning the cards\u2026");
       deck.forEach(function (card, i) {
@@ -286,14 +297,98 @@
       finishRun({ picked: picked, serverCards: cards });
     }
 
-    // Touch lift before the pick lands.
+    // Press-and-slide picking. On a phone a fanned card shows only a
+    // ~6 px sliver, far below a 44 px touch target, so the finger never
+    // has to land on a card: press anywhere on the fan, slide to move
+    // the highlight (card darkens and lifts above its neighbours), let
+    // go to pick it. A plain tap picks the nearest card. Mouse users get
+    // the same highlight on hover.
+    var hl = null;
+    var scrubbing = false;
+    // The highlight only pops up a little: it keeps its own layer, so the
+    // cards on top of it still overlap it and its place in the fan stays clear.
+    var LIFT = Math.round(G.rowGap * 0.22);
+    function candidates(row) {
+      return deck.filter(function (c) {
+        return c._fan && c._row === row && c.classList.contains("pickable");
+      });
+    }
+    function cardAt(px, py) {
+      var top = G.deckY - (G.rows - 1) * G.rowGap;
+      var row = Math.max(0, Math.min(G.rows - 1, Math.floor((py - top) / G.rowGap)));
+      var list = candidates(row);
+      for (var d = 1; !list.length && d < G.rows; d++) {
+        list = candidates(row - d).concat(candidates(row + d));
+      }
+      var best = null;
+      var bd = Infinity;
+      list.forEach(function (c) {
+        var d = Math.abs(c._fan.x + G.cw / 2 - px);
+        if (d < bd) {
+          bd = d;
+          best = c;
+        }
+      });
+      return best;
+    }
+    function setHl(card) {
+      if (card === hl) return;
+      if (hl) {
+        hl.classList.remove("hl");
+        place(hl, hl._fan.x, hl._fan.y, hl._fan.a, 1, hl._fan.z);
+      }
+      hl = card;
+      if (hl) {
+        hl.classList.add("hl");
+        place(hl, hl._fan.x, hl._fan.y - LIFT, hl._fan.a, 1, hl._fan.z);
+        if (scrubbing && navigator.vibrate) {
+          try {
+            navigator.vibrate(4);
+          } catch (e) {}
+        }
+      }
+    }
+    function local(e) {
+      var r = stage.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    }
+    function inFan(p) {
+      return p.y >= G.deckY - (G.rows - 1) * G.rowGap - LIFT && p.y <= G.H;
+    }
+    function endScrub(commit) {
+      if (!scrubbing) return;
+      scrubbing = false;
+      stage.classList.remove("scrubbing");
+      var c = hl;
+      setHl(null);
+      if (commit && c) pick(c);
+    }
     stage.addEventListener("pointerdown", function (e) {
-      var card = e.target && e.target.closest ? e.target.closest(".card.pickable") : null;
-      if (card && state === "picking") card.classList.add("lift");
+      if (state !== "picking") return;
+      var p = local(e);
+      if (!inFan(p)) return;
+      scrubbing = true;
+      stage.classList.add("scrubbing");
+      try {
+        stage.setPointerCapture(e.pointerId);
+      } catch (err) {}
+      e.preventDefault();
+      setHl(cardAt(p.x, p.y));
     });
-    stage.addEventListener("pointerup", function (e) {
-      var cards2 = stage.querySelectorAll(".card.lift");
-      for (var i = 0; i < cards2.length; i++) cards2[i].classList.remove("lift");
+    stage.addEventListener("pointermove", function (e) {
+      if (state !== "picking") return;
+      var p = local(e);
+      if (scrubbing) setHl(cardAt(p.x, p.y));
+      else if (e.pointerType === "mouse") setHl(inFan(p) ? cardAt(p.x, p.y) : null);
+    });
+    stage.addEventListener("pointerup", function () {
+      endScrub(true);
+    });
+    stage.addEventListener("pointercancel", function () {
+      endScrub(false);
+    });
+    stage.addEventListener("pointerleave", function (e) {
+      if (e.pointerType === "mouse" && !scrubbing) setHl(null);
     });
     stage.addEventListener("keydown", function (e) {
       if ((e.key === "Enter" || e.key === " ") && document.activeElement && document.activeElement.classList.contains("pickable")) {

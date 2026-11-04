@@ -43,4 +43,16 @@ describe("auth pages", () => {
     expect(res.status).toBe(302);
     expect(res.headers.get("location")).toContain("/sign-in");
   });
+
+  it("renders password toggles as icon buttons, not text", async () => {
+    for (const path of ["/register", "/sign-in", "/reset-password?token=x"]) {
+      const html = await (await app.request(path)).text();
+      expect(html).toContain('class="pw-toggle"');
+      expect(html).toContain('aria-label="Show password"');
+      expect(html).toContain("data-pw-eye");
+      expect(html).toContain("<svg");
+      expect(html).not.toContain('class="linklike pw-toggle"');
+      expect(html).not.toContain(">Show password</button>");
+    }
+  });
 });

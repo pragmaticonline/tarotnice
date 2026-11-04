@@ -19,6 +19,10 @@ const STYLE = `<style>
 .auth-card p{line-height:1.5}
 .auth-card label{display:block;font-weight:700;margin:1rem 0 .3rem}
 .auth-card input{width:100%;box-sizing:border-box;font-size:1rem;padding:.8rem;border:2px solid var(--gold-dim);border-radius:12px;min-height:52px;background:#fff;color:#2e2547}
+.pw-row{position:relative}
+.pw-row input{padding-right:3rem}
+.pw-toggle{position:absolute;right:.4rem;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;width:2.25rem;height:2.25rem;background:none;border:0;border-radius:8px;color:#6b6390;cursor:pointer;padding:0}
+.pw-toggle svg{width:1.2rem;height:1.2rem}
 .auth-card .btn{width:100%;margin-top:1.25rem}
 .auth-err{color:#b3261e;min-height:1.4em;margin:.75rem 0 0}
 .auth-note{font-size:.92rem}
@@ -86,6 +90,13 @@ document.querySelectorAll("[data-social]").forEach(function (b) {
 </script>`;
 }
 
+const PW_EYE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const PW_EYE_OFF = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.6 10.6 0 0 1 12 19c-6.5 0-10-7-10-7a17.6 17.6 0 0 1 4.06-4.94M9.9 4.24A10.6 10.6 0 0 1 12 5c6.5 0 10 7 10 7a17.7 17.7 0 0 1-2.16 3.19M9.88 9.88a3 3 0 1 0 4.24 4.24"/><line x1="2" y1="2" x2="22" y2="22"/></svg>`;
+
+function pwToggleButton(id: string, d: ReturnType<typeof t>): string {
+  return `<button type="button" class="pw-toggle" data-pw-toggle="${id}" data-show="${escapeHtml(d.showPassword)}" data-hide="${escapeHtml(d.hidePassword)}" aria-label="${escapeHtml(d.showPassword)}" aria-pressed="false"><span data-pw-eye aria-hidden="true">${PW_EYE}</span><span data-pw-eye-off aria-hidden="true" hidden>${PW_EYE_OFF}</span></button>`;
+}
+
 const PW_TOGGLE = `<script>
 document.querySelectorAll("[data-pw-toggle]").forEach(function (b) {
   b.addEventListener("click", function () {
@@ -93,14 +104,19 @@ document.querySelectorAll("[data-pw-toggle]").forEach(function (b) {
     if (!input) return;
     var show = input.type === "password";
     input.type = show ? "text" : "password";
-    b.textContent = show ? b.getAttribute("data-hide") : b.getAttribute("data-show");
+    b.setAttribute("aria-pressed", show ? "true" : "false");
+    b.setAttribute("aria-label", show ? b.getAttribute("data-hide") : b.getAttribute("data-show"));
+    var eye = b.querySelector("[data-pw-eye]");
+    var eyeOff = b.querySelector("[data-pw-eye-off]");
+    if (eye) eye.hidden = show;
+    if (eyeOff) eyeOff.hidden = !show;
   });
 });
 </script>`;
 
 function passwordField(id: string, label: string, d: ReturnType<typeof t>, autocomplete: string): string {
   return `<label for="${id}">${escapeHtml(label)}</label>
-<div class="pw-row"><input id="${id}" type="password" autocomplete="${autocomplete}" minlength="8" required><button type="button" class="linklike pw-toggle" data-pw-toggle="${id}" data-show="${escapeHtml(d.showPassword)}" data-hide="${escapeHtml(d.hidePassword)}">${escapeHtml(d.showPassword)}</button></div>
+<div class="pw-row"><input id="${id}" type="password" autocomplete="${autocomplete}" minlength="8" required>${pwToggleButton(id, d)}</div>
 <p class="auth-note">${escapeHtml(d.passwordRule)}</p>`;
 }
 
@@ -260,7 +276,7 @@ ${socialButtons(social, d)}
 <label for="email">${escapeHtml(d.emailLabel)}</label>
 <input id="email" type="email" autocomplete="email" required>
 <label for="password">${escapeHtml(d.passwordLabel)} <a class="auth-forgot" href="/forgot-password">${escapeHtml(d.forgotPassword)}</a></label>
-<div class="pw-row"><input id="password" type="password" autocomplete="current-password" required><button type="button" class="linklike pw-toggle" data-pw-toggle="password" data-show="${escapeHtml(d.showPassword)}" data-hide="${escapeHtml(d.hidePassword)}">${escapeHtml(d.showPassword)}</button></div>
+<div class="pw-row"><input id="password" type="password" autocomplete="current-password" required>${pwToggleButton("password", d)}</div>
 ${returnField(ret)}
 <p class="auth-err" id="err" role="alert"></p>
 <button class="btn" type="submit">${escapeHtml(d.signIn)}</button>
