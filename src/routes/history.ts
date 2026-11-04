@@ -88,7 +88,7 @@ export function historyPage(opts: {
     `</div>`;
   let list: string;
   if (opts.items.length === 0) {
-    list = `<p class="empty">${escapeHtml(d.emptyHistory)}</p><p><a class="btn" href="/">${escapeHtml(d.shuffle)}</a></p>`;
+    list = `<p class="empty">${escapeHtml(d.emptyHistory)}</p>`;
   } else {
     let lastMonth = "";
     const parts: string[] = [];
