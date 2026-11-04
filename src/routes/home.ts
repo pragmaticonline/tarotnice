@@ -39,7 +39,7 @@ function quotaRow(ui: UiLang): string {
   const d = t(ui);
   // Loading line (never a wrong count) until home.js paints fresh
   // /api/me/summary numbers. Dots reuse the .wdots pulse pattern.
-  return `<p class="quota" role="status"><span class="moonstone" data-quota-gem hidden aria-hidden="true"></span><span data-quota-label>${escapeHtml(d.quotaLoading)}<span class="wdots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span></span></p>`;
+  return `<span class="quota" role="status"><span class="moonstone" data-quota-gem hidden aria-hidden="true"></span><span data-quota-label>${escapeHtml(d.quotaLoading)}<span class="wdots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span></span></span>`;
 }
 
 export function homePage(opts: HomeOpts = {}): string {
@@ -73,7 +73,7 @@ ${inviteBanner}${steps}
 <form id="ask-form" action="/api/readings" method="post" data-need="${escapeHtml(d.hintNeed)}">
 <label class="ask-label" for="q">${escapeHtml(d.ask)}</label>
 <textarea id="q" name="question" rows="3" maxlength="300" placeholder="${escapeHtml(d.placeholder)}"></textarea>
-<p class="q-count"><span id="q-count">0</span>/300</p>
+<p class="q-count">${quotaRow(ui)}<span><span id="q-count">0</span>/300</span></p>
 <p class="muted">${escapeHtml(d.eachReadingLine)}</p>
 <button class="btn btn-primary" type="submit">${escapeHtml(d.shuffleCards)} <span class="shuffle-cost" aria-hidden="true">| <span class="moonstone"></span> <span class="shuffle-price">5 ${escapeHtml(d.tokensUnit)}</span></span></button>
 <p class="muted">${escapeHtml(d.notSureAsk)}</p>
@@ -90,7 +90,6 @@ ${inviteBanner}${steps}
   }).join("")}</div>
 ${opts.turnstileSiteKey ? `<div class="cf-turnstile" data-sitekey="${escapeHtml(opts.turnstileSiteKey)}" data-size="invisible"></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>` : ""}
 </form>
-${quotaRow(ui)}
 </section>
 <section id="step-draw" data-step="2" hidden>
 <div class="draw-top"><button type="button" class="draw-back" id="draw-back" aria-label="Back">\u2190</button><p class="draw-q" id="draw-q"></p></div>
