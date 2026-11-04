@@ -77,6 +77,12 @@ async function runFollowUpFlow(postRemaining = 2, summary: unknown = null) {
   const question = makeEl({ value: "Will tomorrow go well?" });
   const askLabel = makeEl({ textContent: "What would you like to ask today?" });
   const readQ = makeEl();
+  const freshRow = makeEl({ hidden: true });
+  const freshLink = makeEl();
+  const freshHandlers: Record<string, (e: unknown) => unknown> = {};
+  freshLink.addEventListener = (type: string, fn: (e: unknown) => unknown) => {
+    freshHandlers[type] = fn;
+  };
   let followUp: { onFollowUp: (q: string) => void } | null = null;
   const byId: Record<string, unknown> = {
     "ask-form": form,
@@ -88,6 +94,8 @@ async function runFollowUpFlow(postRemaining = 2, summary: unknown = null) {
     "read-eyebrow": makeEl(),
     "read-q": readQ,
     "ask-label": askLabel,
+    "fresh-ask-row": freshRow,
+    "fresh-ask-link": freshLink,
     "read-cards": makeEl(),
     reading: makeEl(),
     // Old bubble() routing reads step-draw visibility directly.
@@ -214,7 +222,7 @@ async function runFollowUpFlow(postRemaining = 2, summary: unknown = null) {
   if (!followUp) throw new Error("renderReading never ran");
   (followUp as { onFollowUp: (q: string) => void }).onFollowUp("Is it serious?");
   await new Promise((r) => setTimeout(r, 400));
-  return { guideAskBubble, guideBubble, question, created, askLabel, readQ };
+  return { guideAskBubble, guideBubble, question, created, askLabel, readQ, freshRow, freshHandlers };
 }
 
 describe("ask flow step-1 bubble", () => {
@@ -274,5 +282,25 @@ describe("ask flow step-1 bubble", () => {
     ((btn as Record<string, unknown>).handlers as Record<string, (e: unknown) => unknown>).click({});
     expect(question.value).toBe("");
     expect(askLabel.textContent).toBe("This is a follow-up on \u201cWill tomorrow go well?\u201d");
+  }, 15000);
+
+  it("offers a fresh-question escape under the follow-up label", async () => {
+    const { created, question, askLabel, readQ, freshRow, freshHandlers } = await runFollowUpFlow(0) as unknown as {
+      created: Record<string, unknown>[];
+      question: Record<string, unknown>;
+      askLabel: Record<string, unknown>;
+      readQ: Record<string, unknown>;
+      freshRow: Record<string, unknown>;
+      freshHandlers: Record<string, (e: unknown) => unknown>;
+    };
+    readQ.textContent = "\u201cWill tomorrow go well?\u201d";
+    const btn = created.find((e) => String(e.textContent || "").startsWith("Follow up"));
+    ((btn as Record<string, unknown>).handlers as Record<string, (e: unknown) => unknown>).click({});
+    expect(askLabel.textContent).toContain("follow-up on");
+    expect(freshRow.hidden).toBe(false);
+    freshHandlers.click({});
+    expect(question.value).toBe("");
+    expect(askLabel.textContent).toBe("What would you like to ask today?");
+    expect(freshRow.hidden).toBe(true);
   }, 15000);
 });

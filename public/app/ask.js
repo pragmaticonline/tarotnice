@@ -200,10 +200,14 @@
     if (!lbl.dataset.followDefault) lbl.dataset.followDefault = lbl.textContent;
     var tpl = t("followUpOn") || "This is a follow-up on \u201c{q}\u201d";
     lbl.textContent = tpl.replace("{q}", q);
+    var row = document.getElementById("fresh-ask-row");
+    if (row) row.hidden = false;
   }
   function resetAskLabel() {
     var lbl = document.getElementById("ask-label");
     if (lbl && lbl.dataset.followDefault) lbl.textContent = lbl.dataset.followDefault;
+    var row = document.getElementById("fresh-ask-row");
+    if (row) row.hidden = true;
   }
   function currentReadingQuestion() {
     var rq = document.getElementById("read-q");
@@ -809,6 +813,14 @@
         resetAskLabel();
         if (qEl) { qEl.value = chip.getAttribute("data-suggest") || ""; syncCount(); qEl.focus(); }
       });
+    });
+    // "Ask a different question instead?" under a follow-up label:
+    // drop the follow-up context and start a fresh question.
+    var freshLink = document.getElementById("fresh-ask-link");
+    if (freshLink) freshLink.addEventListener("click", function () {
+      resetAskLabel();
+      if (qEl) { qEl.value = ""; syncCount(); qEl.focus(); }
+      if (window.TarotHome) window.TarotHome.refresh();
     });
     // Pack sheet controls.
     var sheetClose = document.getElementById("pack-sheet-close");

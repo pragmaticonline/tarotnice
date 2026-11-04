@@ -13,6 +13,9 @@ describe("GET / (draw screen)", () => {
     // The label carries an id so follow-ups can retitle it to
     // "This is a follow-up on ...".
     expect(html).toContain('id="ask-label"');
+    // Fresh-question escape hatch under the follow-up label.
+    expect(html).toContain('id="fresh-ask-link"');
+    expect(html).toContain("Ask a different question instead?");
     expect(html).toContain('maxlength="300"');
     expect(html).toContain('id="q-count"');
     expect(html).toContain('data-suggest');
