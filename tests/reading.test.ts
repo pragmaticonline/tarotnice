@@ -5,6 +5,7 @@ import {
   cleanQuestion,
   crisisMessage,
   drawReadingCards,
+  guessTopic,
   classifyCrisis,
   crisisWatchHit,
   isCrisisQuestion,
@@ -38,6 +39,14 @@ describe("question validation", () => {
     expect(cleanQuestion("love <b>me</b>?")).toBeNull();
     // Bare angle brackets without a tag are fine.
     expect(cleanQuestion("a < b and b > c?")).toBe("a < b and b > c?");
+  });
+
+  it("guesses topic from wording so typed questions land on the right history tab", () => {
+    expect(guessTopic("will i find love?")).toBe("love");
+    expect(guessTopic("will i be rich?")).toBe("money");
+    expect(guessTopic("should I take the new job?")).toBe("career");
+    expect(guessTopic("how can I feel less stressed?")).toBe("health");
+    expect(guessTopic("what should I focus on this week?")).toBe("general");
   });
 
   it("validates topic and lang enums", () => {

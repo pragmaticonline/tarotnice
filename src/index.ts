@@ -13,6 +13,7 @@ import {
   crisisMessage,
   crisisWatchHit,
   drawReadingCards,
+  guessTopic,
   isCrisisQuestion,
   isLang,
   isTopic,
@@ -348,7 +349,9 @@ app.post("/api/readings", async (c) => {
     return c.json({ error: "bad_request" }, 400);
   }
   const question = cleanQuestion(body.question);
-  const topic: Topic = isTopic(body.topic) ? body.topic : "general";
+  // Typed questions arrive topic-less ("general"); guess from wording.
+  // An explicit chip choice is always respected.
+  const topic: Topic = isTopic(body.topic) && body.topic !== "general" ? body.topic : guessTopic(question ?? "");
   const lang = isLang(body.lang) ? body.lang : requestUiLang(c);
   if (!question) return c.json({ error: "bad_question" }, 400);
   // Crisis pre-check first: supportive reply, no reading, no quota

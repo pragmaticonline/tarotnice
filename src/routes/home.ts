@@ -109,7 +109,7 @@ ${opts.turnstileSiteKey ? `<div class="cf-turnstile" data-sitekey="${escapeHtml(
 <div class="guest-gate" id="guest-gate" hidden>
 <h2>${escapeHtml(d.guestGateTitle)}</h2>
 <p>${escapeHtml(d.guestGateText)}</p>
-<p><a class="btn btn-primary" href="/sign-in">${escapeHtml(d.signInToKeep)}</a> <a class="btn btn-outline" href="/register">${escapeHtml(d.createAccountHeading)}</a></p>
+<p class="guest-gate-actions"><a class="btn btn-primary" href="/sign-in">${escapeHtml(d.signInToKeep)}</a><a class="btn btn-outline" href="/register">${escapeHtml(d.createAccountHeading)}</a></p>
 </div>
 <div class="sheet" id="pack-sheet" hidden>
 <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="pack-sheet-title">

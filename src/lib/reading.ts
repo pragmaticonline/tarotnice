@@ -77,6 +77,29 @@ export function crisisWatchHit(question: string): boolean {
   return CRISIS_WATCH.test(question);
 }
 
+/**
+ * Keyword topics for free-typed questions. The client only sends a
+ * topic when the user taps a suggestion chip; typed questions arrive
+ * as "general", which would miscategorise e.g. "will i be rich?"
+ * under General instead of Money. First match wins in love, money,
+ * career, health order (love first so "wedding job" keeps the
+ * wedding). An explicit non-general chip choice is never overridden.
+ */
+const TOPIC_PATTERNS: { topic: Topic; re: RegExp }[] = [
+  { topic: "love", re: /love|crush|relationship|partner|boyfriend|girlfriend|husband|wife|marri|divorce|dating|breakup|cheat|romance|affair|\u0e23\u0e31\u0e01|\u0e41\u0e1f\u0e19|\u0e41\u0e15\u0e48\u0e07\u0e07\u0e32\u0e19|\u0e40\u0e25\u0e34\u0e01|\u0e2a\u0e32\u0e21\u0e35|\u0e20\u0e23\u0e23\u0e22\u0e32|\u0e2b\u0e22\u0e48\u0e32/i },
+  { topic: "money", re: /\brich\b|riches|wealth|money|financ|salary|incomes?|debt|invest|lottery|paycheck|bankrupt|loans?|\u0e23\u0e27\u0e22|\u0e40\u0e07\u0e34\u0e19|\u0e2b\u0e19\u0e35\u0e49|\u0e25\u0e07\u0e17\u0e38\u0e19|\u0e23\u0e32\u0e22\u0e44\u0e14\u0e49|\u0e2b\u0e27\u0e22/i },
+  { topic: "career", re: /\bjob\b|jobless|career|boss|promotion|interview|resign|fired|colleague|business|compan(y|ies)|workplace|unemploy|\u0e07\u0e32\u0e19|\u0e2d\u0e32\u0e0a\u0e35\u0e1e|\u0e40\u0e08\u0e49\u0e32\u0e19\u0e32\u0e22|\u0e1a\u0e23\u0e34\u0e29\u0e31\u0e17|\u0e2a\u0e21\u0e31\u0e04\u0e23\u0e07\u0e32\u0e19|\u0e2a\u0e31\u0e21\u0e20\u0e32\u0e29\u0e13\u0e4c|\u0e40\u0e25\u0e37\u0e48\u0e2d\u0e19\u0e15\u0e33\u0e41\u0e2b\u0e19\u0e48\u0e07|\u0e15\u0e01\u0e07\u0e32\u0e19|\u0e25\u0e32\u0e2d\u0e2d\u0e01/i },
+  { topic: "health", re: /health|stress|sick|illness|sleep|insomnia|doctor|hospital|anxi|depress|tired|\u0e2a\u0e38\u0e02\u0e20\u0e32\u0e1e|\u0e40\u0e04\u0e23\u0e35\u0e22\u0e14|\u0e1b\u0e48\u0e27\u0e22|\u0e19\u0e2d\u0e19\u0e44\u0e21\u0e48\u0e2b\u0e25\u0e31\u0e1a|\u0e2b\u0e21\u0e2d|\u0e42\u0e23\u0e07\u0e1e\u0e22\u0e32\u0e1a\u0e32\u0e25|\u0e27\u0e34\u0e15\u0e01|\u0e0b\u0e36\u0e21\u0e40\u0e28\u0e23\u0e49\u0e32|\u0e40\u0e2b\u0e19\u0e37\u0e48\u0e2d\u0e22|\u0e1b\u0e27\u0e14/i },
+];
+
+/** Best-guess topic from question wording, "general" when nothing hits. */
+export function guessTopic(question: string): Topic {
+  for (const p of TOPIC_PATTERNS) {
+    if (p.re.test(question)) return p.topic;
+  }
+  return "general";
+}
+
 /** Cheap classifier for watch-listed questions. True = crisis. */
 export async function classifyCrisis(aiRun: AiRun, question: string): Promise<boolean> {
   try {
