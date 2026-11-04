@@ -75,6 +75,7 @@ ${inviteBanner}${steps}
 <textarea id="q" name="question" rows="3" maxlength="300" placeholder="${escapeHtml(d.placeholder)}"></textarea>
 <p class="q-count"><span id="q-count">0</span>/300</p>
 <p class="muted">${escapeHtml(d.notSureAsk)}</p>
+<button class="btn btn-primary" type="submit">${escapeHtml(d.shuffleCards)} <span class="shuffle-cost" aria-hidden="true">| <span class="moonstone"></span> <span class="shuffle-price">5 ${escapeHtml(d.tokensUnit)}</span></span></button>
 <div class="suggest-chips">${TOPICS.map((topic) => {
     const samples: Record<string, [string, string]> = {
       love: ["Will my relationship move forward?", "\u0e04\u0e27\u0e32\u0e21\u0e2a\u0e31\u0e21\u0e1e\u0e31\u0e19\u0e18\u0e4c\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19\u0e08\u0e30\u0e40\u0e14\u0e34\u0e19\u0e2b\u0e19\u0e49\u0e32\u0e15\u0e48\u0e2d\u0e44\u0e2b\u0e21"],
@@ -88,7 +89,6 @@ ${inviteBanner}${steps}
   }).join("")}</div>
 <p class="muted">${escapeHtml(d.eachReadingLine)}</p>
 ${opts.turnstileSiteKey ? `<div class="cf-turnstile" data-sitekey="${escapeHtml(opts.turnstileSiteKey)}" data-size="invisible"></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>` : ""}
-<button class="btn btn-primary" type="submit">${escapeHtml(d.shuffleCards)} <span class="shuffle-cost" aria-hidden="true">| <span class="moonstone"></span> <span class="shuffle-price">5 ${escapeHtml(d.tokensUnit)}</span></span></button>
 </form>
 ${quotaRow(ui)}
 </section>

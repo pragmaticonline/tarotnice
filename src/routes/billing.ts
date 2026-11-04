@@ -104,7 +104,6 @@ ${configured ? `<h2>${escapeHtml(d.packsTitle)}</h2>
 <h3>${escapeHtml(d.shareWithFriends)}</h3>
 <p class="share-row">
 <button type="button" class="btn btn-outline" data-share-invite="line">LINE</button>
-<button type="button" class="btn btn-outline" data-share-invite="facebook">Facebook</button>
 <a class="btn btn-outline" id="invite-image" href="/invite.png" download>${escapeHtml(d.share)} · 1080</a>
 </p>
 <p class="msg-label">${escapeHtml(d.messagePreviewLabel)}</p>
@@ -202,25 +201,25 @@ export function invitePage(opts: { ui: UiLang; origin: string; account?: HeaderA
   const d = t(opts.ui);
   const body = `<main>
 ${headerHtml({ ui: opts.ui, streak: { current: 0, longest: 0, activeToday: false }, path: "/invite", account: opts.account })}
-<h1 class="display">${escapeHtml(d.inviteTitle)}</h1>
-<p class="invite-sub">${escapeHtml(d.invitePageSub)}</p>
-<p class="invite-code-label">${escapeHtml(d.inviteYourCode)}</p>
-<p class="invite-code-row"><b id="invite-code"></b> <button type="button" class="btn btn-outline" id="copy-code">${escapeHtml(d.copyBtn)}</button></p>
-<p class="invite-link-row"><span id="invite-link"></span> <button type="button" class="btn btn-outline" id="copy-link">${escapeHtml(d.copyInviteLink)}</button></p>
-<p class="share-row">
-<button type="button" class="btn btn-outline" data-share-invite="line">${escapeHtml(d.shareOnLine)}</button>
-<button type="button" class="btn btn-outline" data-share-invite="facebook">Facebook</button>
-<a class="btn btn-outline" id="invite-image" href="/invite.png" download>${escapeHtml(d.saveImage)}</a>
-</p>
-<div class="invite-stats">
-<div class="invite-stat"><b id="stat-joined">0</b><span>${escapeHtml(d.statJoined)}</span></div>
-<div class="invite-stat"><b id="stat-read">0</b><span>${escapeHtml(d.statFirstReading)}</span></div>
-<div class="invite-stat"><b id="stat-earned">0</b><span>${escapeHtml(d.statEarned)}</span></div>
+<div class="invite-head"><img src="/mascot/ngern-sitting.svg" alt="" width="64" height="64"><span><h1 class="display">${escapeHtml(d.invitePageTitle)}</h1><span class="invite-sub">${escapeHtml(d.invitePageSub)}</span></span></div>
+<section class="hero-card invite-hero">
+<p class="invite-code-label"><small>${escapeHtml(d.inviteYourCode)}</small></p>
+<p class="invite-code-row"><b id="invite-code" class="value code-value"></b> <button type="button" class="btn btn-outline btn-sm" id="copy-code">${escapeHtml(d.copyCodeBtn)}</button></p>
+<div class="share-grid">
+<button type="button" class="btn btn-sm btn-line" data-share-invite="line">${escapeHtml(d.shareOnLine)}</button>
+<button type="button" class="btn btn-sm btn-gold" id="copy-link">${escapeHtml(d.copyInviteLink)}</button>
+<a class="btn btn-sm btn-outline" id="invite-image" href="/invite.png" download>${escapeHtml(d.saveImage)}</a>
 </div>
-<h3>${escapeHtml(d.yourFriends)} <span id="friends-counts"></span></h3>
-<p class="friends-progress" id="friends-progress"></p>
+</section>
+<section class="panel-card invite-stats-card">
+<div class="invite-stats">
+<div class="invite-stat"><b id="stat-joined" class="stat-value">0</b><span>${escapeHtml(d.statJoined)}</span></div>
+<div class="invite-stat"><b id="stat-read" class="stat-value">0</b><span>${escapeHtml(d.statFirstReading)}</span></div>
+<div class="invite-stat"><b id="stat-earned" class="stat-value">0</b><span>${escapeHtml(d.statEarned)}</span></div>
+</div>
 <ul class="friend-list" id="friend-list"></ul>
-<p class="invite-terms">${escapeHtml(d.inviteRules)} \u00b7 <a href="/terms">${escapeHtml(d.terms)}</a></p>
+</section>
+<p class="invite-terms muted">${escapeHtml(d.inviteRules)} \u00b7 <a href="/terms">${escapeHtml(d.terms)}</a></p>
 </main>`;
   return pageShell({
     title: `TarotNice — ${d.inviteTitle}`,

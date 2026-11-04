@@ -1,5 +1,5 @@
 // Share sheet: bottom sheet with the story preview, private-by-default
-// question toggle, and one-tap targets (native, LINE, Facebook, X,
+// question toggle, and one-tap targets (native, LINE, X,
 // Instagram, save, copy). Every tap is logged for virality metrics.
 (function () {
   "use strict";
@@ -156,7 +156,6 @@
       targets.innerHTML = "";
       var text = encodeURIComponent(share.url);
       targets.appendChild(link("https://line.me/R/share?text=" + text, "LINE", "line"));
-      targets.appendChild(link("https://www.facebook.com/sharer/sharer.php?u=" + text, "Facebook", "facebook"));
       targets.appendChild(link("https://twitter.com/intent/tweet?url=" + text, "X", "x"));
       if (navigator.share) {
         targets.appendChild(button(t("native"), "native", function () {

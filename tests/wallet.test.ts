@@ -86,8 +86,8 @@ describe("rewardsTodayCount / filter mapping", () => {
       row(50, "topup", "2026-10-26"),
     ];
     expect(rewardsTodayCount(rows, "2026-10-26")).toBe(1);
-    // Design rule: inviter earns +1 question (5 tokens) per friend, max
-    // +3 questions a day.
+    // Design rule: inviter earns +5 tokens per friend, max 3 friends
+    // (+15 tokens) a day.
     expect(REFERRAL_DAILY_CAP).toBe(3);
     expect(REFERRAL_DAILY_CAP * 5).toBe(15);
   });

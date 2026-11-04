@@ -25,7 +25,7 @@
       txReferral: "Invite bonus", txReferralFriend: "Joining bonus", txWelcome: "Welcome bonus", txPromo: "Promo bonus",
       available: "Available", used: "Used", expired: "Expired",
       friend: "Friend", waiting: "Waiting for first reading",
-      rewarded: "First reading · +1", joined: "Joined", read: "First reading done",
+      rewarded: "+5 tokens", joined: "Joined", read: "First reading done",
       counts: function (j, r, b, cap) { return j + " joined · " + r + " read · Bonus today " + b + "/" + cap; },
       copied: "Copied",
     },
@@ -35,7 +35,7 @@
       txReferral: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e0a\u0e27\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19", txReferralFriend: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e2a\u0e21\u0e31\u0e04\u0e23", txWelcome: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e15\u0e49\u0e2d\u0e19\u0e23\u0e31\u0e1a", txPromo: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e42\u0e1b\u0e23\u0e42\u0e21\u0e0a\u0e31\u0e19",
       available: "\u0e43\u0e0a\u0e49\u0e44\u0e14\u0e49", used: "\u0e43\u0e0a\u0e49\u0e41\u0e25\u0e49\u0e27", expired: "\u0e2b\u0e21\u0e14\u0e2d\u0e32\u0e22\u0e38",
       friend: "\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19", waiting: "\u0e23\u0e2d\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e14\u0e39\u0e14\u0e27\u0e07\u0e04\u0e23\u0e31\u0e49\u0e07\u0e41\u0e23\u0e01",
-      rewarded: "\u0e14\u0e39\u0e14\u0e27\u0e07\u0e04\u0e23\u0e31\u0e49\u0e07\u0e41\u0e23\u0e01\u0e41\u0e25\u0e49\u0e27 \u00b7 +1", joined: "\u0e2a\u0e21\u0e31\u0e04\u0e23\u0e41\u0e25\u0e49\u0e27", read: "\u0e14\u0e39\u0e14\u0e27\u0e07\u0e41\u0e23\u0e01\u0e41\u0e25\u0e49\u0e27",
+      rewarded: "+5 \u0e42\u0e17\u0e40\u0e04\u0e19", joined: "\u0e2a\u0e21\u0e31\u0e04\u0e23\u0e41\u0e25\u0e49\u0e27", read: "\u0e14\u0e39\u0e14\u0e27\u0e07\u0e41\u0e23\u0e01\u0e41\u0e25\u0e49\u0e27",
       counts: function (j, r, b, cap) { return "\u0e40\u0e02\u0e49\u0e32\u0e23\u0e48\u0e27\u0e21 " + j + " \u00b7 \u0e14\u0e39\u0e14\u0e27\u0e07 " + r + " \u00b7 \u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49 " + b + "/" + cap; },
       copied: "\u0e04\u0e31\u0e14\u0e25\u0e2d\u0e01\u0e41\u0e25\u0e49\u0e27",
     },
@@ -206,8 +206,9 @@
     if (list) {
       list.innerHTML = friends.map(function (f) {
         var initial = esc((f.name || ui.friend).charAt(0).toUpperCase() || "?");
+        var earned = f.status === "rewarded" || f.status === "read";
         var label = f.status === "rewarded" ? ui.rewarded : f.status === "read" ? ui.read : f.status === "joined" ? ui.joined : ui.waiting;
-        return '<li class="friend-row"><span class="friend-ava">' + initial + '</span><span class="friend-name">' + esc(f.name || ui.friend) + '</span><span class="friend-status">' + esc(label) + "</span></li>";
+        return '<li class="friend-row"><span class="friend-ava">' + initial + '</span><span class="friend-name">' + esc(f.name || ui.friend) + '</span><span class="friend-status ' + (earned ? "pill-earned" : "pill-waiting") + '">' + esc(label) + "</span></li>";
       }).join("");
     }
     var copyCode = $("copy-code");
@@ -219,9 +220,8 @@
         var text = msgEl ? msgEl.textContent : inviteData.link;
         var url = inviteData.link;
         var target = btn.getAttribute("data-share-invite");
-        var shareUrl = target === "line"
-          ? "https://social-plugins.line.me/lineit/share?url=" + encodeURIComponent(url) + "&text=" + encodeURIComponent(text)
-          : "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(url) + "&quote=" + encodeURIComponent(text);
+        if (target !== "line") return;
+        var shareUrl = "https://social-plugins.line.me/lineit/share?url=" + encodeURIComponent(url) + "&text=" + encodeURIComponent(text);
         window.open(shareUrl, "_blank", "noopener,width=640,height=560");
       });
     });

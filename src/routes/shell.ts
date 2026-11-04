@@ -177,31 +177,6 @@ export function streakChipHtml(streak: StreakInfo, ui: UiLang, href?: string): s
     : `<span class="streak-chip" data-streak title="${escapeHtml(title)}">${inner}</span>`;
 }
 
-/** Day / Night toggle button (client script above does the work). */
-export function themeToggleHtml(ui: UiLang): string {
-  const d = t(ui);
-  return `<button class="theme-toggle" type="button" data-theme-toggle data-day="${escapeHtml(d.themeDay)}" data-night="${escapeHtml(d.themeNight)}" aria-label="${escapeHtml(d.themeDay)} / ${escapeHtml(d.themeNight)}"><span data-theme-label></span></button>`;
-}
-
-/** \u0e44\u0e17\u0e22 / EN switcher: plain ?ui= links, works without JavaScript. */
-export function langToggleHtml(ui: UiLang, path: string): string {
-  const sep = path.includes("?") ? "&" : "?";
-  const items = UI_LANGS.map(
-    (l) =>
-      `<a class="lang-opt" lang="${l.code}" href="${escapeHtml(path)}${sep}ui=${l.code}"${l.code === ui ? ` aria-current="true"` : ""}>${l.code === "th" ? "\u0e44\u0e17\u0e22" : "EN"}</a>`,
-  ).join("");
-  return `<nav class="lang-toggle" aria-label="${escapeHtml(t(ui).interfaceLanguage)}">${items}</nav>`;
-}
-
-/** Site header: wordmark, streak chip, Day/Night + \u0e44\u0e17\u0e22/EN toggles.
- *  On narrow screens the toggles wrap under the wordmark. */
-/** Compact single language button for the header (full choice in footer). */
-export function langButtonHtml(ui: UiLang, path: string): string {
-  const other = UI_LANGS.find((l) => l.code !== ui) || UI_LANGS[0];
-  const sep = path.includes("?") ? "&" : "?";
-  return `<a class="lang-btn" lang="${other.code}" href="${escapeHtml(path)}${sep}ui=${other.code}" aria-label="${escapeHtml(t(ui).interfaceLanguage)}">${other.code.toUpperCase()}</a>`;
-}
-
 /** Auth entry in the header: Sign in (guests) -> Account (registered,
  *  swapped client-side by AUTH_LINK). Reuses the lang-btn pill style. */
 export function authLinkHtml(ui: UiLang): string {
@@ -327,8 +302,8 @@ export function drawerHtml(ui: UiLang): string {
 </aside>`;
 }
 
-/** Shared footer: tagline, entertainment line, legal links, one
- *  app-language control. */
+/** Shared footer (design boards): brand left, legal links right,
+ *  centered \u00a9 line. Language and theme live in the drawer. */
 /** 404 page (design board: "This page is not in the deck"). */
 export function notFoundPage(opts: { ui: UiLang; origin: string }): string {
   const d = t(opts.ui);
@@ -353,12 +328,7 @@ export function notFoundPage(opts: { ui: UiLang; origin: string }): string {
   });
 }
 
-export function siteFooterHtml(uiLang: UiLang = "en", path = "/"): string {
+export function siteFooterHtml(uiLang: UiLang = "en", _path = "/"): string {
   const d = t(uiLang);
-  const sep = path.includes("?") ? "&" : "?";
-  const items = UI_LANGS.map(
-    (l) =>
-      `<a class="foot-opt" lang="${l.code}" href="${escapeHtml(path)}${sep}ui=${l.code}"${l.code === uiLang ? ` aria-current="true"` : ""}>${escapeHtml(l.ownName)}</a>`,
-  ).join("");
-  return `<footer class="site-foot"><div class="footer-main"><div class="foot-brand"><span class="foot-mark">${LOGO_SVG}</span><b>TarotNice</b><p class="foot-tag">${escapeHtml(d.tagline)}</p></div><nav class="foot-links" aria-label="Footer"><a class="foot-link" href="/cards">${escapeHtml(d.cardsTitle)}</a><a class="foot-link" href="/terms">${escapeHtml(d.terms)}</a><a class="foot-link" href="/privacy">${escapeHtml(d.privacy)}</a><a class="foot-link" href="/contact">${escapeHtml(d.contact)}</a></nav><div class="foot-lang"><p class="foot-label">${escapeHtml(d.appLanguage)}</p><div class="foot-opts">${items}</div><p class="foot-theme">${themeToggleHtml(uiLang)}</p></div></div><div class="footer-bottom"><p class="foot-legal">\u00a9 2026 TarotNice</p></div></footer>`;
+  return `<footer class="site-foot"><div class="footer-main"><div class="foot-brand"><span class="foot-mark">${LOGO_SVG}</span><b>TarotNice</b></div><nav class="foot-links" aria-label="Footer"><a class="foot-link" href="/cards">${escapeHtml(d.cardsTitle)}</a><a class="foot-link" href="/terms">${escapeHtml(d.terms)}</a><a class="foot-link" href="/privacy">${escapeHtml(d.privacy)}</a><a class="foot-link" href="/contact">${escapeHtml(d.contact)}</a></nav></div><div class="footer-bottom"><p class="foot-legal">\u00a9 2026 TarotNice</p></div></footer>`;
 }

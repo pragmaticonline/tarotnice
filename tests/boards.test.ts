@@ -200,6 +200,21 @@ describe("invite + 404 boards", () => {
     expect(html).toContain('href="/terms"');
   });
 
+  it("invite board parity: purple hero card, share grid, 3-col stats, no Facebook", () => {
+    for (const ui of ["en", "th"] as const) {
+      const html = invitePage({ ui, origin: "" });
+      expect(html).toContain("hero-card invite-hero");
+      expect(html).toContain("share-grid");
+      expect(html).toContain("btn-line");
+      expect(html).toContain("btn-gold");
+      expect(html).toContain("invite-stats-card");
+      expect(html).toContain("stat-read");
+      expect(html).toContain('id="invite-code"');
+      expect(html).toContain('id="friend-list"');
+      expect(html).not.toMatch(/facebook/i);
+    }
+  });
+
   it("404 page is the not-in-the-deck board with both CTAs", () => {
     const html = notFoundPage({ ui: "en", origin: "" });
     expect(html).toContain("This page is not in the deck");

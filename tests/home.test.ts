@@ -31,14 +31,17 @@ describe("GET / (draw screen)", () => {
     expect(html).toContain('data-logo="ngern"');
     // No streak chip in the header anymore (streak lives in the drawer).
     expect(html).not.toContain("data-streak");
-    expect(html).toContain("data-theme-toggle");
-    expect(html).toContain("?ui=th");
-    // Mobile header stays uncluttered: no language or Day/Night in the
-    // header (both live in the footer; language is footer-only).
+    // Design boards: language and theme live only in the drawer, never
+    // in the header or footer.
+    expect(html).toContain("data-drawer-lang");
+    expect(html).toContain("data-theme-choice");
     const header = html.slice(html.indexOf("<header"), html.indexOf("</header>"));
     expect(header).not.toContain("data-theme-toggle");
     expect(header).not.toContain("ui=th");
-    expect(html).toContain("data-theme-toggle");
+    const footer = html.slice(html.indexOf("<footer"), html.indexOf("</footer>"));
+    expect(footer).not.toContain("data-theme-toggle");
+    expect(footer).not.toContain("ui=th");
+    expect(footer).not.toContain("foot-opts");
     // Account drawer (design update): header menu button opens it;
     // profile, tokens/streak, menu, preferences, settings sub-view.
     expect(html).toContain("data-drawer-open");
@@ -96,6 +99,15 @@ describe("GET / (draw screen)", () => {
     expect(withKey).toContain("cf-turnstile");
     expect(withKey).toContain('data-sitekey="0xTESTKEY"');
     expect(withKey).toContain("challenges.cloudflare.com/turnstile");
+  });
+
+  it("shuffle button sits above the suggested questions", () => {
+    const html = homePage({ origin: "https://tarotnice.com", uiLang: "en" });
+    const shuffleAt = html.indexOf('type="submit"');
+    const chipsAt = html.indexOf("suggest-chips");
+    expect(shuffleAt).toBeGreaterThanOrEqual(0);
+    expect(chipsAt).toBeGreaterThanOrEqual(0);
+    expect(shuffleAt).toBeLessThan(chipsAt);
   });
 
   it("shuffle button shows the 5-token cost with the gem, not an arrow", () => {
