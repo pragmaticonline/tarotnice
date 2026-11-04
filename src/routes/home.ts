@@ -75,6 +75,7 @@ ${inviteBanner}${steps}
 <textarea id="q" name="question" rows="3" maxlength="300" placeholder="${escapeHtml(d.placeholder)}"></textarea>
 <p class="q-count"><span id="q-count">0</span>/300</p>
 <p class="muted">${escapeHtml(d.notSureAsk)}</p>
+<p class="muted">${escapeHtml(d.eachReadingLine)}</p>
 <button class="btn btn-primary" type="submit">${escapeHtml(d.shuffleCards)} <span class="shuffle-cost" aria-hidden="true">| <span class="moonstone"></span> <span class="shuffle-price">5 ${escapeHtml(d.tokensUnit)}</span></span></button>
 <div class="suggest-chips">${TOPICS.map((topic) => {
     const samples: Record<string, [string, string]> = {
@@ -87,7 +88,6 @@ ${inviteBanner}${steps}
     const sample = samples[topic.code][ui === "th" ? 1 : 0];
     return `<button type="button" class="suggest-chip" data-suggest="${escapeHtml(sample)}" data-topic="${topic.code}">${escapeHtml(sample)}</button>`;
   }).join("")}</div>
-<p class="muted">${escapeHtml(d.eachReadingLine)}</p>
 ${opts.turnstileSiteKey ? `<div class="cf-turnstile" data-sitekey="${escapeHtml(opts.turnstileSiteKey)}" data-size="invisible"></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>` : ""}
 </form>
 ${quotaRow(ui)}
