@@ -10,6 +10,9 @@ describe("GET / (draw screen)", () => {
     const html = await res.text();
     // Ask form: label, 300-char textarea with board counter, Shuffle.
     expect(html).toContain("What would you like to ask today?");
+    // The label carries an id so follow-ups can retitle it to
+    // "This is a follow-up on ...".
+    expect(html).toContain('id="ask-label"');
     expect(html).toContain('maxlength="300"');
     expect(html).toContain('id="q-count"');
     expect(html).toContain('data-suggest');

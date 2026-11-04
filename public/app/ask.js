@@ -142,6 +142,7 @@
       crisis: "Support",
       retry: "Try again",
       again: "Ask again",
+      followUpOn: "This is a follow-up on \u201c{q}\u201d",
       blocked: "Please try again in a moment.",
       failed: "Ngern couldn't read the cards right now. Try again \u2014 your question is saved on the same cards.",
       noModel: "Readings are warming up. Your cards are drawn \u2014 please try again in a bit.",
@@ -166,6 +167,7 @@
       retry: "\u0e25\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07",
       disclaimer: "\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e08\u0e32\u0e01 Tarotnice \u0e21\u0e35\u0e44\u0e27\u0e49\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e1a\u0e31\u0e19\u0e40\u0e17\u0e34\u0e07 \u0e01\u0e32\u0e23\u0e17\u0e1a\u0e17\u0e27\u0e19\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07 \u0e41\u0e25\u0e30\u0e21\u0e38\u0e21\u0e21\u0e2d\u0e07\u0e2a\u0e48\u0e27\u0e19\u0e1a\u0e38\u0e04\u0e04\u0e25\u0e40\u0e17\u0e48\u0e32\u0e19\u0e31\u0e49\u0e19 \u0e44\u0e21\u0e48\u0e16\u0e37\u0e2d\u0e40\u0e1b\u0e47\u0e19\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33\u0e17\u0e32\u0e07\u0e27\u0e34\u0e0a\u0e32\u0e0a\u0e35\u0e1e\u0e43\u0e19\u0e14\u0e49\u0e32\u0e19\u0e43\u0e14 \u0e46 \u0e17\u0e31\u0e49\u0e07\u0e14\u0e49\u0e32\u0e19\u0e01\u0e32\u0e23\u0e41\u0e1e\u0e17\u0e22\u0e4c \u0e08\u0e34\u0e15\u0e27\u0e34\u0e17\u0e22\u0e32 \u0e01\u0e0e\u0e2b\u0e21\u0e32\u0e22 \u0e01\u0e32\u0e23\u0e40\u0e07\u0e34\u0e19 \u0e2b\u0e23\u0e37\u0e2d\u0e18\u0e38\u0e23\u0e01\u0e34\u0e08 \u0e42\u0e1b\u0e23\u0e14\u0e43\u0e0a\u0e49\u0e27\u0e34\u0e08\u0e32\u0e23\u0e13\u0e0d\u0e32\u0e13\u0e02\u0e2d\u0e07\u0e17\u0e48\u0e32\u0e19\u0e40\u0e2d\u0e07 \u0e01\u0e32\u0e23\u0e15\u0e31\u0e14\u0e2a\u0e34\u0e19\u0e43\u0e08\u0e2b\u0e23\u0e37\u0e2d\u0e01\u0e32\u0e23\u0e01\u0e23\u0e30\u0e17\u0e33\u0e43\u0e14 \u0e46 \u0e17\u0e35\u0e48\u0e40\u0e01\u0e34\u0e14\u0e08\u0e32\u0e01\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e19\u0e35\u0e49 \u0e16\u0e37\u0e2d\u0e40\u0e1b\u0e47\u0e19\u0e14\u0e38\u0e25\u0e22\u0e1e\u0e34\u0e19\u0e34\u0e08\u0e41\u0e25\u0e30\u0e04\u0e27\u0e32\u0e21\u0e23\u0e31\u0e1a\u0e1c\u0e34\u0e14\u0e0a\u0e2d\u0e1a\u0e02\u0e2d\u0e07\u0e1c\u0e39\u0e49\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19\u0e41\u0e15\u0e48\u0e40\u0e1e\u0e35\u0e22\u0e07\u0e1c\u0e39\u0e49\u0e40\u0e14\u0e35\u0e22\u0e27 Tarotnice \u0e44\u0e21\u0e48\u0e21\u0e35\u0e2a\u0e48\u0e27\u0e19\u0e40\u0e01\u0e35\u0e48\u0e22\u0e27\u0e02\u0e49\u0e2d\u0e07\u0e41\u0e25\u0e30\u0e44\u0e21\u0e48\u0e23\u0e31\u0e1a\u0e1c\u0e34\u0e14\u0e0a\u0e2d\u0e1a\u0e15\u0e48\u0e2d\u0e1c\u0e25\u0e25\u0e31\u0e1e\u0e18\u0e4c \u0e04\u0e27\u0e32\u0e21\u0e2a\u0e39\u0e0d\u0e40\u0e2a\u0e35\u0e22 \u0e2b\u0e23\u0e37\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e40\u0e2a\u0e35\u0e22\u0e2b\u0e32\u0e22\u0e43\u0e14 \u0e46 \u0e17\u0e35\u0e48\u0e40\u0e01\u0e34\u0e14\u0e02\u0e36\u0e49\u0e19\u0e08\u0e32\u0e01\u0e01\u0e32\u0e23\u0e19\u0e33\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e44\u0e1b\u0e43\u0e0a\u0e49 \u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e2a\u0e33\u0e04\u0e31\u0e0d \u0e40\u0e23\u0e32\u0e41\u0e19\u0e30\u0e19\u0e33\u0e43\u0e2b\u0e49\u0e1b\u0e23\u0e36\u0e01\u0e29\u0e32\u0e1c\u0e39\u0e49\u0e40\u0e0a\u0e35\u0e48\u0e22\u0e27\u0e0a\u0e32\u0e0d\u0e43\u0e19\u0e14\u0e49\u0e32\u0e19\u0e19\u0e31\u0e49\u0e19\u0e42\u0e14\u0e22\u0e15\u0e23\u0e07 Tarotnice \u0e2b\u0e27\u0e31\u0e07\u0e27\u0e48\u0e32\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e19\u0e35\u0e49\u0e08\u0e30\u0e0a\u0e48\u0e27\u0e22\u0e43\u0e2b\u0e49\u0e04\u0e38\u0e13\u0e40\u0e2b\u0e47\u0e19\u0e04\u0e27\u0e32\u0e21\u0e40\u0e1b\u0e47\u0e19\u0e44\u0e1b\u0e44\u0e14\u0e49\u0e43\u0e2b\u0e21\u0e48 \u0e46 \u0e41\u0e25\u0e30\u0e40\u0e02\u0e49\u0e32\u0e43\u0e08\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07\u0e21\u0e32\u0e01\u0e02\u0e36\u0e49\u0e19 \u0e2a\u0e38\u0e14\u0e17\u0e49\u0e32\u0e22\u0e41\u0e25\u0e49\u0e27 \u0e2d\u0e33\u0e19\u0e32\u0e08\u0e43\u0e19\u0e01\u0e32\u0e23\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e40\u0e2a\u0e49\u0e19\u0e17\u0e32\u0e07\u0e40\u0e1b\u0e47\u0e19\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e40\u0e2a\u0e21\u0e2d",
       again: "\u0e16\u0e32\u0e21\u0e43\u0e2b\u0e21\u0e48",
+      followUpOn: "\u0e19\u0e35\u0e48\u0e40\u0e1b\u0e47\u0e19\u0e04\u0e33\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d\u0e40\u0e19\u0e37\u0e48\u0e2d\u0e07\u0e02\u0e2d\u0e07 \u201c{q}\u201d",
       blocked: "\u0e02\u0e2d\u0e2d\u0e20\u0e31\u0e22 \u0e25\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07\u0e43\u0e19\u0e2d\u0e35\u0e01\u0e2a\u0e31\u0e01\u0e04\u0e23\u0e39\u0e48",
       failed: "\u0e40\u0e07\u0e34\u0e19\u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49 \u0e25\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e2d\u0e22\u0e39\u0e48\u0e01\u0e31\u0e1a\u0e44\u0e1e\u0e48\u0e0a\u0e38\u0e14\u0e40\u0e14\u0e34\u0e21",
       noModel: "\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e01\u0e33\u0e25\u0e31\u0e07\u0e40\u0e15\u0e23\u0e35\u0e22\u0e21\u0e15\u0e31\u0e27 \u0e44\u0e1e\u0e48\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e08\u0e31\u0e48\u0e27\u0e41\u0e25\u0e49\u0e27 \u0e25\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07\u0e43\u0e19\u0e2d\u0e35\u0e01\u0e2a\u0e31\u0e01\u0e04\u0e23\u0e39\u0e48",
@@ -182,6 +184,30 @@
   };
   function t(k) {
     return (STR[uiLang()] || STR.en)[k];
+  }
+
+  function stripEdgeQuotes(s) {
+    return String(s == null ? "" : s).replace(/^[\s\u201c\u201d"']+|[\s\u201c\u201d"']+$/g, "");
+  }
+  // The ask-form label names the reading a follow-up continues, so a
+  // follow-up never looks like a fresh question. The server-rendered
+  // default is captured on first use and restored for fresh asks.
+  function setFollowupLabel(original) {
+    var q = stripEdgeQuotes(original);
+    if (!q) return;
+    var lbl = document.getElementById("ask-label");
+    if (!lbl) return;
+    if (!lbl.dataset.followDefault) lbl.dataset.followDefault = lbl.textContent;
+    var tpl = t("followUpOn") || "This is a follow-up on \u201c{q}\u201d";
+    lbl.textContent = tpl.replace("{q}", q);
+  }
+  function resetAskLabel() {
+    var lbl = document.getElementById("ask-label");
+    if (lbl && lbl.dataset.followDefault) lbl.textContent = lbl.dataset.followDefault;
+  }
+  function currentReadingQuestion() {
+    var rq = document.getElementById("read-q");
+    return rq ? stripEdgeQuotes(rq.textContent) : "";
   }
 
   function countdown(resetsAt) {
@@ -396,6 +422,7 @@
     btn.addEventListener("click", function () {
       var q = document.getElementById("q");
       if (q) q.value = "";
+      resetAskLabel();
       var form = document.getElementById("ask-form");
       var submitBtn = form && form.querySelector('button[type="submit"]');
       if (submitBtn) submitBtn.disabled = false;
@@ -426,7 +453,9 @@
         mount.appendChild(disc);
       },
       onFollowUp: function (question) {
+        var orig = currentReadingQuestion();
         showStep(1);
+        setFollowupLabel(orig);
         var q = document.getElementById("q");
         if (q) {
           q.value = question;
@@ -776,6 +805,7 @@
       chip.addEventListener("click", function () {
         document.querySelectorAll("[data-suggest]").forEach(function (x) { x.classList.toggle("on", x === chip); });
         window.__tnTopic = chip.getAttribute("data-topic") || "general";
+        resetAskLabel();
         if (qEl) { qEl.value = chip.getAttribute("data-suggest") || ""; syncCount(); qEl.focus(); }
       });
     });
@@ -835,9 +865,11 @@
       var fq = document.getElementById("followup-q");
       var q = document.getElementById("q");
       if (fq && q && fq.value.trim()) {
+        var orig = currentReadingQuestion();
         q.value = fq.value.trim();
         var form2 = document.getElementById("ask-form");
         showStep(1);
+        setFollowupLabel(orig);
         if (form2) submit(form2);
       }
     });
