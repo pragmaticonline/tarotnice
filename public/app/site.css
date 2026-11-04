@@ -214,7 +214,7 @@ main>*+*{margin-top:16px}
 .reading-detail .rc p{margin:0;white-space:pre-wrap}
 .topic-chip{display:inline-block;background:var(--accent);color:var(--on-accent);border-radius:999px;padding:.25rem .8rem;font-size:.9rem}
 .question{font-family:var(--f-display);font-style:italic;font-size:1.25rem}
-#journal-form textarea{width:100%;box-sizing:border-box;min-height:5rem;border-radius:12px;padding:.7rem;border:2px solid var(--gold-dim);background:var(--card-face);color:var(--ink);font:inherit}
+#journal-form textarea{width:100%;box-sizing:border-box;min-height:5rem;border-radius:12px;padding:.7rem;border:2px solid var(--gold-dim);background:var(--card-face);color:var(--card-ink);font:inherit}
 .journal-ok{color:#146c2e;margin-left:.6rem}
 .actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem}
 .btn-danger{background:#b3261e;color:#fff}
@@ -256,7 +256,7 @@ main>*+*{margin-top:16px}
 /* Account prefs. */
 #prefs-form{margin-top:.5rem}
 #prefs-form label{display:block;margin-top:.6rem;font-weight:500}
-#prefs-form select,#prefs-form input{width:100%;box-sizing:border-box;padding:.6rem;border-radius:12px;border:2px solid var(--gold-dim);background:var(--card-face);color:var(--ink);font:inherit}
+#prefs-form select,#prefs-form input{width:100%;box-sizing:border-box;padding:.6rem;border-radius:12px;border:2px solid var(--gold-dim);background:var(--card-face);color:var(--card-ink);font:inherit}
 .recent-strip{display:flex;gap:.5rem;flex-wrap:wrap}
 .recent-card{margin:0;text-align:center}
 .recent-card img{width:56px;border-radius:5px;box-shadow:0 2px 6px rgba(0,0,0,.25)}

@@ -14,7 +14,8 @@ export function safeReturnPath(raw: string | null | undefined): string {
 }
 
 const STYLE = `<style>
-.auth-card{max-width:440px;margin:2.5rem auto;background:var(--card-face);border:1px solid var(--gold-dim);border-radius:16px;padding:1.75rem}
+.auth-card{max-width:440px;margin:2.5rem auto;background:var(--card-face);color:var(--card-ink);border:1px solid var(--gold-dim);border-radius:16px;padding:1.75rem}
+.auth-card .auth-or{color:var(--card-ink);opacity:.75}
 .auth-card h1{font-size:1.55rem;line-height:1.2;margin:0 0 .5rem}
 .auth-card p{line-height:1.5}
 .auth-card label{display:block;font-weight:700;margin:1rem 0 .3rem}

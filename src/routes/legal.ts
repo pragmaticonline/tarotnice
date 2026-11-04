@@ -10,16 +10,16 @@ export const SUPPORT_EMAIL = "support@tarotnice.com";
 
 const STYLE = `.legal-page{max-width:44rem;margin:0 auto;line-height:1.6}
 p.small{color:#76698f;font-size:.92rem}
-p.lede{color:#76698f;margin-top:-.4rem}
+p.lede{color:var(--muted)}
 .faq-h{font-size:1.25rem;margin:1.6rem 0 .7rem}
 .faq{background:#fffdf7;border:1px solid #e4d9c8;border-radius:14px;padding:.9rem 1.1rem;margin:.55rem 0}
-.faq summary{cursor:pointer;font-weight:700;list-style:none}
+.faq summary{cursor:pointer;font-weight:700;list-style:none;color:var(--card-ink)}
 .faq summary::-webkit-details-marker{display:none}
 .faq p{margin:.6rem 0 .1rem;color:#4c4368}
 .contact-card{background:#43356f;color:#f4eefc;border-radius:18px;padding:1.4rem 1.5rem;margin:1.6rem 0 1rem}
-.contact-card h2{margin:.1rem 0 .5rem;font-size:1.45rem}
+.contact-card h2{margin:.1rem 0 .5rem;font-size:1.45rem;color:#f4eefc}
 .contact-btn{display:inline-block;background:#d9a742;color:#241b3a;font-weight:800;text-decoration:none;padding:.7rem 1.1rem;border-radius:10px}
-.contact-links{color:#76698f;font-size:.95rem}`;
+.contact-links{color:var(--muted);font-size:.95rem}`;
 
 function shell(title: string, heading: string, inner: string, uiLang: UiLang, account?: HeaderAccount): string {
   const head = headerHtml({
