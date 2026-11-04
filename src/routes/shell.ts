@@ -209,25 +209,36 @@ export function authLinkHtml(ui: UiLang): string {
   return `<a class="lang-btn head-auth" data-auth-link data-account-label="${escapeHtml(d.account)}" href="/sign-in">${escapeHtml(d.signIn)}</a>`;
 }
 
-/** Token amount at the top of the screen (free + wallet). The count
- *  is filled client-side from /api/me/summary; hidden until then. */
-export function tokenChipHtml(ui: UiLang): string {
+/** Signed-in header facts, rendered on the server so the first
+ *  paint already shows the right initial and balance (the client
+ *  script repaints them from /api/me/summary anyway). */
+export type HeaderAccount = { initial: string; tokens: number | null } | null;
+
+/** Token amount at the top of the screen (free + wallet). A known
+ *  balance renders visibly on the server; otherwise the count stays
+ *  hidden until client hydration fills it. */
+export function tokenChipHtml(ui: UiLang, tokens?: number | null): string {
   const d = t(ui);
-  return `<button type="button" class="lang-btn token-chip" data-token-chip hidden aria-label="${escapeHtml(d.billingTitle)}"><span class="moonstone" aria-hidden="true"></span><b data-token-count>0</b></button>`;
+  if (tokens == null) {
+    return `<button type="button" class="lang-btn token-chip" data-token-chip hidden aria-label="${escapeHtml(d.billingTitle)}"><span class="moonstone" aria-hidden="true"></span><b data-token-count>0</b></button>`;
+  }
+  return `<button type="button" class="lang-btn token-chip" data-token-chip aria-label="${escapeHtml(d.billingTitle)}"><span class="moonstone" aria-hidden="true"></span><b data-token-count>${tokens}</b></button>`;
 }
 
 /** Header menu button (design: hamburger + avatar initial in a pill). */
-export function drawerButtonHtml(ui: UiLang): string {
+export function drawerButtonHtml(ui: UiLang, initial?: string): string {
   const d = t(ui);
-  return `<button class="menu-btn" type="button" data-drawer-open aria-label="${escapeHtml(d.yourAccount)}"><span aria-hidden="true">&#9776;</span><span class="avatar-dot" data-avatar-initial aria-hidden="true">T</span></button>`;
+  return `<button class="menu-btn" type="button" data-drawer-open aria-label="${escapeHtml(d.yourAccount)}"><span aria-hidden="true">&#9776;</span><span class="avatar-dot" data-avatar-initial aria-hidden="true">${escapeHtml(initial ?? "T")}</span></button>`;
 }
 
 export function headerHtml(opts: {
   ui: UiLang;
   streak: StreakInfo;
   path?: string;
+  account?: HeaderAccount;
 }): string {
-  return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${tokenChipHtml(opts.ui)}${drawerButtonHtml(opts.ui)}</header>`;
+  const account = opts.account ?? null;
+  return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${tokenChipHtml(opts.ui, account?.tokens ?? null)}${drawerButtonHtml(opts.ui, account?.initial)}</header>`;
 }
 
 /** Account drawer (design boards A-C): profile, tokens/streak, menu,

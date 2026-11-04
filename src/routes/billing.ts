@@ -5,7 +5,7 @@
 import { escapeHtml } from "../lib/html";
 import { fmt, t, type UiLang } from "../lib/i18n";
 import { PACK_LIST, tokensConfigured, type StripeEnv } from "../lib/stripe";
-import { headerHtml, pageShell, siteFooterHtml } from "./shell";
+import { headerHtml, pageShell, siteFooterHtml, type HeaderAccount } from "./shell";
 
 /** Same-origin return path for post-billing navigation. Single leading
  * slash only (mirrors nicelingo). */
@@ -35,6 +35,8 @@ export function billingPage(opts: {
   /** Current balances for the header (server-rendered, no flash). */
   balance: number;
   freeLeft: number;
+  /** Server-rendered header initial + token balance (no first-paint flash). */
+  account?: HeaderAccount;
 }): string {
   const d = t(opts.ui);
   const configured = tokensConfigured(opts.env);
@@ -54,7 +56,7 @@ export function billingPage(opts: {
   const totalTokens = opts.balance + opts.freeLeft;
   const enoughReadings = Math.floor(totalTokens / 5);
   const body = `<main>
-${headerHtml({ ui: opts.ui, streak: { current: 0, longest: 0, activeToday: false }, path: "/billing" })}
+${headerHtml({ ui: opts.ui, streak: { current: 0, longest: 0, activeToday: false }, path: "/billing", account: opts.account })}
 <h1 class="display">${escapeHtml(d.billingTitle)}</h1>
 <section class="balance-card" aria-label="${escapeHtml(d.billingBalance)}">
 <p class="balance-row"><span>${escapeHtml(d.billingBalance)}</span><span><span class="moonstone" aria-hidden="true"></span><b id="balance-value">${opts.balance}</b></span></p>
@@ -146,6 +148,8 @@ export function billingSuccessPage(opts: {
   returnTo: string;
   state: "verified" | "pending" | "failed";
   detail?: PaymentDetail | null;
+  /** Server-rendered header initial + token balance (no first-paint flash). */
+  account?: HeaderAccount;
 }): string {
   const d = t(opts.ui);
   const det = opts.detail;
@@ -158,7 +162,7 @@ export function billingSuccessPage(opts: {
 ${money || det.email ? `<p>${escapeHtml([money, det.email ? fmt(d.receiptSent, { email: det.email }) : ""].filter(Boolean).join(" \u00b7 "))}</p>` : ""}`
     : `<p>${escapeHtml(text)}</p>`;
   const body = `<main>
-${headerHtml({ ui: opts.ui, streak: { current: 0, longest: 0, activeToday: false }, path: "/billing" })}
+${headerHtml({ ui: opts.ui, streak: { current: 0, longest: 0, activeToday: false }, path: "/billing", account: opts.account })}
 <h1 class="display">${escapeHtml(d.successTitle)}</h1>
 ${detailHtml}
 <p><a class="btn btn-primary" href="${escapeHtml(opts.returnTo)}">${escapeHtml(d.continueQuestion)}</a></p>
@@ -173,10 +177,10 @@ ${detailHtml}
   });
 }
 
-export function billingCancelPage(opts: { ui: UiLang; origin: string; returnTo: string }): string {
+export function billingCancelPage(opts: { ui: UiLang; origin: string; returnTo: string; account?: HeaderAccount }): string {
   const d = t(opts.ui);
   const body = `<main>
-${headerHtml({ ui: opts.ui, streak: { current: 0, longest: 0, activeToday: false }, path: "/billing" })}
+${headerHtml({ ui: opts.ui, streak: { current: 0, longest: 0, activeToday: false }, path: "/billing", account: opts.account })}
 <h1 class="display">${escapeHtml(d.cancelTitle)}</h1>
 <p>${escapeHtml(d.cancelBoardText)}</p>
 <p><a class="btn btn-primary" href="/billing">${escapeHtml(d.tryAgain)}</a></p>
@@ -194,10 +198,10 @@ ${headerHtml({ ui: opts.ui, streak: { current: 0, longest: 0, activeToday: false
 
 /** Standalone Invite page (design board: Invite friends). Reuses the
  *  billing.js referrals wiring (same element ids, all guarded). */
-export function invitePage(opts: { ui: UiLang; origin: string }): string {
+export function invitePage(opts: { ui: UiLang; origin: string; account?: HeaderAccount }): string {
   const d = t(opts.ui);
   const body = `<main>
-${headerHtml({ ui: opts.ui, streak: { current: 0, longest: 0, activeToday: false }, path: "/invite" })}
+${headerHtml({ ui: opts.ui, streak: { current: 0, longest: 0, activeToday: false }, path: "/invite", account: opts.account })}
 <h1 class="display">${escapeHtml(d.inviteTitle)}</h1>
 <p class="invite-sub">${escapeHtml(d.invitePageSub)}</p>
 <p class="invite-code-label">${escapeHtml(d.inviteYourCode)}</p>

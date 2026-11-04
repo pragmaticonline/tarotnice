@@ -191,7 +191,7 @@ describe("prompt builder", () => {
       cards: [toPromptCard(card, false, "general")],
       prev: [], nickname: null,
     });
-    expect(system).toContain("concrete visual details");
+    expect(system).toContain("at most once in the whole reading");
   });
 
   it("tells the Thai prompt to spell every word completely (no dropped letters)", () => {
@@ -257,6 +257,14 @@ describe("pickSpread", () => {
       "Present",
       "Future",
     ]);
+  });
+
+  it("picks a timeline spread for about-to / going-to questions (en+th)", () => {
+    const future = ["Past", "Present", "Future"];
+    expect(pickSpread("What kind of disaster am I about to face?", "general", "en")).toEqual(future);
+    expect(pickSpread("What is going to happen with my job?", "general", "en")).toEqual(future);
+    expect(pickSpread("\u0e0a\u0e48\u0e27\u0e07\u0e19\u0e35\u0e49\u0e08\u0e30\u0e40\u0e08\u0e2d\u0e2d\u0e30\u0e44\u0e23", "general", "th")).toEqual(["\u0e2d\u0e14\u0e35\u0e15", "\u0e1b\u0e31\u0e08\u0e08\u0e38\u0e1a\u0e31\u0e19", "\u0e2d\u0e19\u0e32\u0e04\u0e15"]);
+    expect(pickSpread("\u0e01\u0e33\u0e25\u0e31\u0e07\u0e08\u0e30\u0e40\u0e01\u0e34\u0e14\u0e2d\u0e30\u0e44\u0e23\u0e02\u0e36\u0e49\u0e19\u0e01\u0e31\u0e1a\u0e07\u0e32\u0e19", "general", "th")).toEqual(["\u0e2d\u0e14\u0e35\u0e15", "\u0e1b\u0e31\u0e08\u0e08\u0e38\u0e1a\u0e31\u0e19", "\u0e2d\u0e19\u0e32\u0e04\u0e15"]);
   });
 
   it("falls back to a general spread", () => {
@@ -335,23 +343,44 @@ describe("pickSpread", () => {
     }
   });
 
-  it("requires the Overview to synthesize all three cards, not list them", () => {
+  it("requires the Overview to answer the question first, then tell one story", () => {
     const en = buildReadingPrompt({
       lang: "en", topic: "general", question: "Should I quit my job?",
       cards: [], prev: [], nickname: null,
     });
-    expect(en.system).toContain("Synthesize all three cards into one combined picture");
-    expect(en.system).toContain("do not walk through the cards one by one");
+    expect(en.system).toContain("Sentence 1 answers the question as asked");
+    expect(en.system).toContain("Sentences 2-4 tell the one story");
+    expect(en.system).toContain("You may name a card when it anchors the answer");
+    expect(en.system).toContain("No advice here");
     const th = buildReadingPrompt({
       lang: "th", topic: "general", question: "Should I quit my job?",
       cards: [], prev: [], nickname: null,
     });
-    expect(th.system).toContain("\u0e2a\u0e31\u0e07\u0e40\u0e04\u0e23\u0e32\u0e30\u0e2b\u0e4c\u0e44\u0e1e\u0e48\u0e17\u0e31\u0e49\u0e07\u0e2a\u0e32\u0e21\u0e43\u0e1a");
-    expect(th.system).toContain("\u0e2b\u0e49\u0e32\u0e21\u0e44\u0e25\u0e48\u0e40\u0e23\u0e35\u0e22\u0e07\u0e44\u0e1e\u0e48\u0e17\u0e35\u0e25\u0e30\u0e43\u0e1a");
+    expect(th.system).toContain("\u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04\u0e41\u0e23\u0e01\u0e15\u0e2d\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21");
+    expect(th.system).toContain("\u0e44\u0e21\u0e48\u0e21\u0e35\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33\u0e15\u0e23\u0e07\u0e19\u0e35\u0e49");
     expect(th.user).toContain("4-6");
-    expect(en.user).toContain("synthesize all three cards into one story");
-    expect(en.system).toContain("Do not name any card in the Overview");
-    expect(th.system).toContain("\u0e2b\u0e49\u0e32\u0e21\u0e40\u0e2d\u0e48\u0e22\u0e0a\u0e37\u0e48\u0e2d\u0e44\u0e1e\u0e48\u0e43\u0e19\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21");
+    expect(en.user).toContain("sentence 1 answers the question as asked");
+  });
+
+  it("builds a story map with one plot and one answer sentence", () => {
+    for (const lang of ["en", "th"] as const) {
+      const { system } = buildReadingPrompt({
+        lang, topic: "general", question: "Should I quit my job?",
+        cards: [], prev: [], nickname: null,
+      });
+      expect(system).toContain("story map");
+    }
+    const en = buildReadingPrompt({
+      lang: "en", topic: "general", question: "Should I quit my job?",
+      cards: [], prev: [], nickname: null,
+    });
+    expect(en.system).toContain("card 1 sets the scene, card 2 turns it, card 3 steadies or resolves it");
+    expect(en.system).toContain("Write that sentence first");
+    expect(en.system).toContain("never confirming a future event");
+    expect(en.system).toContain("at most once in the whole reading");
+    expect(en.system).toContain("Each section has one job and must add something new");
+    expect(en.system).toContain("with the condition that changes it");
+    expect(en.system).toContain("If a sentence would fit any other spread, rewrite it for this one");
   });
 
   it("gives both languages the same reasoning chain and combined guidance", () => {

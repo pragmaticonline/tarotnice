@@ -292,7 +292,7 @@ app.get("/", async (c) => {
       invite = { code, inviterName: null };
     }
   }
-  return c.html(homePage({ origin, uiLang: requestUiLang(c), turnstileSiteKey: c.env?.TURNSTILE_SITE_KEY, invite }));
+  return c.html(homePage({ origin, uiLang: requestUiLang(c), turnstileSiteKey: c.env?.TURNSTILE_SITE_KEY, invite, account: await pageAccount(c.env?.DB, await currentUser(c)) }));
 });
 
 app.get("/robots.txt", (c) => {
@@ -327,9 +327,9 @@ app.get("/sitemap.xml", async (c) => {
   );
 });
 
-app.get("/terms", (c) => c.html(termsPage(requestUiLang(c))));
-app.get("/privacy", (c) => c.html(privacyPage(requestUiLang(c))));
-app.get("/contact", (c) => c.html(contactPage(requestUiLang(c))));
+app.get("/terms", async (c) => c.html(termsPage(requestUiLang(c), await pageAccount(c.env?.DB, await currentUser(c)))));
+app.get("/privacy", async (c) => c.html(privacyPage(requestUiLang(c), await pageAccount(c.env?.DB, await currentUser(c)))));
+app.get("/contact", async (c) => c.html(contactPage(requestUiLang(c), await pageAccount(c.env?.DB, await currentUser(c)))));
 
 // Ask a question: quota + burst + Turnstile + IP-day backstops, then
 // the server draws 3 cards (stored as status='drawn' immediately).
@@ -1170,7 +1170,7 @@ app.get("/invite", async (c) => {
   if (!user || !isRegisteredUser(user)) {
     return c.redirect(`/sign-in?return=${encodeURIComponent("/invite")}`, 302);
   }
-  return c.html(invitePage({ ui: requestUiLang(c), origin: new URL(c.req.url).origin }));
+  return c.html(invitePage({ ui: requestUiLang(c), origin: new URL(c.req.url).origin, account: await pageAccount(c.env?.DB, user) }));
 });
 
 // Billing: token packs, history, invite panel. Registered users only;
@@ -1193,6 +1193,7 @@ app.get("/billing", async (c) => {
       env: c.env,
       balance: balance.wallet,
       freeLeft: balance.dailyLeft,
+      account: await pageAccount(c.env?.DB, user),
     }),
   );
 });
@@ -1235,13 +1236,13 @@ app.get("/billing/success", async (c) => {
       state = "failed";
     }
   }
-  return c.html(billingSuccessPage({ ui, origin, returnTo, state, detail }));
+  return c.html(billingSuccessPage({ ui, origin, returnTo, state, detail, account: await pageAccount(c.env?.DB, await currentUser(c)) }));
 });
 
-app.get("/billing/cancel", (c) => {
+app.get("/billing/cancel", async (c) => {
   c.header("Cache-Control", "private, no-store");
   const returnTo = safeReturnPath(c.req.query("return"));
-  return c.html(billingCancelPage({ ui: requestUiLang(c), origin: new URL(c.req.url).origin, returnTo }));
+  return c.html(billingCancelPage({ ui: requestUiLang(c), origin: new URL(c.req.url).origin, returnTo, account: await pageAccount(c.env?.DB, await currentUser(c)) }));
 });
 
 // Account pages (free registration saves readings across devices).
@@ -1275,6 +1276,32 @@ async function pageStreak(db: D1Database | undefined, userId: string | null) {
     return computeStreak(await d1TarotStore(db).activityDays(userId), bangkokDay());
   } catch {
     return { current: 0, longest: 0, activeToday: false };
+  }
+}
+
+/** Header account facts for pages: avatar initial + token total,
+ *  rendered on the server so the first paint is already right.
+ *  Guests (and any DB failure) fall back to the neutral defaults
+ *  the client script hydrates. Never throws. */
+async function pageAccount(
+  db: D1Database | undefined,
+  user: SessionUser | null,
+): Promise<{ initial: string; tokens: number | null } | null> {
+  if (!db || !user) return null;
+  try {
+    const store = d1TarotStore(db);
+    const [prefs, balance] = await Promise.all([
+      d1PrefsStore(db).get(user.id).catch(() => null),
+      walletState(store, user.id, bangkokDay()).catch(() => null),
+    ]);
+    const email = user.email ?? "";
+    const name = prefs?.nickname || (!user.isAnonymous && email ? email.split("@")[0] : "");
+    return {
+      initial: (name || "T").charAt(0).toUpperCase(),
+      tokens: balance ? Math.max(0, balance.wallet) + Math.max(0, balance.dailyLeft) : null,
+    };
+  } catch {
+    return null;
   }
 }
 
@@ -1320,6 +1347,7 @@ app.get("/history", async (c) => {
       ui,
       origin: new URL(c.req.url).origin,
       streak: await pageStreak(c.env.DB, user.id),
+      account: await pageAccount(c.env.DB, user),
       items: items.map((r) => ({
         id: r.id,
         day: r.day,
@@ -1375,6 +1403,7 @@ app.get("/history/:id", async (c) => {
       ui,
       origin: new URL(c.req.url).origin,
       streak: await pageStreak(c.env.DB, user.id),
+      account: await pageAccount(c.env.DB, user),
       reading: {
         id: reading.id,
         topicLabel: topicLabel(ui, reading.topic),
@@ -1556,14 +1585,24 @@ app.get("/progress", async (c) => {
       left: ownedDaily.length >= 78 ? undefined : fmt(d.leftToGo, { n: 78 - ownedDaily.length }),
     },
   ];
-  const calDays = lastNDays(days, 35);
+  // The grid always covers the labelled month (from its 1st to its
+  // last day), navigable with ?month=YYYY-MM. A trailing window no
+  // longer leaks the previous month under the current month's label.
+  const activeDays = new Set(days);
+  const calMonth = parseCalMonth(c.req.query("month")) ?? bangkokMonth(new Date(Date.now()));
+  const calDays = monthGridDays(activeDays, calMonth);
   const monthLabel = (() => {
     try {
       return new Intl.DateTimeFormat(ui === "th" ? "th-TH" : "en-GB", {
         month: "long", year: "numeric", timeZone: "Asia/Bangkok",
-      }).format(new Date(calDays[calDays.length - 1].date + "T00:00:00Z"));
+      }).format(new Date(`${calMonth}-02T00:00:00Z`));
     } catch { return ""; }
   })();
+  const calYear = Number(calMonth.slice(0, 4));
+  const calMon = Number(calMonth.slice(5, 7));
+  const shiftMonth = (d: Date) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+  const monthPrev = shiftMonth(new Date(Date.UTC(calYear, calMon - 2, 1)));
+  const monthNext = shiftMonth(new Date(Date.UTC(calYear, calMon, 1)));
   const entries = windowReadings
     .filter((r) => calDays.some((day) => day.date === r.day))
     .map((r) => ({
@@ -1579,9 +1618,12 @@ app.get("/progress", async (c) => {
       ui,
       origin: new URL(c.req.url).origin,
       streak,
+      account: await pageAccount(c.env.DB, user),
       days: calDays,
       entries,
       monthLabel,
+      monthPrev,
+      monthNext,
       owned: ownedDaily,
       cardNames,
       referrals,
@@ -1600,16 +1642,33 @@ app.get("/progress", async (c) => {
   );
 });
 
-/** Last N Bangkok days ending today, oldest first. */
-function lastNDays(days: string[], n: number): { date: string; active: boolean }[] {
-  const active = new Set(days);
-  // Bangkok "today": UTC + 7h, floored to a UTC day.
-  const todayMs = Date.now() + 7 * 3600 * 1000;
-  const today = new Date(todayMs);
-  today.setUTCHours(0, 0, 0, 0);
+/** Bangkok calendar month (YYYY-MM) for an instant. */
+export function bangkokMonth(now: Date): string {
+  const bkk = new Date(now.getTime() + 7 * 3600 * 1000);
+  return `${bkk.getUTCFullYear()}-${String(bkk.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+/** Validated ?month=YYYY-MM, or null when missing or malformed. */
+export function parseCalMonth(raw: string | undefined): string | null {
+  if (!raw) return null;
+  const m = /^(\d{4})-(\d{2})$/.exec(raw.trim());
+  if (!m) return null;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  if (y < 2000 || y > 2100 || mo < 1 || mo > 12) return null;
+  return `${m[1]}-${m[2]}`;
+}
+
+/** Every day of a Bangkok month, oldest first, flagged from the
+ *  activity set. The page pads blanks so the 1st lands on its
+ *  weekday (Monday-first grid). */
+export function monthGridDays(active: Set<string>, ym: string): { date: string; active: boolean }[] {
+  const y = Number(ym.slice(0, 4));
+  const mo = Number(ym.slice(5, 7));
+  const dim = new Date(Date.UTC(y, mo, 0)).getUTCDate();
   const out: { date: string; active: boolean }[] = [];
-  for (let back = n - 1; back >= 0; back--) {
-    const key = new Date(today.getTime() - back * 24 * 3600 * 1000).toISOString().slice(0, 10);
+  for (let day = 1; day <= dim; day++) {
+    const key = `${ym}-${String(day).padStart(2, "0")}`;
     out.push({ date: key, active: active.has(key) });
   }
   return out;
@@ -1623,7 +1682,10 @@ type PageCtx = {
   req: { url: string };
 };
 
-async function cardsIndex(c: PageCtx, ui: UiLang, prefix: string, userId: string | null) {
+async function cardsIndex(
+  c: PageCtx, ui: UiLang, prefix: string, userId: string | null,
+  account?: { initial: string; tokens: number | null } | null,
+) {
   const lang = ui === "th" ? "th" : "en";
   const cards = c.env?.DB ? await d1TarotStore(c.env.DB).listCards(lang) : [];
   const toCard = (card: (typeof cards)[number]) => ({
@@ -1658,12 +1720,19 @@ async function cardsIndex(c: PageCtx, ui: UiLang, prefix: string, userId: string
       streak: await pageStreak(c.env?.DB, userId),
       groups,
       prefix,
+      account,
     }),
   );
 }
 
-app.get("/cards", async (c) => cardsIndex(c, requestUiLang(c), "", (await currentUser(c))?.id ?? null));
-app.get("/th/cards", async (c) => cardsIndex(c, "th", "/th", (await currentUser(c))?.id ?? null));
+app.get("/cards", async (c) => {
+  const user = await currentUser(c);
+  return cardsIndex(c, requestUiLang(c), "", user?.id ?? null, await pageAccount(c.env?.DB, user));
+});
+app.get("/th/cards", async (c) => {
+  const user = await currentUser(c);
+  return cardsIndex(c, "th", "/th", user?.id ?? null, await pageAccount(c.env?.DB, user));
+});
 
 // Card detail: meanings by topic + prev/next; drafts carry noindex.
 // Served at /cards/:slug (UI language) and /th/cards/:slug (Thai).
@@ -1673,6 +1742,7 @@ async function cardDetail(
   prefix: string,
   slug: string,
   userId: string | null,
+  account?: { initial: string; tokens: number | null } | null,
 ) {
   const lang = ui === "th" ? "th" : "en";
   if (!c.env?.DB) return c.text("Not found", 404);
@@ -1696,6 +1766,7 @@ async function cardDetail(
       origin: new URL(c.req.url).origin,
       streak: await pageStreak(c.env.DB, userId),
       prefix,
+      account,
       card: {
         slug: card.slug,
         name: card.name,
@@ -1717,10 +1788,14 @@ async function cardDetail(
   );
 }
 
-app.get("/cards/:slug", async (c) =>
-  cardDetail(c, requestUiLang(c), "", c.req.param("slug"), (await currentUser(c))?.id ?? null));
-app.get("/th/cards/:slug", async (c) =>
-  cardDetail(c, "th", "/th", c.req.param("slug"), (await currentUser(c))?.id ?? null));
+app.get("/cards/:slug", async (c) => {
+  const user = await currentUser(c);
+  return cardDetail(c, requestUiLang(c), "", c.req.param("slug"), user?.id ?? null, await pageAccount(c.env?.DB, user));
+});
+app.get("/th/cards/:slug", async (c) => {
+  const user = await currentUser(c);
+  return cardDetail(c, "th", "/th", c.req.param("slug"), user?.id ?? null, await pageAccount(c.env?.DB, user));
+});
 
 // Better Auth handler (social callbacks, anonymous sign-in, session, ...).
 app.on(["GET", "POST"], "/api/auth/*", (c) => {

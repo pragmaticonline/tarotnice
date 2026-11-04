@@ -3,7 +3,7 @@
 // with noindex until the owner approves them (content/REVIEW.md).
 import { escapeHtml } from "../lib/html";
 import { t, type UiLang } from "../lib/i18n";
-import { brandHtml, headerHtml, pageShell, siteFooterHtml } from "./shell";
+import { brandHtml, headerHtml, pageShell, siteFooterHtml, type HeaderAccount } from "./shell";
 import type { StreakInfo } from "../lib/streaks";
 
 export type LibraryCard = {
@@ -24,10 +24,12 @@ export function cardsPage(opts: {
   groups: LibraryGroup[];
   /** "" for /cards, "/th" for the Thai URL tree. */
   prefix?: string;
+  /** Server-rendered header initial + token balance (no first-paint flash). */
+  account?: HeaderAccount;
 }): string {
   const d = t(opts.ui);
   const prefix = opts.prefix ?? "";
-  const head = headerHtml({ ui: opts.ui, streak: opts.streak, path: `${prefix}/cards` });
+  const head = headerHtml({ ui: opts.ui, streak: opts.streak, path: `${prefix}/cards`, account: opts.account });
   const total = opts.groups.reduce((n, g) => n + g.cards.length, 0);
   const tabs =
     `<button type="button" class="lib-tab on" data-lib-tab="all">${escapeHtml(d.allCards)} ${total}</button>` +
@@ -111,11 +113,13 @@ export function cardDetailPage(opts: {
   card: LibraryDetail;
   /** "" for /cards, "/th" for the Thai URL tree. */
   prefix?: string;
+  /** Server-rendered header initial + token balance (no first-paint flash). */
+  account?: HeaderAccount;
 }): string {
   const d = t(opts.ui);
   const card = opts.card;
   const prefix = opts.prefix ?? "";
-  const head = headerHtml({ ui: opts.ui, streak: opts.streak, path: `${prefix}/cards` });
+  const head = headerHtml({ ui: opts.ui, streak: opts.streak, path: `${prefix}/cards`, account: opts.account });
   const notes = card.notes
     .map((n) => `<section class="meaning-note"><h2>${escapeHtml(n.label)}</h2><p>${escapeHtml(n.text)}</p></section>`)
     .join("");

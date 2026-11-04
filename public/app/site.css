@@ -338,6 +338,7 @@ a{color:var(--accent)}
 .rtext .sec-follow .sec-title{font-family:var(--f-display);font-size:1.08rem;color:var(--accent);margin:0 0 .5rem}
 .follow-btns{display:flex;flex-direction:column;gap:.5rem}
 .follow-btn{text-align:left;background:var(--card-face);color:var(--card-ink);border:1.5px solid var(--gold-dim);border-radius:12px;padding:.7rem .9rem;font-family:var(--f-body);font-size:.98rem;cursor:pointer;min-height:44px}
+a.follow-btn{display:block;text-decoration:none}
 .disclaimer{margin-top:1.2rem;border-top:1px solid var(--gold-dim);padding-top:.8rem;color:var(--muted);font-size:.82rem;line-height:1.55}
 
 /* Reading page layout (mockup): eyebrow question, captioned cards,
@@ -541,6 +542,8 @@ button.token-chip{font:inherit;cursor:pointer;background:none}
 .journey-stats b{font-size:1.25rem}
 .cal-5wk{max-width:520px}
 .cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;max-width:520px;text-align:center;color:var(--muted);font-size:.82rem;margin-top:.4rem}
+.cal-nav{display:flex;gap:.5rem;margin:.2rem 0 .6rem}
+.cal-nav .btn{min-height:0;padding:.4rem .9rem}
 .cal-cell.blank{background:transparent;opacity:0}
 .cal-legend{display:flex;align-items:center;gap:.4rem;color:var(--muted);font-size:.9rem}
 .cal-cell.mini{width:14px;height:14px;aspect-ratio:auto;display:inline-block}

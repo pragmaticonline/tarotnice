@@ -3,7 +3,7 @@
 // non-refundable except where the law requires). The privacy page
 // states that questions are stored and how to delete them.
 import { escapeHtml } from "../lib/html";
-import { headerHtml, pageShell, siteFooterHtml } from "./shell";
+import { headerHtml, pageShell, siteFooterHtml, type HeaderAccount } from "./shell";
 import { t, type UiLang } from "../lib/i18n";
 
 export const SUPPORT_EMAIL = "support@tarotnice.com";
@@ -21,11 +21,12 @@ p.lede{color:#76698f;margin-top:-.4rem}
 .contact-btn{display:inline-block;background:#d9a742;color:#241b3a;font-weight:800;text-decoration:none;padding:.7rem 1.1rem;border-radius:10px}
 .contact-links{color:#76698f;font-size:.95rem}`;
 
-function shell(title: string, heading: string, inner: string, uiLang: UiLang): string {
+function shell(title: string, heading: string, inner: string, uiLang: UiLang, account?: HeaderAccount): string {
   const head = headerHtml({
     ui: uiLang,
     streak: { current: 0, longest: 0, activeToday: false },
     path: "/terms",
+    account,
   });
   return pageShell({
     title: `${title} \u00b7 TarotNice`,
@@ -40,7 +41,7 @@ function legalTabs(active: "terms" | "privacy", uiLang: UiLang): string {
   return `<nav class="legal-tabs"><a class="lib-tab${active === "terms" ? " on" : ""}" href="/terms">${escapeHtml(d.terms)}</a><a class="lib-tab${active === "privacy" ? " on" : ""}" href="/privacy">${escapeHtml(d.privacy)}</a></nav>`;
 }
 
-export function termsPage(uiLang: UiLang = "en"): string {
+export function termsPage(uiLang: UiLang = "en", account?: HeaderAccount): string {
   const d = t(uiLang);
   const en = [
     ["what", "What TarotNice is", "TarotNice offers tarot readings for entertainment, reflection and personal insight. Readings are written with the help of AI."],
@@ -67,10 +68,10 @@ export function termsPage(uiLang: UiLang = "en"): string {
   const body = legalTabs("terms", uiLang) +
     `<p class="small">${escapeHtml(updated)}</p>` + toc +
     sections.map((x, i) => `<section id="${x[0]}"><h2>${i + 1}. ${escapeHtml(x[1])}</h2><p>${escapeHtml(x[2])}</p></section>`).join("");
-  return shell(d.terms, d.terms, body, uiLang);
+  return shell(d.terms, d.terms, body, uiLang, account);
 }
 
-export function privacyPage(uiLang: UiLang = "en"): string {
+export function privacyPage(uiLang: UiLang = "en", account?: HeaderAccount): string {
   const d = t(uiLang);
   const body =
     uiLang === "th"
@@ -82,10 +83,10 @@ export function privacyPage(uiLang: UiLang = "en"): string {
 <p>Your questions are personal. They are never logged to analytics, and there are no third-party trackers. Readings are kept until you delete them.</p>
 <p>Sign-in is handled by our authentication provider with cookies that keep you signed in and remember your language choices.</p>
 <p>To delete everything, visit /account and choose \u201cdelete my data\u201d, or write to <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>.</p>`;
-  return shell(d.privacy, d.privacy, legalTabs("privacy", uiLang) + body, uiLang);
+  return shell(d.privacy, d.privacy, legalTabs("privacy", uiLang) + body, uiLang, account);
 }
 
-export function contactPage(uiLang: UiLang = "en"): string {
+export function contactPage(uiLang: UiLang = "en", account?: HeaderAccount): string {
   const d = t(uiLang);
   const faq: { q: string; a: string }[] =
     uiLang === "th"
@@ -118,5 +119,5 @@ export function contactPage(uiLang: UiLang = "en"): string {
     `<p>${escapeHtml(uiLang === "th" ? "\u0e04\u0e33\u0e16\u0e32\u0e21 \u0e23\u0e32\u0e22\u0e07\u0e32\u0e19\u0e1a\u0e31\u0e4a\u0e01 \u0e2b\u0e23\u0e37\u0e2d\u0e2d\u0e22\u0e32\u0e01\u0e40\u0e2a\u0e19\u0e2d\u0e41\u0e19\u0e30? \u0e1a\u0e2d\u0e01\u0e40\u0e23\u0e32\u0e27\u0e48\u0e32\u0e40\u0e01\u0e34\u0e14\u0e2d\u0e30\u0e44\u0e23\u0e02\u0e36\u0e49\u0e19 \u0e04\u0e38\u0e13\u0e17\u0e33\u0e2d\u0e30\u0e44\u0e23\u0e2d\u0e22\u0e39\u0e48\u0e15\u0e2d\u0e19\u0e19\u0e31\u0e49\u0e19 \u0e41\u0e25\u0e30\u0e43\u0e0a\u0e49\u0e2d\u0e38\u0e1b\u0e01\u0e23\u0e13\u0e4c\u0e2d\u0e30\u0e44\u0e23" : "Questions, a bug to report, or a suggestion? Tell us what happened, what you were doing, and which device you use.")}</p>` +
     `<p><a class="contact-btn" href="mailto:${SUPPORT_EMAIL}">&#9993; ${SUPPORT_EMAIL}</a></p></section>` +
     `<p class="contact-links"><a href="/terms">${escapeHtml(d.terms)}</a> · <a href="/privacy">${escapeHtml(d.privacy)}</a> · <a href="/cards">${escapeHtml(d.cardsTitle)}</a></p>`;
-  return shell(d.drawerHelp, d.drawerHelp, body, uiLang);
+  return shell(d.drawerHelp, d.drawerHelp, body, uiLang, account);
 }

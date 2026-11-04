@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import app from "../src/index";
-import { historyDetailPage, historyPage } from "../src/routes/history";
+import app, { bangkokMonth, monthGridDays, parseCalMonth } from "../src/index";
+import { historyDetailPage, historyPage, summaryPreview } from "../src/routes/history";
 import { progressPage } from "../src/routes/progress";
 import { cardDetailPage, cardsPage } from "../src/routes/library";
 import { badgeLandingPage } from "../src/routes/share";
@@ -95,6 +95,56 @@ describe("historyDetailPage", () => {
     expect(html).toContain("&lt;b&gt;q&lt;/b&gt;");
     expect(html).toContain("&lt;i&gt;j&lt;/i&gt;");
   });
+
+  it("parses labelled sections like the live reading and strips Summary", () => {
+    const aiText = [
+      "Overview: You stand at a crossroads.",
+      "1 \u00b7 Situation \u2014 **The Fool**\nA new beginning calls.",
+      "**Guidance:** Trust your own pace.",
+      "**What to do:**\n- Write it down\n- Tell a friend",
+      "**What next:** A quieter week follows.",
+      "**Explore further:**\n- What should I watch for?\n- How do I prepare?",
+      "Summary: Trust the slow build.",
+    ].join("\n\n");
+    const html = historyDetailPage({
+      ui: "en", origin: "https://tarotnice.com", streak: STREAK,
+      reading: { ...reading, aiText, summary: "Trust the slow build." },
+    });
+    expect(html).toContain("sec-guidance");
+    expect(html).toContain("Trust your own pace.");
+    expect(html).toContain("sec-advice");
+    expect(html).toContain("<ol>");
+    expect(html).toContain("<li>Write it down</li>");
+    expect(html).toContain("sec-follow");
+    expect(html).toContain("/?prefill=What%20should%20I%20watch%20for%3F");
+    expect(html).not.toContain("**Guidance:**");
+    expect(html).not.toContain("<p>**");
+    expect(html).not.toContain("- Write it down");
+    expect(html).not.toContain("Summary:");
+  });
+
+  it("parses Thai section labels too", () => {
+    const aiText = [
+      "\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21: \u0e04\u0e38\u0e13\u0e22\u0e37\u0e19\u0e2d\u0e22\u0e39\u0e48\u0e17\u0e35\u0e48\u0e17\u0e32\u0e07\u0e41\u0e22\u0e01",
+      "**\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33:** \u0e44\u0e27\u0e49\u0e43\u0e08\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07",
+      "**\u0e2a\u0e23\u0e38\u0e1b:** \u0e44\u0e27\u0e49\u0e43\u0e08\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07",
+    ].join("\n\n");
+    const html = historyDetailPage({
+      ui: "th", origin: "https://tarotnice.com", streak: STREAK,
+      reading: { ...reading, aiText, summary: null },
+    });
+    expect(html).toContain("sec-guidance");
+    expect(html).not.toContain("**\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33:**");
+    expect(html).not.toContain("\u0e2a\u0e23\u0e38\u0e1b:");
+  });
+
+  it("summaryPreview strips markdown and the Overview label", () => {
+    expect(summaryPreview("Trust the slow build.")).toBe("Trust the slow build.");
+    expect(summaryPreview("**Overview:** Trust the slow build.")).toBe("Trust the slow build.");
+    expect(summaryPreview("**\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21:** \u0e44\u0e27\u0e49\u0e43\u0e08\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07")).toBe("\u0e44\u0e27\u0e49\u0e43\u0e08\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07");
+    expect(summaryPreview(null)).toBeNull();
+    expect(summaryPreview("  ")).toBeNull();
+  });
 });
 
 describe("progressPage", () => {
@@ -130,6 +180,45 @@ describe("progressPage", () => {
     expect(html).toContain("2 / 78 collected");
     const deck = html.match(/deck-cell/g)?.length ?? 0;
     expect(deck).toBeGreaterThanOrEqual(78);
+  });
+
+  it("builds month helpers on Bangkok boundaries", () => {
+    expect(parseCalMonth("2026-11")).toBe("2026-11");
+    expect(parseCalMonth(" 2026-02 ")).toBe("2026-02");
+    expect(parseCalMonth(undefined)).toBeNull();
+    expect(parseCalMonth("nov")).toBeNull();
+    expect(parseCalMonth("2026-13")).toBeNull();
+    expect(parseCalMonth("1999-12")).toBeNull();
+    // UTC+7: 17:00Z on the 31st is already the 1st in Bangkok.
+    expect(bangkokMonth(new Date(Date.UTC(2025, 11, 31, 17, 0, 0)))).toBe("2026-01");
+    expect(bangkokMonth(new Date(Date.UTC(2025, 11, 31, 16, 59, 0)))).toBe("2025-12");
+    const nov = monthGridDays(new Set(["2026-11-04"]), "2026-11");
+    expect(nov).toHaveLength(30);
+    expect(nov[0].date).toBe("2026-11-01");
+    expect(nov[29].date).toBe("2026-11-30");
+    expect(nov.filter((d) => d.active).map((d) => d.date)).toEqual(["2026-11-04"]);
+    expect(monthGridDays(new Set(), "2026-02")).toHaveLength(28);
+  });
+
+  it("renders a full labelled month with padded weeks and arrows", () => {
+    const days = monthGridDays(new Set(["2026-11-04"]), "2026-11");
+    const html = progressPage({
+      ui: "en", origin: "https://tarotnice.com", streak: STREAK, days,
+      owned: [], cardNames: {},
+      referrals: { invited: 0, converted: 0 }, bonusOn: false,
+      milestones: [], readings: 1,
+      monthLabel: "November 2026", monthPrev: "2026-10", monthNext: "2026-12",
+    });
+    expect(html).toContain("November 2026");
+    // 30 day buttons, none from October or December.
+    expect(html.match(/data-cal-day="/g)?.length ?? 0).toBe(30);
+    expect(html).not.toContain("2026-10-");
+    expect(html).not.toContain("2026-12-");
+    // Nov 2026 starts on a Sunday: 6 lead + 6 trail blanks pad the grid.
+    expect(html.match(/cal-cell blank/g)?.length ?? 0).toBe(12);
+    expect(html).toContain('href="/progress?month=2026-10"');
+    expect(html).toContain('href="/progress?month=2026-12"');
+    expect(html).toContain('aria-label="Previous month"');
   });
 });
 

@@ -3,7 +3,7 @@
 // per-milestone Share buttons (Ngern praised in the sheet title).
 import { escapeHtml } from "../lib/html";
 import { fmt, t, type UiLang } from "../lib/i18n";
-import { brandHtml, headerHtml, pageShell, siteFooterHtml } from "./shell";
+import { brandHtml, headerHtml, pageShell, siteFooterHtml, type HeaderAccount } from "./shell";
 import type { StreakInfo } from "../lib/streaks";
 
 export type Milestone = { key: string; label: string; achieved: boolean; left?: string };
@@ -29,21 +29,33 @@ export function progressPage(opts: {
   /** Readings in the calendar window, for the selected-day list. */
   entries?: JourneyEntry[];
   monthLabel?: string;
+  /** Adjacent months (YYYY-MM) for the calendar arrows. */
+  monthPrev?: string;
+  monthNext?: string;
+  /** Server-rendered header initial + token balance (no first-paint flash). */
+  account?: HeaderAccount;
 }): string {
   const d = t(opts.ui);
-  const head = headerHtml({ ui: opts.ui, streak: opts.streak, path: "/progress" });
+  const head = headerHtml({ ui: opts.ui, streak: opts.streak, path: "/progress", account: opts.account });
   // Design: Last 5 weeks as a Mon-Sun grid (pad the first week with
   // blanks so columns line up with weekdays).
   const firstDow = opts.days.length ? new Date(opts.days[0].date + "T00:00:00Z").getUTCDay() : 1; // 0=Sun
   const leadBlanks = (firstDow + 6) % 7; // Monday-first offset
+  const trailBlanks = (7 - ((leadBlanks + opts.days.length) % 7)) % 7;
+  const blank = `<span class="cal-cell blank" aria-hidden="true"></span>`;
   const cells =
-    Array.from({ length: leadBlanks }, () => `<span class="cal-cell blank" aria-hidden="true"></span>`).join("") +
+    Array.from({ length: leadBlanks }, () => blank).join("") +
     opts.days
       .map(
         (day) =>
           `<button type="button" class="cal-cell${day.active ? " on" : ""}" data-cal-day="${escapeHtml(day.date)}" title="${escapeHtml(day.date)}" aria-label="${escapeHtml(day.date)}${day.active ? " ✓" : ""}">${Number(day.date.slice(8, 10))}</button>`,
       )
-      .join("");
+      .join("") +
+    Array.from({ length: trailBlanks }, () => blank).join("");
+  const calNav =
+    opts.monthPrev && opts.monthNext
+      ? `<div class="cal-nav"><a class="btn btn-outline" href="/progress?month=${escapeHtml(opts.monthPrev)}" aria-label="${escapeHtml(d.prevMonth)}">&lsaquo;</a><a class="btn btn-outline" href="/progress?month=${escapeHtml(opts.monthNext)}" aria-label="${escapeHtml(d.nextMonth)}">&rsaquo;</a></div>`
+      : "";
   const entries = (opts.entries ?? [])
     .map(
       (e) =>
@@ -80,7 +92,7 @@ export function progressPage(opts: {
       `<p class="journey-note">${escapeHtml(d.freezeNote)}</p></div>` +
       `<div class="journey-stats"><span><small>${escapeHtml(d.bestTitle)}</small><b>${opts.streak.longest}</b></span>` +
       `<span><small>${escapeHtml(d.historyTitle)}</small><b>${opts.readings}</b></span></div></section>` +
-      `<section class="panel-card"><h2>${escapeHtml(opts.monthLabel ?? d.lastWeeksTitle)}</h2>` +
+      `<section class="panel-card"><h2>${escapeHtml(opts.monthLabel ?? d.lastWeeksTitle)}</h2>${calNav}` +
       `<div class="cal-head" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>` +
       `<div class="cal cal-5wk" aria-label="${escapeHtml(d.calendarTitle)}">${cells}</div>` +
       `<p class="cal-legend"><span class="cal-cell on mini" aria-hidden="true"></span> ${escapeHtml(d.drewCardsLegend)} <span class="cal-cell mini" aria-hidden="true"></span> ${escapeHtml(d.noReadingLegend)}</p>` +

@@ -7,7 +7,7 @@ import { fmt, t, type UiLang } from "../lib/i18n";
 import { isInviteCode } from "../lib/invite";
 import { PACK_LIST } from "../lib/stripe";
 import { computeStreak, localDayString } from "../lib/streaks";
-import { headerHtml, pageShell, siteFooterHtml } from "./shell";
+import { headerHtml, pageShell, siteFooterHtml, type HeaderAccount } from "./shell";
 
 export type HomeOpts = {
   uiLang?: UiLang;
@@ -17,6 +17,8 @@ export type HomeOpts = {
   turnstileSiteKey?: string;
   /** Invite landing banner (design board 2) when arriving via /r/NICE-XXXX. */
   invite?: { code: string; inviterName: string | null } | null;
+  /** Server-rendered header initial + token balance (no first-paint flash). */
+  account?: HeaderAccount;
 };
 
 export type Topic = "love" | "career" | "money" | "health" | "general";
@@ -45,7 +47,7 @@ export function homePage(opts: HomeOpts = {}): string {
   const d = t(ui);
   const origin = opts.origin ?? "";
   const streak = computeStreak(opts.streakDays ?? [], localDayString());
-  const head = headerHtml({ ui, streak, path: "/" });
+  const head = headerHtml({ ui, streak, path: "/", account: opts.account });
   const steps = `<ol class="steps" aria-label="Steps">
 <li class="step on" data-step-ind="1"><span class="step-bar"></span><span class="step-label">1 ${escapeHtml(d.stepAsk)}</span></li>
 <li class="step" data-step-ind="2"><span class="step-bar"></span><span class="step-label">2 ${escapeHtml(d.stepDraw)}</span></li>
