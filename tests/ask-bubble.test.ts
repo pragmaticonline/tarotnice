@@ -69,6 +69,9 @@ async function runFollowUpFlow(postRemaining = 2, summary: unknown = null) {
   const formHandlers: Record<string, (e: unknown) => unknown> = {};
   const formControls: Record<string, unknown>[] = [];
   const docListeners: Record<string, ((e: unknown) => void)[]> = {};
+  // The top-up sheet is always in the page: pre-fix, any gate opened it
+  // (even for guests, whose only action inside is another sign-in link).
+  const packSheet = makeEl({ hidden: true });
   const form = makeEl({
     addEventListener: (type: string, fn: (e: unknown) => unknown) => {
       formHandlers[type] = fn;
@@ -98,6 +101,7 @@ async function runFollowUpFlow(postRemaining = 2, summary: unknown = null) {
     "ask-label": askLabel,
     "fresh-ask-row": freshRow,
     "fresh-ask-link": freshLink,
+    "pack-sheet": packSheet,
     "read-cards": makeEl(),
     reading: makeEl(),
     // Old bubble() routing reads step-draw visibility directly.
@@ -226,7 +230,7 @@ async function runFollowUpFlow(postRemaining = 2, summary: unknown = null) {
   if (!followUp) throw new Error("renderReading never ran");
   (followUp as { onFollowUp: (q: string) => void }).onFollowUp("Is it serious?");
   await new Promise((r) => setTimeout(r, 400));
-  return { guideAskBubble, guideBubble, question, created, askLabel, readQ, freshRow, freshHandlers, readingOpts: followUp, win: sandbox.window, location: sandbox.location as { href?: string }, formControls, docListeners };
+  return { guideAskBubble, guideBubble, question, created, askLabel, readQ, freshRow, freshHandlers, readingOpts: followUp, win: sandbox.window, location: sandbox.location as { href?: string }, formControls, docListeners, packSheet };
 }
 
 describe("ask flow step-1 bubble", () => {
@@ -346,7 +350,7 @@ describe("ask flow step-1 bubble", () => {
     expect(guideAskBubble.textContent).toBe("Hi, I'm Ngern. Ask me anything.");
   }, 15000);
 
-  it("sleep mode leaves the fresh-question link clickable while the rest of the form sleeps", async () => {
+  it("sleep mode leaves every form control enabled so taps reach the gates", async () => {
     const r = await runFollowUpFlow(0) as unknown as {
       formControls: Record<string, unknown>[];
       docListeners: Record<string, ((e: unknown) => void)[]>;
@@ -359,8 +363,9 @@ describe("ask flow step-1 bubble", () => {
     const onSummary = (r.docListeners["tarot:summary"] || [])[0];
     expect(onSummary).toBeTruthy();
     onSummary({ detail: { quota: { used: 3, limit: 3, resetsAt: null } } });
-    expect(ta.disabled).toBe(true);
-    expect(submit.disabled).toBe(true);
+    // Disabled controls swallow taps silently; the gates below must see them.
+    expect(ta.disabled).toBeFalsy();
+    expect(submit.disabled).toBeFalsy();
     expect(fresh.disabled).toBeFalsy();
   }, 15000);
 
@@ -404,6 +409,75 @@ describe("ask flow step-1 bubble", () => {
     expect(r.question.value).toBe("");
     expect(r.askLabel.textContent).toBe("What would you like to ask today?");
     expect(r.guideAskBubble.textContent).toBe("stale bubble");
+    expect(r.location.href).toBe("/sign-in?return=%2Fbilling");
+  }, 15000);
+
+  // Any tap inside the ask form — shuffle button, input box, or a
+  // suggested-question chip — takes the same document-capture path.
+  function inFormTap(prevented: { v: boolean }) {
+    return {
+      target: { closest: (sel: string) => (sel === "#ask-form" ? {} : null) },
+      preventDefault: () => { prevented.v = true; },
+    };
+  }
+
+  it("out-of-tokens guest tapping the ask form goes straight to sign-in", async () => {
+    const r = await runFollowUpFlow(1) as unknown as {
+      location: { href?: string };
+      docListeners: Record<string, ((e: unknown) => void)[]>;
+      packSheet: Record<string, unknown>;
+      win: Record<string, unknown>;
+    };
+    (r.win.TarotHome as { data: unknown }).data = {
+      tokens: { remaining: 0, freeTotal: 0 },
+      quota: { used: 3, limit: 3, resetsAt: null },
+      user: { isAnonymous: true },
+    };
+    const onDocClick = (r.docListeners["click"] || [])[0];
+    expect(onDocClick).toBeTruthy();
+    const prevented = { v: false };
+    onDocClick(inFormTap(prevented));
+    expect(prevented.v).toBe(true);
+    // Guests skip the top-up sheet: its only guest action is a
+    // sign-in link to the same destination.
+    expect(r.packSheet.hidden).toBe(true);
+    expect(r.location.href).toBe("/sign-in?return=%2Fbilling");
+  }, 15000);
+
+  it("out-of-tokens registered user tapping the ask form gets the top-up sheet", async () => {
+    const r = await runFollowUpFlow(1) as unknown as {
+      location: { href?: string };
+      docListeners: Record<string, ((e: unknown) => void)[]>;
+      packSheet: Record<string, unknown>;
+      win: Record<string, unknown>;
+    };
+    (r.win.TarotHome as { data: unknown }).data = {
+      tokens: { remaining: 0, freeTotal: 0 },
+      quota: { used: 3, limit: 3, resetsAt: null },
+      user: { isAnonymous: false },
+    };
+    const onDocClick = (r.docListeners["click"] || [])[0];
+    onDocClick(inFormTap({ v: false }));
+    expect(r.packSheet.hidden).toBe(false);
+    expect(r.location.href).toBeUndefined();
+  }, 15000);
+
+  it("sleeping guest tapping the ask form is routed to sign-in", async () => {
+    const r = await runFollowUpFlow(1) as unknown as {
+      location: { href?: string };
+      docListeners: Record<string, ((e: unknown) => void)[]>;
+      win: Record<string, unknown>;
+    };
+    (r.win.TarotHome as { data: unknown }).data = {
+      tokens: { remaining: 5 },
+      quota: { used: 3, limit: 3, resetsAt: null },
+      user: { isAnonymous: true },
+    };
+    // Quota-only summary (no tokens key): the quota branch sleeps.
+    const onSummary = (r.docListeners["tarot:summary"] || [])[0];
+    onSummary({ detail: { quota: { used: 3, limit: 3, resetsAt: null } } });
+    const onDocClick = (r.docListeners["click"] || [])[0];
+    onDocClick(inFormTap({ v: false }));
     expect(r.location.href).toBe("/sign-in?return=%2Fbilling");
   }, 15000);
 });

@@ -250,8 +250,9 @@
   }
 
   // Whether the ask step is parked in quota-exhausted sleep. Only
-  // sleepMode sets it; only wakeMode clears it — so a refresh that
-  // lands mid-submit never re-enables the in-flight submit button.
+  // sleepMode sets it; only wakeMode clears it. The form stays enabled
+  // throughout: the submit and document-click gates route every tap
+  // while gated, so no tap ever lands on a dead control.
   var sleeping = false;
   // The idle hint, captured at init so wakeMode can restore it after
   // sleepMode overwrote the bubble.
@@ -259,15 +260,6 @@
 
   function sleepMode(resetsAt) {
     sleeping = true;
-    var form = document.getElementById("ask-form");
-    if (form) {
-      form.querySelectorAll("textarea,button,input").forEach(function (n) {
-        // The fresh-start link stays clickable while asleep: a tap
-        // routes to top-up (or just clears the staged question) instead
-        // of landing on a dead control.
-        if (n.id !== "fresh-ask-link") n.disabled = true;
-      });
-    }
     sleepNgern();
     bubble(t("sleep"));
     var mount = null; // sleep state stays on step 1 now
@@ -278,18 +270,12 @@
     else bubble(t("sleep"));
   }
 
-  // Quota reset while the tab stayed open: undo sleepMode (re-enable
-  // the form, wake Ngern, restore the idle hint) so the fresh quota
-  // from TarotHome.refresh() is actually askable.
+  // Quota reset while the tab stayed open: undo sleepMode (wake
+  // Ngern, restore the idle hint) so the fresh quota from
+  // TarotHome.refresh() is actually askable.
   function wakeMode() {
     if (!sleeping) return;
     sleeping = false;
-    var form = document.getElementById("ask-form");
-    if (form) {
-      form.querySelectorAll("textarea,button,input").forEach(function (n) {
-        n.disabled = false;
-      });
-    }
     document.querySelectorAll("#guide .ngern-wrap, #guide-ask .ngern-wrap").forEach(function (wrap) {
       if (wrap.dataset.awake) wrap.innerHTML = wrap.dataset.awake;
     });
@@ -335,11 +321,15 @@
   }
   function gateInsufficient() {
     savePendingQuestion();
-    var sheet = document.getElementById("pack-sheet");
-    if (sheet) { openPackSheet(); return; }
     var d = summaryData();
     var reg = (d && d.user && !d.user.isAnonymous) || window.__tnRegistered;
-    location.href = reg ? "/billing" : "/sign-in?return=%2Fbilling";
+    // Guests go straight to sign-in: the sheet's only guest action is a
+    // sign-in link to the same destination. Registered users get the
+    // top-up sheet (packs + redeem) while it is in the page.
+    if (!reg) { location.href = "/sign-in?return=%2Fbilling"; return; }
+    var sheet = document.getElementById("pack-sheet");
+    if (sheet) { openPackSheet(); return; }
+    location.href = "/billing";
   }
 
   // --- Top-up pack sheet (design boards: Top up / pack dialog) ---
@@ -919,7 +909,10 @@
       }
     });
     document.addEventListener("click", function (e) {
-      if (!cannotAfford()) return;
+      // Shuffle, the input box, and the suggested-question chips all
+      // live in #ask-form and share this path. Sleeping taps count too:
+      // the form stays enabled so they arrive here instead of dying.
+      if (!cannotAfford() && !sleeping) return;
       var inForm = e.target && e.target.closest && e.target.closest("#ask-form");
       if (inForm) { e.preventDefault(); gateInsufficient(); }
     }, true);
