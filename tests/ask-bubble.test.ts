@@ -75,6 +75,8 @@ async function runFollowUpFlow(postRemaining = 2, summary: unknown = null) {
     querySelectorAll: () => [],
   });
   const question = makeEl({ value: "Will tomorrow go well?" });
+  const askLabel = makeEl({ textContent: "What would you like to ask today?" });
+  const readQ = makeEl();
   let followUp: { onFollowUp: (q: string) => void } | null = null;
   const byId: Record<string, unknown> = {
     "ask-form": form,
@@ -84,7 +86,8 @@ async function runFollowUpFlow(postRemaining = 2, summary: unknown = null) {
     "draw-topic": makeEl(),
     "draw-q": makeEl(),
     "read-eyebrow": makeEl(),
-    "read-q": makeEl(),
+    "read-q": readQ,
+    "ask-label": askLabel,
     "read-cards": makeEl(),
     reading: makeEl(),
     // Old bubble() routing reads step-draw visibility directly.
@@ -150,6 +153,11 @@ async function runFollowUpFlow(postRemaining = 2, summary: unknown = null) {
       addEventListener: () => {},
       createElement: () => {
         const e = makeEl();
+        const handlers: Record<string, (e: unknown) => unknown> = {};
+        e.addEventListener = (type: string, fn: (e: unknown) => unknown) => {
+          handlers[type] = fn;
+        };
+        e.handlers = handlers;
         created.push(e);
         return e;
       },
@@ -206,7 +214,7 @@ async function runFollowUpFlow(postRemaining = 2, summary: unknown = null) {
   if (!followUp) throw new Error("renderReading never ran");
   (followUp as { onFollowUp: (q: string) => void }).onFollowUp("Is it serious?");
   await new Promise((r) => setTimeout(r, 400));
-  return { guideAskBubble, guideBubble, question, created };
+  return { guideAskBubble, guideBubble, question, created, askLabel, readQ };
 }
 
 describe("ask flow step-1 bubble", () => {
@@ -247,9 +255,24 @@ describe("ask flow step-1 bubble", () => {
     expect(r.session.store["tarotnice:pending-question"]).toBe(r.question.value || "Will it go well?");
   }, 15000);
 
-  it("still shows Ask again when the last free question was just used (remaining 0)", async () => {
+  it("still shows Follow up when the last free question was just used (remaining 0)", async () => {
     const { created } = await runFollowUpFlow(0);
     const labels = created.map((e) => String(e.textContent || ""));
-    expect(labels.some((l) => l.startsWith("Ask again"))).toBe(true);
+    expect(labels.some((l) => l.startsWith("Follow up"))).toBe(true);
+  }, 15000);
+
+  it("Follow up reopens the ask form titled as a follow-up on the finished reading", async () => {
+    const { created, question, askLabel, readQ } = await runFollowUpFlow(0) as unknown as {
+      created: Record<string, unknown>[];
+      question: Record<string, unknown>;
+      askLabel: Record<string, unknown>;
+      readQ: Record<string, unknown>;
+    };
+    readQ.textContent = "\u201cWill tomorrow go well?\u201d";
+    const btn = created.find((e) => String(e.textContent || "").startsWith("Follow up"));
+    expect(btn).toBeTruthy();
+    ((btn as Record<string, unknown>).handlers as Record<string, (e: unknown) => unknown>).click({});
+    expect(question.value).toBe("");
+    expect(askLabel.textContent).toBe("This is a follow-up on \u201cWill tomorrow go well?\u201d");
   }, 15000);
 });
