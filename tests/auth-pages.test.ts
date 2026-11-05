@@ -21,6 +21,18 @@ describe("auth pages", () => {
     expect(html).not.toContain("Premium");
   });
 
+  it("register consent links open Terms/Privacy in a new tab", async () => {
+    // New tabs keep the typed invite code and form: no navigation away.
+    // (?ui= itself 302s to set the cookie, so pass the cookie directly.)
+    for (const cookie of ["", "nl_ui=th"]) {
+      const html = await (
+        await app.request("/register", { headers: cookie ? { cookie } : {} })
+      ).text();
+      expect(html).toContain('<a href="/terms" target="_blank"');
+      expect(html).toContain('<a href="/privacy" target="_blank"');
+    }
+  });
+
   it("sign-in offers Google and password reset", async () => {
     const html = await (await app.request("/sign-in")).text();
     expect(html).toContain("Continue with Google");
@@ -42,6 +54,18 @@ describe("auth pages", () => {
     const res = await app.request("/account");
     expect(res.status).toBe(302);
     expect(res.headers.get("location")).toContain("/sign-in");
+  });
+
+  it("password guards reference the in-scope variable, not bare v", async () => {
+    // Regression: passwordOk() once emitted `.test(v)` with no `v` in
+    // scope, so submit threw an unhandled rejection outside `try` and
+    // the button died with no message.
+    const register = await (await app.request("/register")).text();
+    expect(register).toContain(".test(password)");
+    expect(register).not.toContain(".test(v)");
+    const reset = await (await app.request("/reset-password?token=x")).text();
+    expect(reset).toContain(".test(pw)");
+    expect(reset).not.toContain(".test(v)");
   });
 
   it("renders password toggles as icon buttons, not text", async () => {

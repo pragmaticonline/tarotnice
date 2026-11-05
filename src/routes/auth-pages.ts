@@ -122,7 +122,7 @@ function passwordField(id: string, label: string, d: ReturnType<typeof t>, autoc
 }
 
 function passwordOk(v: string): string {
-  return `(/[A-Za-z]/.test(v) && /[0-9]/.test(v) && v.length >= 8)`;
+  return `(/[A-Za-z]/.test(${v}) && /[0-9]/.test(${v}) && ${v}.length >= 8)`;
 }
 
 export function registerPage(returnTo?: string | null, origin = "", uiLang: UiLang = "en", social: SocialOpts = {}): string {
@@ -153,7 +153,7 @@ ${returnField(ret)}
 <p class="auth-err" id="err" role="alert"></p>
 <button class="btn" type="submit">${escapeHtml(d.createAccountBtn)}</button>
 </form>
-<p class="auth-note">${escapeHtml(d.agreeLine)}</p>
+<p class="auth-note">${escapeHtml(d.agreePrefix)}<a href="/terms" target="_blank" rel="noopener">${escapeHtml(d.terms)}</a>${escapeHtml(d.agreeAnd)}<a href="/privacy" target="_blank" rel="noopener">${escapeHtml(d.privacy)}</a>${escapeHtml(d.agreeSuffix)}</p>
 ${PW_TOGGLE}
 <script>
 (function () {
