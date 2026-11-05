@@ -19,6 +19,7 @@ p.lede{color:var(--muted)}
 .contact-card{background:#43356f;color:#f4eefc;border-radius:18px;padding:1.4rem 1.5rem;margin:1.6rem 0 1rem}
 .contact-card h2{margin:.1rem 0 .5rem;font-size:1.45rem;color:#f4eefc}
 .contact-btn{display:inline-block;background:#d9a742;color:#241b3a;font-weight:800;text-decoration:none;padding:.7rem 1.1rem;border-radius:10px}
+.contact-btn .mail-ic{font-size:1.6em;line-height:1;vertical-align:-.12em;margin-right:.15em}
 .contact-links{color:var(--muted);font-size:.95rem}`;
 
 function shell(title: string, heading: string, inner: string, uiLang: UiLang, account?: HeaderAccount): string {
@@ -117,7 +118,7 @@ export function contactPage(uiLang: UiLang = "en", account?: HeaderAccount): str
     `<h2 class="faq-h">${escapeHtml(d.faqTitle)}</h2>${faqHtml}` +
     `<section class="contact-card"><h2>${escapeHtml(d.contactUsTitle)}</h2>` +
     `<p>${escapeHtml(uiLang === "th" ? "\u0e04\u0e33\u0e16\u0e32\u0e21 \u0e23\u0e32\u0e22\u0e07\u0e32\u0e19\u0e1a\u0e31\u0e4a\u0e01 \u0e2b\u0e23\u0e37\u0e2d\u0e2d\u0e22\u0e32\u0e01\u0e40\u0e2a\u0e19\u0e2d\u0e41\u0e19\u0e30? \u0e1a\u0e2d\u0e01\u0e40\u0e23\u0e32\u0e27\u0e48\u0e32\u0e40\u0e01\u0e34\u0e14\u0e2d\u0e30\u0e44\u0e23\u0e02\u0e36\u0e49\u0e19 \u0e04\u0e38\u0e13\u0e17\u0e33\u0e2d\u0e30\u0e44\u0e23\u0e2d\u0e22\u0e39\u0e48\u0e15\u0e2d\u0e19\u0e19\u0e31\u0e49\u0e19 \u0e41\u0e25\u0e30\u0e43\u0e0a\u0e49\u0e2d\u0e38\u0e1b\u0e01\u0e23\u0e13\u0e4c\u0e2d\u0e30\u0e44\u0e23" : "Questions, a bug to report, or a suggestion? Tell us what happened, what you were doing, and which device you use.")}</p>` +
-    `<p><a class="contact-btn" href="mailto:${SUPPORT_EMAIL}">&#9993; ${SUPPORT_EMAIL}</a></p></section>` +
+    `<p><a class="contact-btn" href="mailto:${SUPPORT_EMAIL}"><span class="mail-ic" aria-hidden="true">&#9993;</span> ${SUPPORT_EMAIL}</a></p></section>` +
     `<p class="contact-links"><a href="/terms">${escapeHtml(d.terms)}</a> · <a href="/privacy">${escapeHtml(d.privacy)}</a> · <a href="/cards">${escapeHtml(d.cardsTitle)}</a></p>`;
   return shell(d.drawerHelp, d.drawerHelp, body, uiLang, account);
 }

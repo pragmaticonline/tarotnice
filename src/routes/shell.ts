@@ -43,7 +43,7 @@ function paint(d){try{
  var fl=q("[data-drawer-free-line]");if(fl&&d.tokens)fl.textContent=(fl.getAttribute("data-template")||"").replace("{free}",String(Math.max(0,d.tokens.freeLeft||0)));
  var provs=(d.user&&d.user.providers)||[];var states=qa("[data-provider-state]");for(var pi=0;pi<states.length;pi++){var pv=states[pi].getAttribute("data-provider-state");var on=provs.indexOf(pv)>=0;states[pi].textContent=on?states[pi].getAttribute("data-on")||"Connected":"";var lb=states[pi].parentNode.querySelector("[data-link-provider]");if(lb)lb.hidden=on}
  var lineRow=q("[data-line-row]");if(lineRow)lineRow.hidden=!(d.authProviders&&d.authProviders.line);
- if(d.prefs){var nd=q("[data-notify='notifyDaily']");if(nd)nd.checked=d.prefs.notifyDaily!==false;var np=q("[data-notify='notifyPromo']");if(np)np.checked=!!d.prefs.notifyPromo}
+ if(d.prefs){var np=q("[data-notify='notifyPromo']");if(np)np.checked=!!d.prefs.notifyPromo}
  var ni=q("[data-drawer-nick]");if(ni&&nick)ni.value=nick;
  var av=qa("[data-avatar-initial]");for(var i=0;i<av.length;i++)av[i].textContent=(name||"T").charAt(0).toUpperCase();
  var guest=q("[data-drawer-guest]");if(guest)guest.hidden=!!reg;
@@ -284,11 +284,9 @@ export function drawerHtml(ui: UiLang): string {
     <p class="drawer-method" data-line-row hidden><span><b>L</b> LINE</span><span class="drawer-method-state" data-provider-state="line" data-on="${escapeHtml(d.connected)}"></span><button type="button" class="btn btn-outline" data-link-provider="line" hidden>${escapeHtml(d.connect)}</button></p>
   </div>
   <h3 class="drawer-h">${escapeHtml(d.notificationsTitle)}</h3>
-  <label class="drawer-toggle"><span><b>${escapeHtml(d.notifyDailyLabel)}</b><small>${escapeHtml(d.notifyDailySub)}</small></span><input type="checkbox" data-notify="notifyDaily"></label>
   <label class="drawer-toggle"><span><b>${escapeHtml(d.notifyPromoLabel)}</b><small>${escapeHtml(d.notifyPromoSub)}</small></span><input type="checkbox" data-notify="notifyPromo"></label>
   <h3 class="drawer-h">${escapeHtml(d.yourData)}</h3>
   <nav class="drawer-nav">
-    <a href="/api/me/export" download>${escapeHtml(d.downloadReadings)}</a>
     <button type="button" data-signout-all>${escapeHtml(d.signOutAll)}</button>
   </nav>
   <h3 class="drawer-h drawer-danger">${escapeHtml(d.dangerZone)}</h3>
