@@ -99,7 +99,7 @@ export const userPrefs = sqliteTable("user_prefs", {
   theme: text("theme"), // 'day' | 'night' | NULL (auto)
   nickname: text("nickname"),
   notifyDaily: integer("notify_daily").notNull().default(1),
-  notifyPromo: integer("notify_promo").notNull().default(0),
+  notifyPromo: integer("notify_promo").notNull().default(1),
   updatedAt: integer("updated_at").notNull(),
 });
 

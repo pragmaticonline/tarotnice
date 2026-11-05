@@ -68,7 +68,6 @@ document.addEventListener("click",function(e){var t=e.target&&e.target.closest?e
  if(t.closest("[data-drawer-wallet-open]")){showWallet();return}
  if(t.closest("[data-drawer-back]")){showMain();return}
  var lp=t.closest("[data-link-provider]");if(lp){var prov=lp.getAttribute("data-link-provider");fetch("/api/auth/link-social",{method:"POST",credentials:"include",headers:{"content-type":"application/json"},body:JSON.stringify({provider:prov,callbackURL:location.pathname})}).then(function(r){return r.json().catch(function(){return{}})}).then(function(data){if(data&&data.url)location.href=data.url}).catch(function(){});return}
- if(t.closest("[data-signout-all]")){fetch("/api/auth/revoke-sessions",{method:"POST",credentials:"include",headers:{"content-type":"application/json"},body:"{}"}).then(function(){location.href="/"}).catch(function(){location.href="/"});return}
  var th=t.closest("[data-theme-choice]");if(th){setTheme(th.getAttribute("data-theme-choice"));return}
  if(t.closest("[data-drawer-save]")){var ni=q("[data-drawer-nick]");var sv=t.closest("[data-drawer-save]");fetch("/api/me/prefs",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify({nickname:ni?ni.value:""}),credentials:"include"}).then(function(){if(sv){sv.textContent=sv.getAttribute("data-saved-label")||sv.textContent;setTimeout(function(){sv.textContent=sv.getAttribute("data-save-label")||sv.textContent},2000)}load()}).catch(function(){});return}
  if(t.closest("[data-drawer-signout]")){fetch("/api/auth/sign-out",{method:"POST",credentials:"include",headers:{"content-type":"application/json"},body:"{}"}).then(function(){location.href="/"}).catch(function(){location.href="/"});return}
@@ -285,10 +284,6 @@ export function drawerHtml(ui: UiLang): string {
   </div>
   <h3 class="drawer-h">${escapeHtml(d.notificationsTitle)}</h3>
   <label class="drawer-toggle"><span><b>${escapeHtml(d.notifyPromoLabel)}</b><small>${escapeHtml(d.notifyPromoSub)}</small></span><input type="checkbox" data-notify="notifyPromo"></label>
-  <h3 class="drawer-h">${escapeHtml(d.yourData)}</h3>
-  <nav class="drawer-nav">
-    <button type="button" data-signout-all>${escapeHtml(d.signOutAll)}</button>
-  </nav>
   <h3 class="drawer-h drawer-danger">${escapeHtml(d.dangerZone)}</h3>
   <p class="drawer-hint">${escapeHtml(d.deleteAccountCopy)}</p>
   <p><button class="btn btn-danger" type="button" data-drawer-delete>${escapeHtml(d.deleteData)}</button></p>

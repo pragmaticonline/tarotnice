@@ -20,7 +20,7 @@ const DEFAULTS: UserPrefs = {
   theme: null,
   nickname: null,
   notifyDaily: true,
-  notifyPromo: false,
+  notifyPromo: true,
 };
 
 function toPrefs(row: {
