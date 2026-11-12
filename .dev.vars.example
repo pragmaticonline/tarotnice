@@ -4,6 +4,8 @@ BETTER_AUTH_URL=http://localhost:8787
 BETTER_AUTH_SECRET=replace-with-32-plus-random-chars-for-local-dev
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
+LINE_CHANNEL_ID=
+LINE_CHANNEL_SECRET=
 # Local QA only: open lessons beyond Unit 1 + scoring on localhost
 # (qa-audio.mjs needs this), skipping the subscription gate.
 # Never set in production.

@@ -415,12 +415,19 @@ export function accountPage(
   email = "",
   uiLang: UiLang = "en",
   prefs: { lang: string; theme: string | null; nickname: string | null } = { lang: "en", theme: null, nickname: null },
+  social: SocialOpts = {},
 ): string {
   const d = t(uiLang);
+  const socialLinks = [
+    `<p><a class="btn btn-outline" href="/api/auth/sign-in/social?provider=google">${escapeHtml(d.continueWithGoogle)}</a></p>`,
+    ...(social.line
+      ? [`<p><a class="btn btn-outline" href="/api/auth/sign-in/social?provider=line">${escapeHtml(d.continueWithLine)}</a></p>`]
+      : []),
+  ].join("\n");
   const inner = `<h1>${escapeHtml(d.yourAccount)}</h1>
 <p class="auth-note" id="who">${email ? escapeHtml(fmt_signedIn(d, email)) : ""}</p>
 <p class="auth-note">${escapeHtml(d.saveReadingsLine)}</p>
-<p><a class="btn btn-outline" href="/api/auth/sign-in/social?provider=google">${escapeHtml(d.continueWithGoogle)}</a></p>
+${socialLinks}
 <h2>${escapeHtml(d.accountPrefs)}</h2>
 <form id="prefs-form">
 <label for="p-lang">${escapeHtml(d.appLanguage)}</label>

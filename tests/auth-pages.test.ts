@@ -43,11 +43,18 @@ describe("auth pages", () => {
   it("account page links Google, signs out, goes home", () => {
     const html = accountPage("", "ploy@example.com", "en");
     expect(html).toContain("Continue with Google");
+    expect(html).not.toContain("provider=line");
     expect(html).toContain("Sign out");
     expect(html).toContain("Back home");
     expect(html).toContain("Save your readings on any phone");
     expect(html).not.toContain("/students");
     expect(html).toContain("/billing"); // account drawer wallet link
+  });
+
+  it("account page links LINE only when configured", () => {
+    const html = accountPage("", "ploy@example.com", "en", { lang: "en", theme: null, nickname: null }, { line: true });
+    expect(html).toContain("Continue with LINE");
+    expect(html).toContain("provider=line");
   });
 
   it("account redirects anonymous visitors to sign-in", async () => {

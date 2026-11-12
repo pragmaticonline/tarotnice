@@ -1278,11 +1278,17 @@ app.get("/account", async (c) => {
   }
   const prefs = c.env?.DB ? await d1PrefsStore(c.env.DB).get(user.id) : null;
   return c.html(
-    accountPage(new URL(c.req.url).origin, user?.email ?? "", requestUiLang(c), {
-      lang: prefs?.lang ?? "en",
-      theme: prefs?.theme ?? null,
-      nickname: prefs?.nickname ?? null,
-    }),
+    accountPage(
+      new URL(c.req.url).origin,
+      user?.email ?? "",
+      requestUiLang(c),
+      {
+        lang: prefs?.lang ?? "en",
+        theme: prefs?.theme ?? null,
+        nickname: prefs?.nickname ?? null,
+      },
+      { line: lineConfigured(c.env) },
+    ),
   );
 });
 
