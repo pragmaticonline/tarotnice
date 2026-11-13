@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import app from "../src/index";
-import { accountPage, safeReturnPath } from "../src/routes/auth-pages";
+import { escapeHtml } from "../src/lib/html";
+import { t } from "../src/lib/i18n";
+import { accountPage, registerPage, safeReturnPath, signInPage } from "../src/routes/auth-pages";
 
 describe("safeReturnPath", () => {
   it("allows only same-origin absolute paths", () => {
@@ -73,6 +75,56 @@ describe("auth pages", () => {
     const reset = await (await app.request("/reset-password?token=x")).text();
     expect(reset).toContain(".test(pw)");
     expect(reset).not.toContain(".test(v)");
+  });
+
+  it("sign-in and register explain LINE email_not_found", async () => {
+    // Better Auth redirects OAuth failures (e.g. LINE withholding the
+    // email claim) back with ?error=email_not_found. The pages must
+    // render a friendly message, never the raw code.
+    for (const path of ["/sign-in?error=email_not_found", "/register?error=email_not_found"]) {
+      const html = await (await app.request(path)).text();
+      expect(html).toContain(t("en").lineEmailMissing);
+      expect(html).not.toContain("email_not_found");
+    }
+    const th = await (await app.request("/sign-in?error=email_not_found", { headers: { cookie: "nl_ui=th" } })).text();
+    expect(th).toContain(t("th").lineEmailMissing);
+    expect(th).not.toContain("email_not_found");
+  });
+
+  it("shows the LINE email consent notice under the LINE button", () => {
+    for (const uiLang of ["en", "th"] as const) {
+      const d = t(uiLang);
+      for (const html of [
+        signInPage(null, "", uiLang, { google: true, line: true }),
+        registerPage(null, "", uiLang, { google: true, line: true }),
+      ]) {
+        expect(html).toContain(d.continueWithLine);
+        expect(html).toContain("06C755");
+        // LINE button first, with the official-style logo on the left.
+        expect(html.indexOf('data-social="line"')).toBeLessThan(html.indexOf('data-social="google"'));
+        const lineBtn = html.slice(html.indexOf('data-social="line"'), html.indexOf("</button>", html.indexOf('data-social="line"')));
+        expect(lineBtn).toContain("<svg");
+        // LINE states: #06C755 base, 10% black overlay on hover, 30% on press.
+        expect(html).toContain("rgba(0,0,0,.1)");
+        expect(html).toContain("rgba(0,0,0,.3)");
+        expect(html).not.toContain("#05B34C");
+        // Consent notice: bold lead, green box, privacy link.
+        expect(html).toContain(`<strong>${escapeHtml(d.lineEmailLead)}</strong>`);
+        expect(html).toContain(escapeHtml(d.lineEmailPrefix));
+        expect(html).toContain(`<a href="/privacy" target="_blank" rel="noopener">${escapeHtml(d.lineEmailLink)}</a>`);
+        expect(html).toContain(escapeHtml(d.lineEmailSuffix));
+        expect(html).toContain("line-email-note");
+        expect(html).toContain("eef8f1");
+        expect(html).toContain("bfe6cc");
+      }
+      // No LINE button, no notice.
+      expect(signInPage(null, "", uiLang, { google: true })).not.toContain(escapeHtml(d.lineEmailPrefix));
+    }
+  });
+
+  it("ignores unknown error codes on auth pages", async () => {
+    const html = await (await app.request("/sign-in?error=zzz_evil")).text();
+    expect(html).not.toContain("zzz_evil");
   });
 
   it("renders password toggles as icon buttons, not text", async () => {

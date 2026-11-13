@@ -34,6 +34,11 @@ const STYLE = `<style>
 .pw-toggle{white-space:nowrap}
 .auth-or{text-align:center;color:var(--muted);margin:1rem 0 .2rem}
 .social-btn{width:100%;margin-top:.6rem}
+.social-btn[data-social="line"]{background:#06C755;border-color:#06C755;color:#fff;box-shadow:none}
+.social-btn[data-social="line"]:hover{background:#06C755;border-color:#06C755;color:#fff;box-shadow:inset 0 0 0 999px rgba(0,0,0,.1)}
+.social-btn[data-social="line"]:active,.social-btn[data-social="line"]:focus-visible{background:#06C755;border-color:#06C755;color:#fff;box-shadow:inset 0 0 0 999px rgba(0,0,0,.3)}
+.social-btn[data-social="line"] svg{width:1.5rem;height:auto;flex:none}
+.line-email-note{background:#eef8f1;border:1px solid #bfe6cc;border-radius:12px;padding:.8rem .9rem;font-size:.92rem;line-height:1.5;margin:.75rem 0 0}
 .linklike{background:none;border:none;color:var(--accent);font:inherit;cursor:pointer;text-decoration:underline;padding:0}
 </style>`;
 
@@ -63,25 +68,39 @@ function returnField(ret: string): string {
 
 export type SocialOpts = { google?: boolean; line?: boolean };
 
+/** Friendly text for whitelisted OAuth error codes. Unknown codes render nothing. */
+function socialErrorText(d: ReturnType<typeof t>, code: string | null | undefined): string | null {
+  if (code === "email_not_found") return d.lineEmailMissing;
+  return null;
+}
+
+const LINE_ICON = `<svg viewBox="0 0 40 36" width="24" height="22" aria-hidden="true"><path d="M20 3c-9.4 0-17 6-17 13.3 0 4.3 2.8 8 7 10.1-.3 1.1-1.1 3.9-3.9 4.9 0 0 4.1.3 7.7-2 .9.2 3.5.6 6.2.6 9.4 0 17-6 17-13.3S29.4 3 20 3z" fill="#fff"/><text x="20" y="20.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="9" font-weight="900" fill="#06C755">LINE</text></svg>`;
+
 function socialButton(provider: string, label: string): string {
-  return `<button class="btn btn-outline social-btn" data-social="${provider}" type="button">${escapeHtml(label)}</button>`;
+  const icon = provider === "line" ? `${LINE_ICON} ` : "";
+  return `<button class="btn btn-outline social-btn" data-social="${provider}" type="button">${icon}${escapeHtml(label)}</button>`;
 }
 
 function socialButtons(opts: SocialOpts, d: ReturnType<typeof t>): string {
   const btns: string[] = [];
-  if (opts.google !== false) btns.push(socialButton("google", d.continueWithGoogle));
   if (opts.line) btns.push(socialButton("line", d.continueWithLine));
+  if (opts.google !== false) btns.push(socialButton("google", d.continueWithGoogle));
   if (!btns.length) return "";
+  const lineNotice = opts.line
+    ? `<p class="line-email-note"><strong>${escapeHtml(d.lineEmailLead)}</strong> ${escapeHtml(d.lineEmailPrefix)}<a href="/privacy" target="_blank" rel="noopener">${escapeHtml(d.lineEmailLink)}</a>${escapeHtml(d.lineEmailSuffix)}</p>`
+    : "";
   return `${btns.join("\n")}
+${lineNotice}
 <p class="auth-or">${escapeHtml(d.orUseEmail)}</p>
 <script>
 document.querySelectorAll("[data-social]").forEach(function (b) {
   b.addEventListener("click", async function () {
     try {
+      var ret = document.getElementById("return").value || "/";
       const res = await fetch("/api/auth/sign-in/social", {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider: b.getAttribute("data-social"), callbackURL: document.getElementById("return").value || "/" }),
+        body: JSON.stringify({ provider: b.getAttribute("data-social"), callbackURL: ret, errorCallbackURL: location.pathname + "?return=" + encodeURIComponent(ret) }),
       });
       const data = await res.json().catch(() => ({}));
       if (data.url) { location.href = data.url; }
@@ -125,9 +144,10 @@ function passwordOk(v: string): string {
   return `(/[A-Za-z]/.test(${v}) && /[0-9]/.test(${v}) && ${v}.length >= 8)`;
 }
 
-export function registerPage(returnTo?: string | null, origin = "", uiLang: UiLang = "en", social: SocialOpts = {}): string {
+export function registerPage(returnTo?: string | null, origin = "", uiLang: UiLang = "en", social: SocialOpts = {}, errorCode?: string | null): string {
   const d = t(uiLang);
   const ret = safeReturnPath(returnTo);
+  const socialErr = socialErrorText(d, errorCode);
   const inner = `<h1>${escapeHtml(d.createAccountHeading)}</h1>
 <p>${escapeHtml(d.registerBenefit)}</p>
 <div class="invite-code-box" id="invite-box">
@@ -150,7 +170,7 @@ ${socialButtons(social, d)}
 <input id="email" type="email" autocomplete="email" required>
 ${passwordField("password", d.passwordLabel, d, "new-password")}
 ${returnField(ret)}
-<p class="auth-err" id="err" role="alert"></p>
+<p class="auth-err" id="err" role="alert">${socialErr ? escapeHtml(socialErr) : ""}</p>
 <button class="btn" type="submit">${escapeHtml(d.createAccountBtn)}</button>
 </form>
 <p class="auth-note">${escapeHtml(d.agreePrefix)}<a href="/terms" target="_blank" rel="noopener">${escapeHtml(d.terms)}</a>${escapeHtml(d.agreeAnd)}<a href="/privacy" target="_blank" rel="noopener">${escapeHtml(d.privacy)}</a>${escapeHtml(d.agreeSuffix)}</p>
@@ -267,9 +287,10 @@ document.getElementById("register-form").addEventListener("submit", async (e) =>
   return shell(`${d.createAccountHeading} \u00b7 TarotNice`, origin, inner, { uiLang });
 }
 
-export function signInPage(returnTo?: string | null, origin = "", uiLang: UiLang = "en", social: SocialOpts = {}): string {
+export function signInPage(returnTo?: string | null, origin = "", uiLang: UiLang = "en", social: SocialOpts = {}, errorCode?: string | null): string {
   const d = t(uiLang);
   const ret = safeReturnPath(returnTo);
+  const socialErr = socialErrorText(d, errorCode);
   const inner = `<h1>${escapeHtml(d.welcomeBack)}</h1>
 <p>${escapeHtml(d.moveGuestLine)}</p>
 ${socialButtons(social, d)}
@@ -279,7 +300,7 @@ ${socialButtons(social, d)}
 <label for="password">${escapeHtml(d.passwordLabel)} <a class="auth-forgot" href="/forgot-password">${escapeHtml(d.forgotPassword)}</a></label>
 <div class="pw-row"><input id="password" type="password" autocomplete="current-password" required>${pwToggleButton("password", d)}</div>
 ${returnField(ret)}
-<p class="auth-err" id="err" role="alert"></p>
+<p class="auth-err" id="err" role="alert">${socialErr ? escapeHtml(socialErr) : ""}</p>
 <button class="btn" type="submit">${escapeHtml(d.signIn)}</button>
 </form>
 ${PW_TOGGLE}

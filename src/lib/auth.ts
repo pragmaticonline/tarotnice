@@ -30,6 +30,29 @@ export function lineConfigured(env: AuthEnv | undefined | null): boolean {
   return Boolean(env?.LINE_CHANNEL_ID && env?.LINE_CHANNEL_SECRET);
 }
 
+/** Reserved domain for synthesized LINE identities: RFC 2606 guarantees
+ *  it can never be a real mailbox, so placeholders never collide with
+ *  real users and mail to them fails closed. */
+const LINE_PLACEHOLDER_DOMAIN = "line.invalid";
+
+/**
+ * Maps a LINE profile to local user attributes. LINE only includes the
+ * email claim when the channel has email permission and the user grants
+ * it; without an email Better Auth rejects the login outright. To let
+ * those users in anyway, synthesize a stable placeholder from the
+ * always-present `sub` claim. A granted email is never overridden, and
+ * without a subject we return nothing so the friendly email_not_found
+ * error still applies.
+ */
+export function lineProfileToUser(
+  profile: { sub?: unknown; email?: unknown } | null | undefined,
+): { email?: string } {
+  if (profile?.email) return {};
+  const sub = typeof profile?.sub === "string" ? profile.sub : "";
+  if (!sub) return {};
+  return { email: `${sub}@${LINE_PLACEHOLDER_DOMAIN}` };
+}
+
 /**
  * Move everything a guest accumulated onto the account they just
  * signed into (design board: "Readings you made as a guest on this
@@ -133,6 +156,7 @@ export function createAuth(env: AuthEnv) {
             line: {
               clientId: env.LINE_CHANNEL_ID as string,
               clientSecret: env.LINE_CHANNEL_SECRET as string,
+              mapProfileToUser: lineProfileToUser,
             },
           }
         : {}),

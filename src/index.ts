@@ -118,6 +118,11 @@ function clientIp(c: { req: { raw: Request; header: (n: string) => string | unde
   return c.req.header("cf-connecting-ip")?.trim() || "unknown";
 }
 
+// LINE Login is fully wired (provider, secrets, drawer, account page).
+// Set to false + redeploy to hide the buttons (e.g. while the LINE
+// channel is pending verification); true shows them.
+const LINE_LOGIN_VISIBLE = true;
+
 async function verifyTurnstile(secret: string, token: string, ip: string): Promise<boolean> {
   try {
     const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
@@ -1263,8 +1268,8 @@ app.get("/billing/cancel", async (c) => {
 });
 
 // Account pages (free registration saves readings across devices).
-app.get("/register", (c) => c.html(registerPage(c.req.query("return"), new URL(c.req.url).origin, requestUiLang(c), { google: true, line: lineConfigured(c.env) })));
-app.get("/sign-in", (c) => c.html(signInPage(c.req.query("return"), new URL(c.req.url).origin, requestUiLang(c), { google: true, line: lineConfigured(c.env) })));
+app.get("/register", (c) => c.html(registerPage(c.req.query("return"), new URL(c.req.url).origin, requestUiLang(c), { google: true, line: lineConfigured(c.env) && LINE_LOGIN_VISIBLE }, c.req.query("error"))));
+app.get("/sign-in", (c) => c.html(signInPage(c.req.query("return"), new URL(c.req.url).origin, requestUiLang(c), { google: true, line: lineConfigured(c.env) && LINE_LOGIN_VISIBLE }, c.req.query("error"))));
 app.get("/forgot-password", (c) => c.html(forgotPasswordPage(new URL(c.req.url).origin, requestUiLang(c))));
 app.get("/reset-password", (c) => c.html(resetPasswordPage(c.req.query("token") ?? "", new URL(c.req.url).origin, requestUiLang(c))));
 app.get("/account", async (c) => {
@@ -1287,7 +1292,7 @@ app.get("/account", async (c) => {
         theme: prefs?.theme ?? null,
         nickname: prefs?.nickname ?? null,
       },
-      { line: lineConfigured(c.env) },
+      { line: lineConfigured(c.env) && LINE_LOGIN_VISIBLE },
     ),
   );
 });
@@ -2046,7 +2051,7 @@ app.get("/api/me/summary", async (c) => {
       emailVerified: account?.emailVerified ?? false,
       providers: account?.providers ?? [],
     },
-    authProviders: { google: googleConfigured(c.env), line: lineConfigured(c.env) },
+    authProviders: { google: googleConfigured(c.env), line: lineConfigured(c.env) && LINE_LOGIN_VISIBLE },
     prefs: prefs ?? { lang: ui, theme: null, nickname: null, notifyDaily: true, notifyPromo: true },
     streak: computeStreak(days, today),
     quota: { used, limit: await effectiveLimit(c.env, store, user.id), resetsAt: nextBangkokMidnight() },
