@@ -11,6 +11,8 @@ export const REFERRAL_REWARD_TOKENS = 5;
 export const REFERRAL_FRIEND_BONUS_TOKENS = 5;
 /** Max rewarded friends per referrer per Bangkok day (+3 questions). */
 export const REFERRAL_DAILY_CAP = 3;
+/** One-time code sent when a user adds the LINE OA: one free question. */
+export const LINE_WELCOME_BONUS_TOKENS = 5;
 
 export type LedgerReason = "daily" | "topup" | "reading" | "referral" | "refund" | "welcome" | "promo";
 /** One-off welcome grant for a first registered sign-in (+2 questions). */

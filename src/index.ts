@@ -84,6 +84,7 @@ import {
 } from "./lib/invite";
 import {
   DAILY_FREE_TOKENS,
+  LINE_WELCOME_BONUS_TOKENS,
   REFERRAL_DAILY_CAP,
   REFERRAL_FRIEND_BONUS_TOKENS,
   REFERRAL_REWARD_TOKENS,
@@ -2528,7 +2529,7 @@ app.post("/api/line/webhook", async (c) => {
     return c.json({ error: "invalid event" }, 400);
   }
   if (!c.env?.DB) return c.json({ error: "unavailable" }, 503);
-  const orm = drizzle(c.env.DB, { schema: { lineFriends: schema.lineFriends } });
+  const orm = drizzle(c.env.DB, { schema: { lineFriends: schema.lineFriends, redeemCodes: schema.redeemCodes } });
   for (const ev of body.events) {
     const lineUserId = ev.source?.userId;
     if (!lineUserId) continue;
@@ -2539,23 +2540,26 @@ app.post("/api/line/webhook", async (c) => {
         .from(schema.lineFriends)
         .where(eq(schema.lineFriends.lineUserId, lineUserId))
         .limit(1);
-      if (existing.length && existing[0].welcomeCode) {
+      const isNewCode = !(existing.length && existing[0].welcomeCode);
+      const code = isNewCode ? newLineWelcomeCode() : (existing[0].welcomeCode as string);
+      if (existing.length) {
         // Replay (re-delivery or re-follow): revive silently, no new code.
         await orm
           .update(schema.lineFriends)
-          .set({ unfollowedAt: null, updatedAt: now })
+          .set({ unfollowedAt: null, welcomeCode: code, updatedAt: now })
           .where(eq(schema.lineFriends.lineUserId, lineUserId));
-        continue;
+      } else {
+        await orm
+          .insert(schema.lineFriends)
+          .values({ lineUserId, addedAt: now, welcomeCode: code, updatedAt: now });
       }
-      const code = newLineWelcomeCode();
+      // The welcome code must be redeemable: register it as a one-use
+      // promo so /api/me/redeem finds it (idempotent on replay).
       await orm
-        .insert(schema.lineFriends)
-        .values({ lineUserId, addedAt: now, welcomeCode: code, updatedAt: now })
-        .onConflictDoUpdate({
-          target: schema.lineFriends.lineUserId,
-          set: { unfollowedAt: null, welcomeCode: code, updatedAt: now },
-        });
-      if (ev.replyToken) await replyLineText(c.env, ev.replyToken, lineWelcomeText(code, "en"));
+        .insert(schema.redeemCodes)
+        .values({ code, bonusTokens: LINE_WELCOME_BONUS_TOKENS, expiresAt: null, maxUses: 1, active: 1, createdAt: now })
+        .onConflictDoNothing();
+      if (isNewCode && ev.replyToken) await replyLineText(c.env, ev.replyToken, lineWelcomeText(code, "en"));
     } else if (ev.type === "unfollow") {
       await orm
         .update(schema.lineFriends)
