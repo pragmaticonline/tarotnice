@@ -122,6 +122,16 @@ describe("auth pages", () => {
     }
   });
 
+  it("explains account_not_linked with fallback instructions", async () => {
+    for (const path of ["/sign-in?error=account_not_linked", "/sign-in?error=unable_to_link_account", "/register?error=account_not_linked"]) {
+      const html = await (await app.request(path)).text();
+      expect(html).toContain(t("en").accountAlreadyExists);
+      expect(html).not.toContain("account_not_linked");
+    }
+    const th = await (await app.request("/sign-in?error=account_not_linked", { headers: { cookie: "nl_ui=th" } })).text();
+    expect(th).toContain(t("th").accountAlreadyExists);
+  });
+
   it("ignores unknown error codes on auth pages", async () => {
     const html = await (await app.request("/sign-in?error=zzz_evil")).text();
     expect(html).not.toContain("zzz_evil");

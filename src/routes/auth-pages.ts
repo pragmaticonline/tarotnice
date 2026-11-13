@@ -71,6 +71,7 @@ export type SocialOpts = { google?: boolean; line?: boolean };
 /** Friendly text for whitelisted OAuth error codes. Unknown codes render nothing. */
 function socialErrorText(d: ReturnType<typeof t>, code: string | null | undefined): string | null {
   if (code === "email_not_found") return d.lineEmailMissing;
+  if (code === "account_not_linked" || code === "unable_to_link_account") return d.accountAlreadyExists;
   return null;
 }
 

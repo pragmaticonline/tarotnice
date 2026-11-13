@@ -146,6 +146,11 @@ export function createAuth(env: AuthEnv) {
         await sendEmail(env, { to: user.email, ...mail });
       },
     },
+    // LINE never claims email_verified, so implicit linking needs trusted
+    // providers. requireLocalEmailVerified stays at its default (true):
+    // an unverified existing account must link LINE explicitly from
+    // Account settings, never by implicit email match.
+    account: { accountLinking: { enabled: true, trustedProviders: ["google", "line"] } },
     socialProviders: {
       google: {
         clientId: env.GOOGLE_CLIENT_ID ?? "",
