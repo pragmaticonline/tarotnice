@@ -147,10 +147,12 @@ export function createAuth(env: AuthEnv) {
       },
     },
     // LINE never claims email_verified, so implicit linking needs trusted
-    // providers. requireLocalEmailVerified stays at its default (true):
-    // an unverified existing account must link LINE explicitly from
-    // Account settings, never by implicit email match.
-    account: { accountLinking: { enabled: true, trustedProviders: ["google", "line"] } },
+    // providers. requireLocalEmailVerified is off by owner decision:
+    // an existing unverified account auto-links on LINE email match and
+    // signs in. This accepts the takeover risk where a same-email LINE
+    // account can claim the account; the explicit-link fallback stays in
+    // Account settings for anyone who signed in another way.
+    account: { accountLinking: { enabled: true, trustedProviders: ["google", "line"], requireLocalEmailVerified: false } },
     socialProviders: {
       google: {
         clientId: env.GOOGLE_CLIENT_ID ?? "",

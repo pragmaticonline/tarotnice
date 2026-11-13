@@ -10,8 +10,9 @@ import { createAuth, lineProfileToUser, type AuthEnv } from "../src/lib/auth";
  *  A. brand-new LINE user → new account with the granted email
  *     (mapper: granted email untouched; fresh DB lookup means register)
  *  B. existing verified user → LINE links implicitly (trusted provider)
- *  C. existing unverified user → blocked, must link explicitly from
- *     Account settings (no takeover of unverified accounts)
+ *  C. existing unverified user → auto-links too (owner decision:
+ *     requireLocalEmailVerified false; honors email match without
+ *     demanding a password first)
  */
 function testAuthOptions() {
   const env = {
@@ -67,13 +68,13 @@ describe("LINE account linking (trusted providers)", () => {
     expect(blocked).toBe(false);
   });
 
-  it("C. existing unverified user is NOT implicitly linked", () => {
+  it("C. existing unverified user auto-links without a password step", () => {
     const linking = testAuthOptions();
-    // requireLocalEmailVerified must stay at its default (true).
-    expect(linking?.requireLocalEmailVerified ?? true).toBe(true);
+    // Owner decision: no password step for unverified matches.
+    expect(linking?.requireLocalEmailVerified).toBe(false);
     const blocked = shouldBlockImplicitLink(linking, { emailVerified: false }, { emailVerified: false }, "line");
-    expect(blocked).toBe(true);
-    // Without the trusted entry it would also block verified users —
+    expect(blocked).toBe(false);
+    // Without the trusted entry even verified users would block —
     // the config above is what removes that.
     const untrusted = shouldBlockImplicitLink(
       { enabled: true, trustedProviders: ["google"] },
