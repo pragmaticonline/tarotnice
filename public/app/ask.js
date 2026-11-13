@@ -468,7 +468,7 @@
     p.textContent = t("lineFriend");
     var add = document.createElement("a");
     add.className = "btn line-add-btn";
-    add.href = "https://line.me/R/add/@tarotnice";
+    add.href = "https://line.me/R/add/@677zpuat";
     add.target = "_blank";
     add.rel = "noopener";
     add.textContent = t("lineFriendCta");

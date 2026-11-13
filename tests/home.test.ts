@@ -148,7 +148,7 @@ describe("GET / (draw screen)", () => {
       const html = homePage({ uiLang: ui });
       const d = t(ui);
       expect(html).toContain("line-redeem-note");
-      expect(html).toContain('https://line.me/R/add/@tarotnice');
+      expect(html).toContain('https://line.me/R/add/@677zpuat');
       expect(html).toContain(d.lineRedeemLink);
       // Never a homepage banner before a reading: the note lives
       // inside the user-opened pack sheet.

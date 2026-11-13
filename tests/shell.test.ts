@@ -35,7 +35,7 @@ describe("headerHtml server-rendered account", () => {
     for (const ui of ["en", "th"] as const) {
       const html = drawerHtml(ui);
       const d = t(ui);
-      expect(html).toContain('href="https://line.me/R/add/@tarotnice"');
+      expect(html).toContain('href="https://line.me/R/add/@677zpuat"');
       expect(html).toContain(d.lineFriends);
       expect(html.indexOf("href=\"/invite\"")).toBeLessThan(html.indexOf("line-friends-link"));
       expect(html.indexOf("line-friends-link")).toBeLessThan(html.indexOf("href=\"/cards\""));
