@@ -241,6 +241,7 @@ export function drawerHtml(ui: UiLang): string {
     <a href="/history">${escapeHtml(d.historyTitle)} <span class="drawer-count" data-drawer-history-count hidden></span></a>
     <a href="/progress">${escapeHtml(d.drawerJourney)}</a>
     <a href="/invite">${escapeHtml(d.refTab)} <span class="drawer-pill">${escapeHtml(d.invitePill)}</span></a>
+    <a class="line-friends-link" href="https://line.me/R/add/@tarotnice" target="_blank" rel="noopener"><span class="drawer-line-icon" aria-hidden="true"></span>${escapeHtml(d.lineFriends)}</a>
     <a href="/cards">${escapeHtml(d.cardsTitle)}</a>
     <button type="button" data-drawer-settings-open>${escapeHtml(d.drawerSettings)} <span aria-hidden="true">&rsaquo;</span></button>
     <button type="button" data-drawer-wallet-open>${escapeHtml(d.drawerWallet)} <span class="drawer-sub"><span class="moonstone" aria-hidden="true"></span><span data-drawer-wallet-count>0</span></span></button>

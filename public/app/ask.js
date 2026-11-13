@@ -155,6 +155,8 @@
       registerFirstText: "Today's free question is used. Create a free account to use tokens for more questions — your reading moves into your account automatically.",
       registerCta: "Create free account",
       signInCta: "Sign in",
+      lineFriend: "Add \"Nong Ngern\" (Tarotnice) on LINE for a chance to receive free token codes on special occasions!",
+      lineFriendCta: "Add as a friend",
     },
     th: {
       need: "\u0e1e\u0e34\u0e21\u0e1e\u0e4c\u0e04\u0e33\u0e16\u0e32\u0e21\u0e01\u0e48\u0e2d\u0e19\u0e19\u0e30 \u0e41\u0e25\u0e49\u0e27\u0e04\u0e48\u0e2d\u0e22\u0e2a\u0e31\u0e1a\u0e44\u0e1e\u0e48",
@@ -180,6 +182,8 @@
       registerFirstText: "\u0e04\u0e33\u0e16\u0e32\u0e21\u0e1f\u0e23\u0e35\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49\u0e43\u0e0a\u0e49\u0e2b\u0e21\u0e14\u0e41\u0e25\u0e49\u0e27 \u0e2a\u0e23\u0e49\u0e32\u0e07\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e1f\u0e23\u0e35\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e43\u0e0a\u0e49\u0e42\u0e17\u0e40\u0e04\u0e19\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d \u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e17\u0e35\u0e48\u0e1c\u0e48\u0e32\u0e19\u0e21\u0e32\u0e08\u0e30\u0e22\u0e49\u0e32\u0e22\u0e40\u0e02\u0e49\u0e32\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e43\u0e2b\u0e49\u0e2d\u0e31\u0e15\u0e42\u0e19\u0e21\u0e31\u0e15\u0e34",
       registerCta: "\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e1f\u0e23\u0e35",
       signInCta: "\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a",
+      lineFriend: "\u0e40\u0e1e\u0e34\u0e48\u0e21 \"Nong Ngern\" (Tarotnice) \u0e40\u0e1b\u0e47\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e1a\u0e19 LINE \u0e23\u0e31\u0e1a\u0e42\u0e2d\u0e01\u0e32\u0e2a\u0e44\u0e14\u0e49\u0e23\u0e2b\u0e31\u0e2a\u0e42\u0e17\u0e40\u0e04\u0e47\u0e19\u0e1f\u0e23\u0e35\u0e43\u0e19\u0e42\u0e2d\u0e01\u0e32\u0e2a\u0e1e\u0e34\u0e40\u0e28\u0e29!",
+      lineFriendCta: "\u0e40\u0e1e\u0e34\u0e48\u0e40\u0e1b\u0e47\u0e19\u0e40\u0e1b\u0e47\u0e37\u0e48\u0e19\u0e40\u0e1b\u0e47\u0e37\u0e48\u0e19",
     },
   };
   function t(k) {
@@ -456,6 +460,21 @@
     });
     row.appendChild(btn);
     mount.appendChild(row);
+    // Post-reading LINE friend card: only after a reading, never on
+    // the homepage, never as an unsolicited pop-up.
+    var card = document.createElement("section");
+    card.className = "line-friend-card";
+    var p = document.createElement("p");
+    p.textContent = t("lineFriend");
+    var add = document.createElement("a");
+    add.className = "btn line-add-btn";
+    add.href = "https://line.me/R/add/@tarotnice";
+    add.target = "_blank";
+    add.rel = "noopener";
+    add.textContent = t("lineFriendCta");
+    card.appendChild(p);
+    card.appendChild(add);
+    mount.appendChild(card);
     var sd = summaryData();
     var guest = !sd || !sd.user || sd.user.isAnonymous;
     var gg = document.getElementById("guest-gate");

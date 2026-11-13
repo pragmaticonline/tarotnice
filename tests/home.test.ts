@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import app from "../src/index";
+import { t } from "../src/lib/i18n";
 import { homePage } from "../src/routes/home";
 
 describe("GET / (draw screen)", () => {
@@ -140,6 +141,19 @@ describe("GET / (draw screen)", () => {
   it("homePage() renders both languages directly", () => {
     expect(homePage({ uiLang: "en" })).toContain("What would you like to ask today?");
     expect(homePage({ uiLang: "th" })).toContain("\u0e2d\u0e22\u0e32\u0e01\u0e16\u0e32\u0e21\u0e2d\u0e30\u0e44\u0e23\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49?");
+  });
+
+  it("shows the LINE redeem prompt only inside the pack sheet", () => {
+    for (const ui of ["en", "th"] as const) {
+      const html = homePage({ uiLang: ui });
+      const d = t(ui);
+      expect(html).toContain("line-redeem-note");
+      expect(html).toContain('https://line.me/R/add/@tarotnice');
+      expect(html).toContain(d.lineRedeemLink);
+      // Never a homepage banner before a reading: the note lives
+      // inside the user-opened pack sheet.
+      expect(html.indexOf("pack-sheet")).toBeLessThan(html.indexOf("line-redeem-note"));
+    }
   });
 
   it("has no standalone follow-up input box (Follow up button covers it)", () => {

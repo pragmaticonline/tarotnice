@@ -123,6 +123,11 @@ main>*+*{margin-top:16px}
 .topic-chip{display:inline-block;font-size:.85rem;color:var(--muted);border:1px solid var(--gold-dim);border-radius:999px;padding:.15rem .7rem;margin:0 0 .4rem}
 .question{font-family:var(--f-display);font-style:italic;font-size:1.3rem;color:var(--accent);margin:0}
 .reading{display:flex;flex-direction:column;gap:.7rem;margin-top:.5rem}
+.line-friend-card{background:#eef8f1;border:1px solid #bfe6cc;border-radius:12px;padding:.9rem 1rem;margin-top:.6rem}
+.line-friend-card p{margin:0 0 .7rem;line-height:1.5}
+.line-add-btn{display:inline-flex;background:#06C755;border-color:#06C755;color:#fff}
+.line-redeem-note{color:#4c3d78;margin:.65rem 0 0;line-height:1.5}
+.drawer-line-icon{display:inline-block;width:.62rem;height:.62rem;border-radius:999px;background:#06C755;margin-right:.45rem}
 .rc{opacity:0;transform:translateY(6px);transition:opacity .5s,transform .5s;border-left:3px solid var(--gold-dim);padding:.4rem 0 .4rem .8rem}
 .rc.on{opacity:1;transform:none}
 .rc b{font-family:var(--f-display);color:var(--accent);font-size:1.15rem}

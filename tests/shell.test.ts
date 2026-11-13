@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { drawerButtonHtml, headerHtml, tokenChipHtml } from "../src/routes/shell";
+import { t } from "../src/lib/i18n";
+import { drawerButtonHtml, drawerHtml, headerHtml, tokenChipHtml } from "../src/routes/shell";
 
 const STREAK = { current: 3, longest: 9, activeToday: true };
 
@@ -28,6 +29,17 @@ describe("headerHtml server-rendered account", () => {
     const html = headerHtml({ ui: "en", streak: STREAK, path: "/cards", account: { initial: "P", tokens: null } });
     expect(html).toContain("data-token-chip hidden");
     expect(html).toContain('data-avatar-initial aria-hidden="true">P</span>');
+  });
+
+  it("offers LINE friends below Invite Friends", () => {
+    for (const ui of ["en", "th"] as const) {
+      const html = drawerHtml(ui);
+      const d = t(ui);
+      expect(html).toContain('href="https://line.me/R/add/@tarotnice"');
+      expect(html).toContain(d.lineFriends);
+      expect(html.indexOf("href=\"/invite\"")).toBeLessThan(html.indexOf("line-friends-link"));
+      expect(html.indexOf("line-friends-link")).toBeLessThan(html.indexOf("href=\"/cards\""));
+    }
   });
 
   it("escapes the initial", () => {

@@ -71,6 +71,7 @@ ${configured ? `<h2>${escapeHtml(d.packsTitle)}</h2>
 <h2>${escapeHtml(d.redeemTitle)}</h2>
 <p>${escapeHtml(d.redeemHint)}</p>
 <div class="redeem-row"><input id="redeem-code" maxlength="32" autocomplete="off" placeholder="NICE-XXXX"><button type="button" class="btn" id="redeem-apply">${escapeHtml(d.redeemBtn)}</button></div>
+<p class="line-redeem-note">${escapeHtml(d.lineRedeemPre)}<a href="https://line.me/R/add/@tarotnice" target="_blank" rel="noopener">${escapeHtml(d.lineRedeemLink)}</a>${escapeHtml(d.lineRedeemSuff)}</p>
 <p class="auth-err" id="redeem-msg" role="alert"></p>
 </section>
 <script>window.__tnRedeemStrings=${JSON.stringify({ ok: d.redeemOk, invalid: d.redeemInvalid, expired: d.redeemExpired, used: d.redeemUsed, own: d.redeemOwn })};window.__tnTxStrings=${JSON.stringify({ read: d.readThisReading, receipt: d.viewReceipt })};</script>

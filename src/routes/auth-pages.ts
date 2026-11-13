@@ -101,7 +101,7 @@ document.querySelectorAll("[data-social]").forEach(function (b) {
       const res = await fetch("/api/auth/sign-in/social", {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider: b.getAttribute("data-social"), callbackURL: ret, errorCallbackURL: location.pathname + "?return=" + encodeURIComponent(ret) }),
+        body: JSON.stringify({ provider: b.getAttribute("data-social"), callbackURL: ret, errorCallbackURL: location.pathname + "?return=" + encodeURIComponent(ret), ...(b.getAttribute("data-social") === "line" ? { additionalParams: { bot_prompt: "normal" } } : {}) }),
       });
       const data = await res.json().catch(() => ({}));
       if (data.url) { location.href = data.url; }

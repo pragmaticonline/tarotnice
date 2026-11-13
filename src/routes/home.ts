@@ -118,6 +118,7 @@ ${opts.turnstileSiteKey ? `<div class="cf-turnstile" data-sitekey="${escapeHtml(
 <h3>${escapeHtml(d.redeemTitle)}</h3>
 <p>${escapeHtml(d.redeemHint)}</p>
 <div class="redeem-row"><input id="sheet-code" maxlength="32" autocomplete="off" placeholder="NICE-XXXX"><button type="button" class="btn btn-outline" id="sheet-apply">${escapeHtml(d.redeemBtn)}</button></div>
+<p class="line-redeem-note">${escapeHtml(d.lineRedeemPre)}<a href="https://line.me/R/add/@tarotnice" target="_blank" rel="noopener">${escapeHtml(d.lineRedeemLink)}</a>${escapeHtml(d.lineRedeemSuff)}</p>
 <p class="auth-err" id="sheet-code-msg" role="alert"></p>
 <p id="sheet-code-applied" hidden></p>
 <p><button type="button" class="linklike" id="sheet-code-remove" hidden>${escapeHtml(d.removeBtn)}</button></p>

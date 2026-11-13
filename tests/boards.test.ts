@@ -3,7 +3,7 @@ import { t, type UiLang } from "../src/lib/i18n";
 import { maskName } from "../src/lib/invite";
 import { sessionReceipt, type CheckoutSession } from "../src/lib/stripe";
 import { forgotPasswordPage, resetPasswordPage, signInPage } from "../src/routes/auth-pages";
-import { billingCancelPage, billingSuccessPage, invitePage } from "../src/routes/billing";
+import { billingCancelPage, billingPage, billingSuccessPage, invitePage } from "../src/routes/billing";
 import { termsPage } from "../src/routes/legal";
 import { cardDetailPage, cardsPage, type LibraryDetail } from "../src/routes/library";
 import { notFoundPage } from "../src/routes/shell";
@@ -221,6 +221,19 @@ describe("invite + 404 boards", () => {
     expect(html).toContain("ngern-sleeping.svg");
     expect(html).toContain("Ask a question");
     expect(html).toContain("Browse the cards");
+  });
+});
+
+describe("LINE redeem prompt", () => {
+  it("appears below the redeem field on the billing page", () => {
+    for (const ui of ["en", "th"] as const) {
+      const html = billingPage({ ui, origin: "", env: {}, balance: 0, freeLeft: 0 });
+      const d = t(ui);
+      expect(html).toContain("line-redeem-note");
+      expect(html).toContain('href="https://line.me/R/add/@tarotnice"');
+      expect(html).toContain(d.lineRedeemLink);
+      expect(html.indexOf('id="redeem-code"')).toBeLessThan(html.indexOf("line-redeem-note"));
+    }
   });
 });
 

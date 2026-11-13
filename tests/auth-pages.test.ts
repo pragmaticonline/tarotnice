@@ -100,6 +100,9 @@ describe("auth pages", () => {
       ]) {
         expect(html).toContain(d.continueWithLine);
         expect(html).toContain("06C755");
+        // LINE login asks LINE to show the add-friend option on consent.
+        expect(html).toContain("bot_prompt");
+        expect(html).toContain("normal");
         // LINE button first, with the official-style logo on the left.
         expect(html.indexOf('data-social="line"')).toBeLessThan(html.indexOf('data-social="google"'));
         const lineBtn = html.slice(html.indexOf('data-social="line"'), html.indexOf("</button>", html.indexOf('data-social="line"')));

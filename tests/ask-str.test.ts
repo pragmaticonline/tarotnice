@@ -95,6 +95,20 @@ describe("ask.js STR parity", () => {
     expect(src).toContain('"/sign-in?return=%2Fbilling"');
   });
 
+  it("shows the LINE friend card only after a reading completes", () => {
+    expect(src).toContain("line-friend-card");
+    expect(src).toContain("https://line.me/R/add/@tarotnice");
+    // The card is appended inside the post-reading flow (againButton),
+    // never on initial load.
+    expect(src).toContain("Post-reading LINE friend card");
+    const en = blockKeys(src, "en").keys;
+    const th = blockKeys(src, "th").keys;
+    expect(en).toContain("lineFriend");
+    expect(th).toContain("lineFriend");
+    expect(en).toContain("lineFriendCta");
+    expect(th).toContain("lineFriendCta");
+  });
+
   it("uses the full §7 disclaimer wording in both languages", () => {
     // Guards against regressing to the legacy short Thai text: both
     // disclaimers must cover entertainment-only, no professional
