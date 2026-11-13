@@ -37,14 +37,30 @@ wrangler deploy         # tarotnice.com
 
 Secrets (never commit): `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`,
 `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
-`LINE_CHANNEL_ID`, `LINE_CHANNEL_SECRET`, `TURNSTILE_SECRET`,
+`LINE_CHANNEL_ID`, `LINE_CHANNEL_SECRET`,
+`LINE_MSG_CHANNEL_SECRET`, `LINE_MSG_ACCESS_TOKEN`, `TURNSTILE_SECRET`,
 `MAILNICE_API_KEY`, `EMAIL_FROM`, `CF_ANALYTICS_TOKEN`.
+
+## LINE
+
+Two separate channels. The Login channel (`LINE_CHANNEL_ID` /
+`LINE_CHANNEL_SECRET`) powers LINE sign-in on `/sign-in`, `/register`
+and Account settings; the login link passes `bot_prompt=normal`, so
+the LINE consent screen offers "Add as a friend".
+
+The Official Account `@677zpuat` uses the Messaging channel
+(`LINE_MSG_CHANNEL_SECRET` / `LINE_MSG_ACCESS_TOKEN`). Its webhook is
+`POST https://tarotnice.com/api/line/webhook` (set in the LINE
+console; signature-verified). Adding the OA sends a one-time
+`LINE-XXXXXX` code worth 5 tokens, redeemable at `/billing`; friend
+links across the site point at `https://line.me/R/add/@677zpuat`.
+Push sends stay no-ops until `LINE_MSG_ACCESS_TOKEN` is set.
 
 ## Layout
 
 - `src/index.ts` — Hono app, routes, API
 - `src/routes/` — server-rendered pages (shell, home, legal, auth-pages)
-- `src/lib/` — auth, i18n (th/en), geo, streaks, analytics, email
+- `src/lib/` — auth, i18n (th/en), geo, streaks, analytics, email, LINE
 - `src/db/` — Drizzle schema + stores
 - `content/` — card list + meanings (seeded into D1)
 - `scripts/` — seed-cards, check-cards, eval-models
