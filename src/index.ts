@@ -3,6 +3,7 @@ import { setCookie } from "hono/cookie";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { createAuth, googleConfigured, isRegisteredUser, lineConfigured, type AuthEnv } from "./lib/auth";
+import { lineWelcomeText, newLineWelcomeCode, replyLineText, verifyLineSignature, type LineMsgEnv } from "./lib/line";
 import * as schema from "./db/schema";
 import { bangkokDay, bangkokHour, nextBangkokMidnight } from "./lib/bangkok";
 import { luckyColour } from "./lib/daily";
@@ -99,7 +100,8 @@ import { checkoutReturnUrls } from "./routes/billing";
 
 type Env = AuthEnv &
   AnalyticsEnv &
-  StripeEnv & {
+  StripeEnv &
+  LineMsgEnv & {
     AI: Ai;
     ASSETS?: Fetcher;
     MEDIA?: R2Bucket;
@@ -2506,6 +2508,61 @@ app.post("/api/billing/webhook", async (c) => {
     // duplicate path, and ops can reconcile from the event log.
     console.error(JSON.stringify({ message: "stripe webhook failed", error: err instanceof Error ? err.message : String(err) }));
     return c.json({ error: "webhook_failed" }, 500);
+  }
+  return c.json({ received: true });
+});
+
+// LINE Official Account webhook (@677zpuat): X-Line-Signature is
+// HMAC-SHA256 over the raw body with the MSG channel secret. Follow
+// events upsert a line_friend row and send one welcome code; unfollow
+// stamps the row; message events are acknowledged (chatbot later).
+app.post("/api/line/webhook", async (c) => {
+  const raw = await c.req.text();
+  const ok = await verifyLineSignature(c.env, raw, c.req.header("x-line-signature"));
+  if (!ok) return c.json({ error: "invalid signature" }, 401);
+  let body: { events?: Array<{ type?: string; source?: { userId?: string }; replyToken?: string; message?: { text?: string } }> };
+  try {
+    body = JSON.parse(raw);
+    if (!Array.isArray(body.events)) throw new Error("bad events");
+  } catch {
+    return c.json({ error: "invalid event" }, 400);
+  }
+  if (!c.env?.DB) return c.json({ error: "unavailable" }, 503);
+  const orm = drizzle(c.env.DB, { schema: { lineFriends: schema.lineFriends } });
+  for (const ev of body.events) {
+    const lineUserId = ev.source?.userId;
+    if (!lineUserId) continue;
+    const now = Date.now();
+    if (ev.type === "follow") {
+      const existing = await orm
+        .select({ lineUserId: schema.lineFriends.lineUserId, welcomeCode: schema.lineFriends.welcomeCode })
+        .from(schema.lineFriends)
+        .where(eq(schema.lineFriends.lineUserId, lineUserId))
+        .limit(1);
+      if (existing.length && existing[0].welcomeCode) {
+        // Replay (re-delivery or re-follow): revive silently, no new code.
+        await orm
+          .update(schema.lineFriends)
+          .set({ unfollowedAt: null, updatedAt: now })
+          .where(eq(schema.lineFriends.lineUserId, lineUserId));
+        continue;
+      }
+      const code = newLineWelcomeCode();
+      await orm
+        .insert(schema.lineFriends)
+        .values({ lineUserId, addedAt: now, welcomeCode: code, updatedAt: now })
+        .onConflictDoUpdate({
+          target: schema.lineFriends.lineUserId,
+          set: { unfollowedAt: null, welcomeCode: code, updatedAt: now },
+        });
+      if (ev.replyToken) await replyLineText(c.env, ev.replyToken, lineWelcomeText(code, "en"));
+    } else if (ev.type === "unfollow") {
+      await orm
+        .update(schema.lineFriends)
+        .set({ unfollowedAt: now, updatedAt: now })
+        .where(eq(schema.lineFriends.lineUserId, lineUserId));
+    }
+    // message events: acknowledged; the FAQ chatbot arrives later.
   }
   return c.json({ received: true });
 });

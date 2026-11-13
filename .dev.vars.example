@@ -6,6 +6,11 @@ GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 LINE_CHANNEL_ID=
 LINE_CHANNEL_SECRET=
+# LINE Official Account (@677zpuat) Messaging API: webhook signature
+# secret + Channel Access Token. Point the OA webhook at
+# https://tarotnice.com/api/line/webhook. Without the token, sends no-op.
+# LINE_MSG_CHANNEL_SECRET=
+# LINE_MSG_ACCESS_TOKEN=
 # Local QA only: open lessons beyond Unit 1 + scoring on localhost
 # (qa-audio.mjs needs this), skipping the subscription gate.
 # Never set in production.

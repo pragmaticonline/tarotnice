@@ -291,6 +291,24 @@ export const redeemRedemptions = sqliteTable(
   }),
 );
 
+// LINE Official Account friends: one row per LINE user id that added
+// the OA (@677zpuat). userId stays NULL until the follow event can be
+// joined to a TarotNice account; pushes only target joined rows.
+export const lineFriends = sqliteTable(
+  "line_friends",
+  {
+    lineUserId: text("line_user_id").primaryKey(),
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+    addedAt: integer("added_at").notNull(),
+    welcomeCode: text("welcome_code"),
+    unfollowedAt: integer("unfollowed_at"),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (t) => ({
+    welcomeCodeUnique: uniqueIndex("line_friends_welcome_code_unique").on(t.welcomeCode),
+  }),
+);
+
 // Reusable Stripe customer per user (mirrors nicelingo).
 export const stripeCustomers = sqliteTable("stripe_customers", {
   userId: text("user_id")
