@@ -311,7 +311,7 @@ export function notFoundPage(opts: { ui: UiLang; origin: string }): string {
 <img src="/mascot/ngern-sleeping.svg" alt="Ngern sleeping" width="120" height="120">
 <h1 class="display">${escapeHtml(d.notFoundTitle)}</h1>
 <p>${escapeHtml(d.notFoundText)}</p>
-<p><a class="btn btn-primary" href="/">${escapeHtml(d.askQuestionCta)}</a> <a class="btn btn-outline" href="/cards">${escapeHtml(d.browseCards)}</a></p>
+<p class="nf-actions"><a class="btn btn-primary" href="/">${escapeHtml(d.askQuestionCta)}</a> <a class="btn btn-outline" href="/cards">${escapeHtml(d.browseCards)}</a></p>
 </main>`;
   return pageShell({
     title: `TarotNice — ${d.notFoundTitle}`,

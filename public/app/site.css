@@ -503,7 +503,9 @@ button.token-chip{font:inherit;cursor:pointer;background:none}
 .drawer-toggle input{width:22px;height:22px;accent-color:var(--accent)}
 .drawer-wallet-card{margin:.8rem 0}
 @media (max-width:480px){.drawer{width:min(336px,92vw)}}
-.notfound{text-align:center;padding:2.5rem 0}
+.notfound{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:max(420px,calc(100svh - 280px));padding:2.5rem 0}
+.notfound .nf-actions{display:flex;flex-wrap:wrap;gap:.7rem;justify-content:center}
+.notfound .btn-primary{width:auto}
 .notfound img{width:120px;height:120px}
 .notfound .nf-code{letter-spacing:.25em;color:var(--muted);font-weight:700}
 .lib-search{display:flex;align-items:center;gap:.5rem;background:var(--card-face);border:1.5px solid var(--gold-dim);border-radius:12px;padding:.55rem .8rem;margin:1rem 0 .4rem}

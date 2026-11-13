@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { t, type UiLang } from "../src/lib/i18n";
 import { maskName } from "../src/lib/invite";
@@ -8,6 +11,8 @@ import { termsPage } from "../src/routes/legal";
 import { cardDetailPage, cardsPage, type LibraryDetail } from "../src/routes/library";
 import { notFoundPage } from "../src/routes/shell";
 import { shareLandingPage } from "../src/routes/share";
+
+const SITE_CSS_PATH = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../public/app/site.css");
 
 describe("maskName (invite privacy)", () => {
   it("keeps at most three characters and adds the mask", () => {
@@ -221,6 +226,11 @@ describe("invite + 404 boards", () => {
     expect(html).toContain("ngern-sleeping.svg");
     expect(html).toContain("Ask a question");
     expect(html).toContain("Browse the cards");
+    expect(html).toContain("nf-actions");
+    // The block centers itself in the viewport, CTAs side by side.
+    const css = readFileSync(SITE_CSS_PATH, "utf8");
+    expect(css).toContain(".notfound{display:flex;flex-direction:column;align-items:center;justify-content:center");
+    expect(css).toContain(".nf-actions{display:flex");
   });
 });
 
