@@ -233,9 +233,10 @@ export async function translateBlockToThai(
   block: string,
   positionMap: string[],
   timeoutMs = 45_000,
+  onDelta?: (t: string) => void,
 ): Promise<string | null> {
   try {
-    const call = aiRun(model, {
+    const params = {
       // Low reasoning effort: reasoning models can spend the whole
       // budget thinking and return no content (seen live with Qwen
       // 3.8); the roomier token cap covers the thinking plus answer.
@@ -253,20 +254,39 @@ export async function translateBlockToThai(
         { role: "user", content: block },
       ],
       max_tokens: 4000,
-    });
-    const res = await Promise.race([
-      call,
-      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), timeoutMs)),
-    ]);
-    const raw =
-      typeof res === "string"
-        ? res
-        : ((res as { response?: unknown })?.response as string) ??
-          ((res as { choices?: { message?: { content?: unknown } }[] })?.choices?.[0]?.message?.content as string) ??
+    };
+    let raw: unknown;
+    if (onDelta) {
+      // Live path: stream the translation and forward Thai deltas as
+      // they arrive, so the first text paints after time-to-first-token
+      // instead of after the whole block. Reasoning traces never reach
+      // the caller: streamDeltas only yields answer content.
+      try {
+        let out = "";
+        for await (const delta of streamDeltas(aiRun, model, { ...params, stream: true }, timeoutMs)) {
+          out += delta;
+          onDelta(delta);
+        }
+        raw = out;
+      } catch {
+        return null;
+      }
+    } else {
+      const call = aiRun(model, params);
+      raw = await Promise.race([
+        call,
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), timeoutMs)),
+      ]);
+    }
+    const unwrapped =
+      typeof raw === "string"
+        ? raw
+        : ((raw as { response?: unknown })?.response as string) ??
+          ((raw as { choices?: { message?: { content?: unknown } }[] })?.choices?.[0]?.message?.content as string) ??
           "";
     // A thinking trace with no answer is a miss, not a translation.
-    if (!raw || typeof raw !== "string" || !raw.trim()) return null;
-    const out = typeof raw === "string" ? raw.trim().replace(/^```[a-z]*\n?|\n?```$/g, "") : "";
+    if (!unwrapped || typeof unwrapped !== "string" || !unwrapped.trim()) return null;
+    const out = unwrapped.trim().replace(/^```[a-z]*\n?|\n?```$/g, "");
     if (!out) return null;
     if (!/[\u0e00-\u0e7f]/.test(out)) return null;
     const ratio = out.length / Math.max(1, block.length);

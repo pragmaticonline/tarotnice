@@ -662,6 +662,24 @@ describe("translate pipeline helpers", () => {
     expect(await translateBlockToThai(async () => ({ response: "  " }), "qwen", "Overview: x", [])).toBeNull();
     expect(await translateBlockToThai(async () => ({ response: "Overview: still english, no thai script" }), "qwen", "Overview: x", [])).toBeNull();
   });
+
+  it("translateBlockToThai forwards streamed deltas to onDelta live", async () => {
+    const sse =
+      'data: {"choices":[{"delta":{"content":" \u0e20\u0e32\u0e1e"}}]}' + "\n\n" +
+      'data: {"choices":[{"delta":{"content":"\u0e23\u0e27\u0e21"}}]}' + "\n\n" +
+      "data: [DONE]\n\n";
+    const seen: string[] = [];
+    const aiRun = async () =>
+      new ReadableStream({
+        start(c) {
+          c.enqueue(new TextEncoder().encode(sse));
+          c.close();
+        },
+      });
+    const out = await translateBlockToThai(aiRun as never, "qwen", "Overview: x", [], 5000, (d) => seen.push(d));
+    expect(seen.join("")).toBe(" \u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21");
+    expect(out).toBe("\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21");
+  });
 });
 
 describe("hasBrokenThaiLabels", () => {
