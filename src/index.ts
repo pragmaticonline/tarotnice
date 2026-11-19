@@ -109,7 +109,6 @@ type Env = AuthEnv &
     REFERRAL_BONUS?: string;
     READING_MODEL?: string;
     PROOFREAD_MODEL?: string;
-    TRANSLATE_MODEL?: string;
     DEFAULT_LANG?: string;
     TIMEZONE?: string;
     TURNSTILE_SECRET?: string;
@@ -629,10 +628,11 @@ app.get("/api/readings/:id/stream", async (c) => {
             lang: "th", topic,
             question: row.question, cards: thViews, prev, nickname,
           });
-          // Gemma writes Thai directly; falls back down the same chain
-          // as the old translator so unconfigured envs keep working.
-          const thModel = c.env.TRANSLATE_MODEL?.trim() ||
-            c.env.PROOFREAD_MODEL?.trim() || "@cf/qwen/qwen3-30b-a3b-fp8";
+          // Direct Thai generation uses the reading model itself, same
+          // as English: Llama streams content immediately with no
+          // reasoning phase to burn through the token budget (Gemma
+          // spent the whole budget thinking and emitted nothing).
+          const thModel = model;
           send(sseEvent("status", JSON.stringify({ phase: "translating" })));
           hb = setInterval(() => {
             try { send(sseEvent("status", JSON.stringify({ phase: "translating" }))); } catch { /* closed */ }
@@ -643,11 +643,6 @@ app.get("/api/readings/:id/stream", async (c) => {
               { role: "user", content: thPrompt.user },
             ],
             max_tokens: 2048,
-            // Low reasoning effort: reasoning models can spend the
-            // whole budget thinking and return no content (seen live
-            // with Qwen 3.8); measured to roughly halve Gemma's
-            // time-to-first-token on this workload.
-            reasoning_effort: "low",
           // Live: a full reading needs minutes to stream; the old
           // short deadline killed healthy streams mid-reading.
           }, 300_000)) {
