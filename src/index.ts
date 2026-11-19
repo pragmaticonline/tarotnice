@@ -641,7 +641,9 @@ app.get("/api/readings/:id/stream", async (c) => {
           const translator = c.env.TRANSLATE_MODEL?.trim() ||
             c.env.PROOFREAD_MODEL?.trim() || "@cf/qwen/qwen3-30b-a3b-fp8";
           const thaiBlocks: string[] = [];
-          const emitBlock = async (blockEn: string) => {
+          // Translate one block with validation + one retry per model.
+          // Throws translation_failed like before; the queue records it.
+          const translateOne = async (blockEn: string): Promise<string> => {
             const needed = enViews.map((v) => v.name);
             // A translated block must preserve the source's card-name
             // set exactly: dropped names break card art, added names
@@ -665,13 +667,34 @@ app.get("/api/readings/:id/stream", async (c) => {
             if (!th || badBlock(th)) {
               throw new Error("translation_failed");
             }
-            const joined = (thaiBlocks.length ? "\n\n" : "") + th;
-            thaiBlocks.push(th);
-            // Paced typing animation (~25 chunks/sec, first promptly).
-            for (const chunk of joined.match(/[\s\S]{1,120}/g) ?? []) {
-              send(sseEvent("delta", JSON.stringify(chunk)));
-              await new Promise((r) => setTimeout(r, 40));
-            }
+            return th;
+          };
+          // Blocks translate in parallel as the master produces them
+          // (each is independent), but Thai must emit in source order:
+          // completed blocks wait in slots and a single serialized
+          // pump sends consecutive ready blocks, so deltas from two
+          // blocks can never interleave mid-sentence.
+          const slots = new Map<number, string>();
+          let seq = 0;
+          let nextEmit = 0;
+          let emitted = 0;
+          let emitTail: Promise<void> = Promise.resolve();
+          const pump = () => {
+            emitTail = emitTail.then(async () => {
+              while (slots.has(nextEmit)) {
+                const t = slots.get(nextEmit)!;
+                slots.delete(nextEmit);
+                nextEmit++;
+                const joined = (emitted++ === 0 ? "" : "\n\n") + t;
+                thaiBlocks.push(t);
+                // Paced typing animation (~25 chunks/sec, first promptly).
+                for (const chunk of joined.match(/[\s\S]{1,120}/g) ?? []) {
+                  send(sseEvent("delta", JSON.stringify(chunk)));
+                  await new Promise((r) => setTimeout(r, 40));
+                }
+              }
+            });
+            return emitTail;
           };
           let enFull = "";
           let enBuf = "";
@@ -679,15 +702,21 @@ app.get("/api/readings/:id/stream", async (c) => {
           hb = setInterval(() => {
             try { send(sseEvent("status", JSON.stringify({ phase: "translating" }))); } catch { /* closed */ }
           }, 15_000);
-          // Translations run on an ordered queue alongside generation:
-          // awaiting each one inside the stream loop paused the master
-          // stream until its 60s deadline expired mid-reading (the
-          // "couldn't read the cards" failures). The queue keeps block
-          // order while the master keeps flowing.
-          let queue: Promise<void> = Promise.resolve();
+          // Translations run alongside generation: each completed
+          // block starts translating immediately (blocks are
+          // independent), while the serialized pump above emits Thai
+          // in source order. Awaiting each one inside the stream loop
+          // used to pause the master stream until its deadline expired
+          // mid-reading (the "couldn't read the cards" failures).
+          const jobs: Promise<void>[] = [];
           let queueError: unknown = null;
           const queueBlock = (b: string) => {
-            queue = queue.then(() => emitBlock(b)).catch((e) => { queueError ??= e; });
+            const i = seq++;
+            jobs.push(
+              translateOne(b)
+                .then(async (th) => { slots.set(i, th); await pump(); })
+                .catch((e) => { queueError ??= e; }),
+            );
           };
           for await (const delta of streamDeltas(aiRun, model, {
             messages: [
@@ -706,7 +735,7 @@ app.get("/api/readings/:id/stream", async (c) => {
           }
           const tail = takeCompletedBlocks(enBuf + "\n\n");
           for (const b of tail.blocks) queueBlock(b);
-          await queue;
+          await Promise.all(jobs);
           if (queueError) throw queueError instanceof Error ? queueError : new Error("translation_failed");
           enFull = enFull.trim();
           if (!enFull) throw new Error("empty_response");
