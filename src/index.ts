@@ -518,6 +518,16 @@ app.get("/api/readings/:id/stream", async (c) => {
   const stream = new ReadableStream({
     async start(controller) {
       const send = (text: string) => controller.enqueue(new TextEncoder().encode(text));
+      // Heartbeat for the Thai pipeline: the browser re-opens a
+      // silent stream after 60s (wiping its text), but the English
+      // master plus queued translations can run minutes without
+      // emitting a delta. A status event every 15s counts as progress
+      // client-side, so the reading survives its own generation.
+      // (Declared outside the try: the catch below must reach it.)
+      let hb: ReturnType<typeof setInterval> | undefined;
+      const stopHeartbeat = () => {
+        if (hb !== undefined) { clearInterval(hb); hb = undefined; }
+      };
       try {
         if (row.status === "complete" && row.aiText) {
           // Replay in small chunks so the client paints progressively.
@@ -666,6 +676,9 @@ app.get("/api/readings/:id/stream", async (c) => {
           let enFull = "";
           let enBuf = "";
           send(sseEvent("status", JSON.stringify({ phase: "translating" })));
+          hb = setInterval(() => {
+            try { send(sseEvent("status", JSON.stringify({ phase: "translating" }))); } catch { /* closed */ }
+          }, 15_000);
           // Translations run on an ordered queue alongside generation:
           // awaiting each one inside the stream loop paused the master
           // stream until its 60s deadline expired mid-reading (the
@@ -743,6 +756,7 @@ app.get("/api/readings/:id/stream", async (c) => {
         // both views render them with a gap and italic text.
         full = normalizeCardSummaries(full);
         const summary = parseSummary(full);
+        stopHeartbeat();
         await store.setReadingResult(row.id, { aiText: full, aiSummary: summary, model, status: "complete" });
         recordEvent(c.env, {
           name: "reading_completed", lang, topic: row.topic,
@@ -770,6 +784,7 @@ app.get("/api/readings/:id/stream", async (c) => {
         } catch {
           /* keep the drawn row for retry */
         }
+        stopHeartbeat();
         // Failed readings are free: hand the spend back so a retry (or
         // a fresh question) is charged at retry/draw time instead.
         if (markedFailed) {
