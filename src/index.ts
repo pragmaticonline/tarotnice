@@ -111,6 +111,7 @@ type Env = AuthEnv &
     REFERRAL_BONUS?: string;
     READING_MODEL?: string;
     PROOFREAD_MODEL?: string;
+    TRANSLATE_MODEL?: string;
     DEFAULT_LANG?: string;
     TIMEZONE?: string;
     TURNSTILE_SECRET?: string;
@@ -624,7 +625,11 @@ app.get("/api/readings/:id/stream", async (c) => {
           const enSpread = pickSpread(row.question, topic, "en");
           const thSpread = pickSpread(row.question, topic, "th");
           const positionMap = enSpread.map((p, i) => `${p}=${thSpread[i]}`);
-          const translator = c.env.PROOFREAD_MODEL?.trim() || "@cf/qwen/qwen3-30b-a3b-fp8";
+          // Block translation has its own model (Gemma 4): proofreading
+          // stays on PROOFREAD_MODEL. Falls back to the proofread
+          // model, then the Qwen default, so old envs keep working.
+          const translator = c.env.TRANSLATE_MODEL?.trim() ||
+            c.env.PROOFREAD_MODEL?.trim() || "@cf/qwen/qwen3-30b-a3b-fp8";
           const thaiBlocks: string[] = [];
           const emitBlock = async (blockEn: string) => {
             const needed = enViews.map((v) => v.name);

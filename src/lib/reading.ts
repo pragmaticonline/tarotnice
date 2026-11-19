@@ -187,10 +187,14 @@ export async function translateBlockToThai(
   model: string,
   block: string,
   positionMap: string[],
-  timeoutMs = 30_000,
+  timeoutMs = 45_000,
 ): Promise<string | null> {
   try {
     const call = aiRun(model, {
+      // Low reasoning effort: reasoning models can spend the whole
+      // budget thinking and return no content (seen live with Qwen
+      // 3.8); the roomier token cap covers the thinking plus answer.
+      reasoning_effort: "low",
       messages: [
         {
           role: "system",
@@ -203,7 +207,7 @@ export async function translateBlockToThai(
         },
         { role: "user", content: block },
       ],
-      max_tokens: 1800,
+      max_tokens: 4000,
     });
     const res = await Promise.race([
       call,
@@ -215,6 +219,8 @@ export async function translateBlockToThai(
         : ((res as { response?: unknown })?.response as string) ??
           ((res as { choices?: { message?: { content?: unknown } }[] })?.choices?.[0]?.message?.content as string) ??
           "";
+    // A thinking trace with no answer is a miss, not a translation.
+    if (!raw || typeof raw !== "string" || !raw.trim()) return null;
     const out = typeof raw === "string" ? raw.trim().replace(/^```[a-z]*\n?|\n?```$/g, "") : "";
     if (!out) return null;
     if (!/[\u0e00-\u0e7f]/.test(out)) return null;
