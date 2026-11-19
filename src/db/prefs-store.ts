@@ -20,7 +20,9 @@ const DEFAULTS: UserPrefs = {
   theme: null,
   nickname: null,
   notifyDaily: true,
-  notifyPromo: true,
+  // Direct marketing is opt-in (PDPA): new accounts start unsubscribed
+  // and choose News & offers at sign-up or in Account settings.
+  notifyPromo: false,
 };
 
 function toPrefs(row: {

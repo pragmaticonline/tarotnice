@@ -7,6 +7,14 @@ import { headerHtml, pageShell, siteFooterHtml, type HeaderAccount } from "./she
 import { t, type UiLang } from "../lib/i18n";
 
 export const SUPPORT_EMAIL = "support@tarotnice.com";
+export const LEGAL_EMAIL = "legal@tarotnice.com";
+export const PRIVACY_EMAIL = "privacy@tarotnice.com";
+export const SECURITY_EMAIL = "security@tarotnice.com";
+export const AFFILIATES_EMAIL = "affiliates@tarotnice.com";
+export const OPERATOR_NAME = "Pragmatic Online Co., Ltd.";
+export const OPERATOR_ADDRESS =
+  "Prego Mall, 229/14 Moo 8, Tonpao, San Kamphaeng, Chiang Mai 50130, Thailand";
+export const EFFECTIVE_DATE_EN = "19 November 2026";
 
 const STYLE = `.legal-page{max-width:44rem;margin:0 auto;line-height:1.6}
 p.small{color:#76698f;font-size:.92rem}
@@ -20,7 +28,11 @@ p.lede{color:var(--muted)}
 .contact-card h2{margin:.1rem 0 .5rem;font-size:1.45rem;color:#f4eefc}
 .contact-btn{display:inline-block;background:#d9a742;color:#241b3a;font-weight:800;text-decoration:none;padding:.7rem 1.1rem;border-radius:10px}
 .contact-btn .mail-ic{font-size:1.6em;line-height:1;vertical-align:-.12em;margin-right:.15em}
-.contact-links{color:var(--muted);font-size:.95rem}`;
+.contact-links{color:var(--muted);font-size:.95rem}
+.contact-channels{margin:1.2rem 0}
+.contact-channels ul{list-style:none;padding:0;margin:.6rem 0}
+.contact-channels li{margin:.45rem 0;color:#4c4368}
+.contact-channels li b{color:var(--card-ink)}`;
 
 function shell(title: string, heading: string, inner: string, uiLang: UiLang, account?: HeaderAccount): string {
   const head = headerHtml({
@@ -45,25 +57,29 @@ function legalTabs(active: "terms" | "privacy", uiLang: UiLang): string {
 export function termsPage(uiLang: UiLang = "en", account?: HeaderAccount): string {
   const d = t(uiLang);
   const en = [
+    ["who", "Who operates TarotNice", "TarotNice is operated by " + OPERATOR_NAME + ", " + OPERATOR_ADDRESS + "."],
+    ["eligibility", "Who can use TarotNice", "You must be at least 13 years old to use TarotNice. If you are under 20 (the age of majority in Thailand), you need your parent or guardian's permission to buy tokens."],
     ["what", "What TarotNice is", "TarotNice offers tarot readings for entertainment, reflection and personal insight. Readings are written with the help of AI."],
     ["advice", "Not professional advice", "Readings are not medical, psychological, legal, financial or business advice. For important matters, please consult a qualified professional."],
     ["account", "Your account", "Keep your sign-in details safe. You can delete your account and data at any time from Account settings."],
     ["tokens", "Tokens and payments", "Tokens are used for readings. Purchased tokens do not expire and are non-refundable except where the law requires."],
     ["privacy", "Your privacy", "We collect only what we need to run the service. Your questions are never sent to analytics or third-party trackers."],
-    ["contact", "Contact", "Questions about these terms? Write to " + SUPPORT_EMAIL + "."],
+    ["contact", "Contact", "Questions about these terms? Write to " + LEGAL_EMAIL + ". For anything else, write to " + SUPPORT_EMAIL + "."],
   ] as const;
   const th = [
+    ["who", "\u0e1c\u0e39\u0e49\u0e14\u0e33\u0e40\u0e19\u0e34\u0e19\u0e01\u0e32\u0e23 TarotNice", "TarotNice \u0e14\u0e33\u0e40\u0e19\u0e34\u0e19\u0e01\u0e32\u0e23\u0e42\u0e14\u0e22 Pragmatic Online Co., Ltd. \u0e17\u0e35\u0e48\u0e2d\u0e22\u0e39\u0e48 Prego Mall, 229/14 Moo 8, Tonpao, San Kamphaeng, Chiang Mai 50130, Thailand"],
+    ["eligibility", "\u0e43\u0e04\u0e23\u0e43\u0e0a\u0e49 TarotNice \u0e44\u0e14\u0e49\u0e1a\u0e49\u0e32\u0e07", "\u0e04\u0e38\u0e13\u0e15\u0e49\u0e2d\u0e07\u0e21\u0e35\u0e2d\u0e32\u0e22\u0e38\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e19\u0e49\u0e2d\u0e22 13 \u0e1b\u0e35\u0e08\u0e36\u0e07\u0e08\u0e30\u0e43\u0e0a\u0e49 TarotNice \u0e44\u0e14\u0e49 \u0e2b\u0e32\u0e01\u0e2d\u0e32\u0e22\u0e38\u0e15\u0e48\u0e33\u0e01\u0e27\u0e48\u0e32 20 \u0e1b\u0e35 (\u0e40\u0e01\u0e13\u0e11\u0e4c\u0e1a\u0e23\u0e23\u0e25\u0e38\u0e19\u0e34\u0e15\u0e34\u0e20\u0e32\u0e27\u0e30\u0e43\u0e19\u0e1b\u0e23\u0e30\u0e40\u0e17\u0e28\u0e44\u0e17\u0e22) \u0e15\u0e49\u0e2d\u0e07\u0e44\u0e14\u0e49\u0e23\u0e31\u0e1a\u0e2d\u0e19\u0e38\u0e0d\u0e32\u0e15\u0e08\u0e32\u0e01\u0e1c\u0e39\u0e49\u0e1b\u0e01\u0e04\u0e23\u0e2d\u0e07\u0e01\u0e48\u0e2d\u0e19\u0e0b\u0e37\u0e49\u0e2d\u0e42\u0e17\u0e40\u0e04\u0e19"],
     ["what", "TarotNice \u0e04\u0e37\u0e2d\u0e2d\u0e30\u0e44\u0e23", "TarotNice \u0e43\u0e2b\u0e49\u0e1a\u0e23\u0e34\u0e01\u0e32\u0e23\u0e14\u0e39\u0e14\u0e27\u0e07\u0e44\u0e1e\u0e48\u0e17\u0e32\u0e42\u0e23\u0e15\u0e4c\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e1a\u0e31\u0e19\u0e40\u0e17\u0e34\u0e07 \u0e01\u0e32\u0e23\u0e17\u0e1a\u0e17\u0e27\u0e19\u0e41\u0e25\u0e30\u0e40\u0e02\u0e49\u0e32\u0e43\u0e08\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07 \u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e40\u0e02\u0e35\u0e22\u0e19\u0e14\u0e49\u0e27\u0e22\u0e04\u0e27\u0e32\u0e21\u0e0a\u0e48\u0e27\u0e22\u0e40\u0e2b\u0e25\u0e37\u0e2d\u0e02\u0e2d\u0e07 AI"],
     ["advice", "\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33\u0e17\u0e32\u0e07\u0e27\u0e34\u0e0a\u0e32\u0e0a\u0e35\u0e1e", "\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33\u0e17\u0e32\u0e07\u0e01\u0e32\u0e23\u0e41\u0e1e\u0e17\u0e22\u0e4c \u0e08\u0e34\u0e15\u0e27\u0e34\u0e17\u0e22\u0e32 \u0e01\u0e0e\u0e2b\u0e21\u0e32\u0e22 \u0e01\u0e32\u0e23\u0e40\u0e07\u0e34\u0e19 \u0e2b\u0e23\u0e37\u0e2d\u0e18\u0e38\u0e23\u0e01\u0e34\u0e08 \u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e2a\u0e33\u0e04\u0e31\u0e0d \u0e42\u0e1b\u0e23\u0e14\u0e1b\u0e23\u0e36\u0e01\u0e29\u0e32\u0e1c\u0e39\u0e49\u0e40\u0e0a\u0e35\u0e48\u0e22\u0e27\u0e0a\u0e32\u0e0d"],
     ["account", "\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13", "\u0e23\u0e31\u0e01\u0e29\u0e32\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e01\u0e32\u0e23\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e43\u0e2b\u0e49\u0e1b\u0e25\u0e2d\u0e14\u0e20\u0e31\u0e22 \u0e04\u0e38\u0e13\u0e2a\u0e32\u0e21\u0e32\u0e23\u0e16\u0e25\u0e1a\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e41\u0e25\u0e30\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e44\u0e14\u0e49\u0e17\u0e38\u0e01\u0e40\u0e21\u0e37\u0e48\u0e2d\u0e08\u0e32\u0e01\u0e01\u0e32\u0e23\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32\u0e1a\u0e31\u0e0d\u0e0a\u0e35"],
     ["tokens", "\u0e42\u0e17\u0e40\u0e04\u0e19\u0e41\u0e25\u0e30\u0e01\u0e32\u0e23\u0e0a\u0e33\u0e23\u0e30\u0e40\u0e07\u0e34\u0e19", "\u0e42\u0e17\u0e40\u0e04\u0e19\u0e43\u0e0a\u0e49\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e01\u0e32\u0e23\u0e14\u0e39\u0e14\u0e27\u0e07 \u0e42\u0e17\u0e40\u0e04\u0e19\u0e17\u0e35\u0e48\u0e0b\u0e37\u0e49\u0e2d\u0e44\u0e21\u0e48\u0e21\u0e35\u0e27\u0e31\u0e19\u0e2b\u0e21\u0e14\u0e2d\u0e32\u0e22\u0e38 \u0e41\u0e25\u0e30\u0e02\u0e2d\u0e04\u0e37\u0e19\u0e40\u0e07\u0e34\u0e19\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49 \u0e40\u0e27\u0e49\u0e19\u0e41\u0e15\u0e48\u0e01\u0e0e\u0e2b\u0e21\u0e32\u0e22\u0e01\u0e33\u0e2b\u0e19\u0e14"],
     ["privacy", "\u0e04\u0e27\u0e32\u0e21\u0e40\u0e1b\u0e47\u0e19\u0e2a\u0e48\u0e27\u0e19\u0e15\u0e31\u0e27\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13", "\u0e40\u0e23\u0e32\u0e40\u0e01\u0e47\u0e1a\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e40\u0e17\u0e48\u0e32\u0e17\u0e35\u0e48\u0e08\u0e33\u0e40\u0e1b\u0e47\u0e19\u0e43\u0e19\u0e01\u0e32\u0e23\u0e43\u0e2b\u0e49\u0e1a\u0e23\u0e34\u0e01\u0e32\u0e23 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e08\u0e30\u0e44\u0e21\u0e48\u0e16\u0e39\u0e01\u0e2a\u0e48\u0e07\u0e44\u0e1b\u0e22\u0e31\u0e07\u0e23\u0e30\u0e1a\u0e1a\u0e27\u0e34\u0e40\u0e04\u0e23\u0e32\u0e30\u0e2b\u0e4c\u0e2b\u0e23\u0e37\u0e2d\u0e15\u0e31\u0e27\u0e15\u0e34\u0e14\u0e15\u0e32\u0e21\u0e02\u0e2d\u0e07\u0e1a\u0e38\u0e04\u0e04\u0e25\u0e17\u0e35\u0e48\u0e2a\u0e32\u0e21"],
-    ["contact", "\u0e15\u0e34\u0e14\u0e15\u0e48\u0e2d", "\u0e21\u0e35\u0e04\u0e33\u0e16\u0e32\u0e21\u0e40\u0e01\u0e35\u0e48\u0e22\u0e27\u0e01\u0e31\u0e1a\u0e02\u0e49\u0e2d\u0e01\u0e33\u0e2b\u0e19\u0e14\u0e19\u0e35\u0e49? \u0e40\u0e02\u0e35\u0e22\u0e19\u0e21\u0e32\u0e17\u0e35\u0e48 " + SUPPORT_EMAIL],
+    ["contact", "\u0e15\u0e34\u0e14\u0e15\u0e48\u0e2d", "\u0e21\u0e35\u0e04\u0e33\u0e16\u0e32\u0e21\u0e40\u0e01\u0e35\u0e48\u0e22\u0e27\u0e01\u0e31\u0e1a\u0e02\u0e49\u0e2d\u0e01\u0e33\u0e2b\u0e19\u0e14\u0e19\u0e35\u0e49? \u0e40\u0e02\u0e35\u0e22\u0e19\u0e21\u0e32\u0e17\u0e35\u0e48 " + LEGAL_EMAIL + " \u0e2b\u0e32\u0e01\u0e40\u0e1b\u0e47\u0e19\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e2d\u0e37\u0e48\u0e19 \u0e40\u0e02\u0e35\u0e22\u0e19\u0e21\u0e32\u0e17\u0e35\u0e48 " + SUPPORT_EMAIL],
   ] as const;
   const sections = uiLang === "th" ? th : en;
   const updated = uiLang === "th"
-    ? "\u0e2d\u0e31\u0e1b\u0e40\u0e14\u0e15\u0e25\u0e48\u0e32\u0e2a\u0e38\u0e14 1 \u0e1e\u0e24\u0e28\u0e08\u0e34\u0e01\u0e32\u0e22\u0e19 2026 \u00b7 \u0e2d\u0e48\u0e32\u0e19 4 \u0e19\u0e32\u0e17\u0e35"
-    : "Last updated 1 November 2026 \u00b7 4 min read";
+    ? "\u0e21\u0e35\u0e1c\u0e25\u0e15\u0e31\u0e49\u0e07\u0e41\u0e15\u0e48\u0e27\u0e31\u0e19\u0e17\u0e35\u0e48 19 \u0e1e\u0e24\u0e28\u0e08\u0e34\u0e01\u0e32\u0e22\u0e19 2026"
+    : "Effective " + EFFECTIVE_DATE_EN;
   const tocTitle = uiLang === "th" ? "\u0e43\u0e19\u0e2b\u0e19\u0e49\u0e32\u0e19\u0e35\u0e49" : "ON THIS PAGE";
   const toc = `<div class="legal-toc"><b>${escapeHtml(tocTitle)}</b><ol>${sections.map((x) => `<li><a href="#${x[0]}">${escapeHtml(x[1])}</a></li>`).join("")}</ol></div>`;
   const body = legalTabs("terms", uiLang) +
@@ -74,15 +90,22 @@ export function termsPage(uiLang: UiLang = "en", account?: HeaderAccount): strin
 
 export function privacyPage(uiLang: UiLang = "en", account?: HeaderAccount): string {
   const d = t(uiLang);
+  const effective = uiLang === "th"
+    ? `<p class="small">\u0e21\u0e35\u0e1c\u0e25\u0e15\u0e31\u0e49\u0e07\u0e41\u0e15\u0e48\u0e27\u0e31\u0e19\u0e17\u0e35\u0e48 19 \u0e1e\u0e24\u0e28\u0e08\u0e34\u0e01\u0e32\u0e22\u0e19 2026</p>`
+    : `<p class="small">Effective ${EFFECTIVE_DATE_EN}</p>`;
   const body =
     uiLang === "th"
-      ? `<p>\u0e40\u0e23\u0e32\u0e40\u0e01\u0e47\u0e1a\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e19\u0e49\u0e2d\u0e22\u0e17\u0e35\u0e48\u0e2a\u0e38\u0e14\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e43\u0e2b\u0e49\u0e1a\u0e23\u0e34\u0e01\u0e32\u0e23\u0e17\u0e33\u0e07\u0e32\u0e19\u0e44\u0e14\u0e49 \u0e44\u0e14\u0e49\u0e41\u0e01\u0e48 \u0e2d\u0e35\u0e40\u0e21\u0e25\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e41\u0e25\u0e30\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13 \u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13 \u0e27\u0e31\u0e19\u0e17\u0e35\u0e48\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19 (\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e2a\u0e15\u0e23\u0e35\u0e04) \u0e41\u0e25\u0e30\u0e15\u0e31\u0e27\u0e40\u0e25\u0e02\u0e19\u0e31\u0e1a\u0e01\u0e32\u0e23\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19\u0e41\u0e1a\u0e1a\u0e23\u0e27\u0e21 (\u0e40\u0e0a\u0e48\u0e19 \u0e21\u0e35\u0e01\u0e32\u0e23\u0e41\u0e0a\u0e23\u0e4c\u0e01\u0e35\u0e48\u0e04\u0e23\u0e31\u0e49\u0e07) \u0e40\u0e23\u0e32\u0e44\u0e21\u0e48\u0e40\u0e01\u0e47\u0e1a\u0e15\u0e31\u0e27\u0e23\u0e30\u0e1a\u0e38\u0e1c\u0e39\u0e49\u0e40\u0e22\u0e35\u0e48\u0e22\u0e21\u0e0a\u0e21 \u0e17\u0e35\u0e48\u0e2d\u0e22\u0e39\u0e48 IP \u0e43\u0e14\u0e46 \u0e17\u0e31\u0e49\u0e07\u0e2a\u0e34\u0e49\u0e19</p>
+      ? effective + `<p>TarotNice \u0e14\u0e33\u0e40\u0e19\u0e34\u0e19\u0e01\u0e32\u0e23\u0e42\u0e14\u0e22 Pragmatic Online Co., Ltd. \u0e17\u0e35\u0e48\u0e2d\u0e22\u0e39\u0e48 Prego Mall, 229/14 Moo 8, Tonpao, San Kamphaeng, Chiang Mai 50130, Thailand \u0e04\u0e33\u0e16\u0e32\u0e21\u0e40\u0e01\u0e35\u0e48\u0e22\u0e27\u0e01\u0e31\u0e1a\u0e04\u0e27\u0e32\u0e21\u0e40\u0e1b\u0e47\u0e19\u0e2a\u0e48\u0e27\u0e19\u0e15\u0e31\u0e27: <a href="mailto:${PRIVACY_EMAIL}">${PRIVACY_EMAIL}</a> \u0e41\u0e08\u0e49\u0e07\u0e1b\u0e31\u0e0d\u0e2b\u0e32\u0e04\u0e27\u0e32\u0e21\u0e1b\u0e25\u0e2d\u0e14\u0e20\u0e31\u0e22: <a href="mailto:${SECURITY_EMAIL}">${SECURITY_EMAIL}</a></p>
+<p>\u0e40\u0e23\u0e32\u0e40\u0e01\u0e47\u0e1a\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e19\u0e49\u0e2d\u0e22\u0e17\u0e35\u0e48\u0e2a\u0e38\u0e14\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e43\u0e2b\u0e49\u0e1a\u0e23\u0e34\u0e01\u0e32\u0e23\u0e17\u0e33\u0e07\u0e32\u0e19\u0e44\u0e14\u0e49 \u0e44\u0e14\u0e49\u0e41\u0e01\u0e48 \u0e2d\u0e35\u0e40\u0e21\u0e25\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e41\u0e25\u0e30\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13 \u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13 \u0e27\u0e31\u0e19\u0e17\u0e35\u0e48\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19 (\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e2a\u0e15\u0e23\u0e35\u0e04) \u0e41\u0e25\u0e30\u0e15\u0e31\u0e27\u0e40\u0e25\u0e02\u0e19\u0e31\u0e1a\u0e01\u0e32\u0e23\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19\u0e41\u0e1a\u0e1a\u0e23\u0e27\u0e21 (\u0e40\u0e0a\u0e48\u0e19 \u0e21\u0e35\u0e01\u0e32\u0e23\u0e41\u0e0a\u0e23\u0e4c\u0e01\u0e35\u0e48\u0e04\u0e23\u0e31\u0e49\u0e07) \u0e40\u0e23\u0e32\u0e44\u0e21\u0e48\u0e40\u0e01\u0e47\u0e1a\u0e15\u0e31\u0e27\u0e23\u0e30\u0e1a\u0e38\u0e1c\u0e39\u0e49\u0e40\u0e22\u0e35\u0e48\u0e22\u0e21\u0e0a\u0e21 \u0e17\u0e35\u0e48\u0e2d\u0e22\u0e39\u0e48 IP \u0e43\u0e14\u0e46 \u0e17\u0e31\u0e49\u0e07\u0e2a\u0e34\u0e49\u0e19</p>
 <p>\u0e04\u0e33\u0e16\u0e32\u0e21\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e40\u0e1b\u0e47\u0e19\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e2a\u0e48\u0e27\u0e19\u0e15\u0e31\u0e27 \u0e40\u0e23\u0e32\u0e44\u0e21\u0e48\u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01\u0e25\u0e07\u0e23\u0e30\u0e1a\u0e1a\u0e27\u0e34\u0e40\u0e04\u0e23\u0e32\u0e30\u0e2b\u0e4c \u0e41\u0e25\u0e30\u0e44\u0e21\u0e48\u0e15\u0e34\u0e14\u0e15\u0e32\u0e21 third-party \u0e43\u0e14\u0e46 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e08\u0e30\u0e16\u0e39\u0e01\u0e40\u0e01\u0e47\u0e1a\u0e44\u0e27\u0e49\u0e08\u0e19\u0e01\u0e27\u0e48\u0e32\u0e04\u0e38\u0e13\u0e08\u0e30\u0e25\u0e1a\u0e40\u0e2d\u0e07</p>
 <p>\u0e01\u0e32\u0e23\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e14\u0e39\u0e41\u0e25\u0e42\u0e14\u0e22\u0e1c\u0e39\u0e49\u0e43\u0e2b\u0e49\u0e1a\u0e23\u0e34\u0e01\u0e32\u0e23\u0e22\u0e37\u0e19\u0e22\u0e31\u0e19\u0e15\u0e31\u0e27\u0e15\u0e19\u0e02\u0e2d\u0e07\u0e40\u0e23\u0e32 \u0e14\u0e49\u0e27\u0e22\u0e04\u0e38\u0e01\u0e01\u0e35\u0e49\u0e17\u0e35\u0e48\u0e0a\u0e48\u0e27\u0e22\u0e43\u0e2b\u0e49\u0e04\u0e38\u0e13\u0e04\u0e49\u0e32\u0e07\u0e2d\u0e22\u0e39\u0e48\u0e43\u0e19\u0e23\u0e30\u0e1a\u0e1a\u0e41\u0e25\u0e30\u0e08\u0e33\u0e20\u0e32\u0e29\u0e32\u0e17\u0e35\u0e48\u0e40\u0e25\u0e37\u0e2d\u0e01</p>
+<p>\u0e2d\u0e35\u0e40\u0e21\u0e25\u0e02\u0e48\u0e32\u0e27\u0e2a\u0e32\u0e23\u0e41\u0e25\u0e30\u0e02\u0e49\u0e2d\u0e40\u0e2a\u0e19\u0e2d\u0e08\u0e30\u0e2a\u0e48\u0e07\u0e40\u0e09\u0e1e\u0e32\u0e30\u0e40\u0e21\u0e37\u0e48\u0e2d\u0e04\u0e38\u0e13\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e2a\u0e21\u0e31\u0e04\u0e23\u0e40\u0e17\u0e48\u0e32\u0e19\u0e31\u0e49\u0e19 \u0e42\u0e14\u0e22\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e14\u0e49\u0e43\u0e19\u0e2b\u0e19\u0e49\u0e32\u0e2a\u0e21\u0e31\u0e04\u0e23\u0e2b\u0e23\u0e37\u0e2d\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32\u0e1a\u0e31\u0e0d\u0e0a\u0e35</p>
 <p>\u0e2b\u0e32\u0e01\u0e15\u0e49\u0e2d\u0e07\u0e01\u0e32\u0e23\u0e25\u0e1a\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14 \u0e43\u0e2b\u0e49\u0e44\u0e1b\u0e17\u0e35\u0e48\u0e2b\u0e19\u0e49\u0e32 /account \u0e41\u0e25\u0e49\u0e27\u0e40\u0e25\u0e37\u0e2d\u0e01 \u201c\u0e25\u0e1a\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19\u201d \u0e2b\u0e23\u0e37\u0e2d\u0e40\u0e02\u0e35\u0e22\u0e19\u0e21\u0e32\u0e17\u0e35\u0e48 <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a></p>`
-      : `<p>We collect the minimum needed to run the service: your account email, your questions and readings, your journal notes, your activity days (for streaks), and aggregate-only usage counts (for example, how many shares happened). We never store visitor identifiers or IP addresses.</p>
+      : effective + `<p>TarotNice is operated by ${OPERATOR_NAME}, ${OPERATOR_ADDRESS}. Questions about privacy: <a href="mailto:${PRIVACY_EMAIL}">${PRIVACY_EMAIL}</a>. To report a security issue: <a href="mailto:${SECURITY_EMAIL}">${SECURITY_EMAIL}</a>.</p>
+<p>We collect the minimum needed to run the service: your account email, your questions and readings, your journal notes, your activity days (for streaks), and aggregate-only usage counts (for example, how many shares happened). We never store visitor identifiers or IP addresses.</p>
 <p>Your questions are personal. They are never logged to analytics, and there are no third-party trackers. Readings are kept until you delete them.</p>
 <p>Sign-in is handled by our authentication provider with cookies that keep you signed in and remember your language choices.</p>
+<p>News &amp; offers emails are only sent if you opt in — tick the box at sign-up or switch it on in Account settings.</p>
 <p>To delete everything, visit /account and choose \u201cdelete my data\u201d, or write to <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>.</p>`;
   return shell(d.privacy, d.privacy, legalTabs("privacy", uiLang) + body, uiLang, account);
 }
@@ -113,12 +136,31 @@ export function contactPage(uiLang: UiLang = "en", account?: HeaderAccount): str
         `<details class="faq"${i === 0 ? " open" : ""}><summary>${escapeHtml(f.q)}</summary><p>${escapeHtml(f.a)}</p></details>`,
     )
     .join("");
+  const channels: { label: string; email: string }[] =
+    uiLang === "th"
+      ? [
+          { label: "\u0e2a\u0e2d\u0e1a\u0e16\u0e32\u0e21\u0e17\u0e31\u0e48\u0e27\u0e44\u0e1b", email: SUPPORT_EMAIL },
+          { label: "\u0e02\u0e49\u0e2d\u0e01\u0e33\u0e2b\u0e19\u0e14\u0e01\u0e32\u0e23\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19", email: LEGAL_EMAIL },
+          { label: "\u0e04\u0e33\u0e02\u0e2d\u0e40\u0e01\u0e35\u0e48\u0e22\u0e27\u0e01\u0e31\u0e1a\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2a\u0e48\u0e27\u0e19\u0e1a\u0e38\u0e04\u0e04\u0e25", email: PRIVACY_EMAIL },
+          { label: "\u0e41\u0e08\u0e49\u0e07\u0e1b\u0e31\u0e0d\u0e2b\u0e32\u0e04\u0e27\u0e32\u0e21\u0e1b\u0e25\u0e2d\u0e14\u0e20\u0e31\u0e22", email: SECURITY_EMAIL },
+          { label: "\u0e1e\u0e31\u0e19\u0e18\u0e21\u0e34\u0e15\u0e23\u0e17\u0e32\u0e07\u0e18\u0e38\u0e23\u0e01\u0e34\u0e08", email: AFFILIATES_EMAIL },
+        ]
+      : [
+          { label: "General help", email: SUPPORT_EMAIL },
+          { label: "Terms questions", email: LEGAL_EMAIL },
+          { label: "Privacy requests", email: PRIVACY_EMAIL },
+          { label: "Security reports", email: SECURITY_EMAIL },
+          { label: "Partnerships & affiliates", email: AFFILIATES_EMAIL },
+        ];
+  const channelsTitle = uiLang === "th" ? "\u0e0a\u0e48\u0e2d\u0e07\u0e17\u0e32\u0e07\u0e15\u0e34\u0e14\u0e15\u0e48\u0e2d\u0e2d\u0e37\u0e48\u0e19 \u0e46" : "Other ways to reach us";
+  const channelsHtml = `<section class="contact-channels"><h2 class="faq-h">${escapeHtml(channelsTitle)}</h2><ul>${channels.map((c) => `<li><b>${escapeHtml(c.label)}:</b> <a href="mailto:${c.email}">${c.email}</a></li>`).join("")}</ul></section>`;
   const body =
     `<p class="lede">${escapeHtml(d.helpLede)}</p>` +
     `<h2 class="faq-h">${escapeHtml(d.faqTitle)}</h2>${faqHtml}` +
     `<section class="contact-card"><h2>${escapeHtml(d.contactUsTitle)}</h2>` +
     `<p>${escapeHtml(uiLang === "th" ? "\u0e04\u0e33\u0e16\u0e32\u0e21 \u0e23\u0e32\u0e22\u0e07\u0e32\u0e19\u0e1a\u0e31\u0e4a\u0e01 \u0e2b\u0e23\u0e37\u0e2d\u0e2d\u0e22\u0e32\u0e01\u0e40\u0e2a\u0e19\u0e2d\u0e41\u0e19\u0e30? \u0e1a\u0e2d\u0e01\u0e40\u0e23\u0e32\u0e27\u0e48\u0e32\u0e40\u0e01\u0e34\u0e14\u0e2d\u0e30\u0e44\u0e23\u0e02\u0e36\u0e49\u0e19 \u0e04\u0e38\u0e13\u0e17\u0e33\u0e2d\u0e30\u0e44\u0e23\u0e2d\u0e22\u0e39\u0e48\u0e15\u0e2d\u0e19\u0e19\u0e31\u0e49\u0e19 \u0e41\u0e25\u0e30\u0e43\u0e0a\u0e49\u0e2d\u0e38\u0e1b\u0e01\u0e23\u0e13\u0e4c\u0e2d\u0e30\u0e44\u0e23" : "Questions, a bug to report, or a suggestion? Tell us what happened, what you were doing, and which device you use.")}</p>` +
     `<p><a class="contact-btn" href="mailto:${SUPPORT_EMAIL}"><span class="mail-ic" aria-hidden="true">&#9993;</span> ${SUPPORT_EMAIL}</a></p></section>` +
+    channelsHtml +
     `<p class="contact-links"><a href="/terms">${escapeHtml(d.terms)}</a> · <a href="/privacy">${escapeHtml(d.privacy)}</a> · <a href="/cards">${escapeHtml(d.cardsTitle)}</a></p>`;
   return shell(d.drawerHelp, d.drawerHelp, body, uiLang, account);
 }

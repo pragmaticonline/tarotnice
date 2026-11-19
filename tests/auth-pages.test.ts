@@ -23,6 +23,19 @@ describe("auth pages", () => {
     expect(html).not.toContain("Premium");
   });
 
+  it("register asks News & offers as an unchecked opt-in", async () => {
+    for (const cookie of ["", "nl_ui=th"]) {
+      const html = await (
+        await app.request("/register", { headers: cookie ? { cookie } : {} })
+      ).text();
+      expect(html).toContain('id="promo-opt"');
+      expect(html).toContain("notifyPromo");
+    }
+    const html = await (await app.request("/register")).text();
+    const tag = html.slice(html.indexOf('id="promo-opt"') - 60, html.indexOf('id="promo-opt"'));
+    expect(tag).not.toContain("checked");
+  });
+
   it("register consent links open Terms/Privacy in a new tab", async () => {
     // New tabs keep the typed invite code and form: no navigation away.
     // (?ui= itself 302s to set the cookie, so pass the cookie directly.)

@@ -2017,7 +2017,7 @@ app.get("/api/me/summary", async (c) => {
   if (!user || !c.env?.DB) {
     return c.json({
       user: null,
-      prefs: { lang: ui, theme: null, nickname: null, notifyDaily: true, notifyPromo: true },
+      prefs: { lang: ui, theme: null, nickname: null, notifyDaily: true, notifyPromo: false },
       streak: { current: 0, longest: 0, activeToday: false },
       quota: { used: 0, limit: questionLimit(c.env), resetsAt: nextBangkokMidnight() },
     });
@@ -2055,7 +2055,7 @@ app.get("/api/me/summary", async (c) => {
       providers: account?.providers ?? [],
     },
     authProviders: { google: googleConfigured(c.env), line: lineConfigured(c.env) && LINE_LOGIN_VISIBLE },
-    prefs: prefs ?? { lang: ui, theme: null, nickname: null, notifyDaily: true, notifyPromo: true },
+    prefs: prefs ?? { lang: ui, theme: null, nickname: null, notifyDaily: true, notifyPromo: false },
     streak: computeStreak(days, today),
     quota: { used, limit: await effectiveLimit(c.env, store, user.id), resetsAt: nextBangkokMidnight() },
     tokens: {

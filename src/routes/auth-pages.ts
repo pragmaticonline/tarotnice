@@ -33,6 +33,9 @@ const STYLE = `<style>
 .pw-row input{flex:1}
 .pw-toggle{white-space:nowrap}
 .auth-or{text-align:center;color:var(--muted);margin:1rem 0 .2rem}
+.auth-card .auth-opt{display:flex;gap:.6rem;align-items:flex-start;font-weight:400;margin:1rem 0 0;cursor:pointer}
+.auth-card .auth-opt input{width:22px;height:22px;min-height:0;flex:none;margin:.1rem 0 0;padding:0;accent-color:var(--accent)}
+.auth-card .auth-opt small{display:block;font-weight:400;opacity:.75}
 .social-btn{width:100%;margin-top:.6rem}
 .social-btn[data-social="line"]{background:#06C755;border-color:#06C755;color:#fff;box-shadow:none}
 .social-btn[data-social="line"]:hover{background:#06C755;border-color:#06C755;color:#fff;box-shadow:inset 0 0 0 999px rgba(0,0,0,.1)}
@@ -171,6 +174,7 @@ ${socialButtons(social, d)}
 <input id="email" type="email" autocomplete="email" required>
 ${passwordField("password", d.passwordLabel, d, "new-password")}
 ${returnField(ret)}
+<label class="auth-opt"><input type="checkbox" id="promo-opt"><span><b>${escapeHtml(d.notifyPromoLabel)}</b><small>${escapeHtml(d.notifyPromoSub)}</small></span></label>
 <p class="auth-err" id="err" role="alert">${socialErr ? escapeHtml(socialErr) : ""}</p>
 <button class="btn" type="submit">${escapeHtml(d.createAccountBtn)}</button>
 </form>
@@ -251,12 +255,13 @@ document.getElementById("register-form").addEventListener("submit", async (e) =>
       err.textContent = data.message || "Could not create the account. Check your details and try again.";
       return;
     }
-    // Seed the nickname the readings will use.
+    // Seed the nickname the readings will use, plus the explicit
+    // News & offers choice (unchecked = stays opted out, PDPA opt-in).
     try {
       await fetch("/api/me/prefs", {
         method: "PUT", credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nickname: name }),
+        body: JSON.stringify({ nickname: name, notifyPromo: document.getElementById("promo-opt").checked }),
       });
     } catch {}
     if (data.user && data.user.emailVerified === false && !data.token) {

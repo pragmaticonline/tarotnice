@@ -155,11 +155,11 @@ describe("share landing board", () => {
 });
 
 describe("terms board", () => {
-  it("has tabs, the updated line, anchors and all six sections", () => {
+  it("has tabs, the effective date, anchors and all eight sections", () => {
     const html = termsPage("en");
-    expect(html).toContain("Last updated 1 November 2026");
+    expect(html).toContain("Effective 19 November 2026");
     expect(html).toContain("ON THIS PAGE");
-    for (const id of ["what", "advice", "account", "tokens", "privacy", "contact"]) {
+    for (const id of ["who", "eligibility", "what", "advice", "account", "tokens", "privacy", "contact"]) {
       expect(html).toContain(`id="${id}"`);
       expect(html).toContain(`href="#${id}"`);
     }
