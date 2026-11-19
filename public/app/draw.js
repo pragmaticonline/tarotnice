@@ -879,7 +879,18 @@
     });
     }
     connect();
-    return { close: function () { finished = true; clearInterval(watchdog); try { if (es) es.close(); } catch (err) {} } };
+    return {
+      close: function () { finished = true; clearInterval(watchdog); try { if (es) es.close(); } catch (err) {} },
+      // Prefetch handover: move everything rendered so far into the real
+      // step-3 mount and keep rendering there. Nodes move (not cloned),
+      // so the synth element and its delegated listeners survive; the
+      // live EventSource is untouched, so there is no reconnect and no
+      // replay — the user keeps every word streamed during picking.
+      moveTo: function (newMount) {
+        while (mount.firstChild) newMount.appendChild(mount.firstChild);
+        mount = newMount;
+      },
+    };
   }
 
   // Idle stage: the stacked 78-card deck and slot frames are visible

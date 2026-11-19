@@ -482,6 +482,63 @@
     if (remaining <= 0) sleepMode(null);
   }
 
+  // Shared by the live renderer and the prefetch renderer (whose nodes
+  // move onto the real mount at step 3, keeping these listeners).
+  function followUpFromReading(question) {
+    var orig = currentReadingQuestion();
+    showStep(1);
+    setFollowupLabel(orig);
+    var q = document.getElementById("q");
+    if (q) {
+      q.value = question;
+      q.focus();
+    }
+    // The finished reading left the submit button disabled
+    // (submit() disables it; only Ask again re-enabled it).
+    var form = document.getElementById("ask-form");
+    var submitBtn = form && form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = false;
+    if (window.TarotHome) window.TarotHome.refresh();
+  }
+
+  // Prefetch state: at most one live prefetch; superseded on resubmit.
+  var activePrefetch = null;
+
+  // Open the reading stream while the user is still picking cards,
+  // rendering into a detached node. Nothing is shown yet; step 3
+  // adopts the live connection and DOM (see handoverPrefetch), so the
+  // minutes spent shuffling and picking overlap generation instead of
+  // preceding it. Terminal states are recorded, not rendered: a failed
+  // prefetch falls back to the normal path at step 3 (retry panel),
+  // and completion UI runs at handover, never mid-pick.
+  function startPrefetch(reading, lang) {
+    var box = document.createElement("div");
+    var pf = { readingId: reading.id, box: box, handle: null, done: null, error: null, waiters: [] };
+    pf.handle = window.TarotDraw.renderReading(box, reading, lang, "/api/readings/" + reading.id + "/stream", {
+      onDone: function (summary, full) {
+        pf.done = { summary: summary, full: full };
+        var fns = pf.waiters;
+        pf.waiters = [];
+        fns.forEach(function (fn) { try { fn(); } catch (e) {} });
+      },
+      onFollowUp: followUpFromReading,
+      onFreshAsk: function () {
+        freshStart();
+      },
+      onError: function (kind) {
+        pf.error = kind || "reading_failed";
+      },
+    });
+    return pf;
+  }
+
+  function closePrefetch(pf) {
+    if (!pf) return;
+    try {
+      if (pf.handle) pf.handle.close();
+    } catch (e) {}
+  }
+
   async function streamInto(mount, reading, lang, onDone) {
     window.TarotDraw.renderReading(mount, reading, lang, "/api/readings/" + reading.id + "/stream", {
       onDone: function (summary, full) {
@@ -493,22 +550,7 @@
         disc.textContent = t("disclaimer");
         mount.appendChild(disc);
       },
-      onFollowUp: function (question) {
-        var orig = currentReadingQuestion();
-        showStep(1);
-        setFollowupLabel(orig);
-        var q = document.getElementById("q");
-        if (q) {
-          q.value = question;
-          q.focus();
-        }
-        // The finished reading left the submit button disabled
-        // (submit() disables it; only Ask again re-enabled it).
-        var form = document.getElementById("ask-form");
-        var submitBtn = form && form.querySelector('button[type="submit"]');
-        if (submitBtn) submitBtn.disabled = false;
-        if (window.TarotHome) window.TarotHome.refresh();
-      },
+      onFollowUp: followUpFromReading,
       // "Ask something new" under Explore further: leave the reading
       // behind and start over like a first visit.
       onFreshAsk: function () {
@@ -554,6 +596,36 @@
         mount.appendChild(btn);
       },
     });
+  }
+
+  // Step-3 adoption of a prefetch started at draw time: move the live
+  // DOM (and its still-streaming connection) onto the real mount — no
+  // reconnect, no replay, no lost text. Runs the same completion UI as
+  // the normal path. A failed or superseded prefetch falls back to a
+  // normal stream, which shows the retry panel via the normal path.
+  function handoverPrefetch(pf, mount, reading, lang, remaining) {
+    if (!pf || pf.error || !pf.handle || pf.readingId !== reading.id) {
+      closePrefetch(pf);
+      streamInto(mount, reading, lang, function () {
+        if (window.TarotHome) window.TarotHome.refresh();
+        againButton(mount, reading, remaining);
+      });
+      return;
+    }
+    pf.handle.moveTo(mount);
+    var completeIt = function () {
+      if (window.TarotHome) window.TarotHome.refresh();
+      againButton(mount, reading, remaining);
+      var disc = document.createElement("p");
+      disc.className = "disclaimer";
+      disc.textContent = t("disclaimer");
+      mount.appendChild(disc);
+    };
+    if (pf.done) {
+      completeIt();
+    } else {
+      pf.waiters.push(completeIt);
+    }
   }
 
   function enterDraw(question, topicText) {
@@ -649,6 +721,9 @@
         token = window.turnstile.getResponse() || "";
       }
     } catch (e) {}
+    // A new question supersedes any in-flight prefetch for the old one.
+    closePrefetch(activePrefetch);
+    activePrefetch = null;
     startWait();
     var res;
     try {
@@ -758,6 +833,9 @@
       };
     });
     var reading = { id: res.data.id, cards: enriched };
+    // Fire the generation now: picking and revealing take a while, and
+    // the reading does not depend on them. Step 3 adopts this stream.
+    activePrefetch = startPrefetch(reading, lang);
     // A resumed draw keeps its original question on screen.
     var shownQ = res.data.resumed && res.data.question ? res.data.question : question;
     var shownTopic = topicLabel(res.data.resumed && res.data.topic ? res.data.topic : topic);
@@ -777,11 +855,12 @@
     enterRead(shownQ, shownTopic, reading.cards);
     var mount2 = readingMount();
     bubble(lang === "th" ? "\u0e19\u0e35\u0e48\u0e04\u0e37\u0e2d\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13" : "Here is your reading");
-    streamInto(mount2, reading, lang, function () {
-      if (window.TarotHome) window.TarotHome.refresh();
-      var left = typeof res.data.remaining === "number" ? res.data.remaining : 1;
-      againButton(mount2, reading, left);
-    });
+    var left = typeof res.data.remaining === "number" ? res.data.remaining : 1;
+    // Adopt the prefetch started at draw time (same completion UI as a
+    // fresh stream); falls back to a normal stream when it errored.
+    var pf = activePrefetch;
+    activePrefetch = null;
+    handoverPrefetch(pf, mount2, reading, lang, left);
   }
 
   function init() {
