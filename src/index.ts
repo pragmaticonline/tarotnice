@@ -21,13 +21,10 @@ import {
   isLang,
   isTopic,
   isCompleteReading,
-  missingCardNames,
   normalizeCardSummaries,
   parseSummary,
   pickSpread,
   proofreadThai,
-  takeCompletedBlocks,
-  translateBlockToThai,
   sseEvent,
   streamDeltas,
   toPromptCard,
@@ -615,160 +612,49 @@ app.get("/api/readings/:id/stream", async (c) => {
         const aiRun = (m: string, input: unknown) => c.env.AI!.run(m as never, input as never) as Promise<unknown>;
         let full = "";
         if (lang === "th") {
-          // Thai path: generate an English master (never sent to the
-          // client), translate each completed block, and stream the
-          // Thai in small paced chunks so the typing animation stays.
-          // Direct Thai generation kept skipping structure, duplicating
-          // the summary, and drifting in tone; the master keeps the
-          // interpretation identical across languages.
+          // Thai path: generate Thai directly with Gemma, same
+          // single-pass shape as the English path below — stream
+          // deltas live, validate card names and completeness, same
+          // refund-on-failure semantics. No English master and no
+          // translation step: the master-plus-translate pipeline was
+          // the dominant cost of every Thai reading.
           const topic = isTopic(row.topic) ? row.topic : "general";
-          const enViews: PromptCard[] = [];
+          const thViews: PromptCard[] = [];
           for (const card of row.cards) {
-            const view = await store.getCard(card.id, "en");
+            const view = await store.getCard(card.id, "th");
             if (!view) throw new Error("unknown_card");
-            enViews.push(toPromptCard(view, card.reversed, topic));
+            thViews.push(toPromptCard(view, card.reversed, topic));
           }
-          const master = buildReadingPrompt({
-            lang: "en", topic,
-            question: row.question, cards: enViews, prev, nickname,
+          const thPrompt = buildReadingPrompt({
+            lang: "th", topic,
+            question: row.question, cards: thViews, prev, nickname,
           });
-          const enSpread = pickSpread(row.question, topic, "en");
-          const thSpread = pickSpread(row.question, topic, "th");
-          const positionMap = enSpread.map((p, i) => `${p}=${thSpread[i]}`);
-          // Block translation has its own model (Gemma 4): proofreading
-          // stays on PROOFREAD_MODEL. Falls back to the proofread
-          // model, then the Qwen default, so old envs keep working.
-          const translator = c.env.TRANSLATE_MODEL?.trim() ||
+          // Gemma writes Thai directly; falls back down the same chain
+          // as the old translator so unconfigured envs keep working.
+          const thModel = c.env.TRANSLATE_MODEL?.trim() ||
             c.env.PROOFREAD_MODEL?.trim() || "@cf/qwen/qwen3-30b-a3b-fp8";
-          const thaiBlocks: string[] = [];
-          // Per-block translation state for ordered live emit. Each
-          // block starts translating the moment the master completes
-          // it; translations run concurrently, but Thai emits in
-          // source order through the serialized pump below, so deltas
-          // from two blocks can never interleave mid-sentence.
-          type Slot = { source: string; buf: string; full: string; done: boolean };
-          const slots = new Map<number, Slot>();
-          let seq = 0;
-          let nextEmit = 0;
-          let emitTail: Promise<void> = Promise.resolve();
-          const needed = enViews.map((v) => v.name);
-          // A translated block must preserve the source's card-name
-          // set exactly: dropped names break card art, added names
-          // are hallucinations (live: "The Fool" card lines for
-          // cards never drawn).
-          const badBlock = (blockEn: string, t: string | null) =>
-            !t ||
-            missingCardNames(blockEn, t, needed).length > 0 ||
-            alienCardNames(blockEn, t).length > 0;
-          // Non-streamed fallback chain (existing behavior): translator,
-          // then reading model.
-          const translateBulk = async (blockEn: string): Promise<string | null> =>
-            (await translateBlockToThai(aiRun, translator, blockEn, positionMap)) ??
-            (await translateBlockToThai(aiRun, model, blockEn, positionMap));
-          const pump = () => {
-            emitTail = emitTail.then(async () => {
-              try {
-                while (slots.has(nextEmit)) {
-                  const index = nextEmit;
-                  const slot = slots.get(index)!;
-                  // Forward translated text live as it streams in.
-                  while (slot.buf.length > 0 || !slot.done) {
-                    if (slot.buf.length === 0) {
-                      await new Promise((r) => setTimeout(r, 40));
-                      continue;
-                    }
-                    const chunk = slot.buf.slice(0, 120);
-                    slot.buf = slot.buf.slice(120);
-                    send(sseEvent("delta", JSON.stringify(chunk)));
-                  }
-                  // Block complete: validate, repair by swap on failure.
-                  // A still-bad block fails the reading for refund +
-                  // retry instead of storing a wrong reading.
-                  let accepted: string | null = slot.full;
-                  if (badBlock(slot.source, accepted)) {
-                    accepted = await translateBulk(slot.source);
-                    if (badBlock(slot.source, accepted)) {
-                      accepted = await translateBulk(slot.source);
-                    }
-                  }
-                  if (!accepted || badBlock(slot.source, accepted)) throw new Error("translation_failed");
-                  thaiBlocks[index] = accepted;
-                  if (accepted !== slot.full) {
-                    // The client already painted the bad stream: swap in
-                    // the corrected full text so far.
-                    send(sseEvent("final", JSON.stringify(thaiBlocks.slice(0, index + 1).join("\n\n"))));
-                  }
-                  slots.delete(nextEmit);
-                  nextEmit++;
-                }
-              } catch (e) {
-                queueError ??= e;
-              }
-            });
-            return emitTail;
-          };
-          let enFull = "";
-          let enBuf = "";
           send(sseEvent("status", JSON.stringify({ phase: "translating" })));
           hb = setInterval(() => {
             try { send(sseEvent("status", JSON.stringify({ phase: "translating" }))); } catch { /* closed */ }
           }, 15_000);
-          // Translations run alongside generation: each completed
-          // block starts translating immediately (blocks are
-          // independent), while the serialized pump above emits Thai
-          // in source order. Awaiting each one inside the stream loop
-          // used to pause the master stream until its deadline expired
-          // mid-reading (the "couldn't read the cards" failures).
-          const jobs: Promise<void>[] = [];
-          let queueError: unknown = null;
-          const queueBlock = (b: string) => {
-            const i = seq++;
-            slots.set(i, { source: b, buf: "", full: "", done: false });
-            jobs.push(
-              (async () => {
-                try {
-                  await translateBlockToThai(aiRun, translator, b, positionMap, 45_000, (d) => {
-                    const s = slots.get(i);
-                    if (s) { s.buf += d; s.full += d; }
-                  });
-                } catch {
-                  // Best-effort live path: the pump's validation falls
-                  // back to the bulk chain on anything unusable.
-                } finally {
-                  const s = slots.get(i);
-                  if (s) s.done = true;
-                }
-              })().catch((e) => { queueError ??= e; }),
-            );
-            void pump();
-          };
-          for await (const delta of streamDeltas(aiRun, model, {
+          for await (const delta of streamDeltas(aiRun, thModel, {
             messages: [
-              { role: "system", content: master.system },
-              { role: "user", content: master.user },
+              { role: "system", content: thPrompt.system },
+              { role: "user", content: thPrompt.user },
             ],
             max_tokens: 2048,
-          // Live: the English master needs well over 120s; the old
-          // deadline killed healthy streams mid-reading.
+            // Low reasoning effort: reasoning models can spend the
+            // whole budget thinking and return no content (seen live
+            // with Qwen 3.8); measured to roughly halve Gemma's
+            // time-to-first-token on this workload.
+            reasoning_effort: "low",
+          // Live: a full reading needs minutes to stream; the old
+          // short deadline killed healthy streams mid-reading.
           }, 300_000)) {
-            enFull += delta;
-            enBuf += delta;
-            const taken = takeCompletedBlocks(enBuf);
-            enBuf = taken.rest;
-            for (const b of taken.blocks) queueBlock(b);
+            full += delta;
+            send(sseEvent("delta", JSON.stringify(delta)));
           }
-          const tail = takeCompletedBlocks(enBuf + "\n\n");
-          for (const b of tail.blocks) queueBlock(b);
-          await Promise.all(jobs);
-          // The pump (validation, repair swaps, ordered emit) runs on
-          // its own chain: wait for it too before declaring victory.
-          await emitTail;
-          if (queueError) throw queueError instanceof Error ? queueError : new Error("translation_failed");
-          enFull = enFull.trim();
-          if (!enFull) throw new Error("empty_response");
-          if (!isCompleteReading(enFull, enViews.map((v) => v.name))) throw new Error("incomplete_response");
-          full = thaiBlocks.join("\n\n").trim();
-          if (!full) throw new Error("empty_response");
+          full = full.trim();
         } else {
           for await (const delta of streamDeltas(aiRun, model, {
             messages: [

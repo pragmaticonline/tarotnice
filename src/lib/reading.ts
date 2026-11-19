@@ -168,20 +168,6 @@ export async function proofreadThai(
   }
 }
 
-/** Split a streaming buffer into blank-line-completed blocks, keeping
- *  the trailing partial block as the rest. Empty blocks are dropped. */
-export function takeCompletedBlocks(buffer: string): { blocks: string[]; rest: string } {
-  const parts = buffer.split(/\n\s*\n/);
-  const rest = parts.pop() ?? "";
-  return { blocks: parts.map((b) => b.trim()).filter(Boolean), rest };
-}
-
-/**
- * Translate one completed English block of a reading into Thai.
- * Returns null on any failure, empty output, or output with no Thai
- * script (the Thai user must never be shown the English master).
- * Position mappings are "English=Thai" strings substituted by name.
- */
 /** Canonical Thai section labels a translated reading must use. */
 const THAI_SECTION_LABELS = [
   "\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21",
@@ -225,76 +211,6 @@ export function hasBrokenThaiLabels(text: string): boolean {
     if (THAI_SECTION_LABELS.some((c) => editDistance(label, c) <= 3)) return true;
   }
   return false;
-}
-
-export async function translateBlockToThai(
-  aiRun: (model: string, input: unknown) => Promise<unknown>,
-  model: string,
-  block: string,
-  positionMap: string[],
-  timeoutMs = 45_000,
-  onDelta?: (t: string) => void,
-): Promise<string | null> {
-  try {
-    const params = {
-      // Low reasoning effort: reasoning models can spend the whole
-      // budget thinking and return no content (seen live with Qwen
-      // 3.8); the roomier token cap covers the thinking plus answer.
-      reasoning_effort: "low",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a professional English-to-Thai translator for a tarot reading app. Translate the user's English tarot text into natural, warm, fluent Thai. Rules: preserve the paragraph structure, line breaks, '- ' bullet items, numbers, and **bold** markers exactly; keep tarot card names in English exactly as written; copy every English card name character-for-character, never translate or transliterate it; translate section labels exactly as follows: 'Overview:' -> '\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21:', '**Guidance:**' -> '**\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33:**', 'Guidance:' -> '\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33:', '**What to do:**' -> '**\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22:**', 'What to do:' -> '\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22:', '**Explore further:**' -> '**\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d:**', 'Explore further:' -> '\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d:', 'Summary:' -> '\u0e2a\u0e23\u0e38\u0e1b:'. " +
-            (positionMap.length
-              ? "Translate spread position names exactly as follows: " + positionMap.join("; ") + ". "
-              : "") +
-            "Use \u0e44\u0e1e\u0e48 for a tarot card (never \u0e1a\u0e31\u0e15\u0e23) and \u0e04\u0e38\u0e13 for 'you'. At the start of a card paragraph, keep the number, the position name, and the **English card name** exactly as in the source \u2014 do not insert \u0e44\u0e1e\u0e48 before the English card name there. Spell every Thai word completely and correctly, with no dropped consonants, vowels, or tone marks. Do not add, remove, summarize, or explain anything. Return only the translated text. Answer immediately without thinking step by step.",
-        },
-        { role: "user", content: block },
-      ],
-      max_tokens: 4000,
-    };
-    let raw: unknown;
-    if (onDelta) {
-      // Live path: stream the translation and forward Thai deltas as
-      // they arrive, so the first text paints after time-to-first-token
-      // instead of after the whole block. Reasoning traces never reach
-      // the caller: streamDeltas only yields answer content.
-      try {
-        let out = "";
-        for await (const delta of streamDeltas(aiRun, model, { ...params, stream: true }, timeoutMs)) {
-          out += delta;
-          onDelta(delta);
-        }
-        raw = out;
-      } catch {
-        return null;
-      }
-    } else {
-      const call = aiRun(model, params);
-      raw = await Promise.race([
-        call,
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), timeoutMs)),
-      ]);
-    }
-    const unwrapped =
-      typeof raw === "string"
-        ? raw
-        : ((raw as { response?: unknown })?.response as string) ??
-          ((raw as { choices?: { message?: { content?: unknown } }[] })?.choices?.[0]?.message?.content as string) ??
-          "";
-    // A thinking trace with no answer is a miss, not a translation.
-    if (!unwrapped || typeof unwrapped !== "string" || !unwrapped.trim()) return null;
-    const out = unwrapped.trim().replace(/^```[a-z]*\n?|\n?```$/g, "");
-    if (!out) return null;
-    if (!/[\u0e00-\u0e7f]/.test(out)) return null;
-    const ratio = out.length / Math.max(1, block.length);
-    if (ratio < 0.35 || ratio > 2.2) return null;
-    return out;
-  } catch {
-    return null;
-  }
 }
 
 /** Supportive reply (no reading). Thai users get the 1323 hotline. */

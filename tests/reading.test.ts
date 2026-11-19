@@ -20,9 +20,7 @@ import {
   pickSpread,
   sseEvent,
   streamDeltas,
-  takeCompletedBlocks,
   toPromptCard,
-  translateBlockToThai,
   hasBrokenThaiLabels,
 } from "../src/lib/reading";
 
@@ -633,52 +631,6 @@ describe("parseSummary", () => {
     expect(parseSummary("Body.\n**Summary:** Trust the slow build.")).toBe("Trust the slow build.");
     const th = "Body.\n**\u0e2a\u0e23\u0e38\u0e1b:** \u0e44\u0e27\u0e49\u0e43\u0e08\u0e08\u0e31\u0e07\u0e2b\u0e27\u0e30\u0e02\u0e2d\u0e07\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07";
     expect(parseSummary(th)).toBe("\u0e44\u0e27\u0e49\u0e43\u0e08\u0e08\u0e31\u0e07\u0e2b\u0e27\u0e30\u0e02\u0e2d\u0e07\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07");
-  });
-});
-
-describe("translate pipeline helpers", () => {
-  it("takeCompletedBlocks returns only blank-line-terminated blocks", () => {
-    expect(takeCompletedBlocks("one\n\ntwo\n\nthr")).toEqual({ blocks: ["one", "two"], rest: "thr" });
-    expect(takeCompletedBlocks("no boundary")).toEqual({ blocks: [], rest: "no boundary" });
-    expect(takeCompletedBlocks("a\n\n\n\nb\n\n")).toEqual({ blocks: ["a", "b"], rest: "" });
-  });
-
-  it("translateBlockToThai returns the model translation and maps labels in its prompt", async () => {
-    let seenSystem = "";
-    const aiRun = async (_m: string, input: unknown) => {
-      seenSystem = (input as { messages: { content: string }[] }).messages[0].content;
-      return { response: "\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21: \u0e44\u0e1e\u0e48\u0e2a\u0e32\u0e21\u0e43\u0e1a\u0e1a\u0e2d\u0e01\u0e27\u0e48\u0e32\u0e58" };
-    };
-    const out = await translateBlockToThai(aiRun, "qwen", "Overview: The three cards say yes.", ["What are my options=\u0e17\u0e32\u0e07\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19"]);
-    expect(out).toContain("\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21:");
-    expect(seenSystem).toContain("keep tarot card names in English");
-    expect(seenSystem).toContain("\u0e2a\u0e23\u0e38\u0e1b:");
-    expect(seenSystem).toContain("\u0e17\u0e32\u0e07\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19");
-    expect(seenSystem).toContain("\u0e44\u0e1e\u0e48 for a tarot card");
-  });
-
-  it("translateBlockToThai returns null on failure or empty output", async () => {
-    expect(await translateBlockToThai(async () => { throw new Error("down"); }, "qwen", "Overview: x", [])).toBeNull();
-    expect(await translateBlockToThai(async () => ({ response: "  " }), "qwen", "Overview: x", [])).toBeNull();
-    expect(await translateBlockToThai(async () => ({ response: "Overview: still english, no thai script" }), "qwen", "Overview: x", [])).toBeNull();
-  });
-
-  it("translateBlockToThai forwards streamed deltas to onDelta live", async () => {
-    const sse =
-      'data: {"choices":[{"delta":{"content":" \u0e20\u0e32\u0e1e"}}]}' + "\n\n" +
-      'data: {"choices":[{"delta":{"content":"\u0e23\u0e27\u0e21"}}]}' + "\n\n" +
-      "data: [DONE]\n\n";
-    const seen: string[] = [];
-    const aiRun = async () =>
-      new ReadableStream({
-        start(c) {
-          c.enqueue(new TextEncoder().encode(sse));
-          c.close();
-        },
-      });
-    const out = await translateBlockToThai(aiRun as never, "qwen", "Overview: x", [], 5000, (d) => seen.push(d));
-    expect(seen.join("")).toBe(" \u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21");
-    expect(out).toBe("\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21");
   });
 });
 
