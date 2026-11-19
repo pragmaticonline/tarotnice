@@ -601,3 +601,13 @@ button.cal-cell.sel{outline:2px solid var(--accent);outline-offset:1px}
 .shuffle-cost .moonstone{position:relative;top:.15em;margin:0 .1em}
 .shuffle-price{color:var(--gold)}
 :root[data-mode="night"] .shuffle-price{color:#fff}
+/* Night-mode legibility: several surfaces use fixed light-theme colors
+   that vanish on the dark background. These overrides keep day mode
+   pixel-identical and only retune night contrast. */
+:root[data-mode="night"] .line-friend-card{background:#1d3327;border-color:#2e5c42}
+:root[data-mode="night"] .line-redeem-note{color:var(--muted)}
+:root[data-mode="night"] .rtext .sec-advice .sec-title{color:var(--accent)}
+:root[data-mode="night"] .pack-note{color:var(--muted)}
+:root[data-mode="night"] .invite-stats-card{background:#221d45}
+:root[data-mode="night"] .journal-ok,:root[data-mode="night"] .drawer-method-state{color:#7fd08a}
+:root[data-mode="night"] .reading-err,:root[data-mode="night"] .tx-delta.neg,:root[data-mode="night"] .drawer-danger{color:#ff9d8a}

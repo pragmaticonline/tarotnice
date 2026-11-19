@@ -182,6 +182,51 @@ export function takeCompletedBlocks(buffer: string): { blocks: string[]; rest: s
  * script (the Thai user must never be shown the English master).
  * Position mappings are "English=Thai" strings substituted by name.
  */
+/** Canonical Thai section labels a translated reading must use. */
+const THAI_SECTION_LABELS = [
+  "\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21",
+  "\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33",
+  "\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22",
+  "\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d",
+  "\u0e2a\u0e23\u0e38\u0e1b",
+];
+
+function editDistance(a: string, b: string): number {
+  const prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    let diag = prev[0];
+    prev[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const next = Math.min(prev[j] + 1, prev[j - 1] + 1, diag + (a[i - 1] === b[j - 1] ? 0 : 1));
+      diag = prev[j];
+      prev[j] = next;
+    }
+  }
+  return prev[b.length];
+}
+
+/**
+ * True when translated Thai text shows a section header that is close
+ * to, but not exactly, one of the canonical labels (a mangled header
+ * such as a misspelled "**...:**" line). Only the label-looking prefix
+ * (before the first colon, at most 30 chars) counts, so body sentences
+ * with colons do not trigger it; English labels and ordinary prose are
+ * left alone, since the spelling pass could not repair those anyway.
+ * Callers use this to run the proofread repair only when it has
+ * something to fix.
+ */
+export function hasBrokenThaiLabels(text: string): boolean {
+  for (const rawLine of text.split("\n")) {
+    const line = rawLine.trim().replace(/^\*\*/, "");
+    const cut = line.indexOf(":");
+    if (cut < 1 || cut > 30) continue;
+    const label = line.slice(0, cut).replace(/\*+$/, "").trim();
+    if (!label || THAI_SECTION_LABELS.includes(label)) continue;
+    if (THAI_SECTION_LABELS.some((c) => editDistance(label, c) <= 3)) return true;
+  }
+  return false;
+}
+
 export async function translateBlockToThai(
   aiRun: (model: string, input: unknown) => Promise<unknown>,
   model: string,

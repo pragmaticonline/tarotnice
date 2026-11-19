@@ -23,6 +23,7 @@ import {
   takeCompletedBlocks,
   toPromptCard,
   translateBlockToThai,
+  hasBrokenThaiLabels,
 } from "../src/lib/reading";
 
 describe("question validation", () => {
@@ -660,6 +661,27 @@ describe("translate pipeline helpers", () => {
     expect(await translateBlockToThai(async () => { throw new Error("down"); }, "qwen", "Overview: x", [])).toBeNull();
     expect(await translateBlockToThai(async () => ({ response: "  " }), "qwen", "Overview: x", [])).toBeNull();
     expect(await translateBlockToThai(async () => ({ response: "Overview: still english, no thai script" }), "qwen", "Overview: x", [])).toBeNull();
+  });
+});
+
+describe("hasBrokenThaiLabels", () => {
+  const clean =
+    " \u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21:\n \u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\n\n** \u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33:**\n \u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\n\n** \u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22:**\n-  \u0e02\u0e49\u0e2d \u0e2b\u0e19\u0e36\u0e48\u0e07\n\n** \u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d:**\n-  \u0e04\u0e33\u0e16\u0e32\u0e21\n\n \u0e2a\u0e23\u0e38\u0e1b:  \u0e08\u0e1a";
+  it("accepts a clean reading, even with sections missing", () => {
+    expect(hasBrokenThaiLabels(clean)).toBe(false);
+    expect(hasBrokenThaiLabels(" \u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21:  \u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\n\n \u0e2a\u0e23\u0e38\u0e1b:  \u0e08\u0e1a")).toBe(false);
+    expect(hasBrokenThaiLabels("no headers here")).toBe(false);
+  });
+
+  it("flags mangled Thai labels for proofread repair", () => {
+    expect(hasBrokenThaiLabels(clean.replace(" \u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22", " \u0e2a\u0e31\u0e48\u0e48\u0e07\u0e17\u0e35\u0e49\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22"))).toBe(true);
+    expect(hasBrokenThaiLabels(clean.replace(" \u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22", " \u0e2a\u0e37\u0e48\u0e07\u0e17\u0e35\u0e49\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22"))).toBe(true);
+    expect(hasBrokenThaiLabels("**\u0e2a\u0e23\u0e38\u0e1a:**  \u0e08\u0e1a")).toBe(true);
+  });
+
+  it("ignores English labels and body colons (nothing to repair)", () => {
+    expect(hasBrokenThaiLabels("**Guidance:**\nDo this")).toBe(false);
+    expect(hasBrokenThaiLabels(" \u0e2b\u0e21\u0e32\u0e22\u0e40\u0e2b\u0e15\u0e38:  \u0e2d\u0e48\u0e32\u0e19 \u0e15\u0e48\u0e2d")).toBe(false);
   });
 });
 

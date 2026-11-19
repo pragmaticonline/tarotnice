@@ -16,6 +16,7 @@ import {
   crisisWatchHit,
   drawReadingCards,
   guessTopic,
+  hasBrokenThaiLabels,
   isCrisisQuestion,
   isLang,
   isTopic,
@@ -613,7 +614,6 @@ app.get("/api/readings/:id/stream", async (c) => {
         });
         const aiRun = (m: string, input: unknown) => c.env.AI!.run(m as never, input as never) as Promise<unknown>;
         let full = "";
-        let translated = false;
         if (lang === "th") {
           // Thai path: generate an English master (never sent to the
           // client), translate each completed block, and stream the
@@ -742,7 +742,6 @@ app.get("/api/readings/:id/stream", async (c) => {
           if (!isCompleteReading(enFull, enViews.map((v) => v.name))) throw new Error("incomplete_response");
           full = thaiBlocks.join("\n\n").trim();
           if (!full) throw new Error("empty_response");
-          translated = true;
         } else {
           for await (const delta of streamDeltas(aiRun, model, {
             messages: [
@@ -765,7 +764,12 @@ app.get("/api/readings/:id/stream", async (c) => {
         // Actions structure without the Summary line still counts —
         // the fixed fallback summary covers the glance lead.
         if (!isCompleteReading(full, views.map((v) => v.name))) throw new Error("incomplete_response");
-        if (lang === "th" && !translated && c.env.AI) {
+        // Post-stream proofread, only when a section header came out
+        // mangled: the pass is a full extra model call, so clean Gemma
+        // output skips it. (The old `!translated` gate could never
+        // fire — the flag was always true here — so proofread was
+        // effectively off already.)
+        if (lang === "th" && hasBrokenThaiLabels(full) && c.env.AI) {
           // Post-stream proofread: fix dropped Thai letters, then swap
           // the client's text via a final event before done.
           send(sseEvent("status", JSON.stringify({ phase: "proofreading" })));
