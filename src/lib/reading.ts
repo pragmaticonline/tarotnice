@@ -622,8 +622,9 @@ export async function* streamDeltas(
   params: unknown,
   timeoutMs = 0,
 ): AsyncGenerator<string> {
-  // Hard deadline for the whole generation (SPEC §10.6: 25 s). Each
-  // read races the remaining budget; expiry cancels the stream.
+  // Hard deadline for the whole generation (set by the caller to
+  // cover a full reading). Each read races the remaining budget;
+  // expiry cancels the stream.
   const deadline = timeoutMs > 0 ? Date.now() + timeoutMs : Infinity;
   const call = aiRun(model, { ...(params as Record<string, unknown>), stream: true });
   const res = deadline === Infinity

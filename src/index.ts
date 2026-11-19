@@ -682,7 +682,9 @@ app.get("/api/readings/:id/stream", async (c) => {
               { role: "user", content: master.user },
             ],
             max_tokens: 2048,
-          }, 120_000)) {
+          // Live: the English master needs well over 120s; the old
+          // deadline killed healthy streams mid-reading.
+          }, 300_000)) {
             enFull += delta;
             enBuf += delta;
             const taken = takeCompletedBlocks(enBuf);
@@ -706,7 +708,9 @@ app.get("/api/readings/:id/stream", async (c) => {
               { role: "user", content: prompt },
             ],
             max_tokens: 2048,
-          }, 60_000)) {
+          // Live: Llama 4 Scout needs well over 60s to stream a full
+          // ~2k-token reading; the old deadline killed healthy streams.
+          }, 180_000)) {
             full += delta;
             send(sseEvent("delta", JSON.stringify(delta)));
           }
