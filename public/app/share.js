@@ -63,7 +63,7 @@
     var res = await fetch("/api/share", {
       method: "POST", credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ kind: kind, ref: ref || null, showQuestion: !!showQuestion, mode: mode() }),
+      body: JSON.stringify({ kind: kind, ref: ref || null, showQuestion: !!showQuestion, mode: mode(), lang: uiLang() }),
     });
     if (!res.ok) throw new Error("share failed: " + res.status);
     return res.json();

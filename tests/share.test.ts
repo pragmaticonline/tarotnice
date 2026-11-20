@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import app from "../src/index";
 import { wrapText } from "../src/lib/share-images";
@@ -71,6 +72,22 @@ describe("share landing pages", () => {
     const html = unsharedPage("https://tarotnice.com", "en");
     expect(html).toContain("share was removed");
     expect(html).toContain('href="/"');
+  });
+});
+
+describe("share image language follows the sharer, not the reading", () => {
+  it("client sends its UI language and the server prefers it for the frame", () => {
+    const client = readFileSync(new URL("../public/app/share.js", import.meta.url), "utf8");
+    expect(client).toContain("lang: uiLang()");
+    const server = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
+    expect(server).toContain("bodyLang ?? (row.lang");
+    expect(server).toContain("bodyLang ?? (draw.lang");
+  });
+
+  it("Thai hidden-question line in share images is the agreed wording", () => {
+    const images = readFileSync(new URL("../src/lib/share-images.ts", import.meta.url), "utf8");
+    // คำถามถูกซ่อนไว้ as \u escapes in source.
+    expect(images).toContain("\\u0e04\\u0e33\\u0e16\\u0e32\\u0e21\\u0e16\\u0e39\\u0e01\\u0e0b\\u0e48\\u0e2d\\u0e19\\u0e44\\u0e27\\u0e49");
   });
 });
 

@@ -791,12 +791,16 @@ async function badgeAchieved(
 app.post("/api/share", async (c) => {
   const user = await authedUser(c);
   if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
-  let body: { kind?: unknown; ref?: unknown; showQuestion?: unknown; mode?: unknown };
+  let body: { kind?: unknown; ref?: unknown; showQuestion?: unknown; mode?: unknown; lang?: unknown };
   try {
     body = await c.req.json();
   } catch {
     return c.json({ error: "bad_request" }, 400);
   }
+  // The share image frame (hidden-question line, footer) follows the
+  // sharer's current UI language, not the reading's stored language:
+  // a Thai user sharing an English reading still gets a Thai frame.
+  const bodyLang = body.lang === "th" || body.lang === "en" ? body.lang : null;
   const showQuestion = body.showQuestion === true;
   const mode = body.mode === "night" ? "night" : "day";
   const store = d1TarotStore(c.env.DB);
@@ -809,7 +813,7 @@ app.post("/api/share", async (c) => {
     if (!row || row.userId !== user.id || row.status !== "complete") {
       return c.json({ error: "not_found" }, 404);
     }
-    lang = row.lang === "th" ? "th" : "en";
+    lang = bodyLang ?? (row.lang === "th" ? "th" : "en");
     shareId = row.shareId;
     if (!shareId) {
       shareId = newShareId();
@@ -819,7 +823,7 @@ app.post("/api/share", async (c) => {
   } else if (body.kind === "daily") {
     const draw = await store.getDaily(user.id, bangkokDay());
     if (!draw) return c.json({ error: "no_daily" }, 400);
-    lang = draw.lang === "th" ? "th" : "en";
+    lang = bodyLang ?? (draw.lang === "th" ? "th" : "en");
     shareId = draw.shareId;
     if (!shareId) {
       shareId = newShareId();
