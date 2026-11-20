@@ -217,11 +217,15 @@
     if (copyLink) copyLink.addEventListener("click", function () { copyText(inviteData.link, copyLink); });
     document.querySelectorAll("[data-share-invite]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        var text = msgEl ? msgEl.textContent : inviteData.link;
         var url = inviteData.link;
+        // The invite message already ends with the link; LINE appends
+        // the url= value to the text, so strip the link from the text
+        // or the shared message carries the link twice.
+        var text = (msgEl ? msgEl.textContent : "").split(url).join("").trim();
         var target = btn.getAttribute("data-share-invite");
         if (target !== "line") return;
-        var shareUrl = "https://social-plugins.line.me/lineit/share?url=" + encodeURIComponent(url) + "&text=" + encodeURIComponent(text);
+        var shareUrl = "https://social-plugins.line.me/lineit/share?url=" + encodeURIComponent(url) +
+          (text ? "&text=" + encodeURIComponent(text) : "");
         window.open(shareUrl, "_blank", "noopener,width=640,height=560");
       });
     });

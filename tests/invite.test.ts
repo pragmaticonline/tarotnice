@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   INVITE_ALPHABET,
@@ -48,5 +49,19 @@ describe("parseInviteRef", () => {
 
   it("keeps the alphabet unambiguous (no 0/O/1/I/L)", () => {
     for (const ch of INVITE_ALPHABET) expect("01IOL".includes(ch)).toBe(false);
+  });
+});
+
+describe("LINE invite share carries the link once", () => {
+  it("strips the link from the message text before adding url= (LINE appends it)", () => {
+    const src = readFileSync(new URL("../public/app/billing.js", import.meta.url), "utf8");
+    expect(src).toContain('split(url).join("")');
+    expect(src).toContain('text ? "&text=" + encodeURIComponent(text) : ""');
+  });
+
+  it("invite message template ends with the link placeholder", () => {
+    const i18n = readFileSync(new URL("../src/lib/i18n.ts", import.meta.url), "utf8");
+    expect(i18n).toContain("{code}");
+    expect(i18n).toContain("{link}");
   });
 });
