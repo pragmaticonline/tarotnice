@@ -31,6 +31,18 @@ describe("walletBalance", () => {
       .toEqual({ wallet: 0, dailyLeft: 0 });
   });
 
+  it("a referred signup lands on exactly 20 wallet tokens (welcome 10 + friend code 10)", () => {
+    const rows = [
+      row(10, "welcome", "2026-10-26"),
+      row(10, "referral", "2026-10-26"),
+      row(DAILY_FREE_TOKENS, "daily", "2026-10-26"),
+    ];
+    const bal = walletBalance(rows, "2026-10-26");
+    expect(bal.wallet).toBe(20);
+    // Header chip counts today's daily grant on top of the wallet.
+    expect(bal.wallet + bal.dailyLeft).toBe(25);
+  });
+
   it("leaves today's unspent daily grant available", () => {
     expect(walletBalance([row(DAILY_FREE_TOKENS, "daily", "2026-10-26")], "2026-10-26"))
       .toEqual({ wallet: 0, dailyLeft: DAILY_FREE_TOKENS });

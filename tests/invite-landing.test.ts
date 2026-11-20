@@ -92,6 +92,16 @@ describe("invite landing (spec copy and layout)", () => {
     expect(WELCOME_TOKENS).toBe(10);
   });
 
+  it("friend bonus is granted server-side for every signup method, not only email", () => {
+    const src = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
+    const summary = src.slice(src.indexOf('app.get("/api/me/summary"'), src.indexOf('app.get("/api/me/invite/lookup"'));
+    // In the first-summary path (which LINE/Google/email users all hit):
+    // attribute from the cookie, then post the friend bonus by ledger ref.
+    expect(summary).toContain("attributeReferral(c, store, user.id)");
+    expect(summary).toContain("REFERRAL_FRIEND_BONUS_TOKENS, reason: \"referral\"");
+    expect(summary).toContain("friend-bonus:");
+  });
+
   it("route sends unknown invite codes to /register and never redirects guests to the ask page", () => {
     const src = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
     expect(src).toContain('if (!ownerId) return c.redirect("/register", 302);');
