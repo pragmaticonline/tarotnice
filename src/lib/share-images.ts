@@ -78,37 +78,72 @@ async function cardJpeg(env: ShareEnv, key: string): Promise<string> {
   return `data:image/jpeg;base64,${btoa(bin)}`;
 }
 
+/**
+ * resvg gives SARA AM (U+0E33) no advance width, so the next letter is
+ * drawn on top of it (a SARA AM word loses its second letter visually). Decompose AM into
+ * NIKHAHIT + SARA AA, keeping any tone mark between them, which the
+ * rasterizer advances correctly.
+ */
+export function fixThai(s: string): string {
+  return s.replace(/([\u0E48-\u0E4B]?)\u0E33/g, "\u0E4D$1\u0E32");
+}
+
 function escXml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  return fixThai(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+const graphemeSeg = new Intl.Segmenter("th", { granularity: "grapheme" });
+const wordSeg = new Intl.Segmenter("th", { granularity: "word" });
+function graphemes(s: string): string[] {
+  return [...graphemeSeg.segment(s)].map((x) => x.segment);
 }
 
 /**
- * Greedy wrap: word-based when the text has spaces, grapheme-based for
- * Thai (never split a base consonant from its vowel/tone marks).
+ * Wrap by Thai word segments, counting width in graphemes (never split
+ * a base consonant from its vowel/tone marks). Spaces are break
+ * opportunities, and any single segment still longer than the limit is
+ * hard-broken at a grapheme boundary — a long Thai phrase between
+ * spaces must not overflow the canvas.
  */
 export function wrapText(text: string, maxChars: number): string[] {
   const clean = text.replace(/\s+/g, " ").trim();
   if (!clean) return [];
-  const lines: string[] = [];
-  if (clean.includes(" ")) {
-    let line = "";
-    for (const word of clean.split(" ")) {
-      if ((line + " " + word).trim().length > maxChars && line) {
-        lines.push(line.trim());
-        line = word;
-      } else {
-        line = (line + " " + word).trim();
-      }
-    }
-    if (line) lines.push(line);
-  } else {
-    const graphemes = [...new Intl.Segmenter("th", { granularity: "grapheme" }).segment(clean)].map(
-      (s) => s.segment,
-    );
-    for (let i = 0; i < graphemes.length; i += maxChars) {
-      lines.push(graphemes.slice(i, i + maxChars).join(""));
+  const tokens: { text: string; spaceBefore: boolean }[] = [];
+  let pendingSpace = false;
+  for (const part of wordSeg.segment(clean)) {
+    if (/^\s+$/.test(part.segment)) {
+      pendingSpace = tokens.length > 0;
+    } else {
+      tokens.push({ text: part.segment, spaceBefore: pendingSpace });
+      pendingSpace = false;
     }
   }
+  const lines: string[] = [];
+  let line = "";
+  const flush = () => {
+    if (line) lines.push(line);
+    line = "";
+  };
+  for (const tok of tokens) {
+    const parts = graphemes(tok.text);
+    if (parts.length > maxChars) {
+      flush();
+      for (let i = 0; i < parts.length; i += maxChars) {
+        const chunk = parts.slice(i, i + maxChars).join("");
+        if (i + maxChars < parts.length) lines.push(chunk);
+        else line = chunk;
+      }
+      continue;
+    }
+    const candidate = line ? line + (tok.spaceBefore ? " " : "") + tok.text : tok.text;
+    if (graphemes(candidate).length > maxChars && line) {
+      flush();
+      line = tok.text;
+    } else {
+      line = candidate;
+    }
+  }
+  flush();
   return lines;
 }
 

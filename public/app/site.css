@@ -125,7 +125,7 @@ main>*+*{margin-top:16px}
 .reading{display:flex;flex-direction:column;gap:.7rem;margin-top:.5rem}
 .line-friend-card{background:#eef8f1;border:1px solid #bfe6cc;border-radius:12px;padding:.9rem 1rem;margin-top:.6rem}
 .line-friend-card p{margin:0 0 .7rem;line-height:1.5}
-.line-add-btn{display:inline-flex;align-items:center;gap:.5rem;background:#06C755;border-color:#06C755;color:#fff}
+.line-add-btn{display:flex;width:100%;box-sizing:border-box;align-items:center;justify-content:center;gap:.5rem;background:#06C755;border-color:#06C755;color:#fff;text-align:center}
 .line-add-btn .line-logo{display:inline-flex;flex:none}
 .line-add-btn .line-logo svg{display:block}
 .line-redeem-note{color:#4c3d78;margin:.65rem 0 0;line-height:1.5}
