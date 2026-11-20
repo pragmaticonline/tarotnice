@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   alienCardNames,
-  proofreadThai,
+  appendUnique,
   buildReadingPrompt,
   cleanQuestion,
   crisisMessage,
@@ -18,10 +18,10 @@ import {
   normalizeCardSummaries,
   parseSummary,
   pickSpread,
+  pickAnchor,
   sseEvent,
   streamDeltas,
   toPromptCard,
-  hasBrokenThaiLabels,
 } from "../src/lib/reading";
 
 describe("question validation", () => {
@@ -120,19 +120,6 @@ describe("crisis pre-check", () => {
   });
 });
 
-describe("proofreadThai", () => {
-  const mangled = "\u0e01\u0e32\u0e23\u0e2d\u0e21\u0e41\u0e25\u0e30\u0e04\u0e27\u0e32\u0e21\u0e31\u0e48\u0e19\u0e04\u0e07";
-  it("returns the corrected text when the model fixes spelling", async () => {
-    const aiRun = async () => ({ response: "\u0e01\u0e32\u0e23\u0e2d\u0e2d\u0e21\u0e41\u0e25\u0e30\u0e04\u0e27\u0e32\u0e21\u0e21\u0e31\u0e48\u0e19\u0e04\u0e07" });
-    await expect(proofreadThai(aiRun as never, "m", mangled)).resolves.toBe("\u0e01\u0e32\u0e23\u0e2d\u0e2d\u0e21\u0e41\u0e25\u0e30\u0e04\u0e27\u0e32\u0e21\u0e21\u0e31\u0e48\u0e19\u0e04\u0e07");
-  });
-
-  it("falls back to the original on empty, wild-length, or failing output", async () => {
-    await expect(proofreadThai((async () => ({ response: "" })) as never, "m", mangled)).resolves.toBe(mangled);
-    await expect(proofreadThai((async () => ({ response: "\u0e2a\u0e31\u0e49\u0e19" })) as never, "m", mangled)).resolves.toBe(mangled);
-    await expect(proofreadThai((async () => { throw new Error("down"); }) as never, "m", mangled)).resolves.toBe(mangled);
-  });
-});
 
 describe("prompt builder", () => {
   const card = {
@@ -360,7 +347,7 @@ describe("pickSpread", () => {
     });
     expect(en.system).toContain("Sentence 1 answers the question as asked");
     expect(en.system).toContain("Sentences 2-4 tell the one story");
-    expect(en.system).toContain("You may name a card when it anchors the answer");
+    expect(en.system).toContain("If the user message names an anchor card, build the reading around it");
     expect(en.system).toContain("No advice here");
     const th = buildReadingPrompt({
       lang: "th", topic: "general", question: "Should I quit my job?",
@@ -634,26 +621,6 @@ describe("parseSummary", () => {
   });
 });
 
-describe("hasBrokenThaiLabels", () => {
-  const clean =
-    " \u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21:\n \u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\n\n** \u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33:**\n \u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\n\n** \u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22:**\n-  \u0e02\u0e49\u0e2d \u0e2b\u0e19\u0e36\u0e48\u0e07\n\n** \u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d:**\n-  \u0e04\u0e33\u0e16\u0e32\u0e21\n\n \u0e2a\u0e23\u0e38\u0e1b:  \u0e08\u0e1a";
-  it("accepts a clean reading, even with sections missing", () => {
-    expect(hasBrokenThaiLabels(clean)).toBe(false);
-    expect(hasBrokenThaiLabels(" \u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21:  \u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\n\n \u0e2a\u0e23\u0e38\u0e1b:  \u0e08\u0e1a")).toBe(false);
-    expect(hasBrokenThaiLabels("no headers here")).toBe(false);
-  });
-
-  it("flags mangled Thai labels for proofread repair", () => {
-    expect(hasBrokenThaiLabels(clean.replace(" \u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22", " \u0e2a\u0e31\u0e48\u0e48\u0e07\u0e17\u0e35\u0e49\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22"))).toBe(true);
-    expect(hasBrokenThaiLabels(clean.replace(" \u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22", " \u0e2a\u0e37\u0e48\u0e07\u0e17\u0e35\u0e49\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22"))).toBe(true);
-    expect(hasBrokenThaiLabels("**\u0e2a\u0e23\u0e38\u0e1a:**  \u0e08\u0e1a")).toBe(true);
-  });
-
-  it("ignores English labels and body colons (nothing to repair)", () => {
-    expect(hasBrokenThaiLabels("**Guidance:**\nDo this")).toBe(false);
-    expect(hasBrokenThaiLabels(" \u0e2b\u0e21\u0e32\u0e22\u0e40\u0e2b\u0e15\u0e38:  \u0e2d\u0e48\u0e32\u0e19 \u0e15\u0e48\u0e2d")).toBe(false);
-  });
-});
 
 describe("streamDeltas", () => {
   it("parses OpenAI-style SSE chunks", async () => {
@@ -700,9 +667,9 @@ describe("streamDeltas", () => {
     const drip = new ReadableStream({
       async start(c) {
         const enc = new TextEncoder();
-        c.enqueue(enc.encode('data: {"response":"a"}\n\n'));
+        c.enqueue(enc.encode('data: {"choices":[{"delta":{"content":"a"}}]}\n\n'));
         await new Promise((r) => setTimeout(r, 20));
-        c.enqueue(enc.encode('data: {"response":"ab"}\n\n'));
+        c.enqueue(enc.encode('data: {"choices":[{"delta":{"content":"b"}}]}\n\n'));
         c.close();
       },
     });
@@ -711,10 +678,11 @@ describe("streamDeltas", () => {
     expect(out.join("")).toBe("ab");
   });
 
-  it("dedupes cumulative and double-carried chunks", async () => {
+  it("uses one field per event: delta wins, response is not also appended", async () => {
     const sse =
-      'data: {"response":"Hello","choices":[{"delta":{"content":"Hello"}}]}\n\n' +
-      'data: {"response":"Hello world","choices":[{"delta":{"content":"Hello world"}}]}\n\n';
+      'data: {"response":"IGNORED","choices":[{"delta":{"content":"Hello"}}]}\n\n' +
+      'data: {"response":"IGNORED","choices":[{"delta":{"content":" world"}}]}\n\n' +
+      'data: {"response":"!"}\n\n';
     const body = new ReadableStream({
       start(c) {
         c.enqueue(new TextEncoder().encode(sse));
@@ -723,12 +691,145 @@ describe("streamDeltas", () => {
     });
     const out: string[] = [];
     for await (const d of streamDeltas(async () => body, "m", [])) out.push(d);
-    expect(out.join("")).toBe("Hello world");
+    expect(out.join("")).toBe("Hello world!");
+  });
+
+  it("strips only a clearly cumulative long re-send", async () => {
+    const opening = "Hello world, this is a long opening";
+    const sse =
+      `data: {"choices":[{"delta":{"content":${JSON.stringify(opening)}}}]}\n\n` +
+      `data: {"choices":[{"delta":{"content":${JSON.stringify(opening + " indeed")}}}]}\n\n`;
+    const body = new ReadableStream({
+      start(c) {
+        c.enqueue(new TextEncoder().encode(sse));
+        c.close();
+      },
+    });
+    const out: string[] = [];
+    for await (const d of streamDeltas(async () => body, "m", [])) out.push(d);
+    expect(out.join("")).toBe(opening + " indeed");
+  });
+
+  it("does not strip shared leading characters from true deltas (dropped-letters regression)", async () => {
+    const cases: [string[], string][] = [
+      [["\u0e2d\u0e32\u0e08", "\u0e08\u0e30"], "\u0e2d\u0e32\u0e08\u0e08\u0e30"],
+      [["\u0e15\u0e2d\u0e19", "\u0e19\u0e35\u0e49"], "\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49"],
+      [["\u0e2b\u0e25\u0e31\u0e01", "\u0e01\u0e32\u0e23"], "\u0e2b\u0e25\u0e31\u0e01\u0e01\u0e32\u0e23"],
+      [["\u0e04\u0e27\u0e32\u0e21", "\u0e21\u0e31\u0e48\u0e19", "\u0e04\u0e07"], "\u0e04\u0e27\u0e32\u0e21\u0e21\u0e31\u0e48\u0e19\u0e04\u0e07"],
+      [["\u0e01\u0e33\u0e25\u0e31\u0e07", "\u0e25\u0e31\u0e07", "\u0e40\u0e25"], "\u0e01\u0e33\u0e25\u0e31\u0e07\u0e25\u0e31\u0e07\u0e40\u0e25"],
+      [["soon", "!", "!"], "soon!!"],
+    ];
+    for (const [pieces, expected] of cases) {
+      const sse = pieces
+        .map((p) => `data: {"choices":[{"delta":{"content":${JSON.stringify(p)}}}]}\n\n`)
+        .join("");
+      const body = new ReadableStream({
+        start(c) {
+          c.enqueue(new TextEncoder().encode(sse));
+          c.close();
+        },
+      });
+      const out: string[] = [];
+      for await (const d of streamDeltas(async () => body, "m", [])) out.push(d);
+      expect(out.join("")).toBe(expected);
+    }
+  });
+});
+
+describe("appendUnique", () => {
+  it("appends true deltas verbatim, even with shared leading characters", () => {
+    expect(appendUnique("\u0e2d\u0e32\u0e08", "\u0e08\u0e30")).toBe("\u0e08\u0e30");
+    expect(appendUnique("soon!", "!")).toBe("!");
+    expect(appendUnique("ab", "b")).toBe("b");
+    expect(appendUnique("", "x")).toBe("x");
+    expect(appendUnique("x", "")).toBe("");
+  });
+
+  it("does not treat a short cumulative-looking chunk as cumulative", () => {
+    expect(appendUnique("a", "ab")).toBe("ab");
+    expect(appendUnique("Hello", "Hello world")).toBe("Hello world");
+  });
+
+  it("strips the prefix only for a long cumulative re-send", () => {
+    const seen = "Hello world, this is a long opening";
+    expect(appendUnique(seen, seen + " indeed")).toBe(" indeed");
+    expect(appendUnique(seen, "unrelated chunk")).toBe("unrelated chunk");
   });
 });
 
 describe("sseEvent", () => {
   it("frames SSE events", () => {
     expect(sseEvent("done", '{"a":1}')).toBe('event: done\ndata: {"a":1}\n\n');
+  });
+});
+
+describe("pickAnchor", () => {
+  const cards = [
+    { name: "Two of Cups", keywords: ["love", "union"], meaning: "a joyful union", reversed: false, topicNote: null, imagery: null },
+    { name: "Eight of Pentacles", keywords: ["craft", "diligence"], meaning: "steady work and skill", reversed: false, topicNote: null, imagery: null },
+    { name: "The Star", keywords: ["hope", "healing"], meaning: "quiet hope", reversed: false, topicNote: null, imagery: null },
+  ];
+  it("picks the card whose words match the question", () => {
+    expect(pickAnchor("should I quit my job to focus on craft?", cards)).toBe("Eight of Pentacles");
+  });
+  it("breaks ties toward the earliest card", () => {
+    const tied = [
+      { name: "Two of Cups", keywords: ["love"], meaning: "qqq", reversed: false, topicNote: null, imagery: null },
+      { name: "Eight of Pentacles", keywords: ["work"], meaning: "qqq", reversed: false, topicNote: null, imagery: null },
+      cards[2],
+    ];
+    expect(pickAnchor("love and work", tied)).toBe("Two of Cups");
+  });
+  it("returns null when nothing matches", () => {
+    expect(pickAnchor("zxcv bnml", cards)).toBeNull();
+  });
+  it("matches Thai keywords in Thai questions", () => {
+    const th = [
+      { name: "The Lovers", keywords: ["\u0e04\u0e27\u0e32\u0e21\u0e23\u0e31\u0e01"], meaning: "\u0e04\u0e27\u0e32\u0e21\u0e2a\u0e31\u0e21\u0e1e\u0e31\u0e19\u0e18\u0e4c", reversed: false, topicNote: null, imagery: null },
+      cards[1],
+      cards[2],
+    ];
+    expect(pickAnchor("\u0e04\u0e27\u0e32\u0e21\u0e23\u0e31\u0e01\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19\u0e08\u0e30\u0e40\u0e1b\u0e47\u0e19\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23", th)).toBe("The Lovers");
+  });
+});
+
+describe("anchor card in prompt", () => {
+  const cards = [
+    { name: "The Fool", keywords: ["beginnings"], meaning: "a fresh start", reversed: false, topicNote: null, imagery: null },
+    { name: "Eight of Pentacles", keywords: ["craft"], meaning: "steady work", reversed: false, topicNote: null, imagery: null },
+    { name: "The Star", keywords: ["hope"], meaning: "quiet hope", reversed: false, topicNote: null, imagery: null },
+  ];
+  it("names the anchor card in English prompts", () => {
+    const out = buildReadingPrompt({ lang: "en", topic: "general", question: "how do I master my craft?", cards, prev: [], nickname: null });
+    expect(out.user).toContain("Anchor card: Eight of Pentacles");
+  });
+  it("names the anchor card in Thai prompts", () => {
+    const th = cards.map((c) => ({ ...c, keywords: ["\u0e04\u0e27\u0e32\u0e21\u0e23\u0e31\u0e01"], meaning: "\u0e04\u0e27\u0e32\u0e21\u0e2a\u0e31\u0e21\u0e1e\u0e31\u0e19\u0e18\u0e4c" }));
+    const out = buildReadingPrompt({ lang: "th", topic: "general", question: "\u0e04\u0e27\u0e32\u0e21\u0e23\u0e31\u0e01\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19\u0e08\u0e30\u0e40\u0e1b\u0e47\u0e19\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23", cards: th, prev: [], nickname: null });
+    expect(out.user).toContain("\u0e44\u0e1e\u0e48\u0e41\u0e01\u0e19:");
+  });
+  it("omits the anchor line when nothing matches", () => {
+    const out = buildReadingPrompt({ lang: "en", topic: "general", question: "zxcv bnml", cards, prev: [], nickname: null });
+    expect(out.user).not.toContain("Anchor card:");
+  });
+});
+
+describe("method rules in system prompts", () => {
+  const dummy = [
+    { name: "The Fool", keywords: ["beginnings"], meaning: "a fresh start", reversed: false, topicNote: null, imagery: null },
+    { name: "Eight of Pentacles", keywords: ["craft"], meaning: "steady work", reversed: false, topicNote: null, imagery: null },
+    { name: "The Star", keywords: ["hope"], meaning: "quiet hope", reversed: false, topicNote: null, imagery: null },
+  ];
+  const en = buildReadingPrompt({ lang: "en", topic: "general", question: "hello", cards: dummy, prev: [], nickname: null }).system;
+  const th = buildReadingPrompt({ lang: "th", topic: "general", question: "hello", cards: dummy, prev: [], nickname: null }).system;
+  it("teaches reframing and yes-no answers in English", () => {
+    expect(en).toContain("Reframe questions that ask fate");
+    expect(en).toContain("Yes/no questions");
+    expect(en).toContain("If the user message names an anchor card");
+  });
+  it("teaches reframing and yes-no answers in Thai", () => {
+    expect(th).toContain("\u0e01\u0e32\u0e23\u0e1b\u0e23\u0e31\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21:");
+    expect(th).toContain("\u0e04\u0e33\u0e16\u0e32\u0e21\u0e43\u0e0a\u0e48\u0e2b\u0e23\u0e37\u0e2d\u0e44\u0e21\u0e48:");
+    expect(th).toContain("\u0e44\u0e1e\u0e48\u0e41\u0e01\u0e19");
   });
 });

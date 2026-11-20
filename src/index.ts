@@ -8,7 +8,6 @@ import * as schema from "./db/schema";
 import { bangkokDay, bangkokHour, nextBangkokMidnight } from "./lib/bangkok";
 import { luckyColour } from "./lib/daily";
 import {
-  alienCardNames,
   buildReadingPrompt,
   classifyCrisis,
   cleanQuestion,
@@ -16,7 +15,6 @@ import {
   crisisWatchHit,
   drawReadingCards,
   guessTopic,
-  hasBrokenThaiLabels,
   isCrisisQuestion,
   isLang,
   isTopic,
@@ -24,7 +22,6 @@ import {
   normalizeCardSummaries,
   parseSummary,
   pickSpread,
-  proofreadThai,
   sseEvent,
   streamDeltas,
   toPromptCard,
@@ -108,7 +105,6 @@ type Env = AuthEnv &
     DAILY_QUESTION_LIMIT?: string;
     REFERRAL_BONUS?: string;
     READING_MODEL?: string;
-    PROOFREAD_MODEL?: string;
     DEFAULT_LANG?: string;
     TIMEZONE?: string;
     TURNSTILE_SECRET?: string;
@@ -672,27 +668,9 @@ app.get("/api/readings/:id/stream", async (c) => {
         // Actions structure without the Summary line still counts —
         // the fixed fallback summary covers the glance lead.
         if (!isCompleteReading(full, views.map((v) => v.name))) throw new Error("incomplete_response");
-        // Post-stream proofread, only when a section header came out
-        // mangled: the pass is a full extra model call, so clean Gemma
-        // output skips it. (The old `!translated` gate could never
-        // fire — the flag was always true here — so proofread was
-        // effectively off already.)
-        if (lang === "th" && hasBrokenThaiLabels(full) && c.env.AI) {
-          // Post-stream proofread: fix dropped Thai letters, then swap
-          // the client's text via a final event before done.
-          send(sseEvent("status", JSON.stringify({ phase: "proofreading" })));
-          // Heartbeats while proofreading: a silent SSE connection
-          // gets dropped by proxies and strands the client mid-reading.
-          const beat = setInterval(() => { try { send(": ping\n\n"); } catch { /* closed */ } }, 10_000);
-          const checked = await proofreadThai(aiRun, c.env.PROOFREAD_MODEL?.trim() || "@cf/qwen/qwen3-30b-a3b-fp8", full).finally(() => clearInterval(beat));
-          // Never adopt a proofread that invents cards the reading
-          // never drew — keep the streamed text instead.
-          const adopted = checked !== full && alienCardNames(full, checked).length > 0 ? full : checked;
-          if (adopted !== full) {
-            full = adopted;
-            send(sseEvent("final", JSON.stringify(adopted)));
-          }
-        }
+        // No post-stream proofread pass: the dropped letters came from
+        // the streaming assembler (fixed in appendUnique), so Thai text
+        // is delivered exactly as streamed.
         // Fold echoed per-card closers into plain "Summary:" lines so
         // both views render them with a gap and italic text.
         full = normalizeCardSummaries(full);

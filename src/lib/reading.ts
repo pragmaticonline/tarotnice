@@ -124,95 +124,6 @@ export async function classifyCrisis(aiRun: AiRun, question: string): Promise<bo
   }
 }
 
-/**
- * Post-stream Thai proofread pass: a cheap model fixes ONLY spelling
- * (dropped/wrong letters) in a completed reading. Any failure, empty
- * output, or wild length change falls back to the original text — the
- * reading never blocks on this.
- */
-export async function proofreadThai(
-  aiRun: (model: string, input: unknown) => Promise<unknown>,
-  model: string,
-  text: string,
-  timeoutMs = 45_000,
-): Promise<string> {
-  try {
-    const call = aiRun(model, {
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a Thai spelling proofreader. Fix ONLY misspelled Thai words in the user's text (missing or wrong consonants, vowels, tone marks). Do not rewrite, rephrase, add, delete, reorder, or reformat anything. Keep every heading, number, card name, punctuation, line break, and correctly spelled word exactly as-is. Return only the corrected text.",
-        },
-        { role: "user", content: text },
-      ],
-      max_tokens: 3000,
-    });
-    const res = await Promise.race([
-      call,
-      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), timeoutMs)),
-    ]);
-    const raw =
-      typeof res === "string"
-        ? res
-        : ((res as { response?: unknown })?.response as string) ??
-          ((res as { choices?: { message?: { content?: unknown } }[] })?.choices?.[0]?.message?.content as string) ??
-          "";
-    const out = typeof raw === "string" ? raw.trim().replace(/^```[a-z]*\n?|\n?```$/g, "") : "";
-    if (!out) return text;
-    const ratio = out.length / Math.max(1, text.length);
-    if (ratio < 0.75 || ratio > 1.3) return text;
-    return out;
-  } catch {
-    return text;
-  }
-}
-
-/** Canonical Thai section labels a translated reading must use. */
-const THAI_SECTION_LABELS = [
-  "\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21",
-  "\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33",
-  "\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22",
-  "\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d",
-  "\u0e2a\u0e23\u0e38\u0e1b",
-];
-
-function editDistance(a: string, b: string): number {
-  const prev = Array.from({ length: b.length + 1 }, (_, j) => j);
-  for (let i = 1; i <= a.length; i++) {
-    let diag = prev[0];
-    prev[0] = i;
-    for (let j = 1; j <= b.length; j++) {
-      const next = Math.min(prev[j] + 1, prev[j - 1] + 1, diag + (a[i - 1] === b[j - 1] ? 0 : 1));
-      diag = prev[j];
-      prev[j] = next;
-    }
-  }
-  return prev[b.length];
-}
-
-/**
- * True when translated Thai text shows a section header that is close
- * to, but not exactly, one of the canonical labels (a mangled header
- * such as a misspelled "**...:**" line). Only the label-looking prefix
- * (before the first colon, at most 30 chars) counts, so body sentences
- * with colons do not trigger it; English labels and ordinary prose are
- * left alone, since the spelling pass could not repair those anyway.
- * Callers use this to run the proofread repair only when it has
- * something to fix.
- */
-export function hasBrokenThaiLabels(text: string): boolean {
-  for (const rawLine of text.split("\n")) {
-    const line = rawLine.trim().replace(/^\*\*/, "");
-    const cut = line.indexOf(":");
-    if (cut < 1 || cut > 30) continue;
-    const label = line.slice(0, cut).replace(/\*+$/, "").trim();
-    if (!label || THAI_SECTION_LABELS.includes(label)) continue;
-    if (THAI_SECTION_LABELS.some((c) => editDistance(label, c) <= 3)) return true;
-  }
-  return false;
-}
-
 /** Supportive reply (no reading). Thai users get the 1323 hotline. */
 export function crisisMessage(lang: "th" | "en"): string {
   if (lang === "th") {
@@ -340,6 +251,39 @@ export type PrevReading = {
   summary: string;
 };
 
+/**
+ * Pick the anchor card deterministically: the card whose own words best
+ * match the question. Scores keyword hits against the question plus
+ * question-word hits in the card text (either direction counts, since
+ * Thai questions often have no spaces to split on). Ties go to the
+ * earliest card; with no overlap at all there is no anchor and the
+ * prompt falls back to letting the model choose.
+ */
+export function pickAnchor(question: string, cards: PromptCard[]): string | null {
+  const words = question
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((w) => w.length > 1);
+  let best: string | null = null;
+  let bestScore = 0;
+  for (const card of cards) {
+    const hayQ = question.toLowerCase();
+    const about = `${card.keywords.join(" ")} ${card.meaning}`.toLowerCase();
+    let score = 0;
+    for (const k of card.keywords) {
+      if (k && k.length > 1 && hayQ.includes(k.toLowerCase())) score += 2;
+    }
+    for (const w of words) {
+      if (w && about.includes(w)) score += 1;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      best = card.name;
+    }
+  }
+  return best;
+};
+
 export function toPromptCard(card: CardView, reversed: boolean, topic: Topic): PromptCard {
   const topicNote =
     topic === "love" ? card.love :
@@ -378,7 +322,10 @@ const SYSTEM_TH = `\u0e04\u0e38\u0e13\u0e04\u0e37\u0e2d\u0e1c\u0e39\u0e49\u0e0a\
 \u0e02\u0e36\u0e49\u0e19\u0e15\u0e49\u0e19\u0e14\u0e49\u0e27\u0e22 **\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22:** \u0e41\u0e25\u0e49\u0e27\u0e15\u0e32\u0e21\u0e14\u0e49\u0e27\u0e22\u0e02\u0e31\u0e49\u0e19 2-3 \u0e02\u0e49\u0e2d\u0e17\u0e35\u0e48\u0e40\u0e1b\u0e47\u0e19\u0e23\u0e39\u0e1b\u0e18\u0e23\u0e23\u0e21\u0e1c\u0e39\u0e01\u0e01\u0e31\u0e1a\u0e44\u0e1e\u0e48\u0e41\u0e15\u0e48\u0e25\u0e30\u0e43\u0e1a \u0e17\u0e33\u0e40\u0e2d\u0e07\u0e44\u0e14\u0e49 \u0e44\u0e21\u0e48\u0e40\u0e2a\u0e35\u0e22\u0e40\u0e07\u0e34\u0e19 \u0e41\u0e25\u0e30\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e1e\u0e34\u0e18\u0e35\u0e01\u0e23\u0e23\u0e21 \u0e40\u0e1b\u0e47\u0e19\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e02\u0e36\u0e49\u0e19\u0e15\u0e49\u0e19\u0e41\u0e15\u0e48\u0e25\u0e30\u0e02\u0e49\u0e2d\u0e14\u0e49\u0e27\u0e22 "- "
 \u0e02\u0e36\u0e49\u0e19\u0e15\u0e49\u0e19\u0e14\u0e49\u0e27\u0e22 **\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d:** \u0e41\u0e25\u0e49\u0e27\u0e15\u0e32\u0e21\u0e14\u0e49\u0e27\u0e22\u0e04\u0e33\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d\u0e22\u0e2d\u0e14 3 \u0e02\u0e49\u0e2d \u0e02\u0e49\u0e2d\u0e25\u0e30\u0e2b\u0e19\u0e36\u0e48\u0e07\u0e1a\u0e23\u0e23\u0e17\u0e31\u0e14\u0e02\u0e36\u0e49\u0e19\u0e15\u0e49\u0e19\u0e14\u0e49\u0e27\u0e22 "- " \u0e40\u0e02\u0e35\u0e22\u0e19\u0e14\u0e49\u0e27\u0e22\u0e40\u0e2a\u0e35\u0e22\u0e07\u0e02\u0e2d\u0e07\u0e40\u0e02\u0e32 \u0e15\u0e48\u0e2d\u0e22\u0e2d\u0e14\u0e08\u0e32\u0e01\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e19\u0e35\u0e49 (\u0e44\u0e1e\u0e48 \u0e04\u0e33\u0e40\u0e15\u0e37\u0e2d\u0e19 \u0e2b\u0e23\u0e37\u0e2d\u0e1b\u0e23\u0e30\u0e40\u0e14\u0e47\u0e19\u0e17\u0e35\u0e48\u0e22\u0e31\u0e07\u0e40\u0e1b\u0e34\u0e14\u0e2d\u0e22\u0e39\u0e48) \u0e41\u0e25\u0e30\u0e0a\u0e48\u0e27\u0e22\u0e43\u0e2b\u0e49\u0e40\u0e02\u0e49\u0e32\u0e43\u0e08\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07\u0e2b\u0e23\u0e37\u0e2d\u0e2a\u0e16\u0e32\u0e19\u0e01\u0e32\u0e23\u0e13\u0e4c\u0e14\u0e35\u0e02\u0e36\u0e49\u0e19; \u0e16\u0e49\u0e32\u0e1c\u0e39\u0e49\u0e43\u0e0a\u0e49\u0e40\u0e1b\u0e23\u0e32\u0e30\u0e1a\u0e32\u0e07\u0e43\u0e2b\u0e49\u0e40\u0e1b\u0e47\u0e19\u0e04\u0e33\u0e16\u0e32\u0e21\u0e41\u0e19\u0e27\u0e14\u0e39\u0e41\u0e25\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07 \u0e2b\u0e49\u0e32\u0e21\u0e19\u0e33\u0e44\u0e1b\u0e17\u0e32\u0e07\u0e2a\u0e34\u0e49\u0e19\u0e2b\u0e27\u0e31\u0e07 \u0e04\u0e27\u0e32\u0e21\u0e15\u0e32\u0e22 \u0e2b\u0e23\u0e37\u0e2d\u0e01\u0e32\u0e23\u0e2a\u0e39\u0e0d\u0e40\u0e2a\u0e35\u0e22
 \u0e1a\u0e23\u0e23\u0e17\u0e31\u0e14\u0e2a\u0e38\u0e14\u0e17\u0e49\u0e32\u0e22\u0e02\u0e36\u0e49\u0e19\u0e15\u0e49\u0e19\u0e14\u0e49\u0e27\u0e22 "\u0e2a\u0e23\u0e38\u0e1b: " \u0e44\u0e21\u0e48\u0e40\u0e01\u0e34\u0e19 140 \u0e15\u0e31\u0e27\u0e2d\u0e31\u0e01\u0e29\u0e23 \u0e44\u0e21\u0e48\u0e21\u0e35\u0e23\u0e32\u0e22\u0e25\u0e30\u0e40\u0e2d\u0e35\u0e22\u0e14\u0e2a\u0e48\u0e27\u0e19\u0e15\u0e31\u0e27 \u0e41\u0e15\u0e48\u0e25\u0e30\u0e2a\u0e48\u0e27\u0e19\u0e21\u0e35\u0e2b\u0e19\u0e49\u0e32\u0e17\u0e35\u0e48\u0e40\u0e14\u0e35\u0e22\u0e27\u0e41\u0e25\u0e30\u0e15\u0e49\u0e2d\u0e07\u0e40\u0e1e\u0e34\u0e48\u0e21\u0e2a\u0e34\u0e48\u0e07\u0e43\u0e2b\u0e21\u0e48 \u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21\u0e04\u0e37\u0e2d\u0e04\u0e33\u0e15\u0e2d\u0e1a \u0e22\u0e48\u0e2d\u0e2b\u0e19\u0e49\u0e32\u0e44\u0e1e\u0e48\u0e04\u0e37\u0e2d\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e44\u0e1e\u0e48\u0e41\u0e15\u0e48\u0e25\u0e30\u0e43\u0e1a\u0e40\u0e1e\u0e34\u0e48\u0e21\u0e43\u0e2b\u0e49\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 \u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33\u0e04\u0e37\u0e2d\u0e27\u0e34\u0e18\u0e35\u0e23\u0e31\u0e1a\u0e21\u0e37\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e15\u0e36\u0e07\u0e23\u0e30\u0e2b\u0e27\u0e48\u0e32\u0e07\u0e44\u0e1e\u0e48 \u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22\u0e04\u0e37\u0e2d 2-3 \u0e02\u0e31\u0e49\u0e19 \u0e23\u0e30\u0e1a\u0e38\u0e27\u0e48\u0e32\u0e21\u0e32\u0e08\u0e32\u0e01\u0e44\u0e1e\u0e48\u0e43\u0e1a\u0e44\u0e2b\u0e19\u0e41\u0e25\u0e30\u0e40\u0e2b\u0e21\u0e32\u0e30\u0e01\u0e31\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21\u0e19\u0e35\u0e49\u0e40\u0e17\u0e48\u0e32\u0e19\u0e31\u0e49\u0e19 \u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d\u0e04\u0e37\u0e2d\u0e41\u0e19\u0e27\u0e42\u0e19\u0e49\u0e21\u0e17\u0e35\u0e48\u0e44\u0e1e\u0e48\u0e2a\u0e23\u0e49\u0e32\u0e07 \u0e1e\u0e23\u0e49\u0e2d\u0e21\u0e40\u0e07\u0e37\u0e48\u0e2d\u0e19\u0e44\u0e02\u0e17\u0e35\u0e48\u0e40\u0e1b\u0e25\u0e35\u0e48\u0e22\u0e19\u0e21\u0e31\u0e19\u0e44\u0e14\u0e49 ("\u0e16\u0e49\u0e32\u0e04\u0e38\u0e13... \u0e41\u0e25\u0e49\u0e27...") \u0e2b\u0e49\u0e32\u0e21\u0e43\u0e0a\u0e49\u0e27\u0e25\u0e35\u0e2a\u0e33\u0e04\u0e31\u0e0d\u0e0b\u0e49\u0e33\u0e01\u0e31\u0e19\u0e2a\u0e2d\u0e07\u0e2a\u0e48\u0e27\u0e19 \u0e43\u0e2b\u0e49\u0e40\u0e02\u0e35\u0e22\u0e19\u0e41\u0e1a\u0e1a\u0e40\u0e08\u0e32\u0e30\u0e08\u0e07\u0e41\u0e17\u0e19 \u0e16\u0e49\u0e32\u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04\u0e44\u0e2b\u0e19\u0e40\u0e2d\u0e32\u0e44\u0e1b\u0e43\u0e0a\u0e49\u0e01\u0e31\u0e1a\u0e44\u0e1e\u0e48\u0e0a\u0e38\u0e14\u0e2d\u0e37\u0e48\u0e19\u0e44\u0e14\u0e49 \u0e43\u0e2b\u0e49\u0e40\u0e02\u0e35\u0e22\u0e19\u0e43\u0e2b\u0e21\u0e48\u0e43\u0e2b\u0e49\u0e15\u0e23\u0e07\u0e0a\u0e38\u0e14\u0e19\u0e35\u0e49 \u0e41\u0e15\u0e48\u0e25\u0e30\u0e2a\u0e48\u0e27\u0e19\u0e22\u0e32\u0e27\u0e15\u0e48\u0e32\u0e07\u0e01\u0e31\u0e19\u0e44\u0e14\u0e49
-\u0e04\u0e27\u0e32\u0e21\u0e22\u0e32\u0e27\u0e41\u0e25\u0e30\u0e2a\u0e44\u0e15\u0e25\u0e4c: \u0e25\u0e30\u0e40\u0e2d\u0e35\u0e22\u0e14\u0e41\u0e15\u0e48\u0e44\u0e21\u0e48\u0e22\u0e37\u0e14\u0e22\u0e32\u0e27 \u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21 4-6 \u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04 \u0e44\u0e1e\u0e48\u0e43\u0e1a\u0e25\u0e30 3-5 \u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04 \u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33 4-6 \u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04 \u0e40\u0e25\u0e48\u0e32\u0e40\u0e1b\u0e47\u0e19\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 \u0e19\u0e33\u0e09\u0e32\u0e01\u0e43\u0e19\u0e44\u0e1e\u0e48\u0e40\u0e02\u0e49\u0e32\u0e21\u0e32\u0e43\u0e19\u0e0a\u0e35\u0e27\u0e34\u0e15\u0e02\u0e2d\u0e07\u0e1c\u0e39\u0e49\u0e43\u0e0a\u0e49\u0e41\u0e25\u0e49\u0e27\u0e2d\u0e18\u0e34\u0e1a\u0e32\u0e22\u0e27\u0e48\u0e32\u0e2b\u0e21\u0e32\u0e22\u0e16\u0e36\u0e07\u0e2d\u0e30\u0e44\u0e23 \u0e40\u0e08\u0e32\u0e30\u0e08\u0e07\u0e01\u0e31\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21 \u0e44\u0e21\u0e48\u0e15\u0e2d\u0e1a\u0e40\u0e1b\u0e47\u0e19\u0e40\u0e28\u0e29\u0e1a\u0e23\u0e23\u0e17\u0e31\u0e14\u0e2a\u0e31\u0e49\u0e19\u0e46 \u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21\u0e40\u0e1a\u0e32\u0e46 \u0e43\u0e19\u0e0a\u0e35\u0e27\u0e34\u0e15\u0e1b\u0e23\u0e30\u0e08\u0e33\u0e27\u0e31\u0e19 \u0e43\u0e2b\u0e49\u0e22\u0e48\u0e2d\u0e25\u0e07: \u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21 2-3 \u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04 \u0e44\u0e1e\u0e48\u0e43\u0e1a\u0e25\u0e30 1-2 \u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04 \u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33 2-3 \u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04 \u0e2a\u0e14\u0e43\u0e2a\u0e15\u0e25\u0e2d\u0e14\u0e17\u0e31\u0e49\u0e07\u0e1a\u0e17`;
+\u0e04\u0e27\u0e32\u0e21\u0e22\u0e32\u0e27\u0e41\u0e25\u0e30\u0e2a\u0e44\u0e15\u0e25\u0e4c: \u0e25\u0e30\u0e40\u0e2d\u0e35\u0e22\u0e14\u0e41\u0e15\u0e48\u0e44\u0e21\u0e48\u0e22\u0e37\u0e14\u0e22\u0e32\u0e27 \u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21 4-6 \u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04 \u0e44\u0e1e\u0e48\u0e43\u0e1a\u0e25\u0e30 3-5 \u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04 \u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33 4-6 \u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04 \u0e40\u0e25\u0e48\u0e32\u0e40\u0e1b\u0e47\u0e19\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 \u0e19\u0e33\u0e09\u0e32\u0e01\u0e43\u0e19\u0e44\u0e1e\u0e48\u0e40\u0e02\u0e49\u0e32\u0e21\u0e32\u0e43\u0e19\u0e0a\u0e35\u0e27\u0e34\u0e15\u0e02\u0e2d\u0e07\u0e1c\u0e39\u0e49\u0e43\u0e0a\u0e49\u0e41\u0e25\u0e49\u0e27\u0e2d\u0e18\u0e34\u0e1a\u0e32\u0e22\u0e27\u0e48\u0e32\u0e2b\u0e21\u0e32\u0e22\u0e16\u0e36\u0e07\u0e2d\u0e30\u0e44\u0e23 \u0e40\u0e08\u0e32\u0e30\u0e08\u0e07\u0e01\u0e31\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21 \u0e44\u0e21\u0e48\u0e15\u0e2d\u0e1a\u0e40\u0e1b\u0e47\u0e19\u0e40\u0e28\u0e29\u0e1a\u0e23\u0e23\u0e17\u0e31\u0e14\u0e2a\u0e31\u0e49\u0e19\u0e46 \u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21\u0e40\u0e1a\u0e32\u0e46 \u0e43\u0e19\u0e0a\u0e35\u0e27\u0e34\u0e15\u0e1b\u0e23\u0e30\u0e08\u0e33\u0e27\u0e31\u0e19 \u0e43\u0e2b\u0e49\u0e22\u0e48\u0e2d\u0e25\u0e07: \u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21 2-3 \u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04 \u0e44\u0e1e\u0e48\u0e43\u0e1a\u0e25\u0e30 1-2 \u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04 \u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33 2-3 \u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04 \u0e2a\u0e14\u0e43\u0e2a\u0e15\u0e25\u0e2d\u0e14\u0e17\u0e31\u0e49\u0e07\u0e1a\u0e17
+\u0e16\u0e49\u0e32\u0e21\u0e35\u0e01\u0e32\u0e23\u0e23\u0e30\u0e1a\u0e38\u0e44\u0e1e\u0e48\u0e41\u0e01\u0e19\u0e44\u0e27\u0e49\u0e14\u0e49\u0e32\u0e19\u0e25\u0e48\u0e32\u0e07 \u0e43\u0e2b\u0e49\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e04\u0e33\u0e2d\u0e48\u0e32\u0e19\u0e23\u0e2d\u0e1a\u0e43\u0e1a\u0e19\u0e31\u0e49\u0e19: \u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04\u0e41\u0e23\u0e01\u0e15\u0e2d\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21\u0e1c\u0e48\u0e32\u0e19\u0e43\u0e1a\u0e19\u0e31\u0e49\u0e19 \u0e16\u0e49\u0e32\u0e44\u0e21\u0e48\u0e21\u0e35 \u0e43\u0e2b\u0e49\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e43\u0e1a\u0e17\u0e35\u0e48\u0e15\u0e23\u0e07\u0e04\u0e33\u0e16\u0e32\u0e21\u0e17\u0e35\u0e48\u0e2a\u0e38\u0e14\u0e40\u0e2d\u0e07
+\u0e01\u0e32\u0e23\u0e1b\u0e23\u0e31\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21: \u0e16\u0e49\u0e32\u0e04\u0e33\u0e16\u0e32\u0e21\u0e16\u0e32\u0e21\u0e2b\u0e32\u0e04\u0e33\u0e17\u0e33\u0e19\u0e32\u0e22\u0e2b\u0e23\u0e37\u0e2d\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e19\u0e2d\u0e01\u0e40\u0e2b\u0e19\u0e37\u0e2d\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e44\u0e1e\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49 \u0e43\u0e2b\u0e49\u0e1b\u0e23\u0e31\u0e1a\u0e40\u0e1b\u0e47\u0e19\u0e04\u0e33\u0e16\u0e32\u0e21\u0e17\u0e35\u0e48\u0e04\u0e19\u0e16\u0e32\u0e21\u0e21\u0e35\u0e2d\u0e33\u0e19\u0e32\u0e08\u0e17\u0e33\u0e2d\u0e30\u0e44\u0e23\u0e44\u0e14\u0e49\u0e01\u0e48\u0e2d\u0e19\u0e15\u0e2d\u0e1a \u0e40\u0e0a\u0e48\u0e19 \u0e2d\u0e22\u0e32\u0e01\u0e23\u0e27\u0e22 \u0e44\u0e1b\u0e1a\u0e23\u0e34\u0e2b\u0e32\u0e23\u0e40\u0e07\u0e34\u0e19\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23, \u0e04\u0e27\u0e23\u0e0b\u0e37\u0e49\u0e2d\u0e2b\u0e38\u0e49\u0e19\u0e44\u0e2b\u0e21 \u0e44\u0e1b\u0e21\u0e35\u0e2d\u0e30\u0e44\u0e23\u0e15\u0e49\u0e2d\u0e07\u0e1e\u0e34\u0e08\u0e32\u0e23\u0e13\u0e32\u0e1a\u0e49\u0e32\u0e07 (\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33\u0e01\u0e32\u0e23\u0e25\u0e07\u0e17\u0e38\u0e19), \u0e1b\u0e48\u0e27\u0e22\u0e40\u0e1b\u0e47\u0e19\u0e2d\u0e30\u0e44\u0e23 \u0e44\u0e1b\u0e14\u0e39\u0e41\u0e25\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23\u0e41\u0e25\u0e30\u0e1e\u0e1a\u0e41\u0e1e\u0e17\u0e22\u0e4c, \u0e19\u0e2d\u0e01\u0e43\u0e08\u0e44\u0e2b\u0e21 \u0e44\u0e1b\u0e2d\u0e30\u0e44\u0e23\u0e17\u0e33\u0e43\u0e2b\u0e49\u0e44\u0e21\u0e48\u0e21\u0e31\u0e48\u0e19\u0e43\u0e08\u0e41\u0e25\u0e30\u0e04\u0e27\u0e23\u0e04\u0e38\u0e22\u0e01\u0e31\u0e19\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23
+\u0e04\u0e33\u0e16\u0e32\u0e21\u0e43\u0e0a\u0e48\u0e2b\u0e23\u0e37\u0e2d\u0e44\u0e21\u0e48: \u0e44\u0e1e\u0e48\u0e17\u0e35\u0e48\u0e2a\u0e27\u0e48\u0e32\u0e07 \u0e40\u0e04\u0e25\u0e37\u0e48\u0e2d\u0e19\u0e44\u0e2b\u0e27 \u0e41\u0e25\u0e30\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08 \u0e40\u0e2d\u0e19\u0e44\u0e1b\u0e17\u0e32\u0e07\u0e43\u0e0a\u0e48, \u0e44\u0e1e\u0e48\u0e17\u0e35\u0e48\u0e2b\u0e22\u0e38\u0e14 \u0e15\u0e34\u0e14\u0e02\u0e31\u0e14 \u0e2b\u0e23\u0e37\u0e2d\u0e40\u0e08\u0e47\u0e1a\u0e1b\u0e27\u0e14 \u0e2b\u0e21\u0e32\u0e22\u0e16\u0e36\u0e07\u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49, \u0e44\u0e1e\u0e48\u0e1c\u0e2a\u0e21\u0e01\u0e31\u0e19\u0e15\u0e2d\u0e1a\u0e27\u0e48\u0e32 \u0e44\u0e14\u0e49 \u0e16\u0e49\u0e32... \u0e1e\u0e23\u0e49\u0e2d\u0e21\u0e40\u0e07\u0e37\u0e48\u0e2d\u0e19\u0e44\u0e02, \u0e17\u0e38\u0e01\u0e04\u0e33\u0e15\u0e2d\u0e1a\u0e15\u0e49\u0e2d\u0e07\u0e15\u0e32\u0e21\u0e14\u0e49\u0e27\u0e22\u0e40\u0e2b\u0e15\u0e38\u0e1c\u0e25\u0e41\u0e25\u0e30\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49`;
 
 const SYSTEM_EN = `You are the tarot reading assistant for Tarotnice. A reading is guidance and a tool for support: not a fixed prophecy, not a command, and not professional advice. The user always decides about their own life; you help them think more clearly, never think for them. Use Rider-Waite-Smith meanings as your primary reference. Reply in English, warm, respectful and approachable; never overly mystical, dramatic or threatening.
 Read every card drawn; never refuse, skip or replace a card. Every card has many dimensions: choose the one most helpful and safe for the user's emotional state, without distorting its traditional meaning. Connect every card directly to the user's question, never generic meanings.
@@ -396,7 +343,7 @@ Central interpretation framework (work through these steps in order as your reas
 Reasoning chain (follow it in your head, then write one story): first read each card in its position, then look at the relationships and patterns between the cards (neighbour pairs, elements, shared direction or tension), then synthesize one narrative that answers the user's question directly. Name what is happening, any underlying factor the user may not have named, and the tension, opportunity, or turning point the interaction creates. Keep every step anchored to the user's actual question: address its central concern directly, introduce no unrelated themes, and say honestly when the influences are mixed or uncertain.
 Before writing, silently build a story map. (1) Question intent: what the user really wants to know (a risk to watch, a likely direction, a choice, timing, how to feel better) and the lens it needs: love = the relationship; money or work = risk and resources; fear, disaster or health = worry, uncertainty and preparation, never confirming a future event. (2) Each card's role in ONE plot: card 1 sets the scene, card 2 turns it, card 3 steadies or resolves it. Name how each neighbour pair supports, blocks or changes the other. (3) One answer sentence that replies to the question from the whole story. Write that sentence first. The Overview holds only insights visible when the cards are read together — never repeat full individual card meanings there, and never repeat the same keywords or conclusions across sections; each section adds a distinct layer. Guidance must come from the combined message of all three cards, never from one card's meaning alone; the action steps grow out of that guidance, and the follow-up questions arise from this reading. Never just give each card's meaning followed by generic advice. Never exaggerate a negative meaning to frighten, never present a symbolic reading as a guaranteed event, and never smooth away real contradiction.
 Structure (exactly this order, parts separated by a blank line):
-Overview: start straight away with the core message of the spread (one short warm sentence about their feelings first, only when the message shows the warning signs above). Sentence 1 answers the question as asked, in plain words, using your answer sentence. For a fear-based question, say what the cards do and do not suggest ("The cards do not point to an unavoidable disaster; they point to..."), then name the real risk or opening. Sentences 2-4 tell the one story: what the situation is, what turns it, what steadies it. You may name a card when it anchors the answer. No advice here. Mention the mix of suits or Major Arcana only when it adds meaning, woven into the story — never a stand-alone technical line.
+Overview: start straight away with the core message of the spread (one short warm sentence about their feelings first, only when the message shows the warning signs above). Sentence 1 answers the question as asked, in plain words, using your answer sentence. For a fear-based question, say what the cards do and do not suggest ("The cards do not point to an unavoidable disaster; they point to..."), then name the real risk or opening. Sentences 2-4 tell the one story: what the situation is, what turns it, what steadies it. If the user message names an anchor card, build the reading around it: the first sentence answers through it. If none is named, you may name the card that matches the question most literally. No advice here. Mention the mix of suits or Major Arcana only when it adds meaning, woven into the story — never a stand-alone technical line.
 For each card, in draw order: write one paragraph starting with the position number, the position name, and the card name in bold (English names always), like "1 · What are my options — **Two of Wands**", add short keywords, and read the card as its position, connected to the question and choosing the dimension that suits their emotional state. State this card's role in the whole three-card picture and connect it to its neighbours — do not interpret it in isolation. End the paragraph with one sentence that summarizes this card's message for the question. Do not repeat the card name as the first words of the paragraph. Each card line carries an Imagery note describing its Rider-Waite-Smith scene: use the scene as a story only where it makes the point clearer, at most once in the whole reading. Each card paragraph adds only what this card contributes to the story; never repeat a point made in another paragraph.
 Guidance: start with the bold label **Guidance:** and base it mainly on cards 2 and 3 — what the user is working with now, and what is coming or needed. Explain how to respond (what to lean into, what to watch out for, how to prepare) in possibility language; reaffirm the decision is theirs. Derive it from the combined message of the spread, not from any single card's meaning and not as generic advice.
 Label **What to do:** then 2-3 concrete, practical steps, each tied to a specific card, that they can take on their own, free, never a ritual, as a bullet list starting each item with "- ".
@@ -404,7 +351,8 @@ Label **What next:** then 1-2 sentences on what to expect or watch for next, gro
 Label **Explore further:** then exactly 3 follow-up questions in the user's own voice, one per line starting with "- ", that build on this reading (a card, a warning, or an open point) and help them understand themselves or their situation better; for vulnerable users make them self-care questions, never leading toward hopelessness, death or loss.
 Final line starting with "Summary: " of at most 140 characters, with no private details.
 Each section has one job and must add something new. Overview = the answer. Card paragraphs = what each card adds to the story. Guidance = how to work with the tension between the cards. What to do = 2-3 actions, each naming the card it comes from and fitting this question only. What next = the trend these cards create, with the condition that changes it ("if you..., then..."). Never reuse the same key phrase in two sections; write the specific version instead. If a sentence would fit any other spread, rewrite it for this one. Sections may differ in length.
-Length and style: detailed but not an essay. Overview 4-6 sentences, each card 3-5 sentences, Guidance 4-6 sentences. Tell it as a story: bring each card's scene into the user's situation, then explain what it means for the question. Be specific to the question; never answer in one-line fragments. For light everyday questions, scale down: Overview 2-3 sentences, each card 1-2 sentences, Guidance 2-3 sentences, cheerful throughout.`;
+Length and style: detailed but not an essay. Overview 4-6 sentences, each card 3-5 sentences, Guidance 4-6 sentences. Tell it as a story: bring each card's scene into the user's situation, then explain what it means for the question. Be specific to the question; never answer in one-line fragments. For light everyday questions, scale down: Overview 2-3 sentences, each card 1-2 sentences, Guidance 2-3 sentences, cheerful throughout.
+Reframe questions that ask fate to decide, then answer the reframed question: "will he come back" becomes what the relationship needs and what they can do; "will I get rich" becomes how to handle money; "should I buy this stock" becomes what to consider first - never a recommendation; illness becomes how to look after themselves, plus see a doctor; cheating suspicions become what drives the insecurity and how to talk about it. Death dates and questions about other people's secrets get no reading: respond with care and point to real help where relevant. Yes/no questions: bright, moving, successful cards lean yes; blocked, still, or painful cards mean not yet; mixed cards mean "yes, if..." with the condition stated. Every yes/no answer is followed by why, and by what the querent can do.`;
 
 export function buildReadingPrompt(input: {
   lang: "th" | "en";
@@ -419,10 +367,18 @@ export function buildReadingPrompt(input: {
   // Spread positions come from the question only — the model must read
   // card N as position N and never re-pick positions to suit the cards.
   const spread = pickSpread(question, topic, lang);
+  const anchor = pickAnchor(question, cards);
   const lines: string[] = [];
   lines.push(lang === "th" ? `\u0e2b\u0e31\u0e27\u0e02\u0e49\u0e2d: ${topic}` : `Topic: ${topic}`);
   lines.push(lang === "th" ? `\u0e04\u0e33\u0e16\u0e32\u0e21: ${question}` : `Question: ${question}`);
   lines.push(lang === "th" ? `\u0e15\u0e33\u0e41\u0e2b\u0e19\u0e48\u0e07\u0e44\u0e1e\u0e48: 1=${spread[0]} / 2=${spread[1]} / 3=${spread[2]}` : `Spread positions: 1=${spread[0]} / 2=${spread[1]} / 3=${spread[2]}`);
+  if (anchor) {
+    lines.push(
+      lang === "th"
+        ? `\u0e44\u0e1e\u0e48\u0e41\u0e01\u0e19: ${anchor}. \u0e15\u0e2d\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21\u0e1c\u0e48\u0e32\u0e19\u0e43\u0e1a\u0e19\u0e35\u0e49\u0e01\u0e48\u0e2d\u0e19 \u0e41\u0e25\u0e30\u0e43\u0e2b\u0e49\u0e40\u0e1b\u0e47\u0e19\u0e41\u0e01\u0e19\u0e02\u0e2d\u0e07\u0e04\u0e33\u0e2d\u0e48\u0e32\u0e19`
+        : `Anchor card: ${anchor}. Answer the question through this card first and make it the backbone of the reading.`
+    );
+  }
   if (nickname) lines.push(lang === "th" ? `\u0e0a\u0e37\u0e48\u0e2d\u0e1c\u0e39\u0e49\u0e16\u0e32\u0e21: ${nickname}` : `Asker name: ${nickname}`);
   cards.forEach((c, i) => {
     lines.push(
@@ -582,17 +538,19 @@ export type AiRun = (model: string, input: unknown) => Promise<unknown>;
  *  content deltas. Works with stream:true responses and with plain
  *  {response} fallbacks. */
 /**
- * Append a chunk that may repeat already-streamed text: Workers AI
- * stream events often carry the full text so far (and events may carry
- * it twice: `response` plus `choices[0].delta.content`). Returns only
- * the genuinely new tail so the assembled text never stutters.
+ * Append a streamed chunk to the text so far. Workers AI sends true
+ * incremental deltas, so each chunk is appended verbatim: a shared
+ * leading character is never stripped. The only exception is a
+ * clearly cumulative re-send, where the whole chunk starts with the
+ * entire accumulated text and that text is longer than
+ * CUMULATIVE_MIN_SEEN characters.
  */
+const CUMULATIVE_MIN_SEEN = 20;
+
 export function appendUnique(full: string, chunk: string): string {
   if (!chunk) return "";
-  if (full.endsWith(chunk)) return "";
-  const max = Math.min(full.length, chunk.length);
-  for (let i = max; i > 0; i--) {
-    if (full.endsWith(chunk.slice(0, i))) return chunk.slice(i);
+  if (full.length > CUMULATIVE_MIN_SEEN && chunk.startsWith(full)) {
+    return chunk.slice(full.length);
   }
   return chunk;
 }
@@ -663,11 +621,15 @@ export async function* streamDeltas(
               response?: unknown;
               choices?: { delta?: { content?: unknown } }[];
             };
-            const pieces: string[] = [];
-            if (typeof json.response === "string" && json.response) pieces.push(json.response);
-            const content = json.choices?.[0]?.delta?.content;
-            if (typeof content === "string" && content) pieces.push(content);
-            for (const piece of pieces) {
+            // One text field per event: the delta when present, else the
+            // legacy response field. Never both: the same text often
+            // arrives in both, and appending it twice duplicates content.
+            const delta = json.choices?.[0]?.delta?.content;
+            const piece =
+              typeof delta === "string" && delta ? delta
+              : typeof json.response === "string" ? json.response
+              : "";
+            if (piece) {
               const add = appendUnique(seen, piece);
               if (add) {
                 seen += add;

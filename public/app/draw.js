@@ -75,7 +75,7 @@
   }
 
   var TH_EXPLORE = String.fromCharCode(0x0e25, 0x0e2d, 0x0e07, 0x0e16, 0x0e32, 0x0e21, 0x0e15, 0x0e48, 0x0e2d);
-  var TH_SOMETHING_NEW = String.fromCharCode(0x0e16, 0x0e32, 0x0e21, 0x0e40, 0x0e23, 0x0e37, 0x0e48, 0x0e2d, 0x0e07, 0x0e44, 0x0e2b, 0x0e21, 0x0e48);
+  var TH_SOMETHING_NEW = String.fromCharCode(0x0e16, 0x0e32, 0x0e21, 0x0e40, 0x0e23, 0x0e37, 0x0e48, 0x0e2d, 0x0e07, 0x0e43, 0x0e2b, 0x0e21, 0x0e48);
 
   // A block that is only a card-name mention of a card outside this
   // reading (live: hallucinated Thai card lines) carries no reading —
@@ -768,7 +768,7 @@
               return '<button type="button" class="follow-btn" data-fq="' + encodeURIComponent(q) + '">' + esc(q) + "</button>";
             }).join("") + "</div>" +
             '<p class="fresh-link-row"><button type="button" class="linklike" data-fresh-ask>' +
-            esc(lang === "th" ? "\u0e16\u0e32\u0e21\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e44\u0e2b\u0e21\u0e48" : "Ask something new") + "</button></p></div>";
+            esc(lang === "th" ? "\u0e16\u0e32\u0e21\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e43\u0e2b\u0e21\u0e48" : "Ask something new") + "</button></p></div>";
         }
         if (/^\*\*(\u0e04\u0e33\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e08\u0e32\u0e01\u0e44\u0e1e\u0e48|Warning)/.test(b)) {
           return '<p class="sec sec-warning">' + html + "</p>";
