@@ -1,6 +1,6 @@
 // TarotNice offline cache. Precache the app shell + fonts + mascot;
 // serve static assets cache-first, pages network-first with fallback.
-const CACHE = "tarotnice-v95";
+const CACHE = "tarotnice-v96";
 
 const CORE = [
   "/",
@@ -73,16 +73,18 @@ self.addEventListener("fetch", (event) => {
     );
     return;
   }
-  // App shell assets: cache-first.
+  // App shell assets (JS/CSS/fonts/mascot): network-first, cache
+  // fallback for offline. Cache-first here meant a normal refresh kept
+  // running the previous deploy's code until the CACHE name was bumped
+  // by hand — only a hard refresh (which bypasses the worker) showed
+  // the new version.
   event.respondWith(
-    caches.match(event.request).then(
-      (hit) =>
-        hit ||
-        fetch(event.request).then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((cache) => cache.put(event.request, copy)).catch(() => {});
-          return res;
-        }),
-    ),
+    fetch(event.request)
+      .then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE).then((cache) => cache.put(event.request, copy)).catch(() => {});
+        return res;
+      })
+      .catch(() => caches.match(event.request)),
   );
 });

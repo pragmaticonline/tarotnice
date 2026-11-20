@@ -98,6 +98,26 @@ describe("service worker API freshness", () => {
     expect(networkCalls).toBe(2);
   });
 
+  it("serves app shell assets network-first so a normal refresh gets the new deploy", async () => {
+    let networkCalls = 0;
+    const onNetwork = () => {
+      networkCalls++;
+      const v = networkCalls;
+      return Promise.resolve({ ok: true, v, clone() { return { ok: true, v }; } });
+    };
+    const onFetch = loadSW(onNetwork);
+
+    const url = "https://tarotnice.com/app/site.css";
+    const first = getEvent(url);
+    onFetch(first.event);
+    expect(((await first.done(onNetwork)) as { v: number }).v).toBe(1);
+    // Next normal refresh: network again, never the stale cached copy.
+    const second = getEvent(url);
+    onFetch(second.event);
+    expect(((await second.done(onNetwork)) as { v: number }).v).toBe(2);
+    expect(networkCalls).toBe(2);
+  });
+
   it("still serves versioned /static/ art cache-first", async () => {
     let networkCalls = 0;
     const onNetwork = () => {
