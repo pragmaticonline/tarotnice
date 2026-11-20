@@ -446,7 +446,7 @@ h1.read-q{font-weight:600}
 .drawer-id{display:flex;flex-direction:column;min-width:0}
 .drawer-id small{color:var(--muted);overflow:hidden;text-overflow:ellipsis}
 .drawer-x{margin-left:auto;background:none;border:none;color:var(--ink);font-size:1.6rem;cursor:pointer;line-height:1}
-.drawer-ask{display:block;text-align:center}
+.drawer-ask{display:flex;align-items:center;justify-content:center;text-align:center}
 .drawer-stats{display:flex;gap:.7rem;margin:.9rem 0}
 .drawer-stat{flex:1;border:1px solid var(--gold-dim);border-radius:14px;padding:.6rem .8rem;display:flex;flex-direction:column;gap:.2rem;background:var(--card-face);color:var(--card-ink)}
 .drawer-stat small{color:var(--muted)}
