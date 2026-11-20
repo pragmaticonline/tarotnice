@@ -346,7 +346,10 @@ describe("pickSpread", () => {
       cards: [], prev: [], nickname: null,
     });
     expect(en.system).toContain("Sentence 1 answers the question as asked");
-    expect(en.system).toContain("Sentences 2-4 tell the one story");
+    expect(en.system).toContain("Sentences 2-3 tell the one story");
+    expect(en.system).toContain("First line starting with \"Summary: \"");
+    expect(en.system).not.toContain("**What next:**");
+    expect(en.system).toContain("exactly 2 follow-up questions");
     expect(en.system).toContain("If the user message names an anchor card, build the reading around it");
     expect(en.system).toContain("No advice here");
     const th = buildReadingPrompt({
@@ -355,7 +358,7 @@ describe("pickSpread", () => {
     });
     expect(th.system).toContain("\u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04\u0e41\u0e23\u0e01\u0e15\u0e2d\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21");
     expect(th.system).toContain("\u0e44\u0e21\u0e48\u0e21\u0e35\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33\u0e15\u0e23\u0e07\u0e19\u0e35\u0e49");
-    expect(th.user).toContain("4-6");
+    expect(th.user).toContain("2-3");
     expect(en.user).toContain("sentence 1 answers the question as asked");
   });
 
@@ -376,7 +379,6 @@ describe("pickSpread", () => {
     expect(en.system).toContain("never confirming a future event");
     expect(en.system).toContain("at most once in the whole reading");
     expect(en.system).toContain("Each section has one job and must add something new");
-    expect(en.system).toContain("with the condition that changes it");
     expect(en.system).toContain("If a sentence would fit any other spread, rewrite it for this one");
   });
 
@@ -475,7 +477,8 @@ describe("pickSpread", () => {
     expect(system).not.toMatch(/[0-9]\) Overview/);
     expect(system).toContain("only when it adds meaning");
     expect(system).toContain("Do not repeat the card name");
-    expect(system).toContain("Overview 4-6 sentences");
+    expect(system).toContain("Overview 2-3 sentences");
+    expect(system).toContain("each card 2 sentences");
   });
 });
 
@@ -612,6 +615,18 @@ describe("parseSummary", () => {
       cards: [], prev: [], nickname: null,
     });
     expect(th.system).toContain("\u0e43\u0e2b\u0e49\u0e40\u0e02\u0e49\u0e32\u0e01\u0e31\u0e1a\u0e19\u0e49\u0e33\u0e2b\u0e19\u0e31\u0e01\u0e02\u0e2d\u0e07\u0e04\u0e33\u0e16\u0e32\u0e21");
+  });
+
+  it("takes the next line when the summary label sits on its own line (live TH bug: summary parsed as **)", () => {
+    const th = "Body text.\n**\u0e2a\u0e23\u0e38\u0e1b:**\n\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49\u0e04\u0e38\u0e13\u0e21\u0e35\u0e2b\u0e25\u0e32\u0e22\u0e44\u0e2d\u0e40\u0e14\u0e35\u0e22";
+    expect(parseSummary(th)).toBe("\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49\u0e04\u0e38\u0e13\u0e21\u0e35\u0e2b\u0e25\u0e32\u0e22\u0e44\u0e2d\u0e40\u0e14\u0e35\u0e22");
+    expect(parseSummary("Body.\n**Summary:**\nTrust the slow build.")).toBe("Trust the slow build.");
+    expect(parseSummary("Body.\nSummary:\nTrust the slow build.")).toBe("Trust the slow build.");
+  });
+
+  it("never returns markdown punctuation as a summary", () => {
+    expect(parseSummary("Body.\n**Summary:** **")).not.toBe("**");
+    expect(parseSummary("Body.\nSummary: **")).not.toBe("**");
   });
 
   it("pulls a bold-labelled summary (Thai model often writes **label:**)", () => {

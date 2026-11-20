@@ -565,6 +565,11 @@ app.get("/api/readings/:id/stream", async (c) => {
           }
         }
         const model = c.env.READING_MODEL?.trim() || null;
+        // Gemma thinks by default and can burn the whole token budget
+        // before writing; the benchmark winner ran with thinking off.
+        const thinkingOff = model?.includes("gemma")
+          ? { chat_template_kwargs: { enable_thinking: false } }
+          : {};
         if (!model || !c.env.AI) {
           // Hand the claim back so the reading stays retryable.
           try {
@@ -634,11 +639,14 @@ app.get("/api/readings/:id/stream", async (c) => {
             try { send(sseEvent("status", JSON.stringify({ phase: "translating" }))); } catch { /* closed */ }
           }, 15_000);
           for await (const delta of streamDeltas(aiRun, thModel, {
+            ...thinkingOff,
             messages: [
               { role: "system", content: thPrompt.system },
               { role: "user", content: thPrompt.user },
             ],
-            max_tokens: 2048,
+            // Short shape (Summary first, 2 sentences/card): Thai needs
+            // more tokens per character than English, hence 1000 vs 700.
+            max_tokens: 1000,
           // Live: a full reading needs minutes to stream; the old
           // short deadline killed healthy streams mid-reading.
           }, 300_000)) {
@@ -648,11 +656,12 @@ app.get("/api/readings/:id/stream", async (c) => {
           full = full.trim();
         } else {
           for await (const delta of streamDeltas(aiRun, model, {
+            ...thinkingOff,
             messages: [
               { role: "system", content: system },
               { role: "user", content: prompt },
             ],
-            max_tokens: 2048,
+            max_tokens: 700,
           // Live: Llama 4 Scout needs well over 60s to stream a full
           // ~2k-token reading; the old deadline killed healthy streams.
           }, 180_000)) {

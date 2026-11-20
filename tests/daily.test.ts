@@ -56,6 +56,16 @@ describe("dailyMessage", () => {
     await expect(dailyMessage(env, card, false, "en")).resolves.toEqual({ text: "Fresh start text.", model: null });
   });
 
+  it("accepts OpenAI-shaped choices responses (Gemma) and asks Gemma not to think", async () => {
+    let seen: unknown = null;
+    const env = {
+      READING_MODEL: "@cf/google/gemma-4-26b-a4b-it",
+      AI: { run: async (_m: string, input: unknown) => { seen = input; return { choices: [{ message: { content: "  AI message here.  " } }] }; } },
+    };
+    await expect(dailyMessage(env, card, false, "en")).resolves.toEqual({ text: "AI message here.", model: "@cf/google/gemma-4-26b-a4b-it" });
+    expect(seen).toMatchObject({ chat_template_kwargs: { enable_thinking: false } });
+  });
+
   it("uses AI when configured and responding", async () => {
     const env = {
       READING_MODEL: "unit-test-model",

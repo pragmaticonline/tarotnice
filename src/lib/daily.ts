@@ -82,13 +82,18 @@ async function aiDailyMessage(
   const res = (await ai.run(
     model as never,
     {
+      ...(model.includes("gemma") ? { chat_template_kwargs: { enable_thinking: false } } : {}),
       messages: [
         { role: "system", content: sys },
         { role: "user", content: user },
       ],
     } as never,
     { signal: AbortSignal.timeout(25000) } as never,
-  )) as { response?: unknown };
-  const text = typeof res?.response === "string" ? res.response.trim() : "";
+  )) as { response?: unknown; choices?: { message?: { content?: unknown } }[] };
+  const raw =
+    typeof res?.response === "string" ? res.response
+    : typeof res?.choices?.[0]?.message?.content === "string" ? res.choices[0].message.content
+    : "";
+  const text = raw.trim();
   return text || null;
 }

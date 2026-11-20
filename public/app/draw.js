@@ -524,15 +524,19 @@
       var summaryText = "";
       var sIdx = -1;
       blocks.forEach(function (b, i) {
-        var m = b.match(/^\s*(?:\*\*)?(?:SUMMARY|\u0e2a\u0e23\u0e38\u0e1b)\s*(?:\*\*)?\s*:\s*(?:\*\*)?\s*(.+)$/i);
-        if (m) { sIdx = i; summaryText = m[1].replace(/\*\*\s*$/, "").trim(); }
+        // Promote a Summary in the FIRST block (new format: it streams
+        // in first) or the LAST block (old format). A "Summary:" in any
+        // middle block is a per-card closer, never the lead. Once the
+        // first block claims the lead, later closers cannot take it.
+        if (sIdx === 0) return;
+        if (i !== 0 && i !== blocks.length - 1) return;
+        var blines = b.split("\n");
+        var m = blines[0].match(/^\s*(?:\*\*)?(?:SUMMARY|\u0e2a\u0e23\u0e38\u0e1b)\s*(?:\*\*)?\s*:\s*(?:\*\*)?\s*(.*)$/i);
+        if (!m) return;
+        var content = (m[1] || "").replace(/\*\*\s*$/, "").trim();
+        if (!content) content = blines.slice(1).join(" ").replace(/\*\*/g, "").trim();
+        if (content) { sIdx = i; summaryText = content; }
       });
-      if (sIdx >= 0 && sIdx !== blocks.length - 1) {
-        // A "Summary:" anywhere but the last block is a per-card closer,
-        // not the closing summary — never promote it to the lead.
-        sIdx = -1;
-        summaryText = "";
-      }
       if (sIdx >= 0) blocks.splice(sIdx, 1);
       if (!summaryText && doneSummary) summaryText = doneSummary;
       // Server fallback summaries can carry the section header and the

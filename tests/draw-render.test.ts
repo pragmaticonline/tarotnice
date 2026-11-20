@@ -184,6 +184,26 @@ describe("renderReading positions", () => {
     expect(html).toContain("What to do: next steps");
   });
 
+  it("promotes a Summary in the FIRST block to the glance lead as soon as it streams", () => {
+    const html = renderOnce(
+      "Summary: Map options before stepping out.\n\n" +
+        "Together these cards tell a story of change.\n\n" +
+        "**Two of Wands**: You stand between security and a wider world.",
+    );
+    expect(html).not.toContain("is-waiting");
+    expect(html).toContain('<p class="glance-lead">Map options before stepping out.</p>');
+    expect(html).toContain("Together these cards tell a story of change");
+  });
+
+  it("promotes a label-only first summary using the next line in its block", () => {
+    const html = renderOnce(
+      "**Summary:**\nMap options before stepping out.\n\n" +
+        "Together these cards tell a story of change.",
+    );
+    expect(html).not.toContain("is-waiting");
+    expect(html).toContain('<p class="glance-lead">Map options before stepping out.</p>');
+  });
+
   it("bold **Summary:** line fills the At-a-glance lead (no waiting cat)", () => {
     const html = renderOnce(
       "Together these cards tell a story of change.\n\n" +
