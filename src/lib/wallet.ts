@@ -8,7 +8,7 @@ export const DAILY_FREE_TOKENS = 5;
 /** Referral reward when a friend finishes their first reading. */
 export const REFERRAL_REWARD_TOKENS = 5;
 /** Joining bonus for the friend who signs up with an invite code. */
-export const REFERRAL_FRIEND_BONUS_TOKENS = 5;
+export const REFERRAL_FRIEND_BONUS_TOKENS = 10;
 /** Max rewarded friends per referrer per Bangkok day (+3 questions). */
 export const REFERRAL_DAILY_CAP = 3;
 /** One-time code sent when a user adds the LINE OA: one free question. */

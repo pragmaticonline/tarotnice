@@ -6,6 +6,10 @@
 /** Digits/letters that can't be confused when read aloud or typed. */
 export const INVITE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
+/** Days an invite code is kept on the friend's device (cookie). The
+ *  invite page states this number, so copy and cookie share it. */
+export const INVITE_REF_COOKIE_DAYS = 7;
+
 const CODE_RE = /^NICE-([A-Z2-9]{4})$/i;
 
 export function isInviteCode(v: unknown): v is string {

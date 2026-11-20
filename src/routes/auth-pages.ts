@@ -85,7 +85,7 @@ function socialButton(provider: string, label: string): string {
   return `<button class="btn btn-outline social-btn" data-social="${provider}" type="button">${icon}${escapeHtml(label)}</button>`;
 }
 
-function socialButtons(opts: SocialOpts, d: ReturnType<typeof t>): string {
+export function socialButtons(opts: SocialOpts, d: ReturnType<typeof t>): string {
   const btns: string[] = [];
   if (opts.line) btns.push(socialButton("line", d.continueWithLine));
   if (opts.google !== false) btns.push(socialButton("google", d.continueWithGoogle));

@@ -33,6 +33,7 @@ import { d1PrefsStore } from "./db/prefs-store";
 import { d1TarotStore } from "./db/tarot-store";
 import { renderBadgeImage, renderInviteImage, renderShareImage, type ShareCard } from "./lib/share-images";
 import { badgeLandingPage, shareLandingPage, unsharedPage } from "./routes/share";
+import { inviteLandingPage } from "./routes/invite-landing";
 import {
   clientCategory,
   countryOf,
@@ -69,8 +70,10 @@ import {
   type StripeEnv,
 } from "./lib/stripe";
 import {
+  INVITE_REF_COOKIE_DAYS,
   inviteCodeFor,
   inviteCodeFromPngParam,
+  inviteLinkFor,
   inviteRefFor,
   isInviteCode,
   maskName,
@@ -913,21 +916,36 @@ app.get("/r/:shareId", async (c) => {
   const ui = requestUiLang(c);
   const origin = new URL(c.req.url).origin;
   const shareId = c.req.param("shareId");
-  // Personal invite link (/r/NICE-XXXX, design board 2): save the
-  // inviter for attribution and send the friend to the ask flow.
-  if (isInviteCode(shareId) && c.env?.DB) {
+  // Personal invite link (/r/NICE-XXXX): the invite sign-up page.
+  // Unknown codes go to /register with no invite box (no error page).
+  if (isInviteCode(shareId)) {
+    if (!c.env?.DB) return c.redirect("/register", 302);
     const code = normalizeInviteCode(shareId) as string;
-    const ownerId = await d1TarotStore(c.env.DB).inviteOwner(code);
-    if (ownerId) {
+    const store = d1TarotStore(c.env.DB);
+    const ownerId = await store.inviteOwner(code);
+    if (!ownerId) return c.redirect("/register", 302);
+    const viewer = await currentUser(c).catch(() => null);
+    const registered = !!viewer && !viewer.isAnonymous;
+    const state = registered && viewer.id === ownerId ? "own" : registered ? "member" : "guest";
+    // Only guests carry the code forward: signed-in users never get a
+    // code applied, and the inviter's own view applies nothing.
+    if (state === "guest") {
       setCookie(c, "tarotnice_ref", inviteRefFor(ownerId), {
         path: "/",
-        maxAge: 7 * 24 * 3600,
+        maxAge: INVITE_REF_COOKIE_DAYS * 24 * 3600,
         sameSite: "Lax",
       });
-      recordEvent(c.env, { name: "share_landing", kind: "invite", ...requestContext(c), userKind: "guest" });
-      return c.redirect(`/?ref=${code}&invited=${code}`, 302);
     }
-    return c.html(unsharedPage(origin, ui), 410);
+    const ownerPrefs = await d1PrefsStore(c.env.DB).get(ownerId).catch(() => null);
+    const inviterName = ownerPrefs?.nickname ?? t(ui).aFriend;
+    recordEvent(c.env, { name: "share_landing", kind: "invite", ...requestContext(c), userKind: userKind(viewer) });
+    return c.html(
+      inviteLandingPage({
+        ui, origin, code, inviterName, state,
+        inviteLink: inviteLinkFor(origin, code),
+        social: { google: true, line: lineConfigured(c.env) && LINE_LOGIN_VISIBLE },
+      }),
+    );
   }
   if (!isShareId(shareId) || !c.env?.DB) return c.html(unsharedPage(origin, ui), 410);
   const store = d1TarotStore(c.env.DB);
@@ -1988,6 +2006,17 @@ app.get("/api/me/summary", async (c) => {
       userId: user.id, delta: WELCOME_TOKENS, reason: "welcome",
       ref: `welcome:${user.id}`, day: today,
     }).catch(() => false);
+    // Friend-code bonus for every sign-up method (LINE/Google/email):
+    // attribute from the saved ref cookie, then grant +10 once. The
+    // ledger ref makes this idempotent with /api/me/invite, so the
+    // email flow calling that endpoint too can never double-grant.
+    await attributeReferral(c, store, user.id).catch(() => {});
+    if (await store.getReferral(user.id).catch(() => null)) {
+      await store.postLedger({
+        userId: user.id, delta: REFERRAL_FRIEND_BONUS_TOKENS, reason: "referral",
+        ref: `friend-bonus:${user.id}`, day: today,
+      }).catch(() => false);
+    }
   }
   // Unwedge a dead stream (claimed >3 min ago, never finished) so the
   // reading becomes resumable instead of stranding the user all day.

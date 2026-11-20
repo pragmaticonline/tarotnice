@@ -198,7 +198,7 @@ describe("payment result boards", () => {
 describe("invite + 404 boards", () => {
   it("invite page renders code, share actions and stat tiles", () => {
     const html = invitePage({ ui: "en", origin: "" });
-    expect(html).toContain("Your friend gets a bonus question.");
+    expect(html).toContain("Your friend gets 10 bonus tokens.");
     expect(html).toContain('id="stat-joined"');
     expect(html).toContain('id="stat-earned"');
     expect(html).toContain("Share on LINE");
@@ -313,7 +313,7 @@ describe("tokens wording everywhere, never credits", () => {
 
   it("billing invite tab uses the board copy: +5 tokens per first reading", () => {
     expect(t("en").inviteSub).toBe(
-      "Your friend gets a bonus question. You get +5 tokens when they finish their first reading.",
+      "Your friend gets 10 bonus tokens. You get +5 tokens when they finish their first reading.",
     );
     expect(t("th").inviteSub).toContain("+5 \u0e42\u0e17\u0e40\u0e04\u0e19");
   });
