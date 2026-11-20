@@ -183,7 +183,7 @@
       registerCta: "\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e1f\u0e23\u0e35",
       signInCta: "\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a",
       lineFriend: "\u0e40\u0e1e\u0e34\u0e48\u0e21 \"Nong Ngern\" (Tarotnice) \u0e40\u0e1b\u0e47\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e1a\u0e19 LINE \u0e23\u0e31\u0e1a\u0e42\u0e2d\u0e01\u0e32\u0e2a\u0e44\u0e14\u0e49\u0e23\u0e2b\u0e31\u0e2a\u0e42\u0e17\u0e40\u0e04\u0e47\u0e19\u0e1f\u0e23\u0e35\u0e43\u0e19\u0e42\u0e2d\u0e01\u0e32\u0e2a\u0e1e\u0e34\u0e40\u0e28\u0e29!",
-      lineFriendCta: "\u0e40\u0e1e\u0e34\u0e48\u0e40\u0e1b\u0e47\u0e19\u0e40\u0e1b\u0e47\u0e37\u0e48\u0e19\u0e40\u0e1b\u0e47\u0e37\u0e48\u0e19",
+      lineFriendCta: "\u0e40\u0e1e\u0e34\u0e48\u0e21\u0e40\u0e07\u0e34\u0e19\u0e40\u0e1b\u0e47\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19",
     },
   };
   function t(k) {
@@ -471,7 +471,13 @@
     add.href = "https://line.me/R/add/@677zpuat";
     add.target = "_blank";
     add.rel = "noopener";
-    add.textContent = t("lineFriendCta");
+    var lineLogo = document.createElement("span");
+    lineLogo.className = "line-logo";
+    lineLogo.innerHTML = '<svg viewBox="0 0 40 36" width="24" height="22" aria-hidden="true"><path d="M20 3c-9.4 0-17 6-17 13.3 0 4.3 2.8 8 7 10.1-.3 1.1-1.1 3.9-3.9 4.9 0 0 4.1.3 7.7-2 .9.2 3.5.6 6.2.6 9.4 0 17-6 17-13.3S29.4 3 20 3z" fill="#fff"/><text x="20" y="20.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="9" font-weight="900" fill="#06C755">LINE</text></svg>';
+    add.appendChild(lineLogo);
+    var lineLabel = document.createElement("span");
+    lineLabel.textContent = t("lineFriendCta");
+    add.appendChild(lineLabel);
     card.appendChild(p);
     card.appendChild(add);
     mount.appendChild(card);

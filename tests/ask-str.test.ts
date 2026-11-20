@@ -107,6 +107,10 @@ describe("ask.js STR parity", () => {
     expect(th).toContain("lineFriend");
     expect(en).toContain("lineFriendCta");
     expect(th).toContain("lineFriendCta");
+    // Thai CTA names Ngern and carries the LINE logo before the label.
+    expect(src).toContain("\\u0e40\\u0e1e\\u0e34\\u0e48\\u0e21\\u0e40\\u0e07\\u0e34\\u0e19\\u0e40\\u0e1b\\u0e47\\u0e19\\u0e40\\u0e1e\\u0e37\\u0e48\\u0e2d\\u0e19");
+    expect(src).toContain("line-logo");
+    expect(src).toContain("lineLogo");
   });
 
   it("uses the full §7 disclaimer wording in both languages", () => {
