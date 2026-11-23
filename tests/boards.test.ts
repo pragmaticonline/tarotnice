@@ -240,8 +240,8 @@ describe("LINE redeem prompt", () => {
       const html = billingPage({ ui, origin: "", env: {}, balance: 0, freeLeft: 0 });
       const d = t(ui);
       expect(html).toContain("line-redeem-note");
-      expect(html).toContain('href="https://line.me/R/add/@677zpuat"');
-      expect(html).toContain(d.lineRedeemLink);
+      expect(html).toContain('href="https://lin.ee/sqKMO87"');
+      expect(html).toContain("line_add_friends/btn/");
       expect(html.indexOf('id="redeem-code"')).toBeLessThan(html.indexOf("line-redeem-note"));
     }
   });

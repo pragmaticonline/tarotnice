@@ -661,6 +661,3 @@ button.cal-cell.sel{outline:2px solid var(--accent);outline-offset:1px}
 .pay-badges{display:inline-flex;align-items:center;gap:8px}
 .pay-badges img{display:block;height:22px;width:auto;background:#fff;border:1px solid #e3d6b8;border-radius:6px;padding:2px 6px}
 .foot-pay{display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}
-.line-add-btn{background:#06C755 !important;border-color:#06C755 !important;color:#fff !important;min-height:44px;border-radius:10px;padding:0 18px;font-weight:600;display:inline-flex;align-items:center;gap:8px}
-.line-add-btn svg{width:1.5rem;height:auto;flex:none}
-@media(max-width:480px){.line-add-btn{width:100%;justify-content:center}}

@@ -244,7 +244,7 @@ export function drawerHtml(ui: UiLang): string {
     <a href="/history">${escapeHtml(d.historyTitle)} <span class="drawer-count" data-drawer-history-count hidden></span></a>
     <a class="journey-row" data-journey-row href="/progress"><span>${escapeHtml(d.drawerJourney)}</span><span class="journey-dot" data-checkin-dot-menu hidden aria-hidden="true"></span><span class="journey-pill" data-checkin-pill hidden>${escapeHtml(d.checkinPill)}</span></a>
     <a href="/invite">${escapeHtml(d.refTab)} <span class="drawer-pill">${escapeHtml(d.invitePill)}</span></a>
-    <a class="line-friends-link" href="https://line.me/R/add/@677zpuat" target="_blank" rel="noopener"><span class="drawer-line-icon" aria-hidden="true"></span>${escapeHtml(d.lineFriends)}</a>
+    <a class="line-friends-link" href="https://lin.ee/sqKMO87" target="_blank" rel="noopener"><span class="drawer-line-icon" aria-hidden="true"></span>${escapeHtml(d.lineFriends)}</a>
     <a href="/cards">${escapeHtml(d.cardsTitle)}</a>
     <button type="button" data-drawer-settings-open>${escapeHtml(d.drawerSettings)} <span aria-hidden="true">&rsaquo;</span></button>
     <button type="button" data-drawer-wallet-open>${escapeHtml(d.drawerWallet)} <span class="drawer-sub"><span class="moonstone" aria-hidden="true"></span><span data-drawer-wallet-count>0</span></span></button>

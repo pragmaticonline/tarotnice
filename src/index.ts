@@ -1195,11 +1195,7 @@ app.get("/billing", async (c) => {
   c.header("Cache-Control", "private, no-store");
   const user = await currentUser(c);
   if (!user || !isRegisteredUser(user)) {
-    const rawCode = (c.req.query("code") || "").trim();
-    const back = rawCode && /^[A-Za-z0-9-]{1,32}$/.test(rawCode)
-      ? `/billing?code=${encodeURIComponent(rawCode)}`
-      : "/billing";
-    return c.redirect(`/sign-in?return=${encodeURIComponent(back)}`, 302);
+    return c.redirect(`/sign-in?return=${encodeURIComponent("/billing")}`, 302);
   }
   const ui = requestUiLang(c);
   const store = d1TarotStore(c.env.DB);

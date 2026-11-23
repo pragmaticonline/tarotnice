@@ -70,14 +70,6 @@
   if (location.hash === "#ref") activateTab("ref");
   if (location.hash === "#activity" && $("activity")) $("activity").scrollIntoView();
 
-  // --- Redeem code (wallet): pre-fill from ?code= (LINE share links) ---
-  (function () {
-    var input = document.getElementById("redeem-code");
-    if (!input || input.value) return;
-    var m = /(?:^|[?&])code=([A-Za-z0-9-]{1,32})/.exec(location.search);
-    if (m) input.value = decodeURIComponent(m[1]).toUpperCase();
-  })();
-
   // --- Redeem code (wallet) ---
   var redeemBtn = $("redeem-apply");
   if (redeemBtn) {

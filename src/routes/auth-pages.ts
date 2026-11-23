@@ -78,7 +78,7 @@ function socialErrorText(d: ReturnType<typeof t>, code: string | null | undefine
   return null;
 }
 
-export const LINE_ICON = `<svg viewBox="0 0 40 36" width="24" height="22" aria-hidden="true"><path d="M20 3c-9.4 0-17 6-17 13.3 0 4.3 2.8 8 7 10.1-.3 1.1-1.1 3.9-3.9 4.9 0 0 4.1.3 7.7-2 .9.2 3.5.6 6.2.6 9.4 0 17-6 17-13.3S29.4 3 20 3z" fill="#fff"/><text x="20" y="20.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="9" font-weight="900" fill="#06C755">LINE</text></svg>`;
+const LINE_ICON = `<svg viewBox="0 0 40 36" width="24" height="22" aria-hidden="true"><path d="M20 3c-9.4 0-17 6-17 13.3 0 4.3 2.8 8 7 10.1-.3 1.1-1.1 3.9-3.9 4.9 0 0 4.1.3 7.7-2 .9.2 3.5.6 6.2.6 9.4 0 17-6 17-13.3S29.4 3 20 3z" fill="#fff"/><text x="20" y="20.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="9" font-weight="900" fill="#06C755">LINE</text></svg>`;
 
 function socialButton(provider: string, label: string): string {
   const icon = provider === "line" ? `${LINE_ICON} ` : "";

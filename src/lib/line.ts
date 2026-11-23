@@ -108,15 +108,15 @@ export function newLineWelcomeCode(random: () => number = Math.random): string {
  * then English. The token count comes from LINE_WELCOME_BONUS_TOKENS. */
 export function lineWelcomeText(code: string): string {
   const n = LINE_WELCOME_BONUS_TOKENS;
-  const link = `https://tarotnice.com/billing?code=${code}`;
+  const link = "https://tarotnice.com/billing";
   return [
-    `\u{1F381} \u0e42\u0e04\u0e49\u0e14\u0e02\u0e2d\u0e07\u0e02\u0e27\u0e31\u0e0d\u0e08\u0e32\u0e01\u0e19\u0e49\u0e2d\u0e07\u0e40\u0e07\u0e34\u0e19: ${code}`,
+    `\u{1F381} \u0e42\u0e04\u0e49\u0e14\u0e02\u0e2d\u0e07\u0e02\u0e27\u0e31\u0e0d\u0e08\u0e32\u0e01\u0e19\u0e49\u0e2d\u0e07\u0e40\u0e07\u0e34\u0e19: {CODE}`,
     `\u0e23\u0e31\u0e1a\u0e1f\u0e23\u0e35 ${n} \u0e42\u0e17\u0e40\u0e04\u0e19 \u00b7 \u0e43\u0e0a\u0e49\u0e44\u0e14\u0e49 1 \u0e04\u0e23\u0e31\u0e49\u0e07`,
-    `\u0e41\u0e15\u0e30\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e23\u0e31\u0e1a \u{1F449} ${link}`,
+    `\u0e41\u0e25\u0e01\u0e44\u0e14\u0e49\u0e17\u0e35\u0e48 \u{1F449} ${link}`,
     ``,
-    `\u{1F381} A gift from Ngern: ${code}`,
+    `\u{1F381} A gift from Ngern: {CODE}`,
     `Get ${n} free tokens \u00b7 one-time use`,
-    `Tap to redeem \u{1F449} ${link}`,
-  ].join("\n");
+    `Redeem at \u{1F449} ${link}`,
+  ].join("\n").replaceAll("{CODE}", code);
 }
 

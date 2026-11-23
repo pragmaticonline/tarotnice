@@ -40,9 +40,10 @@ describe("LINE Messaging client", () => {
 
   it("renders the bilingual welcome text with code, link and token count", () => {
     const msg = lineWelcomeText("LINE-ABC123");
-    // Code appears twice (TH block + EN block), link carries ?code=.
-    expect(msg.split("LINE-ABC123").length - 1).toBe(4);
-    expect(msg).toContain("https://tarotnice.com/billing?code=LINE-ABC123");
+    // Code appears twice (TH block + EN block); links point at plain /billing.
+    expect(msg.split("LINE-ABC123").length - 1).toBe(2);
+    expect(msg).toContain("https://tarotnice.com/billing");
+    expect(msg).not.toContain("billing?code=");
     expect(msg).toContain(String(LINE_WELCOME_BONUS_TOKENS));
     expect(msg).toContain("Ngern");
     // Thai wording uses the right spelling for tokens.
@@ -58,21 +59,13 @@ describe("LINE Messaging client", () => {
     expect(billing).toContain("/^promo:LINE-/");
     expect(billing).toContain("txLineGift");
     expect(billing).toContain("LINE friend gift");
-    expect(billing).toContain("location.search");
+    expect(billing).not.toContain("location.search");
   });
 
-  it("redeem box pre-fills ?code= and /billing keeps it through sign-in", async () => {
-    const billing = readFileSync(
-      path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../public/app/billing.js"),
-      "utf8",
-    );
-    expect(billing).toContain("redeem-code");
-    // Guests bounce to sign-in with the code preserved for after login.
+  it("guests bounce to plain sign-in (no code-carrying return)", async () => {
     const res = await app.request("/billing?code=LINE-ABC123");
     expect(res.status).toBe(302);
-    expect(res.headers.get("location")).toBe("/sign-in?return=%2Fbilling%3Fcode%3DLINE-ABC123");
-    const junk = await app.request("/billing?code=<evil>");
-    expect(junk.headers.get("location")).toBe("/sign-in?return=%2Fbilling");
+    expect(res.headers.get("location")).toBe("/sign-in?return=%2Fbilling");
   });
 
   it("redeem box invites LINE adds with the live bonus amount", () => {
@@ -80,13 +73,12 @@ describe("LINE Messaging client", () => {
     expect(t("th").lineRedeemCta).toContain("{n}");
     const en = billingPage({ ui: "en", origin: "", env: {} as never, balance: 0, freeLeft: 0 });
     expect(en).toContain("get 5 free tokens right away");
-    expect(en).toContain("Add friend on LINE");
-    expect(en).toContain("https://line.me/R/ti/p/@677zpuat");
-    expect(en).toContain('class="btn line-add-btn"');
-    expect(en).toContain("M20 3c-9.4");
+    expect(en).toContain("https://lin.ee/sqKMO87");
+    expect(en).toContain("https://scdn.line-apps.com/n/line_add_friends/btn/en.png");
+    expect(en).not.toContain("line-add-btn");
     const th = billingPage({ ui: "th", origin: "", env: {} as never, balance: 0, freeLeft: 0 });
     expect(th).toContain("\u0e23\u0e31\u0e1a\u0e1f\u0e23\u0e35\u0e17\u0e31\u0e19\u0e17\u0e35 5 \u0e42\u0e17\u0e40\u0e04\u0e19");
-    expect(th).toContain("line-add-btn");
+    expect(th).toContain("https://scdn.line-apps.com/n/line_add_friends/btn/th.png");
   });
 
   it("LINE friend gifts read distinctly in the ledger", () => {
