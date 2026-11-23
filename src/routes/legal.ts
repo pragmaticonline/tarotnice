@@ -49,9 +49,16 @@ function shell(title: string, heading: string, inner: string, uiLang: UiLang, ac
   });
 }
 
-function legalTabs(active: "terms" | "privacy", uiLang: UiLang): string {
+function legalTabs(active: "terms" | "privacy" | "cookies" | "security" | "policies", uiLang: UiLang): string {
   const d = t(uiLang);
-  return `<nav class="legal-tabs"><a class="lib-tab${active === "terms" ? " on" : ""}" href="/terms">${escapeHtml(d.terms)}</a><a class="lib-tab${active === "privacy" ? " on" : ""}" href="/privacy">${escapeHtml(d.privacy)}</a></nav>`;
+  const tabs: [string, string, string][] = [
+    ["terms", "/terms", d.terms],
+    ["privacy", "/privacy", d.privacy],
+    ["cookies", "/cookies", d.cookiesTitle],
+    ["security", "/security", d.securityTitle],
+    ["policies", "/policies", d.policiesTitle],
+  ];
+  return `<nav class="legal-tabs">${tabs.map(([key, href, label]) => `<a class="lib-tab${active === key ? " on" : ""}" href="${href}">${escapeHtml(label)}</a>`).join("")}</nav>`;
 }
 
 export function termsPage(uiLang: UiLang = "en", account?: HeaderAccount): string {
@@ -108,6 +115,70 @@ export function privacyPage(uiLang: UiLang = "en", account?: HeaderAccount): str
 <p>News &amp; offers emails are only sent if you opt in — tick the box at sign-up or switch it on in Account settings.</p>
 <p>To delete everything, visit /account and choose \u201cdelete my data\u201d, or write to <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>.</p>`;
   return shell(d.privacy, d.privacy, legalTabs("privacy", uiLang) + body, uiLang, account);
+}
+
+export function policiesPage(uiLang: UiLang = "en", account?: HeaderAccount): string {
+  const d = t(uiLang);
+  const docs: [string, string, string][] = uiLang === "th" ? [
+    ["terms", "\u0e02\u0e49\u0e2d\u0e01\u0e33\u0e2b\u0e19\u0e14\u0e01\u0e32\u0e23\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19", "\u0e01\u0e15\u0e34\u0e01\u0e32\u0e01\u0e32\u0e23\u0e43\u0e0a\u0e49 TarotNice: \u0e2d\u0e32\u0e22\u0e38\u0e02\u0e31\u0e49\u0e19\u0e15\u0e48\u0e33 \u0e1a\u0e31\u0e0d\u0e0a\u0e35 \u0e42\u0e17\u0e40\u0e04\u0e19 \u0e41\u0e25\u0e30\u0e01\u0e32\u0e23\u0e0a\u0e33\u0e23\u0e30\u0e40\u0e07\u0e34\u0e19"],
+    ["privacy", "\u0e19\u0e42\u0e22\u0e1a\u0e32\u0e22\u0e04\u0e27\u0e32\u0e21\u0e40\u0e1b\u0e47\u0e19\u0e2a\u0e48\u0e27\u0e19\u0e15\u0e31\u0e27", "\u0e40\u0e23\u0e32\u0e40\u0e01\u0e47\u0e1a\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2d\u0e30\u0e44\u0e23 \u0e40\u0e01\u0e47\u0e1a\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23 \u0e41\u0e25\u0e30\u0e25\u0e1a\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23"],
+    ["cookies", "\u0e19\u0e42\u0e22\u0e1a\u0e32\u0e22\u0e04\u0e38\u0e01\u0e01\u0e35\u0e49", "\u0e04\u0e38\u0e01\u0e01\u0e35\u0e49\u0e41\u0e25\u0e30\u0e17\u0e35\u0e48\u0e40\u0e01\u0e47\u0e1a\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e43\u0e19\u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e17\u0e35\u0e48\u0e40\u0e23\u0e32\u0e43\u0e0a\u0e49"],
+    ["security", "\u0e04\u0e27\u0e32\u0e21\u0e1b\u0e25\u0e2d\u0e14\u0e20\u0e31\u0e22", "\u0e27\u0e34\u0e18\u0e35\u0e17\u0e35\u0e48\u0e40\u0e23\u0e32\u0e1b\u0e01\u0e1b\u0e49\u0e2d\u0e07\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e41\u0e25\u0e30\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13"],
+  ] : [
+    ["terms", "Terms of Service", "Rules for using TarotNice: age, accounts, tokens, payments."],
+    ["privacy", "Privacy Policy", "What we collect, how we use it, how to delete it."],
+    ["cookies", "Cookie Policy", "The cookies and browser storage we use."],
+    ["security", "Security", "How we protect your account and data."],
+  ];
+  const title = uiLang === "th" ? "\u0e19\u0e42\u0e22\u0e1a\u0e32\u0e22\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14" : d.policiesTitle;
+  const lede = uiLang === "th" ? "\u0e40\u0e2d\u0e01\u0e2a\u0e32\u0e23\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14\u0e17\u0e35\u0e48\u0e01\u0e33\u0e01\u0e31\u0e1a\u0e14\u0e39\u0e41\u0e25 TarotNice \u0e23\u0e27\u0e21\u0e44\u0e27\u0e49\u0e17\u0e35\u0e48\u0e19\u0e35\u0e48 \u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22\u0e21\u0e35\u0e1c\u0e25\u0e1c\u0e39\u0e01\u0e1e\u0e31\u0e19\u0e17\u0e32\u0e07\u0e01\u0e0e\u0e2b\u0e21\u0e32\u0e22" : "All documents that govern TarotNice, in one place. The Thai version is legally binding.";
+  const body = `<nav class="legal-tabs">${docs.map(([key, label]) => `<a class="lib-tab" href="/${key}">${escapeHtml(label)}</a>`).join("")}</nav>` +
+    `<p class="lede">${escapeHtml(lede)}</p>` +
+    docs.map(([key, label, desc]) => `<section class="faq"><summary style="cursor:default;list-style:none"><a href="/${key}">${escapeHtml(label)}</a></summary><p>${escapeHtml(desc)}</p></section>`).join("") +
+    `<p class="contact-links">${escapeHtml(uiLang === "th" ? "\u0e04\u0e33\u0e16\u0e32\u0e21\u0e40\u0e01\u0e35\u0e48\u0e22\u0e27\u0e01\u0e31\u0e1a\u0e19\u0e42\u0e22\u0e1a\u0e32\u0e22: " : "Policy questions: ")}<a href="mailto:${LEGAL_EMAIL}">${LEGAL_EMAIL}</a></p>`;
+  return shell(title, title, body, uiLang, account);
+}
+
+export function cookiesPage(uiLang: UiLang = "en", account?: HeaderAccount): string {
+  const d = t(uiLang);
+  const rows: [string, string, string][] = uiLang === "th" ? [
+    ["tarotnice_ref", "\u0e08\u0e33\u0e23\u0e2b\u0e31\u0e2a\u0e0a\u0e27\u0e19\u0e02\u0e2d\u0e07\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19 (7 \u0e27\u0e31\u0e19)", "\u0e08\u0e33\u0e42\u0e04\u0e49\u0e14\u0e0a\u0e27\u0e19\u0e08\u0e32\u0e01\u0e25\u0e34\u0e07\u0e01\u0e4c /r/ \u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e43\u0e2b\u0e49\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e16\u0e39\u0e01\u0e04\u0e19"],
+    ["nl_ui", "\u0e08\u0e33\u0e20\u0e32\u0e29\u0e32\u0e2b\u0e19\u0e49\u0e32\u0e08\u0e2d (1 \u0e1b\u0e35)", "\u0e08\u0e33\u0e27\u0e48\u0e32\u0e04\u0e38\u0e13\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22\u0e2b\u0e23\u0e37\u0e2d\u0e2d\u0e31\u0e07\u0e01\u0e24\u0e29"],
+    ["session", "\u0e04\u0e38\u0e01\u0e01\u0e35\u0e49\u0e25\u0e47\u0e2d\u0e01\u0e2d\u0e34\u0e19 (\u0e08\u0e19\u0e01\u0e27\u0e48\u0e32\u0e08\u0e30\u0e2d\u0e2d\u0e01\u0e08\u0e32\u0e01\u0e23\u0e30\u0e1a\u0e1a)", "\u0e04\u0e38\u0e01\u0e01\u0e35\u0e49\u0e17\u0e35\u0e48\u0e1b\u0e25\u0e2d\u0e14\u0e20\u0e31\u0e22\u0e0b\u0e36\u0e48\u0e07\u0e17\u0e33\u0e43\u0e2b\u0e49\u0e04\u0e38\u0e13\u0e04\u0e49\u0e32\u0e07\u0e2d\u0e22\u0e39\u0e48\u0e43\u0e19\u0e23\u0e30\u0e1a\u0e1a"],
+  ] : [
+    ["tarotnice_ref", "Invite code (7 days)", "Remembers a friend's code from an /r/ link so the bonus lands."],
+    ["nl_ui", "Interface language (1 year)", "Remembers whether you chose Thai or English."],
+    ["session", "Sign-in session (until you sign out)", "A secure cookie that keeps you signed in."],
+  ];
+  const table = `<table class="grid"><thead><tr><th>${escapeHtml(uiLang === "th" ? "\u0e04\u0e38\u0e01\u0e01\u0e35\u0e49" : "Cookie")}</th><th>${escapeHtml(uiLang === "th" ? "\u0e43\u0e0a\u0e49\u0e17\u0e33\u0e2d\u0e30\u0e44\u0e23" : "Purpose")}</th></tr></thead><tbody>${rows.map((r) => `<tr><td><code>${escapeHtml(r[0])}</code><br><span class="muted">${escapeHtml(r[1])}</span></td><td>${escapeHtml(r[2])}</td></tr>`).join("")}</tbody></table>`;
+  const third = uiLang === "th"
+    ? `<p>\u0e1c\u0e39\u0e49\u0e43\u0e2b\u0e49\u0e1a\u0e23\u0e34\u0e01\u0e32\u0e23\u0e02\u0e2d\u0e07\u0e40\u0e23\u0e32\u0e43\u0e0a\u0e49\u0e04\u0e38\u0e01\u0e01\u0e35\u0e49\u0e02\u0e2d\u0e07\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07: Cloudflare \u0e43\u0e0a\u0e49\u0e04\u0e38\u0e01\u0e01\u0e35\u0e49\u0e04\u0e27\u0e32\u0e21\u0e1b\u0e25\u0e2d\u0e14\u0e20\u0e31\u0e22\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e23\u0e31\u0e01\u0e29\u0e32\u0e41\u0e25\u0e30\u0e1b\u0e49\u0e2d\u0e07\u0e01\u0e31\u0e19\u0e01\u0e32\u0e23\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13 \u0e2a\u0e48\u0e27\u0e19\u0e01\u0e32\u0e23\u0e0a\u0e33\u0e23\u0e30\u0e40\u0e07\u0e34\u0e19\u0e17\u0e33\u0e1a\u0e19\u0e40\u0e27\u0e47\u0e1a\u0e02\u0e2d\u0e07 Stripe \u0e42\u0e14\u0e22\u0e15\u0e23\u0e07 \u0e08\u0e36\u0e07\u0e2d\u0e22\u0e39\u0e48\u0e20\u0e32\u0e22\u0e43\u0e15\u0e49\u0e19\u0e42\u0e22\u0e1a\u0e32\u0e22\u0e02\u0e2d\u0e07 Stripe \u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e02\u0e2d\u0e07\u0e40\u0e23\u0e32</p><p>\u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e22\u0e31\u0e07\u0e40\u0e01\u0e47\u0e1a\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e40\u0e25\u0e47\u0e01\u0e46 \u0e19\u0e49\u0e2d\u0e22\u0e46 \u0e44\u0e27\u0e49\u0e43\u0e19\u0e40\u0e04\u0e23\u0e37\u0e48\u0e2d\u0e07 (\u0e40\u0e0a\u0e48\u0e19 \u0e18\u0e35\u0e21\u0e17\u0e35\u0e48\u0e40\u0e25\u0e37\u0e2d\u0e01) \u0e0b\u0e36\u0e48\u0e07\u0e08\u0e30\u0e16\u0e39\u0e01\u0e25\u0e1a\u0e40\u0e21\u0e37\u0e48\u0e2d\u0e04\u0e38\u0e13\u0e25\u0e1a\u0e1a\u0e31\u0e0d\u0e0a\u0e35 \u0e16\u0e49\u0e32\u0e04\u0e38\u0e13\u0e1a\u0e25\u0e47\u0e2d\u0e01\u0e04\u0e38\u0e01\u0e01\u0e35\u0e49 \u0e01\u0e32\u0e23\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e41\u0e25\u0e30\u0e01\u0e32\u0e23\u0e08\u0e33\u0e20\u0e32\u0e29\u0e32\u0e2d\u0e32\u0e08\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49</p>`
+    : `<p>Our providers use their own cookies: Cloudflare sets security cookies that keep your connection safe and block abuse, and payment happens directly on Stripe's site, so Stripe's policy applies there \u2014 not ours.</p><p>Your browser also keeps small local data (such as your theme choice), which is cleared when you delete your account. If you block cookies, staying signed in and language memory may stop working.</p>`;
+  const body = legalTabs("cookies", uiLang) + `<p class="lede">${escapeHtml(d.cookiesTitle)}</p>` + table + third +
+    `<p class="contact-links">${escapeHtml(uiLang === "th" ? "\u0e04\u0e33\u0e16\u0e32\u0e21: " : "Questions: ")}<a href="mailto:${PRIVACY_EMAIL}">${PRIVACY_EMAIL}</a></p>`;
+  return shell(d.cookiesTitle, d.cookiesTitle, body, uiLang, account);
+}
+
+export function securityPage(uiLang: UiLang = "en", account?: HeaderAccount): string {
+  const d = t(uiLang);
+  const items: [string, string][] = uiLang === "th" ? [
+    ["\u0e01\u0e32\u0e23\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d\u0e17\u0e35\u0e48\u0e40\u0e02\u0e49\u0e32\u0e23\u0e2b\u0e31\u0e2a", "\u0e17\u0e38\u0e01\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e23\u0e30\u0e2b\u0e27\u0e48\u0e32\u0e07\u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e01\u0e31\u0e1a TarotNice \u0e16\u0e39\u0e01\u0e40\u0e02\u0e49\u0e32\u0e23\u0e2b\u0e31\u0e2a\u0e14\u0e49\u0e27\u0e22 TLS \u0e1c\u0e48\u0e32\u0e19 Cloudflare"],
+    ["\u0e23\u0e2b\u0e31\u0e2a\u0e1c\u0e48\u0e32\u0e19\u0e16\u0e39\u0e01\u0e41\u0e2e\u0e0a", "\u0e40\u0e23\u0e32\u0e44\u0e21\u0e48\u0e40\u0e04\u0e22\u0e40\u0e01\u0e47\u0e1a\u0e23\u0e2b\u0e31\u0e2a\u0e1c\u0e48\u0e32\u0e19\u0e41\u0e1a\u0e1a\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e18\u0e23\u0e23\u0e21\u0e14\u0e32 \u0e23\u0e2b\u0e31\u0e2a\u0e1c\u0e48\u0e32\u0e19\u0e16\u0e39\u0e01\u0e41\u0e2e\u0e0a\u0e14\u0e49\u0e27\u0e22 scrypt \u0e01\u0e48\u0e2d\u0e19\u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01"],
+    ["\u0e44\u0e21\u0e48\u0e41\u0e15\u0e30\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e1a\u0e31\u0e15\u0e23", "\u0e01\u0e32\u0e23\u0e0a\u0e33\u0e23\u0e30\u0e40\u0e07\u0e34\u0e19\u0e17\u0e33\u0e1a\u0e19\u0e2b\u0e19\u0e49\u0e32\u0e0a\u0e33\u0e23\u0e30\u0e40\u0e07\u0e34\u0e19\u0e02\u0e2d\u0e07 Stripe \u0e40\u0e17\u0e48\u0e32\u0e19\u0e31\u0e49\u0e19 \u0e2b\u0e21\u0e32\u0e22\u0e40\u0e25\u0e02\u0e1a\u0e31\u0e15\u0e23\u0e44\u0e21\u0e48\u0e40\u0e04\u0e22\u0e1c\u0e48\u0e32\u0e19\u0e2b\u0e23\u0e37\u0e2d\u0e16\u0e39\u0e01\u0e40\u0e01\u0e47\u0e1a\u0e44\u0e27\u0e49\u0e17\u0e35\u0e48\u0e40\u0e0b\u0e34\u0e23\u0e4c\u0e1f\u0e40\u0e27\u0e2d\u0e23\u0e4c\u0e02\u0e2d\u0e07\u0e40\u0e23\u0e32"],
+    ["\u0e01\u0e31\u0e19\u0e01\u0e32\u0e23\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19\u0e43\u0e19\u0e17\u0e32\u0e07\u0e17\u0e35\u0e48\u0e1c\u0e34\u0e14", "\u0e40\u0e23\u0e32\u0e08\u0e33\u0e01\u0e31\u0e14\u0e2d\u0e31\u0e15\u0e23\u0e32\u0e01\u0e32\u0e23\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19 \u0e40\u0e0a\u0e48\u0e19 \u0e08\u0e33\u0e19\u0e27\u0e19\u0e04\u0e33\u0e16\u0e32\u0e21\u0e1f\u0e23\u0e35\u0e15\u0e48\u0e2d\u0e27\u0e31\u0e19 \u0e41\u0e25\u0e30\u0e01\u0e32\u0e23\u0e1e\u0e22\u0e32\u0e22\u0e32\u0e21\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a \u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e01\u0e31\u0e19\u0e1a\u0e2d\u0e17\u0e41\u0e25\u0e30\u0e01\u0e32\u0e23\u0e42\u0e08\u0e21\u0e15\u0e35"],
+  ] : [
+    ["Encrypted connections", "Everything between your browser and TarotNice is encrypted with TLS via Cloudflare."],
+    ["Hashed passwords", "We never store plain-text passwords. Passwords are hashed with scrypt before they are saved."],
+    ["No card data here", "Payment happens only on Stripe's checkout pages. Card numbers never pass through or stay on our servers."],
+    ["Abuse backstops", "We rate-limit things like free daily questions and sign-in attempts to block bots and attacks."],
+  ];
+  const report = uiLang === "th"
+    ? `<section class="faq"><summary style="cursor:default;list-style:none">\u0e41\u0e08\u0e49\u0e07\u0e0a\u0e48\u0e2d\u0e07\u0e42\u0e2b\u0e27\u0e48</summary><p>\u0e1e\u0e1a\u0e1b\u0e31\u0e0d\u0e2b\u0e32\u0e04\u0e27\u0e32\u0e21\u0e1b\u0e25\u0e2d\u0e14\u0e20\u0e31\u0e22? \u0e41\u0e08\u0e49\u0e07\u0e40\u0e23\u0e32\u0e17\u0e35\u0e48 <a href="mailto:${SECURITY_EMAIL}">${SECURITY_EMAIL}</a></p></section>`
+    : `<section class="faq"><summary style="cursor:default;list-style:none">Report a hole</summary><p>Found a security problem? Tell us at <a href="mailto:${SECURITY_EMAIL}">${SECURITY_EMAIL}</a>.</p></section>`;
+  const body = legalTabs("security", uiLang) +
+    items.map(([h, p]) => `<section class="faq"><summary style="cursor:default;list-style:none">${escapeHtml(h)}</summary><p>${escapeHtml(p)}</p></section>`).join("") + report +
+    `<p class="contact-links">${escapeHtml(uiLang === "th" ? "\u0e04\u0e33\u0e16\u0e32\u0e21: " : "Questions: ")}<a href="mailto:${SECURITY_EMAIL}">${SECURITY_EMAIL}</a></p>`;
+  return shell(d.securityTitle, d.securityTitle, body, uiLang, account);
 }
 
 export function contactPage(uiLang: UiLang = "en", account?: HeaderAccount): string {

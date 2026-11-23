@@ -657,3 +657,10 @@ button.cal-cell.sel{outline:2px solid var(--accent);outline-offset:1px}
 .ci-done{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 12px;border-radius:12px;background:#eef7f0;border:1px solid #cfe8d6;color:#2f7a43;font-size:15px;font-weight:600;text-align:center}
 .ci-rule{font-size:12px;line-height:1.5;color:#8a7fa3;margin:0}
 .ci-toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:90;background:#2e2547;color:#fffaf2;border-radius:999px;padding:10px 18px;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);white-space:nowrap}
+.pay-secure{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0;font-size:.92rem;color:var(--muted)}
+.pay-badges{display:inline-flex;align-items:center;gap:8px}
+.pay-badges img{display:block;height:22px;width:auto;background:#fff;border:1px solid #e3d6b8;border-radius:6px;padding:2px 6px}
+.foot-pay{display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}
+.line-add-btn{background:#06C755 !important;border-color:#06C755 !important;color:#fff !important;min-height:44px;border-radius:10px;padding:0 18px;font-weight:600;display:inline-flex;align-items:center;gap:8px}
+.line-add-btn svg{width:1.5rem;height:auto;flex:none}
+@media(max-width:480px){.line-add-btn{width:100%;justify-content:center}}

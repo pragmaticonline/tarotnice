@@ -41,7 +41,7 @@ import {
   recordEvent,
   type AnalyticsEnv,
 } from "./lib/analytics";
-import { contactPage, privacyPage, termsPage } from "./routes/legal";
+import { contactPage, cookiesPage, policiesPage, privacyPage, securityPage, termsPage } from "./routes/legal";
 import { homePage } from "./routes/home";
 import { historyDetailPage, historyPage, readingDateLabel } from "./routes/history";
 import { progressPage } from "./routes/progress";
@@ -317,7 +317,7 @@ app.get("/sitemap.xml", async (c) => {
   // Indexable pages only: home + library index + reviewed card details.
   // Draft (unreviewed) cards, history, progress, account, and share
   // landings stay out (drafts also carry noindex).
-  const urls = ["/", "/cards", "/th/cards"];
+  const urls = ["/", "/cards", "/th/cards", "/terms", "/privacy", "/contact", "/policies", "/cookies", "/security"];
   if (c.env?.DB) {
     try {
       const cards = await d1TarotStore(c.env.DB).listCards("en");
@@ -340,6 +340,9 @@ app.get("/sitemap.xml", async (c) => {
 app.get("/terms", async (c) => c.html(termsPage(requestUiLang(c), await pageAccount(c.env?.DB, await currentUser(c)))));
 app.get("/privacy", async (c) => c.html(privacyPage(requestUiLang(c), await pageAccount(c.env?.DB, await currentUser(c)))));
 app.get("/contact", async (c) => c.html(contactPage(requestUiLang(c), await pageAccount(c.env?.DB, await currentUser(c)))));
+app.get("/policies", async (c) => c.html(policiesPage(requestUiLang(c), await pageAccount(c.env?.DB, await currentUser(c)))));
+app.get("/cookies", async (c) => c.html(cookiesPage(requestUiLang(c), await pageAccount(c.env?.DB, await currentUser(c)))));
+app.get("/security", async (c) => c.html(securityPage(requestUiLang(c), await pageAccount(c.env?.DB, await currentUser(c)))));
 
 // Ask a question: quota + burst + Turnstile + IP-day backstops, then
 // the server draws 3 cards (stored as status='drawn' immediately).
@@ -1192,7 +1195,11 @@ app.get("/billing", async (c) => {
   c.header("Cache-Control", "private, no-store");
   const user = await currentUser(c);
   if (!user || !isRegisteredUser(user)) {
-    return c.redirect(`/sign-in?return=${encodeURIComponent("/billing")}`, 302);
+    const rawCode = (c.req.query("code") || "").trim();
+    const back = rawCode && /^[A-Za-z0-9-]{1,32}$/.test(rawCode)
+      ? `/billing?code=${encodeURIComponent(rawCode)}`
+      : "/billing";
+    return c.redirect(`/sign-in?return=${encodeURIComponent(back)}`, 302);
   }
   const ui = requestUiLang(c);
   const store = d1TarotStore(c.env.DB);
@@ -2623,7 +2630,7 @@ app.post("/api/line/webhook", async (c) => {
         .insert(schema.redeemCodes)
         .values({ code, bonusTokens: LINE_WELCOME_BONUS_TOKENS, expiresAt: null, maxUses: 1, active: 1, createdAt: now })
         .onConflictDoNothing();
-      if (isNewCode && ev.replyToken) await replyLineText(c.env, ev.replyToken, lineWelcomeText(code, "en"));
+      if (isNewCode && ev.replyToken) await replyLineText(c.env, ev.replyToken, lineWelcomeText(code));
     } else if (ev.type === "unfollow") {
       await orm
         .update(schema.lineFriends)

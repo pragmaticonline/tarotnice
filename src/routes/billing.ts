@@ -5,6 +5,8 @@
 import { escapeHtml } from "../lib/html";
 import { fmt, t, type UiLang } from "../lib/i18n";
 import { PACK_LIST, tokensConfigured, type StripeEnv } from "../lib/stripe";
+import { LINE_WELCOME_BONUS_TOKENS } from "../lib/wallet";
+import { LINE_ICON } from "./auth-pages";
 import { headerHtml, pageShell, siteFooterHtml, type HeaderAccount } from "./shell";
 
 /** Same-origin return path for post-billing navigation. Single leading
@@ -66,12 +68,14 @@ ${headerHtml({ ui: opts.ui, streak: { current: 0, longest: 0, activeToday: false
 </section>
 ${configured ? `<h2>${escapeHtml(d.packsTitle)}</h2>
 <p class="pack-note">${escapeHtml(d.neverExpire)}</p>
-<ul class="packs">${packs}</ul>` : ""}
+<ul class="packs">${packs}</ul>
+<p class="pay-secure"><span class="pay-badges"><img src="/pay-visa.svg" alt="Visa" width="48" height="16"><img src="/pay-mastercard.svg" alt="Mastercard" width="28" height="18"><img src="/pay-promptpay.png" alt="PromptPay" width="56" height="19"></span><span>${escapeHtml(d.stripeSecure)}</span></p>` : ""}
 <section class="redeem-box" aria-label="${escapeHtml(d.redeemTitle)}">
 <h2>${escapeHtml(d.redeemTitle)}</h2>
 <p>${escapeHtml(d.redeemHint)}</p>
 <div class="redeem-row"><input id="redeem-code" maxlength="32" autocomplete="off" placeholder="NICE-XXXX"><button type="button" class="btn" id="redeem-apply">${escapeHtml(d.redeemBtn)}</button></div>
-<p class="line-redeem-note">${escapeHtml(d.lineRedeemPre)}<a href="https://line.me/R/add/@677zpuat" target="_blank" rel="noopener">${escapeHtml(d.lineRedeemLink)}</a>${escapeHtml(d.lineRedeemSuff)}</p>
+<p class="line-redeem-note">${escapeHtml(fmt(d.lineRedeemCta, { n: LINE_WELCOME_BONUS_TOKENS }))}</p>
+<p><a class="btn line-add-btn" href="https://line.me/R/ti/p/@677zpuat" target="_blank" rel="noopener">${LINE_ICON}<span>${escapeHtml(d.lineAddFriend)}</span></a></p>
 <p class="auth-err" id="redeem-msg" role="alert"></p>
 </section>
 <script>window.__tnRedeemStrings=${JSON.stringify({ ok: d.redeemOk, invalid: d.redeemInvalid, expired: d.redeemExpired, used: d.redeemUsed, own: d.redeemOwn })};window.__tnTxStrings=${JSON.stringify({ read: d.readThisReading, receipt: d.viewReceipt })};</script>

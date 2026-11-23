@@ -140,11 +140,11 @@ ${opts.turnstileSiteKey ? `<div class="cf-turnstile" data-sitekey="${escapeHtml(
     ],
   }).replace(/</g, "\\u003c");
   return pageShell({
-    title: `TarotNice \u2014 ${d.homeTitle}`,
+    title: d.metaTitle,
     lang: ui,
     origin,
     canonicalPath: "/",
-    description: d.homeLede,
+    description: d.metaDesc,
     extraHead: `<script src="/app/home.js" defer></script><script src="/app/draw.js" defer></script><script src="/app/ask.js" defer></script><script src="/app/share.js" defer></script>`,
     jsonLd,
     body: `${head}${body}${siteFooterHtml(ui, "/")}`,

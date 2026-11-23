@@ -3,7 +3,7 @@
 // Cf-Access-Jwt-Assertion for the staff Access application, and the
 // identity must map to an active staff_users row or the allowlist.
 // Roles mirror blognice: read_only < support < admin.
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { and, count, desc, eq, inArray, like, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { d1PrefsStore } from "./db/prefs-store";
@@ -221,8 +221,9 @@ export function shellPage(staff: StaffIdentity): string {
 <div class="card"><h2 style="margin-top:0">Tools</h2>
 <ul class="tools">
 <li><b><a href="/users">User lookup</a></b><br><span class="muted">Find a user, see balance and readings.</span></li>
-<li><b>Token grant</b> <span class="badge">next</span><br><span class="muted">Goodwill top-ups with reason + audit.</span></li>
-<li><b>Invite and referrals</b> <span class="badge">next</span><br><span class="muted">Codes, attribution, inviter rewards.</span></li>
+<li><b><a href="/stuck">Stuck readings</a></b><br><span class="muted">Failed and abandoned draws; refund with a reason.</span></li>
+<li><b><a href="/grants">Token grants</a></b><br><span class="muted">Find a user to grant to; every grant and its reason, audited.</span></li>
+<li><b><a href="/invites">Invites</a></b><br><span class="muted">Codes, attribution, and inviter rewards per user.</span></li>
 </ul></div>`;
   return shellChrome(staff, "Overview", "/", body);
 }
@@ -355,12 +356,12 @@ const NAV_ITEMS: { href: string; label: string }[] = [
   { href: "/", label: "Overview" },
   { href: "/users", label: "Users" },
   { href: "/stuck", label: "Stuck readings" },
+  { href: "/grants", label: "Token grants" },
+  { href: "/invites", label: "Invites" },
 ];
-const NAV_SOON = ["Token grant", "Invite and referrals"];
 
 function shellChrome(staff: StaffIdentity, title: string, active: string, body: string): string {
-  const nav = NAV_ITEMS.map((item) => `<a href="${item.href}" data-staff-nav>${escapeHtml(item.label)}</a>`).join("") +
-    NAV_SOON.map((label) => `<span class="soon">${escapeHtml(label)} (next)</span>`).join("");
+  const nav = NAV_ITEMS.map((item) => `<a href="${item.href}" data-staff-nav>${escapeHtml(item.label)}</a>`).join("");
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1073,6 +1074,241 @@ export function renderStuckPage(
   );
 }
 
+export type GrantAuditRow = {
+  id: string;
+  occurredAt: number;
+  subject: string;
+  email: string;
+  targetId: string;
+  reason: string | null;
+  result: string;
+  amount: number | null;
+  note: string | null;
+};
+
+/** Latest token.grant audit rows, newest first. */
+export async function recentGrants(db: D1Database, limit = 50): Promise<GrantAuditRow[]> {
+  const orm = drizzle(db);
+  const rows = await orm
+    .select({
+      id: staffAuditEvents.id,
+      occurredAt: staffAuditEvents.occurredAt,
+      subject: staffAuditEvents.subject,
+      email: staffAuditEvents.email,
+      targetId: staffAuditEvents.targetId,
+      reason: staffAuditEvents.reason,
+      result: staffAuditEvents.result,
+      afterJson: staffAuditEvents.afterJson,
+    })
+    .from(staffAuditEvents)
+    .where(eq(staffAuditEvents.action, "token.grant"))
+    .orderBy(desc(staffAuditEvents.occurredAt))
+    .limit(Math.max(1, Math.min(100, limit)))
+    .catch(() => []);
+  return (rows as unknown as {
+    id: string; occurredAt: number; subject: string; email: string; targetId: string;
+    reason: string | null; result: string; afterJson: string | null;
+  }[]).map((r) => {
+    let amount: number | null = null;
+    let note: string | null = null;
+    try {
+      const after = r.afterJson ? (JSON.parse(r.afterJson) as { granted?: unknown; note?: unknown }) : null;
+      if (typeof after?.granted === "number") amount = after.granted;
+      if (typeof after?.note === "string" && after.note) note = after.note;
+    } catch {
+      /* best-effort parse */
+    }
+    return {
+      id: r.id, occurredAt: r.occurredAt, subject: r.subject, email: r.email,
+      targetId: r.targetId, reason: r.reason, result: r.result, amount, note,
+    };
+  });
+}
+
+export function renderGrantsPage(
+  staff: StaffIdentity,
+  q: string,
+  hits: StaffUserHit[],
+  grants: GrantAuditRow[],
+): string {
+  const fmtWhen = (ms: number) => (ms ? new Date(ms).toISOString().slice(0, 16).replace("T", " ") : "\u2014");
+  const search = `<form method="get" action="/grants" class="search">
+<input type="search" name="q" value="${escapeHtml(q)}" placeholder="Find a user to grant to: email, id, nickname">
+<button class="btn" type="submit">Search</button>
+</form>`;
+  const list = !q
+    ? `<div class="empty">Search for the customer first, then grant from their user page.</div>`
+    : hits.length === 0
+      ? `<div class="empty">No users match.</div>`
+      : `<table><thead><tr><th>User</th><th>Email</th><th></th></tr></thead><tbody>${hits
+          .map(
+            (h) =>
+              `<tr><td><a href="/users/${escapeHtml(h.id)}">${escapeHtml(h.nickname ?? h.name)}</a></td><td><span class="muted">${escapeHtml(h.email)}</span></td><td><a href="/users/${escapeHtml(h.id)}">Grant \u203a</a></td></tr>`,
+          )
+          .join("")}</tbody></table>`;
+  const log = grants.length
+    ? `<table><thead><tr><th>When (UTC)</th><th>Staff</th><th>User</th><th>Amount</th><th>Reason</th><th>Result</th></tr></thead><tbody>${grants
+        .map(
+          (g) =>
+            `<tr><td>${escapeHtml(fmtWhen(g.occurredAt))}</td><td>${escapeHtml(g.email)}</td>` +
+            `<td><a href="/users/${escapeHtml(g.targetId)}">${escapeHtml(g.targetId)}</a></td>` +
+            `<td>${g.amount === null ? "\u2014" : `+${g.amount}`}</td>` +
+            `<td>${escapeHtml(g.reason ?? "\u2014")}${g.note ? `<br><span class="muted">${escapeHtml(g.note)}</span>` : ""}</td>` +
+            `<td>${g.result === "ok" ? '<span class="badge">ok</span>' : g.result === "denied" ? '<span class="badge warn">denied</span>' : `<span class="badge warn">${escapeHtml(g.result)}</span>`}</td></tr>`,
+        )
+        .join("")}</tbody></table>`
+    : `<div class="empty">No grants yet.</div>`;
+  return shellChrome(
+    staff,
+    "Token grants",
+    "/grants",
+    `<div class="top"><h1>Token grants</h1><small>goodwill top-ups with a required reason, all audited</small></div>` +
+      `<div class="card"><h2 style="margin-top:0">Find customer</h2>${search}${list}</div>` +
+      `<div class="card"><h2 style="margin-top:0">Recent grants</h2>${log}</div>`,
+  );
+}
+
+export type InviteFriendRow = {
+  userId: string;
+  email: string | null;
+  nickname: string | null;
+  joinedAt: number;
+  convertedAt: number | null;
+};
+
+export type InviteDetail = {
+  userId: string;
+  email: string;
+  nickname: string | null;
+  code: string | null;
+  invited: number;
+  converted: number;
+  invitedBy: { userId: string; nickname: string | null; email: string | null; code: string | null } | null;
+  friends: InviteFriendRow[];
+  rewards: { day: string; delta: number; refereeId: string; refereeName: string | null }[];
+  rewardsTotal: number;
+};
+
+async function displayName(db: D1Database, userId: string): Promise<{ nickname: string | null; email: string | null }> {
+  const orm = drizzle(db);
+  const [u, pref] = await Promise.all([
+    orm.select({ name: user.name, email: user.email }).from(user).where(eq(user.id, userId)).limit(1).catch(() => [] as { name: string; email: string }[]),
+    d1PrefsStore(db).get(userId).catch(() => null),
+  ]);
+  const row = u[0];
+  if (!row) return { nickname: pref?.nickname ?? null, email: null };
+  return { nickname: pref?.nickname ?? row.name ?? null, email: row.email ?? null };
+}
+
+/** Full invite picture for one user: code, attribution both ways, rewards paid. */
+export async function inviteDetail(db: D1Database, userId: string): Promise<InviteDetail | null> {
+  const store = d1TarotStore(db);
+  const orm = drizzle(db);
+  const base = await displayName(db, userId);
+  if (base.email === null && base.nickname === null) {
+    const exists = await orm.select({ id: user.id }).from(user).where(eq(user.id, userId)).limit(1).catch(() => []);
+    if (!exists.length) return null;
+  }
+  const [codeRows, stats, referral, friends, rewardRows] = await Promise.all([
+    orm.select({ code: inviteCodes.code }).from(inviteCodes).where(eq(inviteCodes.userId, userId)).limit(1).catch(() => [] as { code: string }[]),
+    store.referralStats(userId).catch(() => ({ invited: 0, converted: 0 })),
+    store.getReferral(userId).catch(() => null),
+    store.listReferralFriends(userId).catch(() => []),
+    store.listTransactions({ userId, reasons: ["referral"], cursor: null, limit: 100 }).catch(() => []),
+  ]);
+  // Batch emails for the friend list.
+  const friendIds = friends.map((f) => f.visitorUserId);
+  const emailRows = friendIds.length
+    ? await orm.select({ id: user.id, email: user.email }).from(user).where(inArray(user.id, friendIds)).catch(() => [] as { id: string; email: string }[])
+    : [];
+  const emailById = new Map(emailRows.map((r) => [r.id, r.email]));
+  let invitedBy: InviteDetail["invitedBy"] = null;
+  if (referral) {
+    const [who, refCode] = await Promise.all([
+      displayName(db, referral.referrerId),
+      orm.select({ code: inviteCodes.code }).from(inviteCodes).where(eq(inviteCodes.userId, referral.referrerId)).limit(1).catch(() => [] as { code: string }[]),
+    ]);
+    invitedBy = { userId: referral.referrerId, nickname: who.nickname, email: who.email, code: refCode[0]?.code ?? null };
+  }
+  const rewards = rewardRows
+    .filter((t) => !t.ref.startsWith("friend-bonus:"))
+    .map((t) => ({ day: t.day, delta: t.delta, refereeId: t.ref, refereeName: null as string | null }));
+  // Name the referees from the friend list when present.
+  const nameById = new Map(friends.map((f) => [f.visitorUserId, f.nickname]));
+  for (const r of rewards) r.refereeName = nameById.get(r.refereeId) ?? null;
+  return {
+    userId,
+    email: base.email ?? "",
+    nickname: base.nickname,
+    code: codeRows[0]?.code ?? null,
+    invited: stats.invited,
+    converted: stats.converted,
+    invitedBy,
+    friends: friends.map((f) => ({
+      userId: f.visitorUserId,
+      email: emailById.get(f.visitorUserId) ?? null,
+      nickname: f.nickname,
+      joinedAt: f.createdAt,
+      convertedAt: f.firstReadingAt,
+    })),
+    rewards,
+    rewardsTotal: rewards.reduce((sum, r) => sum + r.delta, 0),
+  };
+}
+
+export function renderInvitesPage(staff: StaffIdentity, q: string, detail: InviteDetail | null, lookedUp: boolean): string {
+  const search = `<form method="get" action="/invites" class="search">
+<input type="search" name="user" value="${escapeHtml(q)}" placeholder="user id or email">
+<button class="btn" type="submit">Look up</button>
+</form>`;
+  let body = `<div class="card"><h2 style="margin-top:0">Find customer</h2>${search}`;
+  if (!q) {
+    body += `<div class="empty">Look up a user to see their code, who used it, and the rewards paid.</div></div>`;
+  } else if (!detail) {
+    body += `<div class="empty">No user found.</div></div>`;
+  } else {
+    const d = detail;
+    const codeBlock = d.code
+      ? `<p><b style="font-size:20px">${escapeHtml(d.code)}</b> <span class="badge">active</span></p>
+<form method="post" action="/invites/${escapeHtml(d.userId)}/disable" class="filters"><label>Reason (required)<input type="text" name="reason" required maxlength="500" placeholder="Why disable this code?"></label><button class="btn" type="submit">Disable code</button></form>`
+      : `<p><span class="badge warn">disabled</span> <span class="muted">Links with this user's code go to plain sign-up.</span></p>
+<form method="post" action="/invites/${escapeHtml(d.userId)}/enable" class="filters"><label>Reason (required)<input type="text" name="reason" required maxlength="500" placeholder="Why re-enable?"></label><button class="btn" type="submit">Re-enable code</button></form>`;
+    const friends = d.friends.length
+      ? `<table><thead><tr><th>Friend</th><th>Joined</th><th>First reading</th></tr></thead><tbody>${d.friends
+          .map(
+            (f) =>
+              `<tr><td><a href="/users/${escapeHtml(f.userId)}">${escapeHtml(f.nickname ?? f.email ?? f.userId)}</a></td>` +
+              `<td>${escapeHtml(new Date(f.joinedAt).toISOString().slice(0, 10))}</td>` +
+              `<td>${f.convertedAt ? escapeHtml(new Date(f.convertedAt).toISOString().slice(0, 10)) : '<span class="muted">\u2014</span>'}</td></tr>`,
+          )
+          .join("")}</tbody></table>`
+      : `<div class="empty">Nobody has used this code yet.</div>`;
+    const rewards = d.rewards.length
+      ? `<table><thead><tr><th>Day</th><th>Tokens</th><th>Referee</th></tr></thead><tbody>${d.rewards
+          .map(
+            (r) =>
+              `<tr><td>${escapeHtml(r.day)}</td><td>+${r.delta}</td>` +
+              `<td><a href="/users/${escapeHtml(r.refereeId)}">${escapeHtml(r.refereeName ?? r.refereeId)}</a></td></tr>`,
+          )
+          .join("")}</tbody></table>`
+      : `<div class="empty">No rewards paid yet.</div>`;
+    body += `</div>
+<div class="card"><h2 style="margin-top:0">${escapeHtml(d.nickname ?? d.email)}</h2>
+<p class="muted">${escapeHtml(d.email)} \u00b7 <a href="/users/${escapeHtml(d.userId)}">open user page</a></p>
+<h2 style="font-size:15px;margin:14px 0 6px">Invite code</h2>${codeBlock}
+<h2 style="font-size:15px;margin:14px 0 6px">Invited by</h2>
+<p>${d.invitedBy ? `<a href="/invites?user=${encodeURIComponent(d.invitedBy.userId)}">${escapeHtml(d.invitedBy.nickname ?? d.invitedBy.email ?? d.invitedBy.userId)}</a> <span class="muted">(${escapeHtml(d.invitedBy.code ?? "code unknown")})</span>` : '<span class="muted">\u2014</span>'}</p>
+<h2 style="font-size:15px;margin:14px 0 6px">Used by (${d.invited} joined \u00b7 ${d.converted} converted)</h2>${friends}
+<h2 style="font-size:15px;margin:14px 0 6px">Rewards paid (+${d.rewardsTotal} tokens)</h2>${rewards}</div>`;
+  }
+  return shellChrome(
+    staff,
+    "Invites",
+    "/invites",
+    `<div class="top"><h1>Invites</h1><small>codes, attribution, inviter rewards</small></div>${body}`,
+  );
+}
+
 const app = new Hono<{ Bindings: StaffEnv }>();
 
 app.get("/health", (c) => c.json({ ok: true, service: "tarotnice-staff" }));
@@ -1377,6 +1613,84 @@ app.post("/stuck/refund", async (c) => {
   }
   if (wantsJson(c)) return c.json({ ok: true, refunded, failed });
   return c.redirect(`/stuck?refunded=${refunded}&failed=${failed}`, 302);
+});
+
+// Token grants: find the customer, then grant from their user page.
+// The audit trail below shows every grant with its reason.
+app.get("/grants", async (c) => {
+  const staff = c.get("staff" as never) as StaffIdentity;
+  const q = ((c.req.query("q") as string | undefined) ?? "").trim();
+  const hits = q && c.env?.DB ? await findUsers(c.env.DB, q).catch(() => []) : [];
+  const grants = c.env?.DB ? await recentGrants(c.env.DB, 50).catch(() => []) : [];
+  return c.html(renderGrantsPage(staff, q, hits, grants));
+});
+
+// Invite codes per user: who used them, conversion, rewards paid.
+// Disable/enable is admin-only: it changes what /r/CODE links do.
+app.get("/invites", async (c) => {
+  const staff = c.get("staff" as never) as StaffIdentity;
+  const q = ((c.req.query("user") as string | undefined) ?? "").trim();
+  let detail: InviteDetail | null = null;
+  if (q && c.env?.DB) {
+    let id: string | null = null;
+    if (q.includes("@")) {
+      const hits = await findUsers(c.env.DB, q).catch(() => []);
+      const exact = hits.filter((h) => h.email.toLowerCase() === q.toLowerCase());
+      id = (exact[0] ?? hits[0])?.id ?? null;
+    } else {
+      id = q;
+    }
+    if (id) detail = await inviteDetail(c.env.DB, id).catch(() => null);
+  }
+  return c.html(renderInvitesPage(staff, q, detail, q !== ""));
+});
+
+async function setInviteCodeEnabled(
+  c: Context<{ Bindings: StaffEnv }>,
+  staff: StaffIdentity,
+  enable: boolean,
+): Promise<Response> {
+  const userId = c.req.param("userId") ?? "";
+  const body = await readInput(c as never);
+  const reason = String((body as Record<string, unknown>).reason ?? "").trim();
+  if (!userId) return wantsJson(c) ? c.json({ error: "unknown_user" }, 404) : new Response("No such user.", { status: 404 });
+  if (!reason) return wantsJson(c) ? c.json({ error: "A reason is required." }, 400) : new Response("A reason is required.", { status: 400 });
+  const db = c.env?.DB;
+  if (!db) return wantsJson(c) ? c.json({ error: "unavailable" }, 503) : new Response("Unavailable.", { status: 503 });
+  const before = await inviteDetail(db, userId).catch(() => null);
+  if (!before) return wantsJson(c) ? c.json({ error: "unknown_user" }, 404) : new Response("No such user.", { status: 404 });
+  const orm = drizzle(db);
+  if (enable) {
+    await orm
+      .insert(inviteCodes)
+      .values({ userId, code: inviteCodeFor(userId), createdAt: Date.now() })
+      .onConflictDoNothing()
+      .catch(() => {});
+  } else {
+    await orm.delete(inviteCodes).where(eq(inviteCodes.userId, userId)).catch(() => {});
+  }
+  await recordAudit(c.env.DB, staff, {
+    action: enable ? "invite_code.enable" : "invite_code.disable",
+    targetType: "user",
+    targetId: userId,
+    reason,
+    result: "ok",
+    before: { code: before.code },
+  }).catch(() => {});
+  if (wantsJson(c)) return c.json({ ok: true });
+  return c.redirect(`/invites?user=${encodeURIComponent(userId)}`, 302);
+}
+
+app.post("/invites/:userId/disable", async (c) => {
+  const staff = c.get("staff" as never) as StaffIdentity;
+  if (!canAdmin(staff)) return c.text("Admin role required.", 403);
+  return setInviteCodeEnabled(c, staff, false);
+});
+
+app.post("/invites/:userId/enable", async (c) => {
+  const staff = c.get("staff" as never) as StaffIdentity;
+  if (!canAdmin(staff)) return c.text("Admin role required.", 403);
+  return setInviteCodeEnabled(c, staff, true);
 });
 
 app.notFound((c) => c.text("Not found.", 404));
