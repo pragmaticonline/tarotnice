@@ -26,6 +26,7 @@ const THEME_TOGGLE = `<script>(function(){function paint(){try{var night=documen
 const AUTH_LINK = `<script>(function(){
 function q(s){return document.querySelector(s)}function qa(s){return document.querySelectorAll(s)}
 function paint(d){try{
+ if(d.checkin){var showDot=!!(d.user&&!d.user.isAnonymous&&!d.checkin.claimedToday);var dots=qa("[data-checkin-dot]");for(var j=0;j<dots.length;j++)dots[j].hidden=!showDot;var mdots=qa("[data-checkin-dot-menu]");for(var k=0;k<mdots.length;k++)mdots[k].hidden=!showDot;var pills=qa("[data-checkin-pill]");for(var p=0;p<pills.length;p++)pills[p].hidden=!showDot;var mbs=qa("[data-drawer-open]");for(var m=0;m<mbs.length;m++){var wl=mbs[m].getAttribute(showDot?"data-menu-waiting":"data-menu-label");if(wl)mbs[m].setAttribute("aria-label",wl)}}
  if(d.tokens){var total=Math.max(0,d.tokens.freeLeft||0)+Math.max(0,d.tokens.balance||0);var chips=qa("[data-token-chip]");for(var j=0;j<chips.length;j++){chips[j].hidden=false;var n=chips[j].querySelector("[data-token-count]");if(n)n.textContent=String(total)}var c=q("[data-drawer-tokens]");if(c)c.textContent=String(total);var w=q("[data-drawer-wallet-count]");if(w)w.textContent=String(total)}
  if(d.streak){var sc=d.streak.current||0;var st=q("[data-drawer-streak]");if(st)st.textContent=String(sc);var un=q("[data-drawer-day-unit]");if(un)un.textContent=sc===1?un.getAttribute("data-one"):un.getAttribute("data-many")}
  if(typeof d.historyCount==="number"){var hc=q("[data-drawer-history-count]");if(hc){hc.hidden=d.historyCount===0;hc.textContent=String(d.historyCount)}}
@@ -186,7 +187,7 @@ export function authLinkHtml(ui: UiLang): string {
 /** Signed-in header facts, rendered on the server so the first
  *  paint already shows the right initial and balance (the client
  *  script repaints them from /api/me/summary anyway). */
-export type HeaderAccount = { initial: string; tokens: number | null } | null;
+export type HeaderAccount = { initial: string; tokens: number | null; checkinPending?: boolean } | null;
 
 /** Token amount at the top of the screen (free + wallet). A known
  *  balance renders visibly on the server; otherwise the count stays
@@ -200,9 +201,11 @@ export function tokenChipHtml(ui: UiLang, tokens?: number | null): string {
 }
 
 /** Header menu button (design: hamburger + avatar initial in a pill). */
-export function drawerButtonHtml(ui: UiLang, initial?: string): string {
+export function drawerButtonHtml(ui: UiLang, initial?: string, dot?: boolean): string {
   const d = t(ui);
-  return `<button class="menu-btn" type="button" data-drawer-open aria-label="${escapeHtml(d.yourAccount)}"><span aria-hidden="true">&#9776;</span><span class="avatar-dot" data-avatar-initial aria-hidden="true">${escapeHtml(initial ?? "T")}</span></button>`;
+  const pending = dot === true;
+  const label = pending ? d.checkinMenuWaiting : d.yourAccount;
+  return `<button class="menu-btn" type="button" data-drawer-open aria-label="${escapeHtml(label)}" data-menu-label="${escapeHtml(d.yourAccount)}" data-menu-waiting="${escapeHtml(d.checkinMenuWaiting)}"><span aria-hidden="true">&#9776;</span><span class="avatar-dot" data-avatar-initial aria-hidden="true">${escapeHtml(initial ?? "T")}</span><span class="menu-dot" data-checkin-dot${pending ? "" : " hidden"} aria-hidden="true"></span></button>`;
 }
 
 export function headerHtml(opts: {
@@ -212,7 +215,7 @@ export function headerHtml(opts: {
   account?: HeaderAccount;
 }): string {
   const account = opts.account ?? null;
-  return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${tokenChipHtml(opts.ui, account?.tokens ?? null)}${drawerButtonHtml(opts.ui, account?.initial)}</header>`;
+  return `<header class="site-head">${brandHtml()}<span class="head-sp"></span>${tokenChipHtml(opts.ui, account?.tokens ?? null)}${drawerButtonHtml(opts.ui, account?.initial, account?.checkinPending === true)}</header>`;
 }
 
 /** Account drawer (design boards A-C): profile, tokens/streak, menu,
@@ -239,7 +242,7 @@ export function drawerHtml(ui: UiLang): string {
   </div>
   <nav class="drawer-nav">
     <a href="/history">${escapeHtml(d.historyTitle)} <span class="drawer-count" data-drawer-history-count hidden></span></a>
-    <a href="/progress">${escapeHtml(d.drawerJourney)}</a>
+    <a class="journey-row" data-journey-row href="/progress"><span>${escapeHtml(d.drawerJourney)}</span><span class="journey-dot" data-checkin-dot-menu hidden aria-hidden="true"></span><span class="journey-pill" data-checkin-pill hidden>${escapeHtml(d.checkinPill)}</span></a>
     <a href="/invite">${escapeHtml(d.refTab)} <span class="drawer-pill">${escapeHtml(d.invitePill)}</span></a>
     <a class="line-friends-link" href="https://line.me/R/add/@677zpuat" target="_blank" rel="noopener"><span class="drawer-line-icon" aria-hidden="true"></span>${escapeHtml(d.lineFriends)}</a>
     <a href="/cards">${escapeHtml(d.cardsTitle)}</a>

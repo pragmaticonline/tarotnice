@@ -106,8 +106,8 @@ describe("rewardsTodayCount / filter mapping", () => {
 
   it("maps history filters to ledger reasons", () => {
     expect(reasonsForFilter("all")).toBeNull();
-    expect(reasonsForFilter("topup")).toEqual(["topup", "refund", "staff_grant"]);
-    expect(reasonsForFilter("daily")).toEqual(["daily"]);
+    expect(reasonsForFilter("topup")).toEqual(["topup", "refund", "staff_grant"]); // checkin lives under the daily tab, not top-up
+    expect(reasonsForFilter("daily")).toEqual(["daily", "checkin"]);
     expect(reasonsForFilter("reading")).toEqual(["reading"]);
   });
 });

@@ -34,6 +34,7 @@ export const ANALYTICS_EVENTS = [
   "referral_converted",
   "limit_hit",
   "rate_limited",
+  "auto_refund",
 ] as const;
 export type AnalyticsEventName = (typeof ANALYTICS_EVENTS)[number];
 

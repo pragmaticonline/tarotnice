@@ -207,6 +207,7 @@ describe("progressPage", () => {
         { key: "streak7", label: "7-day streak", achieved: false },
       ],
       readings: 5,
+      checkin: { claimedToday: false, total: 0, week: [] },
     });
     expect(html).toContain("noindex");
     expect(html).toContain("2 / 78");
@@ -250,6 +251,7 @@ describe("progressPage", () => {
       owned: [], cardNames: {},
       referrals: { invited: 0, converted: 0 }, bonusOn: false,
       milestones: [], readings: 1,
+      checkin: { claimedToday: false, total: 0, week: [] },
       monthLabel: "November 2026", monthPrev: "2026-10", monthNext: "2026-12",
     });
     expect(html).toContain("November 2026");
@@ -320,6 +322,7 @@ describe("spec milestones + badge shares (M2)", () => {
         { key: "collection", label: "All 78 daily cards", achieved: false },
       ],
       readings: 3,
+      checkin: { claimedToday: false, total: 0, week: [] },
       recentDaily: [{ name: "The Fool", image: "/static/cards/major-00.webp", day: "2026-10-22" }],
     });
     expect(html).toContain('data-share-badge="streak-3"');

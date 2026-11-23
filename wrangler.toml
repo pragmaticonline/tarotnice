@@ -58,6 +58,11 @@ type = "ratelimit"
 namespace_id = "1001"
 simple = { limit = 15, period = 60 }
 
+# Auto-refund sweeper: stuck charged draws are marked failed and their
+# spend refunded, exactly once each (see scheduled handler in src/index.ts).
+[triggers]
+crons = ["*/15 * * * *"]
+
 # Card art + share images live in R2, not in git. The /static/:rest
 # route serves from this bucket first with static assets as fallback.
 [[r2_buckets]]

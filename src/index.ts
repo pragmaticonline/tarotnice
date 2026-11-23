@@ -95,6 +95,8 @@ import {
   walletBalance,
   type LedgerRow,
 } from "./lib/wallet";
+import { checkinWeek } from "./lib/checkin";
+import { sweepStuckReadings } from "./lib/sweep";
 import { checkoutReturnUrls } from "./routes/billing";
 
 type Env = AuthEnv &
@@ -1303,19 +1305,22 @@ async function pageStreak(db: D1Database | undefined, userId: string | null) {
 async function pageAccount(
   db: D1Database | undefined,
   user: SessionUser | null,
-): Promise<{ initial: string; tokens: number | null } | null> {
+): Promise<{ initial: string; tokens: number | null; checkinPending?: boolean } | null> {
   if (!db || !user) return null;
   try {
+    const today = bangkokDay();
     const store = d1TarotStore(db);
-    const [prefs, balance] = await Promise.all([
+    const [prefs, balance, claimed] = await Promise.all([
       d1PrefsStore(db).get(user.id).catch(() => null),
-      walletState(store, user.id, bangkokDay()).catch(() => null),
+      walletState(store, user.id, today).catch(() => null),
+      !user.isAnonymous ? store.hasCheckin(user.id, today).catch(() => true) : Promise.resolve(true),
     ]);
     const email = user.email ?? "";
     const name = prefs?.nickname || (!user.isAnonymous && email ? email.split("@")[0] : "");
     return {
       initial: (name || "T").charAt(0).toUpperCase(),
       tokens: balance ? Math.max(0, balance.wallet) + Math.max(0, balance.dailyLeft) : null,
+      checkinPending: !user.isAnonymous && !claimed,
     };
   } catch {
     return null;
@@ -1630,12 +1635,24 @@ app.get("/progress", async (c) => {
       cardsLabel: r.cards.map((card) => byId.get(card.id)?.name ?? `#${card.id}`).join(" \u00b7 "),
       id: r.id,
     }));
+  const [claimedDays, progressAccount] = await Promise.all([
+    store.checkinDays(user.id).catch(() => [] as string[]),
+    store.accountInfo(user.id).catch(() => null),
+  ]);
+  const progressClaimed = new Set(claimedDays);
+  const progressToday = bangkokDay();
+  const progressSignup = progressAccount?.createdAt ? bangkokDay(new Date(progressAccount.createdAt)) : null;
   return c.html(
     progressPage({
       ui,
       origin: new URL(c.req.url).origin,
       streak,
       account: await pageAccount(c.env.DB, user),
+      checkin: {
+        claimedToday: progressClaimed.has(progressToday),
+        total: claimedDays.length,
+        week: checkinWeek(progressToday, progressClaimed, progressSignup, ui),
+      },
       days: calDays,
       entries,
       monthLabel,
@@ -2006,6 +2023,7 @@ app.get("/api/me/summary", async (c) => {
       prefs: { lang: ui, theme: null, nickname: null, notifyDaily: true, notifyPromo: false },
       streak: { current: 0, longest: 0, activeToday: false },
       quota: { used: 0, limit: questionLimit(c.env), resetsAt: nextBangkokMidnight() },
+      checkin: { claimedToday: false, total: 0, week: [] },
     });
   }
   const store = d1TarotStore(c.env.DB);
@@ -2044,6 +2062,9 @@ app.get("/api/me/summary", async (c) => {
     walletState(store, user.id, today),
     store.accountInfo(user.id).catch(() => null),
   ]);
+  const claimedDays = user.isAnonymous ? [] : await store.checkinDays(user.id).catch(() => []);
+  const claimedSet = new Set(claimedDays);
+  const signupDay = !user.isAnonymous && account?.createdAt ? bangkokDay(new Date(account.createdAt)) : null;
   return c.json({
     user: {
       id: user.id, email: user.email, isAnonymous: user.isAnonymous,
@@ -2063,7 +2084,53 @@ app.get("/api/me/summary", async (c) => {
     },
     historyCount: await store.progressStats(user.id).then((s) => s.readings).catch(() => 0),
     openReading: openReading ? { id: openReading.id, question: openReading.question } : null,
+    checkin: user.isAnonymous
+      ? { claimedToday: false, total: 0, week: [] }
+      : { claimedToday: claimedSet.has(today), total: claimedDays.length, week: checkinWeek(today, claimedSet, signupDay, ui) },
   });
+});
+
+/**
+ * Daily check-in claim: one +1 token per Bangkok day for registered
+ * accounts only. The unique (user, day) row makes double taps and second
+ * tabs return already-claimed instead of a second token; the ledger ref
+ * (checkin:DAY) guards the grant itself the same way.
+ */
+app.post("/api/checkin/claim", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  if (user.isAnonymous) return c.json({ error: "registration_required" }, 403);
+  const store = d1TarotStore(c.env.DB);
+  const today = bangkokDay();
+  const state = async () => {
+    const claimed = await store.checkinDays(user.id).catch(() => []);
+    const set = new Set(claimed);
+    const info = await store.accountInfo(user.id).catch(() => null);
+    const signupDay = info?.createdAt ? bangkokDay(new Date(info.createdAt)) : null;
+    const balance = await walletState(store, user.id, today).catch(() => null);
+    return {
+      claimedToday: set.has(today),
+      total: claimed.length,
+      week: checkinWeek(today, set, signupDay, requestUiLang(c)),
+      wallet: balance?.wallet ?? 0,
+    };
+  };
+  let inserted = false;
+  try {
+    inserted = await store.claimCheckin(user.id, today);
+  } catch {
+    return c.json({ error: "claim_failed" }, 500);
+  }
+  if (!inserted) return c.json({ ok: true, alreadyClaimed: true, ...(await state()) });
+  const granted = await store
+    .postLedger({ userId: user.id, delta: 1, reason: "checkin", ref: `checkin:${today}`, day: today })
+    .catch(() => false);
+  if (!granted) {
+    // No token landed: roll the day back so a retry can still claim it.
+    await store.unclaimCheckin(user.id, today).catch(() => {});
+    return c.json({ error: "claim_failed" }, 500);
+  }
+  return c.json({ ok: true, ...(await state()) });
 });
 
 /**
@@ -2648,5 +2715,29 @@ app.get("*", async (c) => {
   }
   return c.html(notFoundPage({ ui: requestUiLang(c), origin: new URL(c.req.url).origin }), 404);
 });
+
+/**
+ * Auto-refund sweeper (cron, every 15 min): stuck charged draws are
+ * marked failed and their spend refunded, exactly once each. Failed
+ * rows need nothing: the stream catch already refunded them.
+ * Attached to the Hono app object so `export default app` (and the
+ * .request used across the test suite) keeps working; the runtime
+ * calls the .scheduled hook on the entrypoint.
+ */
+(app as unknown as {
+  scheduled: (event: ScheduledEvent, env: Env, ctx: ExecutionContext) => Promise<void>;
+}).scheduled = async (_event, env, ctx) => {
+  ctx.waitUntil(
+    (async () => {
+      try {
+        await sweepStuckReadings(env.DB, Date.now(), (readingId) =>
+          recordEvent(env, { name: "auto_refund", detail: readingId, userKind: "anon" }),
+        );
+      } catch {
+        /* next tick retries; rows stay stuck, never double-paid */
+      }
+    })(),
+  );
+};
 
 export default app;

@@ -351,3 +351,19 @@ export const staffAuditEvents = sqliteTable(
     targetIdx: index("idx_staff_audit_target").on(t.targetType, t.targetId, t.occurredAt),
   }),
 );
+
+// Daily check-in (one row per user per Bangkok day). Unique key makes the
+// claim idempotent: a double tap or a second tab can never grant twice.
+export const checkins = sqliteTable(
+  "checkins",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    day: text("day").notNull(), // YYYY-MM-DD Asia/Bangkok
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => ({
+    userDay: uniqueIndex("checkins_user_day").on(t.userId, t.day),
+  }),
+);

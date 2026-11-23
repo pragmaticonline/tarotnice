@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, lt, ne } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lt, ne, sql } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import * as schema from "./schema";
 
@@ -967,6 +967,97 @@ export function d1TarotStore(db: D1Database) {
         if (full && full.createdAt < beforeMs) return r.id;
       }
       return null;
+    },
+
+    /**
+     * Stuck candidates for the auto-refund sweeper and the staff queue:
+     * drawn older than drawnBeforeMs, streaming older than
+     * streamingBeforeMs, plus recent failures for visibility.
+     */
+    async stuckReadings(opts: {
+      drawnBeforeMs: number;
+      streamingBeforeMs: number;
+      failedSinceMs: number;
+      limit: number;
+    }): Promise<{
+      id: string; userId: string; day: string; topic: string; lang: string;
+      model: string | null; status: string; createdAt: number;
+    }[]> {
+      const rows = await orm
+        .select({
+          id: schema.readings.id,
+          userId: schema.readings.userId,
+          day: schema.readings.bangkokDay,
+          topic: schema.readings.topic,
+          lang: schema.readings.lang,
+          model: schema.readings.model,
+          status: schema.readings.status,
+          createdAt: schema.readings.createdAt,
+        })
+        .from(schema.readings)
+        .where(
+          sql`(${schema.readings.status} = 'drawn' and ${schema.readings.createdAt} < ${opts.drawnBeforeMs}) or (${schema.readings.status} = 'streaming' and ${schema.readings.createdAt} < ${opts.streamingBeforeMs}) or (${schema.readings.status} = 'failed' and ${schema.readings.createdAt} > ${opts.failedSinceMs})`,
+        )
+        .orderBy(desc(schema.readings.createdAt))
+        .limit(Math.max(1, Math.min(100, opts.limit)));
+      return rows;
+    },
+
+    /**
+     * Mark one stuck reading failed, but only if it is still stuck:
+     * returns false when another path (an open stream, a refund) already
+     * moved it. The sweeper refunds only after this succeeds.
+     */
+    async failStuckReading(id: string, drawnBeforeMs: number, streamingBeforeMs: number): Promise<boolean> {
+      const rows = await orm
+        .update(schema.readings)
+        .set({ aiText: "", aiSummary: "", model: "", status: "failed" })
+        .where(
+          sql`${schema.readings.id} = ${id} and ((${schema.readings.status} = 'drawn' and ${schema.readings.createdAt} < ${drawnBeforeMs}) or (${schema.readings.status} = 'streaming' and ${schema.readings.createdAt} < ${streamingBeforeMs}))`,
+        )
+        .returning({ id: schema.readings.id });
+      return rows.length > 0;
+    },
+
+    /** Bangkok days with a check-in row, oldest first. */
+    async checkinDays(userId: string): Promise<string[]> {
+      const rows = await orm
+        .select({ day: schema.checkins.day })
+        .from(schema.checkins)
+        .where(eq(schema.checkins.userId, userId))
+        .orderBy(schema.checkins.day);
+      return rows.map((r) => r.day);
+    },
+
+    /**
+     * Insert today's check-in row. True when this call created it;
+     * false when the day was already claimed (unique key wins, so a
+     * double tap or a second tab can never grant twice).
+     */
+    async claimCheckin(userId: string, day: string): Promise<boolean> {
+      const rows = await orm
+        .insert(schema.checkins)
+        .values({ userId, day, createdAt: Date.now() })
+        .onConflictDoNothing()
+        .returning({ day: schema.checkins.day });
+      return rows.length > 0;
+    },
+
+    /** Whether the user already checked in on a Bangkok day. */
+    async hasCheckin(userId: string, day: string): Promise<boolean> {
+      const rows = await orm
+        .select({ day: schema.checkins.day })
+        .from(schema.checkins)
+        .where(and(eq(schema.checkins.userId, userId), eq(schema.checkins.day, day)))
+        .limit(1);
+      return rows.length > 0;
+    },
+
+    /** Undo a check-in row (compensation when its token grant fails). */
+    async unclaimCheckin(userId: string, day: string): Promise<void> {
+      await orm
+        .delete(schema.checkins)
+        .where(and(eq(schema.checkins.userId, userId), eq(schema.checkins.day, day)));
     },
 
     /** Atomically claim a drawn reading for streaming (one opener). */

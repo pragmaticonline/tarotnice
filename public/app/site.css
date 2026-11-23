@@ -613,3 +613,47 @@ button.cal-cell.sel{outline:2px solid var(--accent);outline-offset:1px}
 :root[data-mode="night"] .invite-stats-card{background:#221d45}
 :root[data-mode="night"] .journal-ok,:root[data-mode="night"] .drawer-method-state{color:#7fd08a}
 :root[data-mode="night"] .reading-err,:root[data-mode="night"] .tx-delta.neg,:root[data-mode="night"] .drawer-danger{color:#ff9d8a}
+
+/* Daily check-in (design: red dot, gold journey row, stamps card). */
+.menu-btn{position:relative}
+.menu-dot{position:absolute;top:1px;right:1px;width:12px;height:12px;border-radius:999px;background:#e0413a;border:2px solid #fffaf0}
+.journey-row{display:flex;align-items:center;gap:8px;min-height:52px;padding:0 10px;margin:2px -10px;border:1.5px solid #e8c98a;border-radius:12px;background:#fff4dc;color:var(--ink);font-size:15px;font-weight:600;text-decoration:none}
+.journey-dot{width:9px;height:9px;border-radius:999px;background:#e0413a;flex:none}
+.journey-pill{margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;background:#4a3d78;color:#f3dca6;font-size:12px;font-weight:600;white-space:nowrap}
+.ci-card{background:#fffaf0;border:1.5px solid #e3d6b8;border-radius:20px;padding:18px 16px;display:flex;flex-direction:column;gap:14px}
+.ci-card[data-claimed="false"]{border-color:#e2bf72;box-shadow:0 6px 20px rgba(176,131,47,.18)}
+.ci-title{margin:0;font-size:20px;font-weight:600;color:#4a3d78}
+.ci-sub{font-size:13px;line-height:1.5;color:#6b5f85}
+.ci-sub b{margin:0 4px;color:#2e2547}
+.ci-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.ci-stamp{min-width:0;padding:8px 2px 7px;border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:5px}
+.ci-stamp .ci-day{font-size:12px;white-space:nowrap}
+.ci-stamp .ci-mark{width:26px;height:26px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.ci-stamp .ci-amt{font-size:12px;font-weight:600}
+.ci-stamp[data-state="got"]{background:#f6e7c4;border:1px solid #e2bf72}
+.ci-stamp[data-state="got"] .ci-day{color:#6b5f85;font-weight:500}
+.ci-stamp[data-state="got"] .ci-mark{background:#b0832f;color:#fffaf2}
+.ci-stamp[data-state="got"] .ci-amt{color:#8a6a2a}
+.ci-stamp[data-state="miss"]{background:#f1ece2;border:1px dashed #d8ccb4}
+.ci-stamp[data-state="miss"] .ci-day{color:#a79fb8;font-weight:500}
+.ci-stamp[data-state="miss"] .ci-mark{background:transparent;color:#b9b0c7;border:1.5px dashed #cfc5d9}
+.ci-stamp[data-state="miss"] .ci-amt{color:#a79fb8}
+.ci-stamp[data-state="today"]{background:linear-gradient(160deg,#fff1cc,#f3d68f);border:2px solid #b0832f;animation:ciPulse 1.8s infinite}
+.ci-stamp[data-state="today"] .ci-day{color:#2e2547;font-weight:700}
+.ci-stamp[data-state="today"] .ci-mark{background:#fffaf0;color:#4a3d78;border:1.5px solid #b0832f}
+.ci-stamp[data-state="today"] .ci-amt{color:#2e2547}
+.ci-stamp[data-state="gotToday"]{background:#4a3d78;border:2px solid #4a3d78}
+.ci-stamp[data-state="gotToday"] .ci-day{color:#f3dca6;font-weight:700}
+.ci-stamp[data-state="gotToday"] .ci-mark{background:#f3dca6;color:#4a3d78}
+.ci-stamp[data-state="gotToday"] .ci-amt{color:#fffaf2}
+.ci-stamp[data-state="next"]{background:#fff;border:1px solid #efe5cf}
+.ci-stamp[data-state="next"] .ci-day{color:#8a7fa3;font-weight:500}
+.ci-stamp[data-state="next"] .ci-mark{background:#f6f1fa;color:#b9b0c7}
+.ci-stamp[data-state="next"] .ci-amt{color:#8a7fa3}
+@keyframes ciPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+@media(prefers-reduced-motion:reduce){.ci-stamp[data-state="today"]{animation:none}}
+.ci-gold{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 16px;border:1px solid #b0832f;border-radius:12px;background:linear-gradient(135deg,#f6e2b0 0%,#e2bf72 100%);color:#2e2547;font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;box-shadow:0 4px 14px rgba(176,131,47,.28)}
+.ci-gold svg{flex:none}
+.ci-done{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 12px;border-radius:12px;background:#eef7f0;border:1px solid #cfe8d6;color:#2f7a43;font-size:15px;font-weight:600;text-align:center}
+.ci-rule{font-size:12px;line-height:1.5;color:#8a7fa3;margin:0}
+.ci-toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:90;background:#2e2547;color:#fffaf2;border-radius:999px;padding:10px 18px;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);white-space:nowrap}

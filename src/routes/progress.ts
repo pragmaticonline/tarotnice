@@ -5,6 +5,7 @@ import { escapeHtml } from "../lib/html";
 import { fmt, t, type UiLang } from "../lib/i18n";
 import { brandHtml, headerHtml, pageShell, siteFooterHtml, type HeaderAccount } from "./shell";
 import type { StreakInfo } from "../lib/streaks";
+import type { CheckinWeekDay } from "../lib/checkin";
 
 export type Milestone = { key: string; label: string; achieved: boolean; left?: string };
 
@@ -24,6 +25,8 @@ export function progressPage(opts: {
   bonusOn: boolean;
   milestones: Milestone[];
   readings: number;
+  /** Daily check-in week (Mon-Sun, Monday-first labels included). */
+  checkin?: { claimedToday: boolean; total: number; week: CheckinWeekDay[] };
   /** Last 7 daily-card thumbnails (SPEC §5.4), newest first. */
   recentDaily?: { name: string; image: string; day: string }[];
   /** Readings in the calendar window, for the selected-day list. */
@@ -79,13 +82,39 @@ export function progressPage(opts: {
         `</li>`,
     )
     .join("");
+const CI_GEM = `<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3h11l4.5 6-10 12L2 9z" fill="#8b6fe0"/><path d="M2 9h20l-10 12z" fill="#6a4fc9"/><path d="M8.5 9L12 3l3.5 6z" fill="#b9a5f5"/><path d="M12 21L8.5 9h7z" fill="#7b5cd6"/></svg>`;
+
+function checkinCard(ui: UiLang, d: ReturnType<typeof t>, checkin: { claimedToday: boolean; total: number; week: CheckinWeekDay[] }): string {
+  const sep = ui === "th" ? " " : ", ";
+  const stamp = (w: CheckinWeekDay): string => {
+    const state = w.status === "claimed" ? "got" : w.status === "missed" ? "miss" : w.status === "upcoming" ? "next" : w.status;
+    let icon = "+1", amt = "+1", aria = w.label;
+    if (state === "got") { icon = "\u2713"; aria = `${w.label} ${d.checkinClaimedWord}`; }
+    else if (state === "miss") { icon = "\u2715"; amt = "\u2013"; aria = `${w.label} ${d.checkinMissedWord}`; }
+    else if (state === "today") { icon = "\ud83d\udcae"; aria = `${d.checkinToday}${sep}${d.checkinTodayOpen}`; }
+    else if (state === "gotToday") { icon = "\u2713"; aria = `${d.checkinToday}${sep}${d.checkinClaimedWord}`; }
+    const label = state === "today" || state === "gotToday" ? d.checkinToday : w.label;
+    const doneAria = state === "today" ? ` data-aria-done="${escapeHtml(`${d.checkinToday}${ui === "th" ? " " : ", "}${d.checkinClaimedWord}`)}"` : "";
+    return `<div class="ci-stamp" role="listitem" data-ci-stamp="${escapeHtml(w.label)}" data-state="${state}" aria-label="${escapeHtml(aria)}"${doneAria}><span class="ci-day">${escapeHtml(label)}</span><span class="ci-mark" data-ci-icon aria-hidden="true">${icon}</span><span class="ci-amt" data-ci-amt>${amt}</span></div>`;
+  };
+  return `<section class="ci-card" id="ci-card" data-claimed="${checkin.claimedToday ? "true" : "false"}" aria-labelledby="ci-h">` +
+    `<div><h2 class="ci-title" id="ci-h">${escapeHtml(d.checkinTitle)}</h2>` +
+    `<span class="ci-sub">${escapeHtml(d.checkinSub)}<b id="ci-total">${checkin.total}</b> ${escapeHtml(checkin.total === 1 ? d.drawerDayUnit : d.drawerDays)}</span></div>` +
+    `<div class="ci-grid" role="list">${checkin.week.map(stamp).join("")}</div>` +
+    (checkin.claimedToday
+      ? `<div class="ci-done" id="ci-done">${escapeHtml(d.checkinDone)}</div>`
+      : `<button class="ci-gold" id="ci-claim" type="button" data-checkin-claim>${CI_GEM}<span>${escapeHtml(d.checkinClaim)}</span></button><div class="ci-done" id="ci-done" hidden>${escapeHtml(d.checkinDone)}</div>`) +
+    `<p class="ci-rule">${escapeHtml(d.checkinRule)}</p></section>`;
+}
+
   return pageShell({
     title: `${d.progressTitle} · TarotNice`,
     lang: opts.ui,
     origin: opts.origin,
     noindex: true,
     body:
-      `${head}<main><h1 class="display">${escapeHtml(d.drawerJourney)}</h1>` +
+      `${head}<main><div class="ci-toast" id="ci-toast" data-template="${escapeHtml(d.checkinToast)}" hidden></div><h1 class="display">${escapeHtml(d.drawerJourney)}</h1>` +
+      checkinCard(opts.ui, d, opts.checkin ?? { claimedToday: false, total: 0, week: [] }) +
       `<section class="journey-hero"><img class="journey-cat" src="/mascot/ngern-sitting.svg" alt="" width="72" height="72">` +
       `<div class="journey-hero-main"><small>${escapeHtml(d.streakTitle)}</small>` +
       `<p class="journey-big"><b>${opts.streak.current}</b> ${escapeHtml(opts.streak.current === 1 ? d.drawerDayUnit : d.drawerDays)}</p>` +
