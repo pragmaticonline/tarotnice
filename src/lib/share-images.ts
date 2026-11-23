@@ -197,7 +197,7 @@ function storySvg(p: ShareSpec & { uris: string[] }): string {
   let q = "";
   let qy = 380;
   for (const line of qLines) {
-    q += `<text x="540" y="${qy}" text-anchor="middle" font-family="Cormorant Garamond, IBM Plex Sans Thai" font-size="52" font-style="italic" fill="${c.accent}">${escXml(line)}</text>`;
+    q += `<text x="540" y="${qy}" text-anchor="middle" font-family="IBM Plex Sans Thai, Cormorant Garamond" font-size="52" font-style="italic" fill="${c.accent}">${escXml(line)}</text>`;
     qy += 66;
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920"><defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.bg0}"/><stop offset="1" stop-color="${c.bg1}"/></linearGradient></defs><rect width="1080" height="1920" fill="url(#bg)"/><text x="540" y="150" text-anchor="middle" font-family="Cormorant Garamond, IBM Plex Sans Thai" font-size="84" font-weight="600" fill="${c.accent}">TarotNice</text><text x="540" y="225" text-anchor="middle" font-family="IBM Plex Sans Thai" font-size="36" fill="${c.muted}">${p.lang === "th" ? "\u0e14\u0e39\u0e14\u0e27\u0e07\u0e44\u0e1e\u0e48\u0e17\u0e32\u0e42\u0e23\u0e15\u0e4c" : "tarot reading"}</text>${q}${cards}${summary}<text x="540" y="1800" text-anchor="middle" font-family="IBM Plex Sans Thai" font-size="38" fill="${c.muted}">${escXml(s.footer)}</text></svg>`;
@@ -246,7 +246,7 @@ function badgeSvg(opts: {
     .slice(0, 3)
     .map(
       (line, i) =>
-        `<text x="50%" y="${opts.kind === "story" ? 880 + i * 110 : 300 + i * 88}" text-anchor="middle" font-family="Cormorant Garamond, IBM Plex Sans Thai" font-size="${opts.kind === "story" ? 96 : 76}" font-weight="600" fill="${c.accent}">${escXml(line)}</text>`,
+        `<text x="50%" y="${opts.kind === "story" ? 880 + i * 110 : 300 + i * 88}" text-anchor="middle" font-family="IBM Plex Sans Thai, Cormorant Garamond" font-size="${opts.kind === "story" ? 96 : 76}" font-weight="600" fill="${c.accent}">${escXml(line)}</text>`,
     )
     .join("");
   // Sun-disc motif drawn as shapes (the embedded fonts have no
@@ -280,7 +280,7 @@ function inviteSvg(opts: { name: string | null; code: string; lang: "th" | "en";
   const c = opts.mode === "night" ? NIGHT : DAY;
   const s = INVITE_STR[opts.lang];
   const who = opts.name ? s.invites.replace("{name}", opts.name) : "TarotNice";
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080"><defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.bg0}"/><stop offset="1" stop-color="${c.bg1}"/></linearGradient></defs><rect width="1080" height="1080" fill="url(#bg)"/><text x="540" y="150" text-anchor="middle" font-family="Cormorant Garamond, IBM Plex Sans Thai" font-size="76" font-weight="600" fill="${c.accent}">TarotNice</text><text x="540" y="330" text-anchor="middle" font-family="IBM Plex Sans Thai" font-size="44" fill="${c.muted}">${escXml(who)}</text><text x="540" y="450" text-anchor="middle" font-family="Cormorant Garamond, IBM Plex Sans Thai" font-size="72" font-weight="600" fill="${c.ink}">${escXml(s.headline)}</text><text x="540" y="540" text-anchor="middle" font-family="IBM Plex Sans Thai" font-size="38" fill="${c.muted}">${escXml(s.line)}</text><rect x="290" y="620" width="500" height="150" rx="16" fill="${c.face}" stroke="#cdb27a" stroke-width="2"/><text x="540" y="682" text-anchor="middle" font-family="IBM Plex Sans Thai" font-size="30" fill="${c.muted}">${escXml(s.code)}</text><text x="540" y="745" text-anchor="middle" font-family="IBM Plex Sans Thai" font-size="58" font-weight="600" fill="${c.accent}">${escXml(opts.code)}</text><text x="540" y="920" text-anchor="middle" font-family="IBM Plex Sans Thai" font-size="32" fill="${c.muted}">${escXml(s.footer)}</text></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080"><defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.bg0}"/><stop offset="1" stop-color="${c.bg1}"/></linearGradient></defs><rect width="1080" height="1080" fill="url(#bg)"/><text x="540" y="150" text-anchor="middle" font-family="Cormorant Garamond, IBM Plex Sans Thai" font-size="76" font-weight="600" fill="${c.accent}">TarotNice</text><text x="540" y="330" text-anchor="middle" font-family="IBM Plex Sans Thai" font-size="44" fill="${c.muted}">${escXml(who)}</text><text x="540" y="450" text-anchor="middle" font-family="IBM Plex Sans Thai, Cormorant Garamond" font-size="72" font-weight="600" fill="${c.ink}">${escXml(s.headline)}</text><text x="540" y="540" text-anchor="middle" font-family="IBM Plex Sans Thai" font-size="38" fill="${c.muted}">${escXml(s.line)}</text><rect x="290" y="620" width="500" height="150" rx="16" fill="${c.face}" stroke="#cdb27a" stroke-width="2"/><text x="540" y="682" text-anchor="middle" font-family="IBM Plex Sans Thai" font-size="30" fill="${c.muted}">${escXml(s.code)}</text><text x="540" y="745" text-anchor="middle" font-family="IBM Plex Sans Thai" font-size="58" font-weight="600" fill="${c.accent}">${escXml(opts.code)}</text><text x="540" y="920" text-anchor="middle" font-family="IBM Plex Sans Thai" font-size="32" fill="${c.muted}">${escXml(s.footer)}</text></svg>`;
 }
 
 /** Render the 1080x1080 invite share image (design board 4). */

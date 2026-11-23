@@ -95,7 +95,7 @@
   }
 
   function hideDots() {
-    ["[data-checkin-dot]", "[data-checkin-dot-menu]", "[data-checkin-pill]"].forEach(function (sel) {
+    ["[data-checkin-dot]", "[data-checkin-dot-menu]"].forEach(function (sel) {
       document.querySelectorAll(sel).forEach(function (el) { el.hidden = true; });
     });
     document.querySelectorAll("[data-drawer-open]").forEach(function (btn) {

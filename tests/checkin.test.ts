@@ -67,7 +67,7 @@ describe("checkin copy", () => {
       const d = t(ui);
       for (const key of [
         "checkinTitle", "checkinSub", "checkinClaim", "checkinDone",
-        "checkinRule", "checkinToday", "checkinToast", "checkinPill",
+        "checkinRule", "checkinToday", "checkinToast",
         "checkinMenuWaiting", "checkinClaimedWord", "checkinMissedWord",
         "checkinTodayOpen", "txCheckin",
       ] as const) {
@@ -82,7 +82,7 @@ describe("checkin copy", () => {
   it("never mixes check-in with the reading streak", () => {
     expect(t("en").checkinTitle).not.toContain("treak");
     expect(t("th").checkinTitle).toContain("\u0e40\u0e0a\u0e47\u0e01\u0e2d\u0e34\u0e19");
-    expect(t("th").checkinTitle).not.toContain("\u0e2a\u0e15\u0e23\u0e35\u0e04");
+    expect(t("th").checkinTitle).not.toContain(String.fromCharCode(0x0e2a, 0x0e15, 0x0e23, 0x0e35, 0x0e04)); // guards the old streak loanword
     expect(t("th").checkinTitle).not.toContain("\u0e25\u0e47\u0e2d\u0e01\u0e2d\u0e34\u0e19");
   });
 });
@@ -164,12 +164,14 @@ describe("checkin wiring", () => {
     expect(billing).toContain("Daily check-in");
   });
 
-  it("header dot and gold journey row are wired to paint()", () => {
+  it("header dot and plain journey row with dot are wired to paint()", () => {
     const shell = src("../src/routes/shell.ts");
     expect(shell).toContain("menu-dot");
     expect(shell).toContain("data-checkin-dot");
-    expect(shell).toContain("journey-row");
-    expect(shell).toContain("data-checkin-pill");
+    expect(shell).not.toContain('class="journey-row"');
+    expect(shell).toContain("data-journey-row");
+    expect(shell).toContain("data-checkin-dot-menu");
+    expect(shell).not.toContain("data-checkin-pill");
     expect(shell).toContain("checkinMenuWaiting");
     const progress = src("../public/app/progress.js");
     expect(progress).toContain("/api/checkin/claim");

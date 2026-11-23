@@ -43,9 +43,9 @@ describe("headerHtml server-rendered account", () => {
   });
 
   it("drawer ask label is Thai in Thai UI and English in English UI", () => {
-    expect(t("th").drawerAsk).toBe("\u0e16\u0e32\u0e21\u0e19\u0e2d\u0e49\u0e07\u0e40\u0e07\u0e34\u0e19");
+    expect(t("th").drawerAsk).toBe("\u0e16\u0e32\u0e21\u0e19\u0e49\u0e2d\u0e07\u0e40\u0e07\u0e34\u0e19");
     expect(t("en").drawerAsk).toBe("Ask Ngern");
-    expect(drawerHtml("th")).toContain("\u0e16\u0e32\u0e21\u0e19\u0e2d\u0e49\u0e07\u0e40\u0e07\u0e34\u0e19");
+    expect(drawerHtml("th")).toContain("\u0e16\u0e32\u0e21\u0e19\u0e49\u0e2d\u0e07\u0e40\u0e07\u0e34\u0e19");
     expect(drawerHtml("en")).toContain("Ask Ngern");
   });
 

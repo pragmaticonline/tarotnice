@@ -22,7 +22,7 @@ const STYLE = `<style>
 .inv-card{max-width:440px;margin:16px auto 0;padding:28px 24px;border-radius:20px;background:#fffaf0;border:1px solid #e3d6b8;box-shadow:0 6px 24px rgba(74,61,120,.08);display:flex;flex-direction:column;gap:16px;box-sizing:border-box}
 .inv-card.own{border:1px dashed #b0832f}
 .inv-avatar{align-self:center;width:56px;height:56px;border-radius:999px;background:#4a3d78;color:#fffaf2;display:inline-flex;align-items:center;justify-content:center;font-weight:600;font-size:22px;box-shadow:0 0 0 4px #f3dca6}
-.inv-card h1{margin:0;font-size:24px;line-height:1.35;font-weight:600;color:#4a3d78;text-align:center;font-family:"Cormorant Garamond","IBM Plex Sans Thai",serif}
+.inv-card h1{margin:0;font-size:24px;line-height:1.35;font-weight:600;color:#4a3d78;text-align:center;font-family:var(--f-display)}
 .inv-card h1 .nowrap{white-space:nowrap}
 .inv-sub{margin:0;font-size:15px;line-height:1.55;color:#4a4062;text-align:center}
 .inv-box{background:#fff4dc;border:1px solid #e8c98a;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}
