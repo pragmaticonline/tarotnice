@@ -943,6 +943,7 @@ app.get("/r/:shareId", async (c) => {
       inviteLandingPage({
         ui, origin, code, inviterName, state,
         inviteLink: inviteLinkFor(origin, code),
+        viewerCode: state === "member" && viewer ? inviteCodeFor(viewer.id) : null,
         social: { google: true, line: lineConfigured(c.env) && LINE_LOGIN_VISIBLE },
       }),
     );

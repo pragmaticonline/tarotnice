@@ -22,7 +22,7 @@
     en: {
       txTopup: "Token top-up", txRefund: "Refund", txDaily: "Daily free tokens",
       txReadingDaily: "Question (free tokens)", txReadingWallet: "Question (tokens)",
-      txReferral: "Invite bonus", txReferralFriend: "Friend code bonus", txWelcome: "Welcome bonus", txPromo: "Promo bonus",
+      txReferral: "Invite bonus", txReferralFriend: "Friend code bonus", txWelcome: "Welcome bonus", txPromo: "Promo bonus", txStaffGrant: "Staff grant",
       available: "Available", used: "Used", expired: "Expired",
       friend: "Friend", waiting: "Waiting for first reading",
       rewarded: "+5 tokens", joined: "Joined", read: "First reading done",
@@ -32,7 +32,7 @@
     th: {
       txTopup: "\u0e40\u0e15\u0e34\u0e21\u0e42\u0e17\u0e40\u0e04\u0e19", txRefund: "\u0e04\u0e37\u0e19\u0e40\u0e07\u0e34\u0e19", txDaily: "\u0e42\u0e17\u0e40\u0e04\u0e19\u0e1f\u0e23\u0e35\u0e23\u0e32\u0e22\u0e27\u0e31\u0e19",
       txReadingDaily: "\u0e04\u0e33\u0e16\u0e32\u0e21 (\u0e42\u0e17\u0e40\u0e04\u0e19\u0e1f\u0e23\u0e35)", txReadingWallet: "\u0e04\u0e33\u0e16\u0e32\u0e21 (\u0e42\u0e17\u0e40\u0e04\u0e19)",
-      txReferral: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e0a\u0e27\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19", txReferralFriend: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e42\u0e04\u0e49\u0e14\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19", txWelcome: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e15\u0e49\u0e2d\u0e19\u0e23\u0e31\u0e1a", txPromo: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e42\u0e1b\u0e23\u0e42\u0e21\u0e0a\u0e31\u0e19",
+      txReferral: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e0a\u0e27\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19", txReferralFriend: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e42\u0e04\u0e49\u0e14\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19", txWelcome: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e15\u0e49\u0e2d\u0e19\u0e23\u0e31\u0e1a", txPromo: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e42\u0e1b\u0e23\u0e42\u0e21\u0e0a\u0e31\u0e19", txStaffGrant: "\u0e42\u0e17\u0e40\u0e04\u0e19\u0e08\u0e32\u0e01\u0e17\u0e35\u0e21\u0e07\u0e32\u0e19",
       available: "\u0e43\u0e0a\u0e49\u0e44\u0e14\u0e49", used: "\u0e43\u0e0a\u0e49\u0e41\u0e25\u0e49\u0e27", expired: "\u0e2b\u0e21\u0e14\u0e2d\u0e32\u0e22\u0e38",
       friend: "\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19", waiting: "\u0e23\u0e2d\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e14\u0e39\u0e14\u0e27\u0e07\u0e04\u0e23\u0e31\u0e49\u0e07\u0e41\u0e23\u0e01",
       rewarded: "+5 \u0e42\u0e17\u0e40\u0e04\u0e19", joined: "\u0e2a\u0e21\u0e31\u0e04\u0e23\u0e41\u0e25\u0e49\u0e27", read: "\u0e14\u0e39\u0e14\u0e27\u0e07\u0e41\u0e23\u0e01\u0e41\u0e25\u0e49\u0e27",
@@ -105,6 +105,7 @@
     if (item.reason === "reading") return item.source === "daily" ? ui.txReadingDaily : ui.txReadingWallet;
     if (item.reason === "welcome") return ui.txWelcome;
     if (item.reason === "promo") return ui.txPromo;
+    if (item.reason === "staff_grant") return ui.txStaffGrant || item.reason;
     if (item.reason === "referral") return item.ref && item.ref.indexOf("friend-bonus:") === 0 ? ui.txReferralFriend : ui.txReferral;
     return item.reason;
   }
@@ -189,8 +190,8 @@
     if (linkEl) linkEl.textContent = inviteData.link;
     if (imgEl) imgEl.href = "/invite/" + encodeURIComponent(inviteData.code) + ".png?lang=" + lang;
     var msg = lang === "th"
-      ? "\u0e25\u0e2d\u0e07\u0e14\u0e39\u0e14\u0e27\u0e07\u0e44\u0e1e\u0e48\u0e17\u0e32\u0e42\u0e23\u0e15\u0e4c\u0e1f\u0e23\u0e35\u0e17\u0e35\u0e48 TarotNice \u0e16\u0e32\u0e21\u0e44\u0e14\u0e49\u0e17\u0e38\u0e01\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 \u0e2a\u0e21\u0e31\u0e04\u0e23\u0e14\u0e49\u0e27\u0e22\u0e42\u0e04\u0e49\u0e14 {code} \u0e23\u0e31\u0e1a +1 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e42\u0e1a\u0e19\u0e31\u0e2a {link}"
-      : "Try a free tarot reading on TarotNice. Ask about anything. Sign up with code {code} for a bonus question. {link}";
+      ? "\u0e21\u0e32\u0e14\u0e39\u0e14\u0e27\u0e07\u0e44\u0e1e\u0e48\u0e17\u0e32\u0e42\u0e23\u0e15\u0e4c\u0e17\u0e35\u0e48 TarotNice \u0e01\u0e31\u0e19 \u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e1e\u0e48 3 \u0e43\u0e1a\u0e40\u0e2d\u0e07 \u0e16\u0e32\u0e21\u0e44\u0e14\u0e49\u0e17\u0e38\u0e01\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 \u0e2a\u0e21\u0e31\u0e04\u0e23\u0e14\u0e49\u0e27\u0e22\u0e42\u0e04\u0e49\u0e14 {code} \u0e23\u0e31\u0e1a 20 \u0e42\u0e17\u0e40\u0e04\u0e19 {link}"
+      : "Try tarot readings on TarotNice. Pick 3 cards yourself and ask about anything. Sign up with my code {code} and get 20 tokens. {link}";
     if (msgEl) msgEl.textContent = msg.replace("{code}", inviteData.code).replace("{link}", inviteData.link);
     var countsEl = $("friends-counts");
     var progEl = $("friends-progress");

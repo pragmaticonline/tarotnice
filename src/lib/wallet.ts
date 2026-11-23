@@ -14,7 +14,7 @@ export const REFERRAL_DAILY_CAP = 3;
 /** One-time code sent when a user adds the LINE OA: one free question. */
 export const LINE_WELCOME_BONUS_TOKENS = 5;
 
-export type LedgerReason = "daily" | "topup" | "reading" | "referral" | "refund" | "welcome" | "promo";
+export type LedgerReason = "daily" | "topup" | "reading" | "referral" | "refund" | "welcome" | "promo" | "staff_grant";
 /** One-off welcome grant for a first registered sign-in (+2 questions). */
 export const WELCOME_TOKENS = 10;
 export type LedgerSource = "daily" | "wallet";
@@ -76,7 +76,7 @@ export type TransactionFilter = "all" | "topup" | "daily" | "reading";
 
 /** Ledger reasons behind each history tab filter (null = no filter). */
 export function reasonsForFilter(filter: TransactionFilter): LedgerReason[] | null {
-  if (filter === "topup") return ["topup", "refund"];
+  if (filter === "topup") return ["topup", "refund", "staff_grant"];
   if (filter === "daily") return ["daily"];
   if (filter === "reading") return ["reading"];
   return null;

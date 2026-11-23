@@ -106,7 +106,7 @@ describe("rewardsTodayCount / filter mapping", () => {
 
   it("maps history filters to ledger reasons", () => {
     expect(reasonsForFilter("all")).toBeNull();
-    expect(reasonsForFilter("topup")).toEqual(["topup", "refund"]);
+    expect(reasonsForFilter("topup")).toEqual(["topup", "refund", "staff_grant"]);
     expect(reasonsForFilter("daily")).toEqual(["daily"]);
     expect(reasonsForFilter("reading")).toEqual(["reading"]);
   });

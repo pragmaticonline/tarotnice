@@ -14,6 +14,14 @@ const base = {
 };
 
 describe("invite landing (spec copy and layout)", () => {
+  it("guest lower section uses the design copy (page-scoped, register untouched)", () => {
+    const html = inviteLandingPage({ ...base, ui: "th", state: "guest" });
+    expect(html).toContain("\u0e23\u0e31\u0e1a\u0e02\u0e48\u0e32\u0e27\u0e2a\u0e32\u0e23\u0e41\u0e25\u0e30\u0e42\u0e1b\u0e23\u0e42\u0e21\u0e0a\u0e31\u0e19\u0e17\u0e32\u0e07\u0e2d\u0e35\u0e40\u0e21\u0e25");
+    expect(html).toContain("\u0e40\u0e07\u0e34\u0e19\u0e08\u0e30\u0e40\u0e23\u0e35\u0e22\u0e01\u0e0a\u0e37\u0e48\u0e2d\u0e19\u0e35\u0e49\u0e43\u0e19\u0e01\u0e32\u0e23\u0e14\u0e39\u0e14\u0e27\u0e07");
+    expect(html).toContain("\u0e21\u0e35\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e2d\u0e22\u0e39\u0e48\u0e41\u0e25\u0e49\u0e27?");
+    expect(html).toContain("\u0e01\u0e32\u0e23\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e16\u0e37\u0e2d\u0e27\u0e48\u0e32\u0e04\u0e38\u0e13\u0e22\u0e2d\u0e21\u0e23\u0e31\u0e1a");
+  });
+
   it("guest card carries the exact spec copy in Thai", () => {
     const html = inviteLandingPage({ ...base, ui: "th", state: "guest" });
     expect(html).toContain("Maew \u0e0a\u0e27\u0e19\u0e04\u0e38\u0e13\u0e21\u0e32\u0e14\u0e39<span class=\"nowrap\">\u0e44\u0e1e\u0e48\u0e17\u0e32\u0e42\u0e23\u0e15\u0e4c</span>");
@@ -65,15 +73,22 @@ describe("invite landing (spec copy and layout)", () => {
   });
 
   it("member state shows no sign-up form and no code application script", () => {
-    const html = inviteLandingPage({ ...base, ui: "th", state: "member" });
+    const html = inviteLandingPage({ ...base, ui: "th", state: "member", viewerCode: "NICE-AAAA" });
     expect(html).not.toContain('id="register-form"');
     expect(html).not.toContain("/api/me/invite");
-    expect(html).toContain("\u0e42\u0e04\u0e49\u0e14\u0e0a\u0e27\u0e19\u0e43\u0e0a\u0e49\u0e44\u0e14\u0e49\u0e01\u0e31\u0e1a\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e43\u0e2b\u0e21\u0e48\u0e40\u0e17\u0e48\u0e32\u0e19\u0e31\u0e49\u0e19");
+    expect(html).not.toContain('<span class="inv-avatar"');
+    expect(html).toContain("\u0e04\u0e38\u0e13\u0e21\u0e35\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e2d\u0e22\u0e39\u0e48\u0e41\u0e25\u0e49\u0e27");
+    expect(html).toContain('href="/r/NICE-AAAA"');
+    expect(html).toContain("\u0e44\u0e1b\u0e14\u0e39\u0e44\u0e1e\u0e48");
+    const noCode = inviteLandingPage({ ...base, ui: "en", state: "member" });
+    expect(noCode).toContain('href="/billing"');
+    expect(noCode).toContain("You already have an account.");
   });
 
   it("own state is the inviter share view with link, LINE share and stats", () => {
     const html = inviteLandingPage({ ...base, ui: "en", state: "own" });
     expect(html).toContain("This is your invite link");
+    expect(html).toContain("get 20 tokens when they sign up");
     expect(html).toContain("tarotnice.com/r/NICE-EF7J");
     expect(html).toContain("social-plugins.line.me/lineit/share");
     expect(html).toContain('href="/billing"');

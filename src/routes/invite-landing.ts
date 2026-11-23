@@ -32,7 +32,8 @@ const STYLE = `<style>
 .inv-tiles{display:flex;align-items:stretch;gap:8px}
 .inv-tile{flex:1;background:#fffdf6;border:1px solid #e8c98a;border-radius:12px;padding:8px 4px;text-align:center}
 .inv-tile small{display:block;font-size:12px;color:#6b5f85;line-height:1.3}
-.inv-tile b{font-size:18px;color:#2e2547}
+.inv-tile b{display:inline-flex;align-items:center;justify-content:center;gap:4px;font-size:17px;font-weight:600;color:#4a3d78}
+.inv-tile svg{width:16px;height:16px;flex:none}
 .inv-tile.total{background:#4a3d78;border-color:#4a3d78}
 .inv-tile.total small{color:#f3dca6}
 .inv-tile.total b{color:#fffaf2}
@@ -54,7 +55,12 @@ const STYLE = `<style>
 @media(max-width:400px){.inv-gold{font-size:13px;gap:6px;padding:0 8px}}
 .inv-err{color:#b3261e;min-height:1.4em;margin:0;font-size:.95rem;line-height:1.5}
 .inv-note{font-size:13px;color:#6b5f85;text-align:center;margin:0;line-height:1.55}
-.inv-alt{margin:0;text-align:center;color:#4a4062}
+.inv-alt{margin:0;text-align:center;color:#4a4062;font-size:14px}
+.inv-terms{font-size:12px;color:#6b5f85;text-align:center;margin:0;line-height:1.55}
+.inv-terms a{margin:0 4px}
+.inv-member-note{margin:0;padding:12px 14px;border-radius:12px;background:#f7f1e3;font-size:14px;line-height:1.55;text-align:center;color:#2e2547}
+.inv-ownlink{align-self:center;display:inline-flex;align-items:center;min-height:44px;font-size:14px;font-weight:600}
+.inv-hint{font-size:13px;color:#6b5f85;margin:0;line-height:1.5}
 .inv-start{width:100%;box-sizing:border-box}
 .inv-linkbox{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:#f7f1e3;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;color:#2e2547;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .inv-row{display:flex;flex-wrap:wrap;gap:10px}
@@ -69,7 +75,9 @@ type Copy = {
   boxBoldPre: string; boxBoldPost: string;
   codePre: string; codeMid: string; codePost: string;
   tile1: string; tile2: string; tile3: string; gold: string;
-  memberNote: string; startMember: string;
+  newsLabel: string; nickHint: string;
+  agree: string; terms: string; and: string; privacy: string; haveAccount: string;
+  memberNote: string; startMember: string; ownInvite: string;
   ownTitle: string; ownSub: string;
   shareLine: string; copyLink: string; copied: string; seeStats: string;
 };
@@ -82,8 +90,10 @@ function copy(ui: UiLang): Copy {
       boxBoldPre: "\u0e2a\u0e21\u0e31\u0e04\u0e23\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49 \u0e23\u0e31\u0e1a\u0e42\u0e17\u0e40\u0e04\u0e19\u0e1e\u0e34\u0e40\u0e28\u0e29\u0e08\u0e32\u0e01\u0e42\u0e04\u0e49\u0e14\u0e02\u0e2d\u0e07 ", boxBoldPost: " \u0e2d\u0e35\u0e01 10 \u0e42\u0e17\u0e40\u0e04\u0e19",
       codePre: "\u0e42\u0e04\u0e49\u0e14 ", codeMid: " \u0e40\u0e01\u0e47\u0e1a\u0e44\u0e27\u0e49\u0e1a\u0e19\u0e40\u0e04\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e19\u0e35\u0e49\u0e41\u0e04\u0e48 ", codePost: " \u0e27\u0e31\u0e19 \u0e2a\u0e21\u0e31\u0e04\u0e23\u0e01\u0e48\u0e2d\u0e19\u0e42\u0e04\u0e49\u0e14\u0e2b\u0e32\u0e22",
       tile1: "\u0e15\u0e49\u0e2d\u0e19\u0e23\u0e31\u0e1a\u0e2a\u0e21\u0e32\u0e0a\u0e34\u0e01\u0e43\u0e2b\u0e21\u0e48", tile2: "\u0e08\u0e32\u0e01\u0e42\u0e04\u0e49\u0e14\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19", tile3: "\u0e23\u0e31\u0e1a\u0e17\u0e31\u0e19\u0e17\u0e35", gold: "\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e40\u0e25\u0e22 \u0e23\u0e31\u0e1a 20 \u0e42\u0e17\u0e40\u0e04\u0e19",
-      memberNote: "\u0e42\u0e04\u0e49\u0e14\u0e0a\u0e27\u0e19\u0e43\u0e0a\u0e49\u0e44\u0e14\u0e49\u0e01\u0e31\u0e1a\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e43\u0e2b\u0e21\u0e48\u0e40\u0e17\u0e48\u0e32\u0e19\u0e31\u0e49\u0e19 \u0e41\u0e15\u0e48\u0e04\u0e38\u0e13\u0e14\u0e39\u0e44\u0e1e\u0e48\u0e44\u0e14\u0e49\u0e15\u0e32\u0e21\u0e1b\u0e01\u0e15\u0e34\u0e14\u0e49\u0e27\u0e22\u0e42\u0e17\u0e40\u0e04\u0e19\u0e17\u0e35\u0e48\u0e21\u0e35\u0e2d\u0e22\u0e39\u0e48", startMember: "\u0e40\u0e23\u0e34\u0e48\u0e21\u0e14\u0e39\u0e44\u0e1e\u0e48",
-      ownTitle: "\u0e19\u0e35\u0e48\u0e04\u0e37\u0e2d\u0e25\u0e34\u0e07\u0e01\u0e4c\u0e0a\u0e27\u0e19\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13", ownSub: "\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e17\u0e35\u0e48\u0e40\u0e1b\u0e34\u0e14\u0e25\u0e34\u0e07\u0e01\u0e4c\u0e19\u0e35\u0e49\u0e08\u0e30\u0e40\u0e2b\u0e47\u0e19\u0e04\u0e33\u0e0a\u0e27\u0e19\u0e08\u0e32\u0e01\u0e04\u0e38\u0e13 \u0e41\u0e25\u0e30\u0e04\u0e38\u0e13\u0e44\u0e14\u0e49 +5 \u0e42\u0e17\u0e40\u0e04\u0e19\u0e40\u0e21\u0e37\u0e48\u0e2d\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e14\u0e39\u0e14\u0e27\u0e07\u0e04\u0e23\u0e31\u0e49\u0e07\u0e41\u0e23\u0e01\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08",
+      newsLabel: "\u0e23\u0e31\u0e1a\u0e02\u0e48\u0e32\u0e27\u0e2a\u0e32\u0e23\u0e41\u0e25\u0e30\u0e42\u0e1b\u0e23\u0e42\u0e21\u0e0a\u0e31\u0e19\u0e17\u0e32\u0e07\u0e2d\u0e35\u0e40\u0e21\u0e25 (\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e14\u0e49)", nickHint: "\u0e40\u0e07\u0e34\u0e19\u0e08\u0e30\u0e40\u0e23\u0e35\u0e22\u0e01\u0e0a\u0e37\u0e48\u0e2d\u0e19\u0e35\u0e49\u0e43\u0e19\u0e01\u0e32\u0e23\u0e14\u0e39\u0e14\u0e27\u0e07\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13",
+      agree: "\u0e01\u0e32\u0e23\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e16\u0e37\u0e2d\u0e27\u0e48\u0e32\u0e04\u0e38\u0e13\u0e22\u0e2d\u0e21\u0e23\u0e31\u0e1a", terms: "\u0e02\u0e49\u0e2d\u0e01\u0e33\u0e2b\u0e19\u0e14\u0e01\u0e32\u0e23\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19", and: "\u0e41\u0e25\u0e30", privacy: "\u0e19\u0e42\u0e22\u0e1a\u0e32\u0e22\u0e04\u0e27\u0e32\u0e21\u0e40\u0e1b\u0e47\u0e19\u0e2a\u0e48\u0e27\u0e19\u0e15\u0e31\u0e27", haveAccount: "\u0e21\u0e35\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e2d\u0e22\u0e39\u0e48\u0e41\u0e25\u0e49\u0e27?",
+      memberNote: "\u0e04\u0e38\u0e13\u0e21\u0e35\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e2d\u0e22\u0e39\u0e48\u0e41\u0e25\u0e49\u0e27 \u0e42\u0e04\u0e49\u0e14\u0e0a\u0e27\u0e19\u0e43\u0e0a\u0e49\u0e44\u0e14\u0e49\u0e01\u0e31\u0e1a\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e43\u0e2b\u0e21\u0e48\u0e40\u0e17\u0e48\u0e32\u0e19\u0e31\u0e49\u0e19 \u0e41\u0e15\u0e48\u0e04\u0e38\u0e13\u0e14\u0e39\u0e44\u0e1e\u0e48\u0e44\u0e14\u0e49\u0e15\u0e32\u0e21\u0e1b\u0e01\u0e15\u0e34", startMember: "\u0e44\u0e1b\u0e14\u0e39\u0e44\u0e1e\u0e48", ownInvite: "\u0e0a\u0e27\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e14\u0e49\u0e27\u0e22\u0e42\u0e04\u0e49\u0e14\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e40\u0e2d\u0e07 \u203a",
+      ownTitle: "\u0e19\u0e35\u0e48\u0e04\u0e37\u0e2d\u0e25\u0e34\u0e07\u0e01\u0e4c\u0e0a\u0e27\u0e19\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13", ownSub: "\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e17\u0e35\u0e48\u0e40\u0e1b\u0e34\u0e14\u0e25\u0e34\u0e07\u0e01\u0e4c\u0e19\u0e35\u0e49\u0e08\u0e30\u0e40\u0e2b\u0e47\u0e19\u0e2b\u0e19\u0e49\u0e32\u0e19\u0e35\u0e49 \u0e41\u0e25\u0e30\u0e44\u0e14\u0e49 20 \u0e42\u0e17\u0e40\u0e04\u0e19\u0e40\u0e21\u0e37\u0e48\u0e2d\u0e2a\u0e21\u0e31\u0e04\u0e23 \u0e2a\u0e48\u0e27\u0e19\u0e04\u0e38\u0e13\u0e44\u0e14\u0e49 +5 \u0e42\u0e17\u0e40\u0e04\u0e19\u0e40\u0e21\u0e37\u0e48\u0e2d\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e14\u0e39\u0e44\u0e1e\u0e48\u0e04\u0e23\u0e31\u0e49\u0e07\u0e41\u0e23\u0e01\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08",
       shareLine: "\u0e41\u0e0a\u0e23\u0e4c\u0e17\u0e32\u0e07 LINE", copyLink: "\u0e04\u0e31\u0e14\u0e25\u0e2d\u0e01\u0e25\u0e34\u0e07\u0e01\u0e4c", copied: "\u0e04\u0e31\u0e14\u0e25\u0e2d\u0e01\u0e41\u0e25\u0e49\u0e27!", seeStats: "\u0e14\u0e39\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e17\u0e35\u0e48\u0e0a\u0e27\u0e19\u0e41\u0e25\u0e49\u0e27 \u203a",
     };
   }
@@ -93,10 +103,12 @@ function copy(ui: UiLang): Copy {
     boxBoldPre: "Sign up now for 10 extra tokens from ", boxBoldPost: "'s code",
     codePre: "Code ", codeMid: " is kept on this device for ", codePost: " days only. Sign up before it's gone.",
     tile1: "Welcome gift", tile2: "Friend's code", tile3: "Yours now", gold: "Create account now \u2013 get 20 tokens",
-    memberNote: "Invite codes are for new accounts only, but you can read as usual with your tokens.",
-    startMember: "Start a reading",
+    newsLabel: "News & offers by email (optional)", nickHint: "Ngern will call you this in readings.",
+    agree: "By creating an account you agree to the", terms: "Terms", and: "and", privacy: "Privacy Policy", haveAccount: "Already have an account?",
+    memberNote: "You already have an account. Invite codes are for new accounts only, but you can read as usual.",
+    startMember: "Start a reading", ownInvite: "Invite friends with your own code \u203a",
     ownTitle: "This is your invite link",
-    ownSub: "Friends who open it see your invitation, and you get +5 tokens when they finish their first reading.",
+    ownSub: "Friends who open it see this page and get 20 tokens when they sign up. You get +5 tokens when they finish their first reading.",
     shareLine: "Share on LINE", copyLink: "Copy link", copied: "Copied!", seeStats: "See friends you invited \u203a",
   };
 }
@@ -107,6 +119,7 @@ export function inviteLandingPage(opts: {
   code: string;
   inviterName: string;
   state: InviteLandingState;
+  viewerCode?: string | null;
   inviteLink: string;
   social: SocialOpts;
 }): string {
@@ -128,29 +141,30 @@ export function inviteLandingPage(opts: {
 <p class="bold" style="margin:0"><span aria-hidden="true">${CLOCK}</span><span>${escapeHtml(c.boxBoldPre + name + c.boxBoldPost)}</span></p>
 <p class="code-line" style="margin:0">${escapeHtml(c.codePre)}<b>${escapeHtml(opts.code)}</b>${escapeHtml(c.codeMid + days + c.codePost)}</p>
 <div class="inv-tiles">
-<div class="inv-tile"><small>${escapeHtml(c.tile1)}</small><b>+10</b></div>
+<div class="inv-tile"><b>${GEM} +10</b><small>${escapeHtml(c.tile1)}</small></div>
 <span class="inv-op" aria-hidden="true">+</span>
-<div class="inv-tile"><small>${escapeHtml(c.tile2)}</small><b>+10</b></div>
+<div class="inv-tile"><b>${GEM} +10</b><small>${escapeHtml(c.tile2)}</small></div>
 <span class="inv-op" aria-hidden="true">=</span>
-<div class="inv-tile total"><small>${escapeHtml(c.tile3)}</small><b>20</b></div>
+<div class="inv-tile total"><b>${GEM} 20</b><small>${escapeHtml(c.tile3)}</small></div>
 </div>
 </div>
 ${socialButtons(opts.social, d)}
 <form class="inv-form" id="register-form">
 <div class="inv-field"><label for="name">${escapeHtml(d.nicknameField)}</label>
-<input id="name" autocomplete="name" required></div>
+<input id="name" autocomplete="name" required>
+<span class="inv-hint">${escapeHtml(c.nickHint)}</span></div>
 <div class="inv-field"><label for="email">${escapeHtml(d.emailLabel)}</label>
 <input id="email" type="email" autocomplete="email" required></div>
 <div class="inv-field"><label for="password">${escapeHtml(d.passwordLabel)}</label>
 <input id="password" type="password" autocomplete="new-password" minlength="8" required>
 <span class="inv-note" style="text-align:left">${escapeHtml(d.passwordRule)}</span></div>
-<label class="inv-opt"><input type="checkbox" id="promo-opt"><span><b>${escapeHtml(d.notifyPromoLabel)}</b><small>${escapeHtml(d.notifyPromoSub)}</small></span></label>
+<label class="inv-opt"><input type="checkbox" id="promo-opt"><span>${escapeHtml(c.newsLabel)}</span></label>
 <input type="hidden" id="return" value="/">
 <p class="inv-err" id="err" role="alert"></p>
 <button class="inv-gold" type="submit">${GEM}<span>${escapeHtml(c.gold)}</span></button>
 </form>
-<p class="inv-note">${escapeHtml(d.agreePrefix)}<a href="/terms" target="_blank" rel="noopener">${escapeHtml(d.terms)}</a>${escapeHtml(d.agreeAnd)}<a href="/privacy" target="_blank" rel="noopener">${escapeHtml(d.privacy)}</a>${escapeHtml(d.agreeSuffix)}</p>
-<p class="inv-alt">${escapeHtml(d.alreadyRegistered)} <a href="/sign-in?return=/">${escapeHtml(d.signIn)}</a></p>
+<p class="inv-terms">${escapeHtml(c.agree)}<a href="/terms" target="_blank" rel="noopener">${escapeHtml(c.terms)}</a>${escapeHtml(c.and)}<a href="/privacy" target="_blank" rel="noopener">${escapeHtml(c.privacy)}</a></p>
+<p class="inv-alt">${escapeHtml(c.haveAccount)} <a href="/sign-in?return=/">${escapeHtml(d.signIn)}</a></p>
 </section>
 <script>
 (function () {
@@ -199,11 +213,11 @@ ${socialButtons(opts.social, d)}
 })();
 </script>`;
   } else if (opts.state === "member") {
+    const ownHref = opts.viewerCode ? `/r/${escapeHtml(opts.viewerCode)}` : "/billing";
     card = `<section class="inv-card">
-<span class="inv-avatar" aria-hidden="true">${escapeHtml(initial)}</span>
-<h1>${escapeHtml(name + c.titlePre)}<span class="nowrap">${escapeHtml(c.titleTail)}</span></h1>
-<p class="inv-sub">${escapeHtml(c.memberNote)}</p>
+<p class="inv-member-note">${escapeHtml(c.memberNote)}</p>
 <a class="btn inv-start" href="/">${escapeHtml(c.startMember)}</a>
+<a class="inv-ownlink" href="${ownHref}">${escapeHtml(c.ownInvite)}</a>
 </section>`;
   } else {
     const msg = fmtInvite(d.inviteMessage, opts.code, opts.inviteLink);

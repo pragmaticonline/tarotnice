@@ -8,11 +8,11 @@ import { and, count, desc, eq, inArray, like, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { d1PrefsStore } from "./db/prefs-store";
 import { d1TarotStore } from "./db/tarot-store";
-import { account, readings, staffUsers, user, userPrefs } from "./db/schema";
+import { account, readings, staffAuditEvents, staffUsers, user, userPrefs } from "./db/schema";
 import { bangkokDay } from "./lib/bangkok";
 import { escapeHtml } from "./lib/html";
 import { inviteCodeFor, inviteLinkFor } from "./lib/invite";
-import { walletBalance, type LedgerRow } from "./lib/wallet";
+import { TOKENS_PER_QUESTION, walletBalance, type LedgerRow } from "./lib/wallet";
 
 export type StaffRole = "read_only" | "support" | "admin";
 export type StaffIdentity = { subject: string; email: string; role: StaffRole };
@@ -381,13 +381,25 @@ export function renderUserSearch(staff: StaffIdentity, q: string, hits: StaffUse
   return shellChrome(staff, "User lookup", "/users", body);
 }
 
-export function renderUserDetail(staff: StaffIdentity, d: StaffUserDetail): string {
+export function renderUserDetail(
+  staff: StaffIdentity,
+  d: StaffUserDetail,
+  notice?: { grantError?: boolean; refundError?: boolean },
+): string {
   const fmtDate = (ms: number) => (ms ? new Date(ms).toISOString().slice(0, 10) : "\u2014");
   const kv = (k: string, v: string) => `<tr><th>${escapeHtml(k)}</th><td>${v}</td></tr>`;
+  const refundForm = (r: { id: string }) =>
+    `<details><summary>Refund this reading</summary><form method="post" action="/users/${escapeHtml(d.id)}/readings/${escapeHtml(r.id)}/refund" class="filters"><label>Reason<input type="text" name="reason" required maxlength="500" placeholder="Why is this refunded?"></label><button class="btn" type="submit">Refund +5 tokens</button></form></details>`;
   const readings = d.recentReadings.length
-    ? `<ul class="tools">${d.recentReadings.map((r) => `<li><b>${escapeHtml(r.topic)}</b> <span class="muted">${escapeHtml(r.day)} \u00b7 ${escapeHtml(r.lang)} \u00b7 ${escapeHtml(r.status)}</span><br><span class="muted">${escapeHtml(r.question)}</span></li>`).join("\n")}</ul>`
-    : `<p class="muted">No readings yet.</p>`;
-  const tx = d.recentTx.length
+    ? `<ul class="tools">${d.recentReadings
+        .map(
+          (r) =>
+            `<li><b>${escapeHtml(r.topic)}</b> <span class="muted">${escapeHtml(r.day)} \u00b7 ${escapeHtml(r.lang)} \u00b7 ${escapeHtml(r.status)}</span><br><span class="muted">${escapeHtml(r.question)}</span>` +
+            (r.status === "complete" ? "" : refundForm(r)) +
+            `</li>`,
+        )
+        .join("\n")}</ul>`
+    : `<p class="muted">No readings yet.</p>`;const tx = d.recentTx.length
     ? `<ul class="tools">${d.recentTx.map((t) => `<li><b>${t.delta > 0 ? "+" : ""}${t.delta}</b> <span class="muted">${escapeHtml(t.reason)} \u00b7 ${escapeHtml(t.day)}</span><br><span class="muted">${escapeHtml(t.ref)}</span></li>`).join("\n")}</ul>`
     : `<p class="muted">No ledger rows yet.</p>`;
   const statusBadges =
@@ -407,6 +419,15 @@ ${kv("Invite code", `<b>${escapeHtml(d.inviteCode)}</b>`)}
 ${kv("Invited by", d.invitedBy ? escapeHtml(d.invitedBy) : "\u2014")}
 ${kv("Friends invited", `${d.invited} joined \u00b7 ${d.converted} converted`)}
 </table><p>${statusBadges}</p></div>
+<div class="card"><h2 style="margin-top:0">Grant tokens</h2>
+${notice?.grantError ? `<p class="muted">Grant failed: check the amount (1-1000) and include a reason.</p>` : ""}
+<form method="post" action="/users/${escapeHtml(d.id)}/grant" class="filters">
+<label>Amount (tokens)<input type="number" name="amount" min="1" max="1000" required></label>
+<label>Reason (required)<input type="text" name="reason" required maxlength="500" placeholder="Why these tokens?"></label>
+<label>Note to customer (optional)<input type="text" name="note" maxlength="500"></label>
+<button class="btn" type="submit">Grant</button>
+</form></div>
+${notice?.refundError ? `<div class="card"><p class="muted">Refund failed: delivered readings cannot be refunded, and a reason is always required.</p></div>` : ""}
 <div class="card"><h2 style="margin-top:0">Recent readings</h2>
 ${readings}</div>
 <div class="card"><h2 style="margin-top:0">Recent transactions</h2>
@@ -601,6 +622,99 @@ ${sel("sort", params.sort, [["newest", "Newest first"], ["oldest", "Oldest first
   );
 }
 
+export type AuditEntry = {
+  action: string;
+  targetType: string;
+  targetId: string;
+  reason: string;
+  result: "ok" | "denied" | "failed";
+  before?: unknown;
+  after?: unknown;
+};
+
+/** Write one audit row: who did what to whom, when, why, before/after. */
+export async function recordAudit(
+  db: D1Database,
+  staff: StaffIdentity,
+  entry: AuditEntry,
+): Promise<void> {
+  const orm = drizzle(db);
+  await orm.insert(staffAuditEvents).values({
+    id: crypto.randomUUID(),
+    occurredAt: Date.now(),
+    subject: staff.subject,
+    email: staff.email,
+    role: staff.role,
+    action: entry.action,
+    targetType: entry.targetType,
+    targetId: entry.targetId,
+    reason: entry.reason,
+    result: entry.result,
+    requestId: null,
+    beforeJson: entry.before === undefined ? null : JSON.stringify(entry.before),
+    afterJson: entry.after === undefined ? null : JSON.stringify(entry.after),
+  });
+}
+
+export type GrantInput = { amount: number; reason: string; note: string };
+
+async function readInput(c: {
+  req: {
+    header: (n: string) => string | undefined;
+    json: () => Promise<unknown>;
+    parseBody: () => Promise<Record<string, string | File>>;
+  };
+}): Promise<Record<string, unknown>> {
+  const contentType = c.req.header("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    try {
+      const body = await c.req.json();
+      return (body ?? {}) as Record<string, unknown>;
+    } catch {
+      return {};
+    }
+  }
+  try {
+    return (await c.req.parseBody()) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
+function wantsJson(c: { req: { header: (n: string) => string | undefined } }): boolean {
+  return (c.req.header("content-type") ?? "").includes("application/json");
+}
+
+/** Validate a token grant: amount 1..1000, reason required, note optional. */
+export function parseGrantInput(body: { amount?: unknown; reason?: unknown; note?: unknown }): GrantInput | { error: string } {
+  const amount = typeof body.amount === "string" && body.amount.trim() !== "" ? Number(body.amount) : body.amount;
+  if (!Number.isSafeInteger(amount) || (amount as number) < 1 || (amount as number) > 1000) {
+    return { error: "Amount must be a whole number of tokens between 1 and 1000." };
+  }
+  const reason = String(body.reason ?? "").trim();
+  if (!reason) return { error: "A reason is required for every grant." };
+  if (reason.length > 500) return { error: "Reason is too long (max 500 characters)." };
+  const note = String(body.note ?? "").trim();
+  if (note.length > 500) return { error: "Note is too long (max 500 characters)." };
+  return { amount: amount as number, reason, note };
+}
+
+async function walletOf(db: D1Database, userId: string): Promise<number> {
+  const store = d1TarotStore(db);
+  const rows = await store.ledgerRows(userId).catch(() => []);
+  const balance = walletBalance(
+    rows.map((r): LedgerRow => ({
+      delta: r.delta,
+      reason: r.reason as LedgerRow["reason"],
+      source: (r.source as LedgerRow["source"]) ?? null,
+      day: r.day,
+      createdAt: r.createdAt,
+    })),
+    bangkokDay(),
+  );
+  return balance.wallet;
+}
+
 const app = new Hono<{ Bindings: StaffEnv }>();
 
 app.get("/health", (c) => c.json({ ok: true, service: "tarotnice-staff" }));
@@ -637,7 +751,122 @@ app.get("/users/:id", async (c) => {
   const detail = c.env?.DB ? await userDetail(c.env.DB, id).catch(() => null) : null;
   if (!detail) return c.text("No such user.", 404);
   const staff = c.get("staff" as never) as StaffIdentity;
-  return c.html(renderUserDetail(staff, detail));
+  return c.html(
+    renderUserDetail(staff, detail, {
+      grantError: c.req.query("grantError") === "1",
+      refundError: c.req.query("refundError") === "1",
+    }),
+  );
+});
+
+// Token grant (support+). Amount + required reason; the customer note
+// lives in the audit log (ledger rows carry no free text).
+app.post("/users/:id/grant", async (c) => {
+  const staff = c.get("staff" as never) as StaffIdentity;
+  if (!canMutate(staff)) return c.text("Support role or above required.", 403);
+  const userId = c.req.param("id");
+  const body = await readInput(c as never);
+  const parsed = parseGrantInput(body);
+  if ("error" in parsed) {
+    if (wantsJson(c)) return c.json({ error: parsed.error }, 400);
+    return c.redirect(`/users/${encodeURIComponent(userId)}?grantError=1`, 302);
+  }
+  if (!c.env?.DB) return c.json({ error: "unavailable" }, 503);
+  const store = d1TarotStore(c.env.DB);
+  const before = await walletOf(c.env.DB, userId);
+  const granted = await store
+    .postLedger({
+      userId,
+      delta: parsed.amount,
+      reason: "staff_grant",
+      ref: `staff-grant:${crypto.randomUUID()}`,
+      day: bangkokDay(),
+    })
+    .catch(() => false);
+  if (!granted) {
+    await recordAudit(c.env.DB, staff, {
+      action: "token.grant",
+      targetType: "user",
+      targetId: userId,
+      reason: parsed.reason,
+      result: "failed",
+      before: { wallet: before },
+    }).catch(() => {});
+    return c.json({ error: "grant_failed" }, 500);
+  }
+  const after = await walletOf(c.env.DB, userId);
+  await recordAudit(c.env.DB, staff, {
+    action: "token.grant",
+    targetType: "user",
+    targetId: userId,
+    reason: parsed.reason,
+    result: "ok",
+    before: { wallet: before },
+    after: { wallet: after, granted: parsed.amount, note: parsed.note || null },
+  }).catch(() => {});
+  if (!wantsJson(c)) return c.redirect(`/users/${encodeURIComponent(userId)}`, 302);
+  return c.json({ ok: true, granted: parsed.amount, wallet: after });
+});
+
+// Refund one reading (support+). Only undelivered readings (drawn/failed)
+// can be refunded; delivered readings are refused. Idempotent per reading.
+app.post("/users/:id/readings/:readingId/refund", async (c) => {
+  const staff = c.get("staff" as never) as StaffIdentity;
+  if (!canMutate(staff)) return c.text("Support role or above required.", 403);
+  const userId = c.req.param("id");
+  const readingId = c.req.param("readingId");
+  const body = await readInput(c as never);
+  const reason = String(body.reason ?? "").trim();
+  if (!reason) {
+    if (wantsJson(c)) return c.json({ error: "A reason is required for every refund." }, 400);
+    return c.redirect(`/users/${encodeURIComponent(userId)}?refundError=1`, 302);
+  }
+  if (!c.env?.DB) return c.json({ error: "unavailable" }, 503);
+  const store = d1TarotStore(c.env.DB);
+  const reading = await store.getReading(readingId).catch(() => null);
+  if (!reading || reading.userId !== userId) {
+    if (wantsJson(c)) return c.json({ error: "unknown_reading" }, 404);
+    return c.text("No such reading.", 404);
+  }
+  if (reading.status === "complete") {
+    await recordAudit(c.env.DB, staff, {
+      action: "reading.refund",
+      targetType: "reading",
+      targetId: readingId,
+      reason,
+      result: "denied",
+      before: { status: reading.status },
+    }).catch(() => {});
+    if (wantsJson(c)) return c.json({ error: "already_delivered" }, 409);
+    return c.redirect(`/users/${encodeURIComponent(userId)}?refundError=1`, 302);
+  }
+  const before = await walletOf(c.env.DB, userId);
+  const granted = await store
+    .postLedger({
+      userId,
+      delta: TOKENS_PER_QUESTION,
+      reason: "refund",
+      ref: readingId,
+      day: bangkokDay(),
+    })
+    .catch(() => false);
+  if (!granted) {
+    if (wantsJson(c)) return c.json({ ok: true, alreadyRefunded: true });
+    return c.redirect(`/users/${encodeURIComponent(userId)}`, 302);
+  }
+  await store.setReadingResult(readingId, { aiText: "", aiSummary: "", model: "", status: "failed" }).catch(() => {});
+  const after = await walletOf(c.env.DB, userId);
+  await recordAudit(c.env.DB, staff, {
+    action: "reading.refund",
+    targetType: "reading",
+    targetId: readingId,
+    reason,
+    result: "ok",
+    before: { status: reading.status, wallet: before },
+    after: { status: "failed", wallet: after, refunded: TOKENS_PER_QUESTION },
+  }).catch(() => {});
+  if (!wantsJson(c)) return c.redirect(`/users/${encodeURIComponent(userId)}`, 302);
+  return c.json({ ok: true, refunded: TOKENS_PER_QUESTION, wallet: after });
 });
 
 app.notFound((c) => c.text("Not found.", 404));

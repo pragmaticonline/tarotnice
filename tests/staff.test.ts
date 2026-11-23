@@ -5,6 +5,7 @@ import app, {
   allowlistedRole,
   canAdmin,
   canMutate,
+  parseGrantInput,
   parseUserListParams,
   renderUserDetail,
   renderUserList,
@@ -197,6 +198,44 @@ describe("staff worker guard and shell", () => {
     expect(html).toContain("Will it work?");
     expect(html).not.toContain("<script>w");
     expect(html).toContain("Mae&lt;script&gt;w");
+  });
+
+  it("grant input requires a bounded amount and a reason", () => {
+    expect(parseGrantInput({ amount: 10, reason: "Goodwill", note: "" })).toEqual({ amount: 10, reason: "Goodwill", note: "" });
+    expect(parseGrantInput({ amount: "25", reason: "  Stuck reading  ", note: "Sorry!" })).toEqual({ amount: 25, reason: "Stuck reading", note: "Sorry!" });
+    for (const bad of [{}, { amount: 0, reason: "x" }, { amount: 1001, reason: "x" }, { amount: 1.5, reason: "x" }, { amount: NaN, reason: "x" }, { amount: 5, reason: "" }, { amount: 5, reason: "   " }, { amount: 5, reason: "x".repeat(501) }]) {
+      expect(parseGrantInput(bad)).toHaveProperty("error");
+    }
+  });
+
+  it("user detail shows the grant form and per-reading refund forms with reason fields", () => {
+    const drawing = { id: "r1", day: "2026-11-23", topic: "love", question: "Q?", lang: "en", status: "drawn" };
+    const done = { id: "r2", day: "2026-11-23", topic: "work", question: "Q?", lang: "en", status: "complete" };
+    const base = {
+      id: "u1", email: "a@b.c", name: "A", nickname: null, providers: [], createdAt: 0,
+      emailVerified: false, isAnonymous: false, wallet: 0, dailyLeft: 0, readings: 0, dailies: 0,
+      inviteCode: "NICE-XXXX", invitedBy: null, invited: 0, converted: 0, recentTx: [],
+    };
+    const html = renderUserDetail(STAFF, { ...base, recentReadings: [drawing, done] });
+    expect(html).toContain('action="/users/u1/grant"');
+    expect(html).toContain('name="reason"');
+    expect(html).toContain('action="/users/u1/readings/r1/refund"');
+    expect(html).not.toContain("/users/u1/readings/r2/refund");
+    expect(html).toContain("Refund +5 tokens");
+    const flagged = renderUserDetail(STAFF, { ...base, recentReadings: [] }, { grantError: true, refundError: true });
+    expect(flagged).toContain("Grant failed");
+    expect(flagged).toContain("Refund failed");
+  });
+
+  it("grant and refund routes require support role, reason, and audit", () => {
+    const src = readFileSync(new URL("../src/staff.ts", import.meta.url), "utf8");
+    expect(src).toContain('app.post("/users/:id/grant"');
+    expect(src).toContain('app.post("/users/:id/readings/:readingId/refund"');
+    expect(src).toContain("recordAudit");
+    expect(src).toContain('reason: "staff_grant"');
+    expect(src).toContain('reason: "refund"');
+    expect(src).toContain("already_delivered");
+    expect(src).toContain('status: "failed"');
   });
 
   it("lookup routes are read-only and wired to the stores", () => {
