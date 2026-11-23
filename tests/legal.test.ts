@@ -111,9 +111,8 @@ describe("GET /policies, /cookies, /security", () => {
     for (const path of ["/terms", "/privacy", "/cookies", "/security", "/policies", "/contact"]) {
       expect(html).toContain(`href="${path}"`);
     }
-    expect(html).toContain("/pay-visa.svg");
-    expect(html).toContain("/pay-mastercard.svg");
-    expect(html).toContain("/pay-promptpay.png");
+    expect(html).not.toContain("foot-pay");
+    expect(html).not.toContain("/pay-visa.svg");
   });
 
   it("home head carries the exact meta title and descriptions", async () => {
@@ -124,14 +123,20 @@ describe("GET /policies, /cookies, /security", () => {
     expect(th).toContain("\u0e14\u0e39\u0e14\u0e27\u0e07\u0e44\u0e1e\u0e48\u0e17\u0e32\u0e42\u0e23\u0e15\u0e4c\u0e2d\u0e2d\u0e19\u0e44\u0e25\u0e19\u0e4c \u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e1e\u0e48 3 \u0e43\u0e1a\u0e14\u0e49\u0e27\u0e22\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07");
   });
 
-  it("billing shows the Stripe line with official brand marks", async () => {
+  it("billing shows the Stripe line with official brand marks when packs are on", async () => {
+    const stripeEnv = {
+      STRIPE_SECRET_KEY: "sk_test_x",
+      STRIPE_PACK_STARTER_PRICE_ID: "price_starter",
+      STRIPE_PACK_STANDARD_PRICE_ID: "price_standard",
+      STRIPE_PACK_PREMIUM_PRICE_ID: "price_premium",
+    } as never;
     for (const ui of ["en", "th"] as const) {
-      const html = billingPage({ ui, origin: "", env: {} as never, balance: 10, freeLeft: 5 });
+      const html = billingPage({ ui, origin: "", env: stripeEnv, balance: 10, freeLeft: 5 });
       expect(html).toContain("/pay-visa.svg");
       expect(html).toContain("/pay-mastercard.svg");
       expect(html).toContain("/pay-promptpay.png");
     }
-    expect(billingPage({ ui: "en", origin: "", env: {} as never, balance: 0, freeLeft: 0 })).toContain("Secure payments by Stripe");
+    expect(billingPage({ ui: "en", origin: "", env: stripeEnv, balance: 0, freeLeft: 0 })).toContain("Secure payments by Stripe");
   });
 
   it("sitemap lists the public policy pages", async () => {
