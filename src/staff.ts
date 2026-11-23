@@ -4,11 +4,11 @@
 // identity must map to an active staff_users row or the allowlist.
 // Roles mirror blognice: read_only < support < admin.
 import { Hono } from "hono";
-import { eq, like, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, like, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { d1PrefsStore } from "./db/prefs-store";
 import { d1TarotStore } from "./db/tarot-store";
-import { staffUsers, user, userPrefs } from "./db/schema";
+import { account, readings, staffUsers, user, userPrefs } from "./db/schema";
 import { bangkokDay } from "./lib/bangkok";
 import { escapeHtml } from "./lib/html";
 import { inviteCodeFor, inviteLinkFor } from "./lib/invite";
@@ -156,47 +156,58 @@ export function canAdmin(staff: StaffIdentity): boolean {
   return staff.role === "admin";
 }
 
-const STYLE = `<style>
-body{margin:0;background:#f6f1fa;color:#2e2547;font-family:system-ui,sans-serif}
-.wrap{max-width:720px;margin:0 auto;padding:32px 16px}
-.card{background:#fff;border:1px solid #e3d6b8;border-radius:16px;padding:24px}
-.muted{color:#6b5f85}
-ul.tools{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
-ul.tools li{border:1px solid #e3d6b8;border-radius:12px;padding:12px 14px;background:#fffaf0}
-.badge{display:inline-block;font-size:12px;font-weight:700;border:1px solid #b0832f;border-radius:999px;padding:2px 10px;margin-left:8px;color:#4a3d78}
-</style>`;
+const STYLE = `:root{color-scheme:light;--ink:#2e2547;--muted:#6b5f85;--rule:#e3d6b8;--paper:#f6f1fa;--accent:#4a3d78;--accent-soft:#ece7f7;--card:#fff}
+*{box-sizing:border-box}html{scrollbar-gutter:stable}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;overflow-y:scroll}
+.staff-top{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:var(--card);border-bottom:1px solid var(--rule)}
+.staff-brand{font-size:1.15rem;font-weight:800;color:var(--ink);text-decoration:none}
+.staff-brand span{font-weight:500;color:var(--muted)}
+.staff-top-meta{display:flex;align-items:center;gap:12px}
+.staff-top-meta small{color:var(--muted)}
+.logout{font-size:.85rem;color:var(--muted);border:1px solid var(--rule);padding:6px 10px;border-radius:7px;text-decoration:none}
+.logout:hover{color:var(--ink);border-color:var(--accent)}
+.staff-menu-toggle{display:none;border:1px solid var(--rule);background:var(--card);border-radius:7px;padding:6px 10px;font:inherit;cursor:pointer;color:var(--ink)}
+.staff-shell{display:flex;min-height:calc(100vh - 64px)}
+.staff-sidebar{width:232px;flex:0 0 232px;background:var(--card);border-right:1px solid var(--rule);padding:24px 14px}
+.staff-nav{display:flex;flex-direction:column;gap:4px}
+.staff-nav a,.staff-nav span.soon{padding:10px 12px;border-radius:7px;text-decoration:none}
+.staff-nav a{color:var(--muted)}
+.staff-nav a:hover{color:var(--ink);background:var(--paper)}
+.staff-nav a.active{color:var(--accent);background:var(--accent-soft);font-weight:650}
+.staff-nav span.soon{color:#a99ec4}
+.staff-content{width:min(1120px,100%);margin:0 auto;padding:30px}
+.staff-content a:not(.btn){color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.top{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--rule);padding-bottom:16px;margin-bottom:16px}
+.top h1{font-size:1.25rem;margin:0}
+.top small{color:var(--muted)}
+h2{font-size:1.1rem;margin:22px 0 8px}
+.muted{color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:10px;margin:14px 0;padding:18px}
+.search{display:flex;gap:8px;margin:18px 0;max-width:560px}
+.search input{flex:1;padding:10px 12px;border:1px solid var(--rule);border-radius:6px;font:inherit;background:#fff;color:var(--ink)}
+.btn{border:1px solid var(--rule);background:#fff;border-radius:6px;padding:9px 13px;font:inherit;cursor:pointer;color:var(--ink)}
+.btn:hover{border-color:var(--accent)}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--rule);vertical-align:top;overflow-wrap:anywhere}
+th{font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.badge{display:inline-block;border-radius:999px;padding:3px 9px;font-size:.76rem;background:var(--accent-soft);color:var(--accent)}
+.badge.warn{background:#fff4d6;color:#7a5b00}
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:16px 0}
+.filters label{display:flex;flex-direction:column;gap:4px;font-size:.82rem;color:var(--muted)}
+.filters select{padding:9px 10px;border:1px solid var(--rule);border-radius:6px;font:inherit;background:#fff;color:var(--ink)}
+.pager{display:flex;gap:14px;align-items:center;margin-top:14px}
+.empty{padding:26px;text-align:center;color:var(--muted)}
+.staff-footer{padding:1.1rem 28px 2rem;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;color:var(--muted);font-size:.82rem}
+@media(max-width:760px){.staff-top{padding:0 16px}.staff-top-meta small{display:none}.staff-menu-toggle{display:block}.staff-sidebar{visibility:hidden;position:fixed;z-index:10;top:64px;bottom:0;left:0;transform:translateX(-100%);transition:transform .18s ease}.staff-sidebar.open{transform:translateX(0);visibility:visible}.staff-content{padding:22px 16px}}`;
 
 export function shellPage(staff: StaffIdentity): string {
-  const tools = [
-    { name: "User lookup", note: "Find a user, see balance and readings.", href: "/users" },
-    { name: "Token grant", note: "Goodwill top-ups with reason + audit.", soon: true },
-    { name: "Invite & referrals", note: "Codes, attribution, inviter rewards.", soon: true },
-  ];
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
-<title>TarotNice staff</title>
-${STYLE}
-</head>
-<body>
-<div class="wrap"><div class="card">
-<h1>TarotNice staff</h1>
-<p class="muted">Signed in as ${escapeHtml(staff.email)} (${escapeHtml(staff.role)})</p>
+  const body = `<div class="top"><h1>Overview</h1><small>Signed in as ${escapeHtml(staff.email)} (${escapeHtml(staff.role)})</small></div>
+<div class="card"><h2 style="margin-top:0">Tools</h2>
 <ul class="tools">
-${tools
-  .map((t) =>
-    "href" in t && t.href
-      ? `<li><b><a href="${t.href}">${escapeHtml(t.name)}</a></b><br><span class="muted">${escapeHtml(t.note)}</span></li>`
-      : `<li><b>${escapeHtml(t.name)}</b><span class="badge">next</span><br><span class="muted">${escapeHtml(t.note)}</span></li>`,
-  )
-  .join("\n")}
-</ul>
-</div></div>
-</body>
-</html>`;
+<li><b><a href="/users">User lookup</a></b><br><span class="muted">Find a user, see balance and readings.</span></li>
+<li><b>Token grant</b> <span class="badge">next</span><br><span class="muted">Goodwill top-ups with reason + audit.</span></li>
+<li><b>Invite and referrals</b> <span class="badge">next</span><br><span class="muted">Codes, attribution, inviter rewards.</span></li>
+</ul></div>`;
+  return shellChrome(staff, "Overview", "/", body);
 }
 
 export type StaffUserHit = { id: string; email: string; name: string; nickname: string | null };
@@ -323,7 +334,15 @@ export async function userDetail(db: D1Database, userId: string): Promise<StaffU
   };
 }
 
-function staffHead(title: string): string {
+const NAV_ITEMS: { href: string; label: string }[] = [
+  { href: "/", label: "Overview" },
+  { href: "/users", label: "Users" },
+];
+const NAV_SOON = ["Token grant", "Invite and referrals"];
+
+function shellChrome(staff: StaffIdentity, title: string, active: string, body: string): string {
+  const nav = NAV_ITEMS.map((item) => `<a href="${item.href}" data-staff-nav>${escapeHtml(item.label)}</a>`).join("") +
+    NAV_SOON.map((label) => `<span class="soon">${escapeHtml(label)} (next)</span>`).join("");
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -331,43 +350,38 @@ function staffHead(title: string): string {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>${escapeHtml(title)} \u00b7 TarotNice staff</title>
-${STYLE}
+<style>${STYLE}</style>
 </head>
 <body>
-<div class="wrap"><div class="card">
-<p class="muted"><a href="/">staff</a></p>`;
-}
-
-function staffFoot(): string {
-  return `</div></div>
+<header class="staff-top"><a class="staff-brand" href="/">TarotNice <span>staff</span></a><div class="staff-top-meta"><small>${escapeHtml(staff.email)} \u00b7 ${escapeHtml(staff.role)}</small><a class="logout" href="/cdn-cgi/access/logout">Log out</a><button class="staff-menu-toggle" type="button" aria-controls="staff-sidebar" aria-expanded="false">Menu</button></div></header>
+<div class="staff-shell"><aside class="staff-sidebar" id="staff-sidebar"><nav class="staff-nav" aria-label="Staff navigation">${nav}</nav></aside><div class="staff-content">${body}</div></div>
+<footer class="staff-footer"><span><strong>TarotNice</strong> staff</span></footer>
+<script>(function(){var path=location.pathname;document.querySelectorAll('[data-staff-nav]').forEach(function(link){var target=link.getAttribute('href')||'/';if(target==='/'?path==='/':path===target||path.indexOf(target+'/')===0)link.classList.add('active');});var toggle=document.querySelector('.staff-menu-toggle'),sidebar=document.getElementById('staff-sidebar');if(toggle&&sidebar){toggle.addEventListener('click',function(){var open=sidebar.classList.toggle('open');toggle.setAttribute('aria-expanded',String(open));});}})();</script>
 </body>
 </html>`;
 }
 
-export function renderUserSearch(q: string, hits: StaffUserHit[]): string {
+export function renderUserSearch(staff: StaffIdentity, q: string, hits: StaffUserHit[]): string {
   const list = hits.length
-    ? `<ul class="tools">${hits
+    ? `<table><thead><tr><th>User</th><th>Email</th><th>Id</th></tr></thead><tbody>${hits
         .map(
           (h) =>
-            `<li><b><a href="/users/${escapeHtml(h.id)}">${escapeHtml(h.nickname ?? h.name)}</a></b><br><span class="muted">${escapeHtml(h.email)} \u00b7 ${escapeHtml(h.id)}</span></li>`,
+            `<tr><td><a href="/users/${escapeHtml(h.id)}">${escapeHtml(h.nickname || h.name || h.id)}</a></td><td>${escapeHtml(h.email)}</td><td><span class="muted">${escapeHtml(h.id)}</span></td></tr>`,
         )
-        .join("\n")}</ul>`
+        .join("")}</tbody></table>`
     : q
-      ? `<p class="muted">No users found.</p>`
-      : `<p class="muted">Search by email, user id, or nickname.</p>`;
-  return (
-    staffHead("User lookup") +
-    `<h1>User lookup</h1>
-<form method="get" action="/users">
+      ? `<div class="empty">No users found.</div>`
+      : `<div class="empty">Search by email, user id, or nickname.</div>`;
+  const body = `<div class="top"><h1>User lookup</h1></div>
+<form method="get" action="/users" class="search">
 <input type="search" name="q" value="${escapeHtml(q)}" placeholder="email, user id, or nickname" required>
-<button type="submit">Search</button>
+<button class="btn" type="submit">Search</button>
 </form>
-${list}` +
-    staffFoot()
-  );
+<div class="card">${list}</div>`;
+  return shellChrome(staff, "User lookup", "/users", body);
 }
 
-export function renderUserDetail(d: StaffUserDetail): string {
+export function renderUserDetail(staff: StaffIdentity, d: StaffUserDetail): string {
   const fmtDate = (ms: number) => (ms ? new Date(ms).toISOString().slice(0, 10) : "\u2014");
   const kv = (k: string, v: string) => `<tr><th>${escapeHtml(k)}</th><td>${v}</td></tr>`;
   const readings = d.recentReadings.length
@@ -376,26 +390,214 @@ export function renderUserDetail(d: StaffUserDetail): string {
   const tx = d.recentTx.length
     ? `<ul class="tools">${d.recentTx.map((t) => `<li><b>${t.delta > 0 ? "+" : ""}${t.delta}</b> <span class="muted">${escapeHtml(t.reason)} \u00b7 ${escapeHtml(t.day)}</span><br><span class="muted">${escapeHtml(t.ref)}</span></li>`).join("\n")}</ul>`
     : `<p class="muted">No ledger rows yet.</p>`;
-  return (
-    staffHead(`User ${d.nickname ?? d.email}`) +
-    `<h1>${escapeHtml(d.nickname ?? d.name)}</h1>
-<p class="muted">${escapeHtml(d.email)} \u00b7 ${escapeHtml(d.id)}</p>
-<table>
+  const statusBadges =
+    `${d.emailVerified ? '<span class="badge">verified</span>' : '<span class="badge warn">unverified</span>'}` +
+    `${d.isAnonymous ? ' <span class="badge warn">anonymous</span>' : ""}`;
+  return shellChrome(
+    staff,
+    `User ${d.nickname ?? d.email}`,
+    "/users",
+    `<div class="top"><h1>${escapeHtml(d.nickname ?? d.name)}</h1><small>${escapeHtml(d.email)} \u00b7 ${escapeHtml(d.id)}</small></div>
+<div class="card"><table>
 ${kv("Providers", escapeHtml(d.providers.join(", ") || "\u2014"))}
 ${kv("Signed up", escapeHtml(fmtDate(d.createdAt)))}
-${kv("Email verified", d.emailVerified ? "yes" : "no")}
-${kv("Anonymous", d.isAnonymous ? "yes" : "no")}
 ${kv("Wallet", `<b>${d.wallet}</b> tokens (${d.dailyLeft} free left today)`)}
 ${kv("Readings", `${d.readings} readings \u00b7 ${d.dailies} dailies`)}
 ${kv("Invite code", `<b>${escapeHtml(d.inviteCode)}</b>`)}
 ${kv("Invited by", d.invitedBy ? escapeHtml(d.invitedBy) : "\u2014")}
 ${kv("Friends invited", `${d.invited} joined \u00b7 ${d.converted} converted`)}
-</table>
-<h2>Recent readings</h2>
-${readings}
-<h2>Recent transactions</h2>
-${tx}` +
-    staffFoot()
+</table><p>${statusBadges}</p></div>
+<div class="card"><h2 style="margin-top:0">Recent readings</h2>
+${readings}</div>
+<div class="card"><h2 style="margin-top:0">Recent transactions</h2>
+${tx}</div>`,
+  );
+}
+
+export const USER_LIST_PAGE_SIZE = 20;
+const USER_LIST_PROVIDERS = ["google", "line", "credential"] as const;
+
+export type UserListParams = {
+  provider: string;
+  verified: string;
+  anonymous: string;
+  activity: string;
+  sort: string;
+  page: number;
+};
+
+export type UserListRow = {
+  id: string;
+  email: string;
+  name: string;
+  nickname: string | null;
+  createdAt: number;
+  emailVerified: boolean;
+  isAnonymous: boolean;
+  providers: string[];
+  readingCount: number;
+};
+
+export type UserList = { rows: UserListRow[]; page: number; pages: number; total: number };
+
+function oneOf(raw: string | undefined, allowed: readonly string[], fallback: string): string {
+  const v = (raw ?? "").trim().toLowerCase();
+  return (allowed as readonly string[]).includes(v) ? v : fallback;
+}
+
+/** Validate list query params; unknown values fall back to defaults. */
+export function parseUserListParams(query: (name: string) => string | undefined): UserListParams {
+  const pageRaw = Number(query("page"));
+  return {
+    provider: oneOf(query("provider"), ["all", ...USER_LIST_PROVIDERS], "all"),
+    verified: oneOf(query("verified"), ["all", "yes", "no"], "all"),
+    anonymous: oneOf(query("anonymous"), ["all", "yes", "no"], "all"),
+    activity: oneOf(query("activity"), ["all", "readers", "none"], "all"),
+    sort: oneOf(query("sort"), ["newest", "oldest", "readings"], "newest"),
+    page: Number.isSafeInteger(pageRaw) && pageRaw >= 0 && pageRaw <= 100000 ? pageRaw : 0,
+  };
+}
+
+/** Paginated staff directory with filters; one query for the page plus batched lookups. */
+export async function listUsers(db: D1Database, params: UserListParams): Promise<UserList> {
+  const orm = drizzle(db);
+  const rc = orm
+    .select({ userId: readings.userId, n: sql<number>`count(*)`.mapWith(Number).as("n") })
+    .from(readings)
+    .groupBy(readings.userId)
+    .as("rc");
+  const conds = [];
+  if (params.provider !== "all") {
+    conds.push(
+      inArray(
+        user.id,
+        orm.select({ uid: account.userId }).from(account).where(eq(account.providerId, params.provider)),
+      ),
+    );
+  }
+  if (params.verified !== "all") conds.push(sql`${user.emailVerified} = ${params.verified === "yes" ? 1 : 0}`);
+  if (params.anonymous !== "all") conds.push(sql`${user.isAnonymous} = ${params.anonymous === "yes" ? 1 : 0}`);
+  if (params.activity === "readers") conds.push(sql`${rc.n} > 0`);
+  if (params.activity === "none") conds.push(sql`${rc.n} IS NULL`);
+  const where = conds.length ? and(...conds) : undefined;
+  const order =
+    params.sort === "oldest"
+      ? [sql`${user.createdAt} ASC`, sql`${user.id} ASC`]
+      : params.sort === "readings"
+        ? [sql`${rc.n} DESC`, sql`${user.createdAt} DESC`, sql`${user.id} DESC`]
+        : [sql`${user.createdAt} DESC`, sql`${user.id} DESC`];
+  const offset = params.page * USER_LIST_PAGE_SIZE;
+  const [pageRows, totalRows] = await Promise.all([
+    orm
+      .select({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        createdAt: user.createdAt,
+        emailVerified: user.emailVerified,
+        isAnonymous: user.isAnonymous,
+        nickname: userPrefs.nickname,
+        readingCount: sql<number | null>`${rc.n}`,
+      })
+      .from(user)
+      .leftJoin(userPrefs, eq(userPrefs.userId, user.id))
+      .leftJoin(rc, eq(rc.userId, user.id))
+      .where(where)
+      .orderBy(...order)
+      .limit(USER_LIST_PAGE_SIZE)
+      .offset(offset),
+    orm
+      .select({ total: count() })
+      .from(user)
+      .leftJoin(rc, eq(rc.userId, user.id))
+      .where(where),
+  ]);
+  // Providers per user on this page (batched; a user can link several).
+  const ids = pageRows.map((r) => r.id);
+  const acctRows = ids.length
+    ? await orm
+        .select({ userId: account.userId, providerId: account.providerId })
+        .from(account)
+        .where(inArray(account.userId, ids))
+    : [];
+  const providersById = new Map<string, string[]>();
+  for (const a of acctRows) {
+    const list = providersById.get(a.userId) ?? [];
+    if (!list.includes(a.providerId)) list.push(a.providerId);
+    providersById.set(a.userId, list);
+  }
+  const total = totalRows[0]?.total ?? 0;
+  return {
+    rows: pageRows.map((r) => ({
+      id: r.id,
+      email: r.email,
+      name: r.name,
+      nickname: r.nickname,
+      createdAt: r.createdAt instanceof Date ? r.createdAt.getTime() : Number(r.createdAt),
+      emailVerified: r.emailVerified === true,
+      isAnonymous: r.isAnonymous === true,
+      providers: providersById.get(r.id) ?? [],
+      readingCount: Number(r.readingCount ?? 0),
+    })),
+    page: params.page,
+    pages: Math.max(1, Math.ceil(total / USER_LIST_PAGE_SIZE)),
+    total,
+  };
+}
+
+function userListQuery(params: UserListParams, overrides: Partial<UserListParams>): string {
+  const merged = { ...params, ...overrides };
+  const sp = new URLSearchParams();
+  sp.set("provider", merged.provider);
+  sp.set("verified", merged.verified);
+  sp.set("anonymous", merged.anonymous);
+  sp.set("activity", merged.activity);
+  sp.set("sort", merged.sort);
+  sp.set("page", String(merged.page));
+  return `/users?${sp.toString()}`;
+}
+
+export function renderUserList(staff: StaffIdentity, params: UserListParams, list: UserList | null): string {
+  const opt = (value: string, label: string, current: string) =>
+    `<option value="${value}"${value === current ? " selected" : ""}>${escapeHtml(label)}</option>`;
+  const sel = (name: string, current: string, options: [string, string][]) =>
+    `<label>${escapeHtml(name)}<select name="${name}">${options.map(([v, l]) => opt(v, l, current)).join("")}</select></label>`;
+  const body = !list
+    ? `<div class="empty">Directory unavailable.</div>`
+    : list.rows.length
+      ? `<table class="grid"><thead><tr><th>User</th><th>Signed up</th><th>Providers</th><th>Readings</th></tr></thead><tbody>${list.rows
+          .map(
+            (r) =>
+              `<tr><td><a href="/users/${escapeHtml(r.id)}">${escapeHtml(r.nickname || r.name || r.id)}</a><br><span class="muted">${escapeHtml(r.email)}</span></td>` +
+              `<td>${escapeHtml(r.createdAt ? new Date(r.createdAt).toISOString().slice(0, 10) : "\u2014")}${r.emailVerified ? "" : " (unverified)"}${r.isAnonymous ? " (anon)" : ""}</td>` +
+              `<td>${escapeHtml(r.providers.join(", ") || "\u2014")}</td>` +
+              `<td>${r.readingCount}</td></tr>`,
+          )
+          .join("")}</tbody></table>
+      <div class="pager">${
+        list.page > 0 ? `<a href="${userListQuery(params, { page: list.page - 1 })}">\u2039 Newer</a>` : `<span class="muted">\u2039 Newer</span>`
+      }<span class="muted">Page ${list.page + 1} of ${list.pages} (${list.total} users)</span>${
+        list.page + 1 < list.pages ? `<a href="${userListQuery(params, { page: list.page + 1 })}">Older \u203a</a>` : `<span class="muted">Older \u203a</span>`
+      }</div>`
+      : `<div class="empty">No users match these filters.</div>`;
+  return shellChrome(
+    staff,
+    "Users",
+    "/users",
+    `<div class="top"><h1>Users</h1><small>${list ? `${list.total} total` : ""}</small></div>
+<form method="get" action="/users" class="search">
+<input type="search" name="q" placeholder="email, user id, or nickname">
+<button class="btn" type="submit">Search</button>
+</form>
+<form method="get" action="/users" class="filters">
+${sel("provider", params.provider, [["all", "All providers"], ["google", "Google"], ["line", "LINE"], ["credential", "Email + password"]])}
+${sel("verified", params.verified, [["all", "All"], ["yes", "Verified"], ["no", "Unverified"]])}
+${sel("anonymous", params.anonymous, [["all", "All"], ["yes", "Anonymous"], ["no", "Registered"]])}
+${sel("activity", params.activity, [["all", "All"], ["readers", "Has readings"], ["none", "No readings"]])}
+${sel("sort", params.sort, [["newest", "Newest first"], ["oldest", "Oldest first"], ["readings", "Most readings"]])}
+<button class="btn" type="submit">Apply</button>
+</form>
+<div class="card">${body}</div>`,
   );
 }
 
@@ -419,16 +621,23 @@ app.get("/", (c) => {
 
 // User lookup: any staff role can read. Search by email, id, or nickname.
 app.get("/users", async (c) => {
+  const staff = c.get("staff" as never) as StaffIdentity;
   const q = (c.req.query("q") ?? "").trim();
-  const hits = q && c.env?.DB ? await findUsers(c.env.DB, q).catch(() => []) : [];
-  return c.html(renderUserSearch(q, hits));
+  if (q) {
+    const hits = c.env?.DB ? await findUsers(c.env.DB, q).catch(() => []) : [];
+    return c.html(renderUserSearch(staff, q, hits));
+  }
+  const params = parseUserListParams((name) => c.req.query(name));
+  const list = c.env?.DB ? await listUsers(c.env.DB, params).catch(() => null) : null;
+  return c.html(renderUserList(staff, params, list));
 });
 
 app.get("/users/:id", async (c) => {
   const id = c.req.param("id");
   const detail = c.env?.DB ? await userDetail(c.env.DB, id).catch(() => null) : null;
   if (!detail) return c.text("No such user.", 404);
-  return c.html(renderUserDetail(detail));
+  const staff = c.get("staff" as never) as StaffIdentity;
+  return c.html(renderUserDetail(staff, detail));
 });
 
 app.notFound((c) => c.text("Not found.", 404));

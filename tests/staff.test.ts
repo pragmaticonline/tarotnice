@@ -1,10 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
+const STAFF = { subject: "s", email: "maew@pragmaticonline.com", role: "admin" as const };
 import app, {
   allowlistedRole,
   canAdmin,
   canMutate,
+  parseUserListParams,
   renderUserDetail,
+  renderUserList,
   renderUserSearch,
   shellPage,
   verifyAccessToken,
@@ -154,9 +157,9 @@ describe("staff worker guard and shell", () => {
   });
 
   it("user search renders the form, hits, and empty states", () => {
-    expect(renderUserSearch("", [])).toContain("Search by email, user id, or nickname.");
-    expect(renderUserSearch("nobody@example.com", [])).toContain("No users found.");
-    const html = renderUserSearch("maew", [
+    expect(renderUserSearch(STAFF, "", [])).toContain("Search by email, user id, or nickname.");
+    expect(renderUserSearch(STAFF, "nobody@example.com", [])).toContain("No users found.");
+    const html = renderUserSearch(STAFF, "maew", [
       { id: "u1", email: "maew@example.com", name: "Maew", nickname: "Maew" },
       { id: "u2", email: "x@example.com", name: "<b>X</b>", nickname: null },
     ]);
@@ -167,7 +170,7 @@ describe("staff worker guard and shell", () => {
   });
 
   it("user detail renders balance, readings, invite, and ledger", () => {
-    const html = renderUserDetail({
+    const html = renderUserDetail(STAFF, {
       id: "u1",
       email: "maew@example.com",
       name: "Maew",
@@ -201,8 +204,44 @@ describe("staff worker guard and shell", () => {
     expect(src).toContain('app.get("/users"');
     expect(src).toContain('app.get("/users/:id"');
     expect(src).toContain("findUsers");
+    expect(src).toContain("listUsers");
     expect(src).toContain("userDetail");
     expect(src).toContain("any staff role can read");
+  });
+
+  it("list params default safely and clamp the page", () => {
+    const blank = parseUserListParams(() => undefined);
+    expect(blank).toEqual({ provider: "all", verified: "all", anonymous: "all", activity: "all", sort: "newest", page: 0 });
+    const evil = parseUserListParams((n) => ({ provider: "drop", sort: "nope", page: "999999999" })[n]);
+    expect(evil.provider).toBe("all");
+    expect(evil.sort).toBe("newest");
+    expect(evil.page).toBe(0);
+    const second = parseUserListParams((n) => ({ page: "2", sort: "readings", verified: "YES " })[n]);
+    expect(second.page).toBe(2);
+    expect(second.sort).toBe("readings");
+    expect(second.verified).toBe("yes");
+  });
+
+  it("user list renders filters, table, and pagination preserving state", () => {
+    const params = { provider: "line", verified: "all", anonymous: "all", activity: "all", sort: "newest", page: 1 };
+    const html = renderUserList(STAFF, params, {
+      rows: [
+        { id: "u1", email: "maew@example.com", name: "Maew", nickname: "Mae<script>w", createdAt: Date.UTC(2026, 0, 2), emailVerified: true, isAnonymous: false, providers: ["line"], readingCount: 7 },
+      ],
+      page: 1,
+      pages: 3,
+      total: 41,
+    });
+    expect(html).toContain("Users");
+    expect(html).toContain('href="/users/u1"');
+    expect(html).toContain("Mae&lt;script&gt;w");
+    expect(html).toContain("Page 2 of 3 (41 users)");
+    expect(html).toContain("page=0");
+    expect(html).toContain("page=2");
+    expect(html).toContain("provider=line");
+    expect(html).not.toContain("<script>w");
+    const empty = renderUserList(STAFF, parseUserListParams(() => undefined), { rows: [], page: 0, pages: 1, total: 0 });
+    expect(empty).toContain("No users match these filters.");
   });
 
   it("worker verifies Access JWTs against team certs and gates on staff identity", () => {
