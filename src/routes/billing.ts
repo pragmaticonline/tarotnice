@@ -74,7 +74,7 @@ ${configured ? `<h2>${escapeHtml(d.packsTitle)}</h2>
 <p>${escapeHtml(d.redeemHint)}</p>
 <div class="redeem-row"><input id="redeem-code" maxlength="32" autocomplete="off" placeholder="NICE-XXXX"><button type="button" class="btn" id="redeem-apply">${escapeHtml(d.redeemBtn)}</button></div>
 <p class="line-redeem-note">${escapeHtml(fmt(d.lineRedeemCta, { n: LINE_WELCOME_BONUS_TOKENS }))}</p>
-<p><a href="https://lin.ee/sqKMO87" target="_blank" rel="noopener"><img src="https://scdn.line-apps.com/n/line_add_friends/btn/${opts.ui === "th" ? "th" : "en"}.png" alt="${escapeHtml(opts.ui === "th" ? "\u0e40\u0e1e\u0e34\u0e48\u0e21\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19" : "Add friend")}" height="36" border="0"></a></p>
+<p><a href="https://lin.ee/tMMzlAg" target="_blank" rel="noopener"><img src="https://scdn.line-apps.com/n/line_add_friends/btn/${opts.ui === "th" ? "th" : "en"}.png" alt="${escapeHtml(opts.ui === "th" ? "\u0e40\u0e1e\u0e34\u0e48\u0e21\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19" : "Add friend")}" height="36" border="0"></a></p>
 <p class="auth-err" id="redeem-msg" role="alert"></p>
 </section>
 <script>window.__tnRedeemStrings=${JSON.stringify({ ok: d.redeemOk, invalid: d.redeemInvalid, expired: d.redeemExpired, used: d.redeemUsed, own: d.redeemOwn })};window.__tnTxStrings=${JSON.stringify({ read: d.readThisReading, receipt: d.viewReceipt })};</script>

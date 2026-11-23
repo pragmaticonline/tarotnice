@@ -73,7 +73,7 @@ describe("LINE Messaging client", () => {
     expect(t("th").lineRedeemCta).toContain("{n}");
     const en = billingPage({ ui: "en", origin: "", env: {} as never, balance: 0, freeLeft: 0 });
     expect(en).toContain("get 5 free tokens right away");
-    expect(en).toContain("https://lin.ee/sqKMO87");
+    expect(en).toContain("https://lin.ee/tMMzlAg");
     expect(en).toContain("https://scdn.line-apps.com/n/line_add_friends/btn/en.png");
     expect(en).not.toContain("line-add-btn");
     const th = billingPage({ ui: "th", origin: "", env: {} as never, balance: 0, freeLeft: 0 });
