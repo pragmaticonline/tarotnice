@@ -317,3 +317,37 @@ export const stripeCustomers = sqliteTable("stripe_customers", {
   customerId: text("customer_id").notNull(),
   updatedAt: integer("updated_at").notNull(),
 });
+
+// Staff administration (separate staff worker, Cloudflare Access in
+// front). Roles mirror blognice: read_only < support < admin.
+export const staffUsers = sqliteTable("staff_users", {
+  subject: text("subject").primaryKey(),
+  email: text("email").notNull(),
+  role: text("role").default("read_only").notNull(),
+  active: integer("active").default(1).notNull(),
+  createdAt: integer("created_at").notNull(),
+  updatedAt: integer("updated_at").notNull(),
+});
+
+export const staffAuditEvents = sqliteTable(
+  "staff_audit_events",
+  {
+    id: text("id").primaryKey(),
+    occurredAt: integer("occurred_at").notNull(),
+    subject: text("subject").notNull(),
+    email: text("email").notNull(),
+    role: text("role").notNull(),
+    action: text("action").notNull(),
+    targetType: text("target_type").notNull(),
+    targetId: text("target_id").notNull(),
+    reason: text("reason"),
+    result: text("result").notNull(),
+    requestId: text("request_id"),
+    beforeJson: text("before_json"),
+    afterJson: text("after_json"),
+  },
+  (t) => ({
+    occurredIdx: index("idx_staff_audit_occurred").on(t.occurredAt),
+    targetIdx: index("idx_staff_audit_target").on(t.targetType, t.targetId, t.occurredAt),
+  }),
+);

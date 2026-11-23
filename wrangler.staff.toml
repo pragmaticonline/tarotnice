@@ -1,0 +1,24 @@
+# Staff administration worker (staff.tarotnice.com). Separate from the
+# public worker; Cloudflare Access sits in front and the worker verifies
+# the Access JWT itself (see src/staff.ts). Fill ACCESS_AUD with the AUD
+# of the Access application after creating it (dashboard: Zero Trust >
+# Access > Applications > staff.tarotnice.com), then deploy.
+name = "tarotnice-staff"
+main = "src/staff.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+routes = [
+  { pattern = "staff.tarotnice.com/*", zone_name = "tarotnice.com" },
+]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tarotnice"
+database_id = "f9f1502a-a15d-447c-84a3-a39c51440d01"
+migrations_dir = "drizzle"
+
+[vars]
+ACCESS_TEAM_DOMAIN = "https://pragmaticonline.cloudflareaccess.com"
+ACCESS_AUD = "11d7b4d70d2112e87263b21479e2f0ec4b16c4263fe994e018b6c918ff4a10b0"
+STAFF_ALLOWED_EMAILS = "ray@pragmaticonline.com,scott@pragmaticonline.com,maew@pragmaticonline.com,alex@pragmaticonline.com"
