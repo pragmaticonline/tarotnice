@@ -6,7 +6,11 @@ import app, {
   canAdmin,
   canMutate,
   parseGrantInput,
+  parseMergeInput,
   parseUserListParams,
+  renderMergeForm,
+  renderMergePreview,
+  renderStuckPage,
   renderUserDetail,
   renderUserList,
   renderUserSearch,
@@ -236,6 +240,60 @@ describe("staff worker guard and shell", () => {
     expect(src).toContain('reason: "refund"');
     expect(src).toContain("already_delivered");
     expect(src).toContain('status: "failed"');
+  });
+
+  it("merge input needs a target, a reason, and the retyped source email", () => {
+    expect(parseMergeInput({ target: "u2", reason: "dup", confirmEmail: "A@x.y" }, "a@x.y")).toEqual({
+      target: "u2",
+      reason: "dup",
+      confirmEmail: "A@x.y",
+    });
+    expect(parseMergeInput({ target: "", reason: "r", confirmEmail: "a@x.y" }, "a@x.y")).toHaveProperty("error");
+    expect(parseMergeInput({ target: "u2", reason: "", confirmEmail: "a@x.y" }, "a@x.y")).toHaveProperty("error");
+    expect(parseMergeInput({ target: "u2", reason: "r", confirmEmail: "wrong@x.y" }, "a@x.y")).toHaveProperty("error");
+    expect(parseMergeInput({ target: "u2", reason: "r", confirmEmail: "" }, "a@x.y")).toHaveProperty("error");
+  });
+
+  it("merge form and preview render both sides and the typed-email gate", () => {
+    const a = { id: "u1", email: "a@x.y", name: "A", nickname: null, providers: ["google"], createdAt: 1, emailVerified: true, isAnonymous: false, wallet: 10, dailyLeft: 0, readings: 2, dailies: 0, inviteCode: "NICE-AAAA", invitedBy: null, invited: 0, converted: 0, recentReadings: [], recentTx: [] };
+    const b = { ...a, id: "u2", email: "b@x.y", wallet: 5 };
+    const form = renderMergeForm(STAFF, a);
+    expect(form).toContain("a@x.y");
+    expect(form).toContain("deletes");
+    const preview = renderMergePreview(STAFF, a, b, "dup", "u2");
+    expect(preview).toContain("Confirm merge");
+    expect(preview).toContain("NICE-AAAA");
+    expect(preview).toContain("about 15 after");
+    expect(preview).toContain('name="confirmEmail"');
+    expect(preview).toContain("Merge and delete source");
+  });
+
+  it("stuck queue renders rows, checkboxes, and bulk action", () => {
+    const rows = [
+      { id: "r1", userId: "u1", email: "a@x.y", nickname: "A", day: "2026-11-19", topic: "love", lang: "th", model: "m", status: "drawn", createdAt: Date.now() - 10 * 60000, stuckMinutes: 10, charged: 5, refunded: false },
+      { id: "r2", userId: "u2", email: "b@x.y", nickname: null, day: "2026-11-19", topic: "work", lang: "en", model: "m", status: "failed", createdAt: Date.now() - 60000, stuckMinutes: 1, charged: 5, refunded: true },
+    ];
+    const html = renderStuckPage(STAFF, rows, { refunded: 2, failed: 1 });
+    expect(html).toContain("Stuck readings");
+    expect(html).toContain('value="r1"');
+    expect(html).not.toContain('value="r2"');
+    expect(html).toContain("refunded</span>");
+    expect(html).toContain("Refund selected");
+    expect(html).toContain("Refunded 2 reading(s)");
+    expect(renderStuckPage(STAFF, [])).toContain("queue is clear");
+  });
+
+  it("support grants are capped, merge/admin routes are admin-only, queue wired", () => {
+    const src = readFileSync(new URL("../src/staff.ts", import.meta.url), "utf8");
+    expect(src).toContain("SUPPORT_GRANT_CAP = 20");
+    expect(src).toContain("grant_cap_exceeded");
+    expect(src).toContain('app.post("/users/:id/merge"');
+    expect(src).toContain('app.get("/users/:id/merge"');
+    expect(src).toContain("mergeUsers");
+    expect(src).toContain("Admin role required.");
+    expect(src).toContain('app.get("/stuck"');
+    expect(src).toContain('app.post("/stuck/refund"');
+    expect(src).toContain("listStuckReadings");
   });
 
   it("lookup routes are read-only and wired to the stores", () => {

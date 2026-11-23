@@ -8,7 +8,24 @@ import { and, count, desc, eq, inArray, like, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { d1PrefsStore } from "./db/prefs-store";
 import { d1TarotStore } from "./db/tarot-store";
-import { account, readings, staffAuditEvents, staffUsers, user, userPrefs } from "./db/schema";
+import {
+  account,
+  badgeShares,
+  dailyDraws,
+  inviteCodes,
+  lineFriends,
+  readings,
+  redeemRedemptions,
+  session,
+  shares,
+  staffAuditEvents,
+  staffUsers,
+  stripeCustomers,
+  stripeEvents,
+  tokenLedger,
+  user,
+  userPrefs,
+} from "./db/schema";
 import { bangkokDay } from "./lib/bangkok";
 import { escapeHtml } from "./lib/html";
 import { inviteCodeFor, inviteLinkFor } from "./lib/invite";
@@ -337,6 +354,7 @@ export async function userDetail(db: D1Database, userId: string): Promise<StaffU
 const NAV_ITEMS: { href: string; label: string }[] = [
   { href: "/", label: "Overview" },
   { href: "/users", label: "Users" },
+  { href: "/stuck", label: "Stuck readings" },
 ];
 const NAV_SOON = ["Token grant", "Invite and referrals"];
 
@@ -418,7 +436,7 @@ ${kv("Readings", `${d.readings} readings \u00b7 ${d.dailies} dailies`)}
 ${kv("Invite code", `<b>${escapeHtml(d.inviteCode)}</b>`)}
 ${kv("Invited by", d.invitedBy ? escapeHtml(d.invitedBy) : "\u2014")}
 ${kv("Friends invited", `${d.invited} joined \u00b7 ${d.converted} converted`)}
-</table><p>${statusBadges}</p></div>
+</table><p>${statusBadges}</p>${staff.role === "admin" ? `<p><a href="/users/${escapeHtml(d.id)}/merge">Merge into another account</a></p>` : ""}</div>
 <div class="card"><h2 style="margin-top:0">Grant tokens</h2>
 ${notice?.grantError ? `<p class="muted">Grant failed: check the amount (1-1000) and include a reason.</p>` : ""}
 <form method="post" action="/users/${escapeHtml(d.id)}/grant" class="filters">
@@ -656,6 +674,9 @@ export async function recordAudit(
   });
 }
 
+/** Per-action grant cap for support staff; admins are unlimited. */
+export const SUPPORT_GRANT_CAP = 20;
+
 export type GrantInput = { amount: number; reason: string; note: string };
 
 async function readInput(c: {
@@ -715,6 +736,343 @@ async function walletOf(db: D1Database, userId: string): Promise<number> {
   return balance.wallet;
 }
 
+export type MergeInput = { target: string; reason: string; confirmEmail: string };
+
+/** Validate merge intent: a different target, a reason, and the source email retyped. */
+export function parseMergeInput(
+  body: { target?: unknown; reason?: unknown; confirmEmail?: unknown },
+  sourceEmail: string,
+): MergeInput | { error: string } {
+  const target = String(body.target ?? "").trim();
+  if (!target) return { error: "Pick the account to merge into (id or email)." };
+  const reason = String(body.reason ?? "").trim();
+  if (!reason) return { error: "A reason is required for every merge." };
+  if (reason.length > 500) return { error: "Reason is too long (max 500 characters)." };
+  const confirmEmail = String(body.confirmEmail ?? "").trim();
+  if (confirmEmail.toLowerCase() !== sourceEmail.trim().toLowerCase() || !confirmEmail) {
+    return { error: "Type the source account email exactly to confirm." };
+  }
+  return { target, reason, confirmEmail };
+}
+
+export type MergeReport = {
+  moved: Record<string, number>;
+  dropped: Record<string, number>;
+  makeup: number;
+  walletBeforeA: number;
+  walletBeforeB: number;
+  walletAfterB: number;
+};
+
+/**
+ * Merge duplicate A into keeper B, then delete A. Referrals are history
+ * and stay untouched. Tables with per-user unique rows keep B's copy;
+ * dropped ledger value returns to B as one makeup grant, so the merged
+ * balance is exactly A + B.
+ */
+export async function mergeUsers(db: D1Database, aId: string, bId: string): Promise<MergeReport> {
+  if (aId === bId) throw new Error("same_user");
+  const orm = drizzle(db);
+  const moved: Record<string, number> = {};
+  const dropped: Record<string, number> = {};
+  const bump = (m: Record<string, number>, k: string, n = 1) => {
+    m[k] = (m[k] ?? 0) + n;
+  };
+
+  const walletBeforeA = await walletOf(db, aId);
+  const walletBeforeB = await walletOf(db, bId);
+
+  // Simple reassignments: globally unique primary keys, no conflicts.
+  type IdRow = { id: string };
+  async function idsOf(ref: any, userCol: any): Promise<string[]> {
+    const rows = (await orm.select({ id: (ref as any).id }).from(ref).where(eq(userCol, aId)).catch(() => [])) as IdRow[];
+    return rows.map((r) => r.id);
+  }
+
+  async function moveById(tableName: string, ref: any, idCol: any): Promise<void> {
+    for (const id of await idsOf(ref, (ref as any).userId)) {
+      try {
+        await orm.update(ref).set({ userId: bId }).where(eq(idCol, id));
+        bump(moved, tableName);
+      } catch {
+        bump(dropped, tableName);
+      }
+    }
+  }
+
+  await moveById("readings", readings, readings.id);
+  await moveById("badge_shares", badgeShares, badgeShares.shareId);
+  await moveById("shares", shares, shares.id);
+  await moveById("stripe_events", stripeEvents, stripeEvents.id);
+
+  // redeem_redemptions: unique (code, user) — drop A's when B already has it.
+  for (const id of await idsOf(redeemRedemptions, redeemRedemptions.userId)) {
+    try {
+      await orm.update(redeemRedemptions).set({ userId: bId }).where(eq(redeemRedemptions.id, id));
+      bump(moved, "redeem_redemptions");
+    } catch {
+      await orm.delete(redeemRedemptions).where(eq(redeemRedemptions.id, id)).catch(() => {});
+      bump(dropped, "redeem_redemptions");
+    }
+  }
+
+  // daily_draws: unique (user, day) — drop A's day when B drew the same day.
+  {
+    const rows = (await orm
+      .select({ day: dailyDraws.bangkokDay })
+      .from(dailyDraws)
+      .where(eq(dailyDraws.userId, aId))
+      .catch(() => [])) as { day: string }[];
+    for (const r of rows) {
+      try {
+        await orm
+          .update(dailyDraws)
+          .set({ userId: bId })
+          .where(and(eq(dailyDraws.userId, aId), eq(dailyDraws.bangkokDay, r.day)));
+        bump(moved, "daily_draws");
+      } catch {
+        await orm
+          .delete(dailyDraws)
+          .where(and(eq(dailyDraws.userId, aId), eq(dailyDraws.bangkokDay, r.day)))
+          .catch(() => {});
+        bump(dropped, "daily_draws");
+      }
+    }
+  }
+
+  // lineFriends: PK is the LINE id — just reassign.
+  await moveById("line_friends", lineFriends, lineFriends.lineUserId);
+
+  // Ledger: PK id, unique (user, reason, ref). Dropped value comes back
+  // as one makeup grant so B's balance still grows by exactly A's.
+  let droppedSum = 0;
+  {
+    const rows = (await orm
+      .select({ id: tokenLedger.id, delta: tokenLedger.delta })
+      .from(tokenLedger)
+      .where(eq(tokenLedger.userId, aId))
+      .catch(() => [])) as { id: string; delta: number }[];
+    for (const r of rows) {
+      try {
+        await orm.update(tokenLedger).set({ userId: bId }).where(eq(tokenLedger.id, r.id));
+        bump(moved, "token_ledger");
+      } catch {
+        await orm.delete(tokenLedger).where(eq(tokenLedger.id, r.id)).catch(() => {});
+        droppedSum += r.delta;
+        bump(dropped, "token_ledger");
+      }
+    }
+  }
+
+  // Per-user singletons: keep B's copy, drop A's.
+  for (const [tableName, ref] of [["user_prefs", userPrefs], ["invite_codes", inviteCodes], ["stripe_customers", stripeCustomers]] as const) {
+    const hasB = (
+      (await orm.select({ id: (ref as any).userId }).from(ref).where(eq((ref as any).userId, bId)).limit(1).catch(() => [])) as unknown[]
+    ).length > 0;
+    if (hasB) {
+      await orm.delete(ref).where(eq((ref as any).userId, aId)).catch(() => {});
+      bump(dropped, tableName);
+    } else {
+      await orm.update(ref).set({ userId: bId }).where(eq((ref as any).userId, aId)).catch(() => {});
+      bump(moved, tableName);
+    }
+  }
+
+  // Providers: move A's logins except ones B already linked.
+  {
+    const bProviders = new Set(
+      ((await orm.select({ providerId: account.providerId }).from(account).where(eq(account.userId, bId)).catch(() => [])) as { providerId: string }[]).map(
+        (r) => r.providerId,
+      ),
+    );
+    const aRows = (await orm
+      .select({ id: account.id, providerId: account.providerId })
+      .from(account)
+      .where(eq(account.userId, aId))
+      .catch(() => [])) as { id: string; providerId: string }[];
+    for (const r of aRows) {
+      if (bProviders.has(r.providerId)) {
+        await orm.delete(account).where(eq(account.id, r.id)).catch(() => {});
+        bump(dropped, "account");
+      } else {
+        await orm.update(account).set({ userId: bId }).where(eq(account.id, r.id)).catch(() => {});
+        bump(moved, "account");
+      }
+    }
+  }
+
+  // A's sessions die with the merge; A must not stay signed in anywhere.
+  await orm.delete(session).where(eq(session.userId, aId)).catch(() => {});
+  // Delete A's row last, after every child moved away or dropped.
+  await orm.delete(user).where(eq(user.id, aId));
+
+  let makeup = 0;
+  if (droppedSum !== 0) {
+    const ok = await d1TarotStore(db)
+      .postLedger({ userId: bId, delta: droppedSum, reason: "staff_grant", ref: `merge-makeup:${aId}`, day: bangkokDay() })
+      .catch(() => false);
+    if (ok) makeup = droppedSum;
+  }
+
+  const walletAfterB = await walletOf(db, bId);
+  return { moved, dropped, makeup, walletBeforeA, walletBeforeB, walletAfterB };
+}
+
+export function renderMergeForm(staff: StaffIdentity, d: StaffUserDetail): string {
+  return shellChrome(
+    staff,
+    `Merge ${d.nickname ?? d.email}`,
+    "/users",
+    `<div class="top"><h1>Merge into another account</h1><small>source: ${escapeHtml(d.email)} \u00b7 ${escapeHtml(d.id)}</small></div>
+<div class="card"><p>This moves everything from <b>${escapeHtml(d.email)}</b> into the keeper account, then <b>deletes</b> this row. Referral history stays untouched.</p>
+<form method="get" action="/users/${escapeHtml(d.id)}/merge" class="filters">
+<label>Keeper account (id or email)<input type="text" name="target" required placeholder="user id or email"></label>
+<label>Reason (required)<input type="text" name="reason" required maxlength="500" placeholder="Why merge these accounts?"></label>
+<button class="btn" type="submit">Preview merge</button>
+</form></div>`,
+  );
+}
+
+export function renderMergePreview(
+  staff: StaffIdentity,
+  a: StaffUserDetail,
+  b: StaffUserDetail,
+  reason: string,
+  targetRaw: string,
+): string {
+  const row = (k: string, x: string, y: string) => `<tr><th>${escapeHtml(k)}</th><td>${x}</td><td>${y}</td></tr>`;
+  const cell = (d: StaffUserDetail) =>
+    `${escapeHtml(d.nickname ?? d.name)}<br><span class="muted">${escapeHtml(d.email)}<br>${escapeHtml(d.id)}</span>`;
+  return shellChrome(
+    staff,
+    `Confirm merge`,
+    "/users",
+    `<div class="top"><h1>Confirm merge</h1><small>irreversible: the source row is deleted</small></div>
+<div class="card"><table><thead><tr><th></th><th>Source (deleted after)</th><th>Keeper</th></tr></thead><tbody>
+${row("Account", cell(a), cell(b))}
+${row("Providers", escapeHtml(a.providers.join(", ") || "\u2014"), escapeHtml(b.providers.join(", ") || "\u2014"))}
+${row("Wallet", `${a.wallet} tokens`, `${b.wallet} tokens \u2192 about ${a.wallet + b.wallet} after`)}
+${row("Readings", `${a.readings}`, `${b.readings}`)}
+${row("Invite code", escapeHtml(a.inviteCode), escapeHtml(b.inviteCode))}
+</tbody></table>
+<p><span class="muted">Reason:</span> ${escapeHtml(reason)}</p>
+<form method="post" action="/users/${escapeHtml(a.id)}/merge" class="filters">
+<input type="hidden" name="target" value="${escapeHtml(targetRaw)}">
+<input type="hidden" name="reason" value="${escapeHtml(reason)}">
+<label>Type the source email to confirm<input type="text" name="confirmEmail" required autocomplete="off" placeholder="${escapeHtml(a.email)}"></label>
+<button class="btn" type="submit">Merge and delete source</button>
+</form></div>`,
+  );
+}
+
+export type StuckReading = {
+  id: string;
+  userId: string;
+  email: string;
+  nickname: string | null;
+  day: string;
+  topic: string;
+  lang: string;
+  model: string | null;
+  status: string;
+  createdAt: number;
+  stuckMinutes: number;
+  charged: number;
+  refunded: boolean;
+};
+
+const STUCK_AFTER_MS = 2 * 60 * 1000;
+const FAILED_WINDOW_MS = 7 * 24 * 3600 * 1000;
+
+/** Safety-net queue: drawn readings stuck past 2 minutes, plus recent failures. */
+export async function listStuckReadings(db: D1Database, now = Date.now()): Promise<StuckReading[]> {
+  const orm = drizzle(db);
+  const cutoff = now - STUCK_AFTER_MS;
+  const rows = (await orm
+    .select({
+      id: readings.id,
+      userId: readings.userId,
+      day: readings.bangkokDay,
+      topic: readings.topic,
+      lang: readings.lang,
+      model: readings.model,
+      status: readings.status,
+      createdAt: readings.createdAt,
+    })
+    .from(readings)
+    .where(
+      sql`(${readings.status} = 'drawn' and ${readings.createdAt} < ${cutoff}) or (${readings.status} = 'failed' and ${readings.createdAt} > ${now - FAILED_WINDOW_MS})`,
+    )
+    .orderBy(sql`${readings.createdAt} ASC`)
+    .limit(100)
+    .catch(() => [])) as {
+    id: string; userId: string; day: string; topic: string; lang: string;
+    model: string | null; status: string; createdAt: number;
+  }[];
+  if (!rows.length) return [];
+  const ids = [...new Set(rows.map((r) => r.id))];
+  const userIds = [...new Set(rows.map((r) => r.userId))];
+  const [users, prefs, spends, refunds] = await Promise.all([
+    orm.select({ id: user.id, email: user.email }).from(user).where(inArray(user.id, userIds)).catch(() => [] as { id: string; email: string }[]),
+    orm.select({ userId: userPrefs.userId, nickname: userPrefs.nickname }).from(userPrefs).where(inArray(userPrefs.userId, userIds)).catch(() => [] as { userId: string; nickname: string | null }[]),
+    orm.select({ ref: tokenLedger.ref, delta: tokenLedger.delta }).from(tokenLedger).where(and(eq(tokenLedger.reason, "reading"), inArray(tokenLedger.ref, ids))).catch(() => [] as { ref: string; delta: number }[]),
+    orm.select({ ref: tokenLedger.ref }).from(tokenLedger).where(and(eq(tokenLedger.reason, "refund"), inArray(tokenLedger.ref, ids))).catch(() => [] as { ref: string }[]),
+  ]);
+  const emailById = new Map(users.map((u) => [u.id, u.email]));
+  const nickById = new Map(prefs.map((r) => [r.userId, r.nickname]));
+  const chargedByRef = new Map(spends.map((r) => [r.ref, r.delta]));
+  const refundedRefs = new Set(refunds.map((r) => r.ref));
+  return rows.map((r) => ({
+    id: r.id,
+    userId: r.userId,
+    email: emailById.get(r.userId) ?? r.userId,
+    nickname: nickById.get(r.userId) ?? null,
+    day: r.day,
+    topic: r.topic,
+    lang: r.lang,
+    model: r.model,
+    status: r.status,
+    createdAt: r.createdAt,
+    stuckMinutes: Math.max(0, Math.floor((now - r.createdAt) / 60000)),
+    charged: -(chargedByRef.get(r.id) ?? 0),
+    refunded: refundedRefs.has(r.id),
+  }));
+}
+
+export function renderStuckPage(
+  staff: StaffIdentity,
+  rows: StuckReading[],
+  notice?: { refunded?: number; failed?: number },
+): string {
+  const fmtDate = (ms: number) => (ms ? new Date(ms).toISOString().slice(0, 16).replace("T", " ") : "\u2014");
+  const body = rows.length
+    ? `<form method="post" action="/stuck/refund"><table><thead><tr><th></th><th>User</th><th>When (UTC)</th><th>Stuck</th><th>Lang</th><th>Topic</th><th>Charged</th><th>Status</th><th></th></tr></thead><tbody>${rows
+        .map(
+          (r) =>
+            `<tr><td>${r.status === "drawn" && !r.refunded ? `<input type="checkbox" name="ids" value="${escapeHtml(r.id)}">` : ""}</td>` +
+            `<td><a href="/users/${escapeHtml(r.userId)}">${escapeHtml(r.nickname ?? r.email)}</a></td>` +
+            `<td>${escapeHtml(fmtDate(r.createdAt))}</td>` +
+            `<td>${r.stuckMinutes}m</td>` +
+            `<td>${escapeHtml(r.lang)}</td>` +
+            `<td>${escapeHtml(r.topic)}</td>` +
+            `<td>${r.charged}</td>` +
+            `<td>${escapeHtml(r.status)}${r.refunded ? ' <span class="badge">refunded</span>' : ""}</td>` +
+            `<td>${r.refunded ? "" : `<a href="/users/${escapeHtml(r.userId)}">open</a>`}</td></tr>`,
+        )
+        .join("")}</tbody></table>
+<div class="filters"><label>Reason (required)<input type="text" name="reason" required maxlength="500" placeholder="Why are these refunded?"></label><button class="btn" type="submit">Refund selected</button></div></form>`
+    : `<div class="empty">No stuck readings. The queue is clear.</div>`;
+  const note = notice
+    ? `<div class="card"><p class="muted">Refunded ${notice.refunded ?? 0} reading(s)${notice.failed ? `, ${notice.failed} failed` : ""}.</p></div>`
+    : "";
+  return shellChrome(
+    staff,
+    "Stuck readings",
+    "/stuck",
+    `<div class="top"><h1>Stuck readings</h1><small>drawn &gt; 2 min old, failures from the last 7 days</small></div>${note}<div class="card">${body}</div>`,
+  );
+}
+
 const app = new Hono<{ Bindings: StaffEnv }>();
 
 app.get("/health", (c) => c.json({ ok: true, service: "tarotnice-staff" }));
@@ -767,6 +1125,18 @@ app.post("/users/:id/grant", async (c) => {
   const userId = c.req.param("id");
   const body = await readInput(c as never);
   const parsed = parseGrantInput(body);
+  if (!("error" in parsed) && !canAdmin(staff) && parsed.amount > SUPPORT_GRANT_CAP) {
+    await recordAudit(c.env.DB, staff, {
+      action: "token.grant",
+      targetType: "user",
+      targetId: userId,
+      reason: parsed.reason,
+      result: "denied",
+      before: { amount: parsed.amount, cap: SUPPORT_GRANT_CAP },
+    }).catch(() => {});
+    if (wantsJson(c)) return c.json({ error: "grant_cap_exceeded" }, 403);
+    return c.redirect(`/users/${encodeURIComponent(userId)}?grantError=1`, 302);
+  }
   if ("error" in parsed) {
     if (wantsJson(c)) return c.json({ error: parsed.error }, 400);
     return c.redirect(`/users/${encodeURIComponent(userId)}?grantError=1`, 302);
@@ -808,6 +1178,53 @@ app.post("/users/:id/grant", async (c) => {
   return c.json({ ok: true, granted: parsed.amount, wallet: after });
 });
 
+export type RefundResult =
+  | { ok: true; refunded: number; wallet: number }
+  | { ok: true; alreadyRefunded: true }
+  | { error: "unknown_reading" | "already_delivered" };
+
+/** Refund one undelivered reading: +5 tokens linked to the reading,
+ *  reading marked failed. Idempotent per reading. */
+export async function refundReading(
+  db: D1Database,
+  staff: StaffIdentity,
+  userId: string,
+  readingId: string,
+  reason: string,
+): Promise<RefundResult> {
+  const store = d1TarotStore(db);
+  const reading = await store.getReading(readingId).catch(() => null);
+  if (!reading || reading.userId !== userId) return { error: "unknown_reading" };
+  if (reading.status === "complete") {
+    await recordAudit(db, staff, {
+      action: "reading.refund",
+      targetType: "reading",
+      targetId: readingId,
+      reason,
+      result: "denied",
+      before: { status: reading.status },
+    }).catch(() => {});
+    return { error: "already_delivered" };
+  }
+  const before = await walletOf(db, userId);
+  const granted = await store
+    .postLedger({ userId, delta: TOKENS_PER_QUESTION, reason: "refund", ref: readingId, day: bangkokDay() })
+    .catch(() => false);
+  if (!granted) return { ok: true, alreadyRefunded: true };
+  await store.setReadingResult(readingId, { aiText: "", aiSummary: "", model: "", status: "failed" }).catch(() => {});
+  const after = await walletOf(db, userId);
+  await recordAudit(db, staff, {
+    action: "reading.refund",
+    targetType: "reading",
+    targetId: readingId,
+    reason,
+    result: "ok",
+    before: { status: reading.status, wallet: before },
+    after: { status: "failed", wallet: after, refunded: TOKENS_PER_QUESTION },
+  }).catch(() => {});
+  return { ok: true, refunded: TOKENS_PER_QUESTION, wallet: after };
+}
+
 // Refund one reading (support+). Only undelivered readings (drawn/failed)
 // can be refunded; delivered readings are refused. Idempotent per reading.
 app.post("/users/:id/readings/:readingId/refund", async (c) => {
@@ -822,51 +1239,144 @@ app.post("/users/:id/readings/:readingId/refund", async (c) => {
     return c.redirect(`/users/${encodeURIComponent(userId)}?refundError=1`, 302);
   }
   if (!c.env?.DB) return c.json({ error: "unavailable" }, 503);
-  const store = d1TarotStore(c.env.DB);
-  const reading = await store.getReading(readingId).catch(() => null);
-  if (!reading || reading.userId !== userId) {
-    if (wantsJson(c)) return c.json({ error: "unknown_reading" }, 404);
-    return c.text("No such reading.", 404);
+  const result = await refundReading(c.env.DB, staff, userId, readingId, reason);
+  if ("error" in result) {
+    if (wantsJson(c)) return c.json({ error: result.error }, result.error === "unknown_reading" ? 404 : 409);
+    return result.error === "unknown_reading"
+      ? c.text("No such reading.", 404)
+      : c.redirect(`/users/${encodeURIComponent(userId)}?refundError=1`, 302);
   }
-  if (reading.status === "complete") {
-    await recordAudit(c.env.DB, staff, {
-      action: "reading.refund",
-      targetType: "reading",
-      targetId: readingId,
-      reason,
-      result: "denied",
-      before: { status: reading.status },
-    }).catch(() => {});
-    if (wantsJson(c)) return c.json({ error: "already_delivered" }, 409);
-    return c.redirect(`/users/${encodeURIComponent(userId)}?refundError=1`, 302);
-  }
-  const before = await walletOf(c.env.DB, userId);
-  const granted = await store
-    .postLedger({
-      userId,
-      delta: TOKENS_PER_QUESTION,
-      reason: "refund",
-      ref: readingId,
-      day: bangkokDay(),
-    })
-    .catch(() => false);
-  if (!granted) {
-    if (wantsJson(c)) return c.json({ ok: true, alreadyRefunded: true });
-    return c.redirect(`/users/${encodeURIComponent(userId)}`, 302);
-  }
-  await store.setReadingResult(readingId, { aiText: "", aiSummary: "", model: "", status: "failed" }).catch(() => {});
-  const after = await walletOf(c.env.DB, userId);
-  await recordAudit(c.env.DB, staff, {
-    action: "reading.refund",
-    targetType: "reading",
-    targetId: readingId,
-    reason,
-    result: "ok",
-    before: { status: reading.status, wallet: before },
-    after: { status: "failed", wallet: after, refunded: TOKENS_PER_QUESTION },
-  }).catch(() => {});
   if (!wantsJson(c)) return c.redirect(`/users/${encodeURIComponent(userId)}`, 302);
-  return c.json({ ok: true, refunded: TOKENS_PER_QUESTION, wallet: after });
+  return c.json({ ok: true, refunded: (result as { refunded?: number }).refunded ?? 0, alreadyRefunded: (result as { alreadyRefunded?: boolean }).alreadyRefunded ?? false });
+});
+
+// Merge duplicates (admin only). GET shows the form, or the preview
+// when ?target=&reason= are present; POST executes after the source
+// email is retyped. The source row is deleted; referrals stay as history.
+app.get("/users/:id/merge", async (c) => {
+  const staff = c.get("staff" as never) as StaffIdentity;
+  if (!canAdmin(staff)) return c.text("Admin role required.", 403);
+  if (!c.env?.DB) return c.text("No such user.", 404);
+  const a = await userDetail(c.env.DB, c.req.param("id")).catch(() => null);
+  if (!a) return c.text("No such user.", 404);
+  const target = (c.req.query("target") ?? "").trim();
+  const reason = (c.req.query("reason") ?? "").trim();
+  if (!target || !reason) return c.html(renderMergeForm(staff, a));
+  const bId = await resolveMergeTarget(c.env.DB, target);
+  if (!bId) return c.html(renderMergeForm(staff, a));
+  if (bId === a.id) return c.text("Source and keeper are the same account.", 400);
+  const b = await userDetail(c.env.DB, bId).catch(() => null);
+  if (!b) return c.text("No such user.", 404);
+  if (b.isAnonymous) return c.text("The keeper account must be registered.", 400);
+  return c.html(renderMergePreview(staff, a, b, reason, target));
+});
+
+app.post("/users/:id/merge", async (c) => {
+  const staff = c.get("staff" as never) as StaffIdentity;
+  if (!canAdmin(staff)) return c.text("Admin role required.", 403);
+  if (!c.env?.DB) return c.text("No such user.", 404);
+  const a = await userDetail(c.env.DB, c.req.param("id")).catch(() => null);
+  if (!a) return c.text("No such user.", 404);
+  const body = await readInput(c as never);
+  const parsed = parseMergeInput(body, a.email);
+  if ("error" in parsed) {
+    if (wantsJson(c)) return c.json({ error: parsed.error }, 400);
+    return c.text(parsed.error, 400);
+  }
+  const bId = await resolveMergeTarget(c.env.DB, parsed.target);
+  if (!bId) {
+    if (wantsJson(c)) return c.json({ error: "unknown_target" }, 404);
+    return c.text("Keeper account not found (use an exact id or email).", 404);
+  }
+  if (bId === a.id) {
+    if (wantsJson(c)) return c.json({ error: "same_user" }, 400);
+    return c.text("Source and keeper are the same account.", 400);
+  }
+  const b = await userDetail(c.env.DB, bId).catch(() => null);
+  if (!b || b.isAnonymous) {
+    if (wantsJson(c)) return c.json({ error: "bad_target" }, 400);
+    return c.text("The keeper account must be a registered user.", 400);
+  }
+  let report;
+  try {
+    report = await mergeUsers(c.env.DB, a.id, bId);
+  } catch (err) {
+    await recordAudit(c.env.DB, staff, {
+      action: "account.merge",
+      targetType: "user",
+      targetId: `${a.id}->${bId}`,
+      reason: parsed.reason,
+      result: "failed",
+      before: { source: a.id },
+    }).catch(() => {});
+    if (wantsJson(c)) return c.json({ error: "merge_failed" }, 500);
+    return c.text("Merge failed partway; check both accounts before retrying.", 500);
+  }
+  await recordAudit(c.env.DB, staff, {
+    action: "account.merge",
+    targetType: "user",
+    targetId: `${a.id}->${bId}`,
+    reason: parsed.reason,
+    result: "ok",
+    before: { source: a, keeper: { id: b.id, wallet: report.walletBeforeB } },
+    after: { moved: report.moved, dropped: report.dropped, makeup: report.makeup, wallet: report.walletAfterB },
+  }).catch(() => {});
+  if (wantsJson(c)) return c.json({ ok: true, keeper: bId, report });
+  return c.redirect(`/users/${encodeURIComponent(bId)}`, 302);
+});
+
+/** Resolve a merge target (exact id, or exact email) to a user id. */
+async function resolveMergeTarget(db: D1Database, target: string): Promise<string | null> {
+  const q = target.trim();
+  if (!q) return null;
+  if (!q.includes("@")) {
+    const d = await userDetail(db, q).catch(() => null);
+    return d ? d.id : null;
+  }
+  const hits = await findUsers(db, q).catch(() => []);
+  if (hits.length === 1) return hits[0].id;
+  const exact = hits.filter((h) => h.email.toLowerCase() === q.toLowerCase());
+  return exact.length === 1 ? exact[0].id : null;
+}
+
+// Stuck-reading safety net (read for all staff; refunds need support+).
+app.get("/stuck", async (c) => {
+  const staff = c.get("staff" as never) as StaffIdentity;
+  const rows = c.env?.DB ? await listStuckReadings(c.env.DB).catch(() => []) : [];
+  return c.html(
+    renderStuckPage(staff, rows, {
+      refunded: c.req.query("refunded") ? Number(c.req.query("refunded")) : undefined,
+      failed: c.req.query("failed") ? Number(c.req.query("failed")) : undefined,
+    }),
+  );
+});
+
+app.post("/stuck/refund", async (c) => {
+  const staff = c.get("staff" as never) as StaffIdentity;
+  if (!canMutate(staff)) return c.text("Support role or above required.", 403);
+  if (!c.env?.DB) return c.text("No such reading.", 404);
+  const body = await readInput(c as never);
+  const rawIds = body.ids;
+  const ids = (Array.isArray(rawIds) ? rawIds : rawIds === undefined ? [] : [rawIds]).map(String).filter(Boolean);
+  const reason = String(body.reason ?? "").trim();
+  if (!ids.length || !reason) {
+    if (wantsJson(c)) return c.json({ error: "ids_and_reason_required" }, 400);
+    return c.redirect("/stuck?failed=1", 302);
+  }
+  let refunded = 0;
+  let failed = 0;
+  for (const id of ids.slice(0, 100)) {
+    const reading = await d1TarotStore(c.env.DB).getReading(id).catch(() => null);
+    if (!reading) {
+      failed += 1;
+      continue;
+    }
+    const result = await refundReading(c.env.DB, staff, reading.userId, id, reason);
+    if ("error" in result) failed += 1;
+    else refunded += 1;
+  }
+  if (wantsJson(c)) return c.json({ ok: true, refunded, failed });
+  return c.redirect(`/stuck?refunded=${refunded}&failed=${failed}`, 302);
 });
 
 app.notFound((c) => c.text("Not found.", 404));
