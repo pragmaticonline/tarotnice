@@ -947,6 +947,10 @@ app.get("/r/:shareId", async (c) => {
       }),
     );
   }
+  // Anything shaped like an invite-code attempt (NICE-…) that did not
+  // resolve above is invalid or expired: send the visitor to sign up,
+  // never to an error page.
+  if (isInviteAttempt(shareId)) return c.redirect("/register", 302);
   if (!isShareId(shareId) || !c.env?.DB) return c.html(unsharedPage(origin, ui), 410);
   const store = d1TarotStore(c.env.DB);
   const row = await store.getReadingByShare(shareId);
@@ -969,6 +973,13 @@ app.get("/r/:shareId", async (c) => {
     }),
   );
 });
+
+// Anything shaped like an invite-code attempt (NICE-…) that did not
+// resolve in the /r/ handler above is invalid or expired: those visitors
+// go to sign up, never to an error page.
+export function isInviteAttempt(v: unknown): boolean {
+  return typeof v === "string" && /^nice-/i.test(v.trim());
+}
 
 app.get("/d/:shareId", async (c) => {
   const ui = requestUiLang(c);

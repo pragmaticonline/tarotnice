@@ -51,7 +51,7 @@ const STYLE = `<style>
 .inv-opt small{display:block;font-weight:400;opacity:.75}
 .inv-gold{display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;height:52px;padding:0 20px;box-sizing:border-box;border:1px solid #b0832f;border-radius:12px;background:linear-gradient(135deg,#f6e2b0 0%,#e2bf72 100%);color:#2e2547;font-size:16px;font-weight:600;box-shadow:0 4px 14px rgba(176,131,47,.28);cursor:pointer;font-family:inherit;white-space:nowrap}
 .inv-gold svg{flex:none}
-@media(max-width:400px){.inv-gold{font-size:15px;gap:8px;padding:0 12px}}
+@media(max-width:400px){.inv-gold{font-size:13px;gap:6px;padding:0 8px}}
 .inv-err{color:#b3261e;min-height:1.4em;margin:0;font-size:.95rem;line-height:1.5}
 .inv-note{font-size:13px;color:#6b5f85;text-align:center;margin:0;line-height:1.55}
 .inv-alt{margin:0;text-align:center;color:#4a4062}

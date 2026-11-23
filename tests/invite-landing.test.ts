@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
+import app, { isInviteAttempt } from "../src/index";
 import { inviteLandingPage } from "../src/routes/invite-landing";
 import { INVITE_REF_COOKIE_DAYS } from "../src/lib/invite";
 import { REFERRAL_FRIEND_BONUS_TOKENS, WELCOME_TOKENS } from "../src/lib/wallet";
@@ -106,5 +107,16 @@ describe("invite landing (spec copy and layout)", () => {
     const src = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
     expect(src).toContain('if (!ownerId) return c.redirect("/register", 302);');
     expect(src).toContain("inviteLandingPage({");
+  });
+
+  it("malformed invite attempts go to /register, other garbage still 410s", async () => {
+    expect(isInviteAttempt("NICE-ABC")).toBe(true);
+    expect(isInviteAttempt("nice-ef7j")).toBe(true);
+    expect(isInviteAttempt("AbC123XyZ9")).toBe(false);
+    expect(isInviteAttempt("nope")).toBe(false);
+    const bad = await app.request("/r/NICE-ABC");
+    expect(bad.status).toBe(302);
+    expect(bad.headers.get("location")).toBe("/register");
+    expect((await app.request("/r/nope")).status).toBe(410);
   });
 });
