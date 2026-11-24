@@ -1706,8 +1706,8 @@ app.get("/progress", async (c) => {
     msRow("first-reading", "\u2605", d.mjFirstReading, stats.readings, 1, "mjLeftR"),
     msRow("five-readings", "\u2605", d.mjFiveReadings, stats.readings, 5, "mjLeftR"),
     ...[3, 7, 14, 30, 100].map((n) =>
-      msRow(`streak-${n}`, "\U0001F525", fmt(d.mjStreakN, { n }), streak.longest, n, "mjLeftD")),
-    msRow("full-deck", "\U0001F0A0", d.mjFullDeck, ownedDaily.length, 78, "mjLeftC"),
+      msRow(`streak-${n}`, "\ud83d\udd25", fmt(d.mjStreakN, { n }), streak.longest, n, "mjLeftD")),
+    msRow("full-deck", "\ud83c\udca0", d.mjFullDeck, ownedDaily.length, 78, "mjLeftC"),
   ];
   // The grid always covers the labelled month (from its 1st to its
   // last day), navigable with ?month=YYYY-MM. A trailing window no

@@ -207,8 +207,8 @@ describe("progressPage", () => {
     owned: [0, 1], cardNames, cardImage, suitFilter: "all",
     invite: { code: "NICE-TEST", link: "https://tarotnice.com/r/NICE-TEST", invited: 2, converted: 1, earned: 5, rewardToday: 1, rewardCap: 3 },
     milestones: [
-      { key: "streak-7", icon: "\U0001F525", label: "7-day streak", sub: "2 days to go", pct: 71, done: false },
-      { key: "full-deck", icon: "\U0001F0A0", label: "Full deck: 78 cards", sub: "Achieved", pct: 100, done: true },
+      { key: "streak-7", icon: "\ud83d\udd25", label: "7-day streak", sub: "2 days to go", pct: 71, done: false },
+      { key: "full-deck", icon: "\ud83c\udca0", label: "Full deck: 78 cards", sub: "Achieved", pct: 100, done: true },
     ],
     readings: 5,
     checkin: { claimedToday: false, total: 0, week: [] as never[] },
@@ -240,6 +240,8 @@ describe("progressPage", () => {
     expect(html).toContain(">2</b> / 78");
     expect(html).toContain("Milestones");
     expect(html).toContain("7-day streak");
+    expect(html).toContain("\ud83d\udd25");
+    expect(html).not.toContain("U0001F525");
     expect(html).toContain("Invite friends");
     expect(html).toContain("NICE-TEST");
     expect(html).toContain("https://social-plugins.line.me/lineit/share?url=");
@@ -318,9 +320,9 @@ describe("spec milestones (M2)", () => {
       entries: [], owned: [0], cardNames: { 0: "The Fool" }, cardImage: { 0: "/static/cards/major-00.webp" }, suitFilter: "all",
       invite: { code: "NICE-T", link: "https://tarotnice.com/r/NICE-T", invited: 0, converted: 0, earned: 0, rewardToday: 0, rewardCap: 3 },
       milestones: [
-        { key: "streak-3", icon: "\U0001F525", label: "3-day streak", sub: "Achieved", pct: 100, done: true },
-        { key: "streak-14", icon: "\U0001F525", label: "14-day streak", sub: "5 days to go", pct: 64, done: false },
-        { key: "full-deck", icon: "\U0001F0A0", label: "Full deck: 78 cards", sub: "77 cards to go", pct: 1, done: false },
+        { key: "streak-3", icon: "\ud83d\udd25", label: "3-day streak", sub: "Achieved", pct: 100, done: true },
+        { key: "streak-14", icon: "\ud83d\udd25", label: "14-day streak", sub: "5 days to go", pct: 64, done: false },
+        { key: "full-deck", icon: "\ud83c\udca0", label: "Full deck: 78 cards", sub: "77 cards to go", pct: 1, done: false },
       ],
       readings: 3,
       checkin: { claimedToday: false, total: 0, week: [] },
