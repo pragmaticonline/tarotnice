@@ -100,6 +100,42 @@
     m.setAttribute("aria-hidden", "true");
     m.innerHTML = MOUSE_SVG;
     guide.appendChild(m);
+    var svg = m.querySelector("svg");
+    if (svg) {
+      svg.style.pointerEvents = "auto";
+      svg.style.cursor = "pointer";
+      var caught = false;
+      svg.addEventListener("click", function (ev) {
+        if (caught) return;
+        caught = true;
+        if (ev.stopPropagation) ev.stopPropagation();
+        if (m.parentNode) m.parentNode.removeChild(m);
+        fetch("/api/mouse/catch", { method: "POST", credentials: "include" })
+          .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { status: r.status, data: d }; }); })
+          .then(function (res) {
+            if (res.data && res.data.granted) {
+              bubble(t("mouseCaught"));
+              fetch("/api/me/summary", { credentials: "include" })
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                  var tk = d && d.tokens;
+                  if (!tk) return;
+                  var total = Math.max(0, tk.freeLeft || 0) + Math.max(0, tk.balance || 0);
+                  document.querySelectorAll("[data-token-chip]").forEach(function (ch) {
+                    ch.hidden = false;
+                    var n = ch.querySelector("[data-token-count]");
+                    if (n) n.textContent = String(total);
+                  });
+                  var wc = document.querySelector("[data-drawer-wallet-count]");
+                  if (wc) wc.textContent = String(total);
+                })
+                .catch(function () {});
+            }
+            else if (res.status === 401 || res.status === 403) bubble(t("mouseSignin"));
+          })
+          .catch(function () {});
+      });
+    }
     var pupils = guide.querySelectorAll(".pupil");
     var look = function (x) {
       for (var i = 0; i < pupils.length; i++) pupils[i].style.transform = "translate(" + x + "px,1px)";
@@ -138,6 +174,8 @@
       slowDay: "This connection has reached today's question limit. It resets at midnight (Bangkok time).",
       sleep: "Ngern is resting now. New questions tomorrow.",
       hurry: "Take your time \u2014 but the cards are waiting. Type your question below!",
+      mouseCaught: "\ud83d\udc2d Caught it! +1 token",
+      mouseSignin: "You caught the mouse! Sign in to claim your token.",
       browse: "Browse the card library",
       crisis: "Support",
       retry: "Try again",
@@ -164,6 +202,8 @@
       slowDay: "\u0e01\u0e32\u0e23\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d\u0e19\u0e35\u0e49\u0e16\u0e36\u0e07\u0e08\u0e33\u0e19\u0e27\u0e19\u0e04\u0e33\u0e16\u0e32\u0e21\u0e2a\u0e39\u0e07\u0e2a\u0e38\u0e14\u0e02\u0e2d\u0e07\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49\u0e41\u0e25\u0e49\u0e27 \u0e23\u0e35\u0e40\u0e0b\u0e47\u0e15\u0e40\u0e17\u0e35\u0e48\u0e22\u0e07\u0e04\u0e37\u0e19 (\u0e40\u0e27\u0e25\u0e32\u0e1b\u0e23\u0e30\u0e40\u0e17\u0e28\u0e44\u0e17\u0e22)",
       sleep: "\u0e40\u0e07\u0e34\u0e19\u0e02\u0e2d\u0e1e\u0e31\u0e01\u0e01\u0e48\u0e2d\u0e19\u0e19\u0e30 \u0e04\u0e33\u0e16\u0e32\u0e21\u0e43\u0e2b\u0e21\u0e48\u0e1e\u0e23\u0e38\u0e48\u0e07\u0e19\u0e35\u0e49",
       hurry: "\u0e44\u0e21\u0e48\u0e15\u0e49\u0e2d\u0e07\u0e23\u0e35\u0e1a \u2014 \u0e41\u0e15\u0e48\u0e44\u0e1e\u0e48\u0e23\u0e2d\u0e2d\u0e22\u0e39\u0e48 \u0e1e\u0e34\u0e21\u0e1e\u0e4c\u0e04\u0e33\u0e16\u0e32\u0e21\u0e14\u0e49\u0e32\u0e19\u0e25\u0e48\u0e32\u0e07\u0e40\u0e25\u0e22",
+      mouseCaught: "\u0e08\u0e31\u0e1a\u0e44\u0e14\u0e49\u0e41\u0e25\u0e49\u0e27! +1 \u0e42\u0e17\u0e40\u0e04\u0e19",
+      mouseSignin: "\u0e08\u0e31\u0e1a\u0e2b\u0e19\u0e39\u0e44\u0e14\u0e49\u0e41\u0e25\u0e49\u0e27! \u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e23\u0e31\u0e1a\u0e42\u0e17\u0e40\u0e04\u0e19",
       browse: "\u0e40\u0e1b\u0e34\u0e14\u0e2b\u0e49\u0e2d\u0e07\u0e2a\u0e21\u0e38\u0e14\u0e44\u0e1e\u0e48",
       crisis: "\u0e01\u0e33\u0e25\u0e31\u0e07\u0e43\u0e08",
       retry: "\u0e25\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07",

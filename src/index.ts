@@ -92,6 +92,8 @@ import {
   isTransactionFilter,
   planSpend,
   reasonsForFilter,
+  MOUSE_CATCH_GAP_MS,
+  MOUSE_DAILY_CAP,
   rewardsTodayCount,
   walletBalance,
   type LedgerRow,
@@ -2314,6 +2316,30 @@ app.post("/api/checkin/claim", async (c) => {
     return c.json({ error: "claim_failed" }, 500);
   }
   return c.json({ ok: true, ...(await state()) });
+});
+
+/** Mouse-catch easter egg: clicking the mouse that dashes across the idle
+ * home guide grants +1 token. Server-gated so it cannot be farmed: one
+ * catch per 5-minute bucket (the spawn cadence), max MOUSE_DAILY_CAP a
+ * day, and the ledger insert is idempotent per bucket. Registered only. */
+app.post("/api/mouse/catch", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  if (user.isAnonymous) return c.json({ error: "registration_required" }, 403);
+  const store = d1TarotStore(c.env.DB);
+  const today = bangkokDay();
+  const dayRows = await store.ledgerRowsForDay(user.id, today).catch(() => []);
+  const caughtToday = dayRows.filter((r) => r.reason === "mouse").length;
+  if (caughtToday >= MOUSE_DAILY_CAP) {
+    return c.json({ ok: true, granted: false, reason: "daily_cap", caughtToday }, 200);
+  }
+  const bucket = Math.floor(Date.now() / MOUSE_CATCH_GAP_MS);
+  const granted = await store
+    .postLedger({ userId: user.id, delta: 1, reason: "mouse", ref: `mouse:${today}:${bucket}`, day: today })
+    .catch(() => false);
+  if (!granted) return c.json({ ok: true, granted: false, reason: "too_soon" }, 200);
+  const balance = await walletState(store, user.id, today).catch(() => null);
+  return c.json({ ok: true, granted: true, tokens: balance?.wallet ?? null, caughtToday: caughtToday + 1 });
 });
 
 /**

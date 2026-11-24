@@ -11,10 +11,16 @@ export const REFERRAL_REWARD_TOKENS = 5;
 export const REFERRAL_FRIEND_BONUS_TOKENS = 10;
 /** Max rewarded friends per referrer per Bangkok day (+3 questions). */
 export const REFERRAL_DAILY_CAP = 3;
+
+/** Mouse-catch easter egg: at most 3 caught mice (tokens) per Bangkok day. */
+export const MOUSE_DAILY_CAP = 3;
+
+/** Minimum gap between mouse catches; mirrors the 5-minute spawn cadence. */
+export const MOUSE_CATCH_GAP_MS = 5 * 60 * 1000;
 /** One-time code sent when a user adds the LINE OA: one free question. */
 export const LINE_WELCOME_BONUS_TOKENS = 5;
 
-export type LedgerReason = "daily" | "topup" | "reading" | "referral" | "refund" | "welcome" | "promo" | "staff_grant" | "checkin" | "affiliate_claim";
+export type LedgerReason = "daily" | "topup" | "reading" | "referral" | "refund" | "welcome" | "promo" | "staff_grant" | "checkin" | "affiliate_claim" | "mouse";
 /** One-off welcome grant for a first registered sign-in (+2 questions). */
 export const WELCOME_TOKENS = 10;
 export type LedgerSource = "daily" | "wallet";
@@ -83,7 +89,7 @@ export type TransactionFilter = "all" | "topup" | "daily" | "reading";
 /** Ledger reasons behind each history tab filter (null = no filter). */
 export function reasonsForFilter(filter: TransactionFilter): LedgerReason[] | null {
   if (filter === "topup") return ["topup", "refund", "staff_grant", "affiliate_claim"];
-  if (filter === "daily") return ["daily", "checkin"];
+  if (filter === "daily") return ["daily", "checkin", "mouse"];
   if (filter === "reading") return ["reading"];
   return null;
 }

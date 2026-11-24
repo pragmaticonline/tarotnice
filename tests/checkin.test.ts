@@ -189,6 +189,24 @@ describe("checkin wiring", () => {
   });
 });
 
+describe("mouse catch easter egg", () => {
+  const src = (p: string) => readFileSync(new URL(p, import.meta.url), "utf8");
+
+  it("grants +1 with anti-farm gates, labelled in the wallet", () => {
+    const index = src("../src/index.ts");
+    expect(index).toContain('app.post("/api/mouse/catch"');
+    expect(index).toContain('reason: "mouse"');
+    expect(index).toContain("MOUSE_DAILY_CAP");
+    expect(index).toContain("MOUSE_CATCH_GAP_MS");
+    const ask = src("../public/app/ask.js");
+    expect(ask).toContain("/api/mouse/catch");
+    expect(ask).toContain("mouseCaught");
+    const billing = src("../public/app/billing.js");
+    expect(billing).toContain('item.reason === "mouse"');
+    expect(billing).toContain("txMouse");
+  });
+});
+
 describe("auto-refund sweeper", () => {
   const src = (p: string) => readFileSync(new URL(p, import.meta.url), "utf8");
 
