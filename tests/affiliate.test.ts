@@ -29,6 +29,8 @@ describe("affiliate totals", () => {
         expect(d[key].length, `${ui}.${key}`).toBeGreaterThan(0);
       }
       expect(d.affNote, ui).not.toMatch(/credit/i);
+      expect(d.affNote, ui).toContain("20%");
+      expect(d.affClaimNote, ui).toContain("{min}");
       const thai = t("th");
       for (const key of ["affEarned", "affClaimed", "affUnclaimed", "affClaimNow", "affPending", "affHistory", "affClaimNote", "affPaid", "affDenied"] as const) {
         expect(thai[key], `th.${key}`).not.toContain("\u0e42\u0e17\u0e40\u0e04\u0e47\u0e19");
@@ -104,7 +106,7 @@ describe("affiliate card on /billing", () => {
     expect(html).toContain("promptpay");
     expect(html).toContain("card");
     expect(html).not.toContain("/users/f1");
-    expect(html).toContain("Gross top-ups");
+    expect(html).toContain("20% of each referred top-up");
     expect(html).toContain("Total earned");
     expect(html).toContain("Available to claim");
     expect(html).toContain("Payout history");

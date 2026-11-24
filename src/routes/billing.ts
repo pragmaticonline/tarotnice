@@ -118,7 +118,7 @@ ${configured ? `<h2>${escapeHtml(d.packsTitle)}</h2>
 <h3>${escapeHtml(d.shareWithFriends)}</h3>
 <p class="share-row">
 <button type="button" class="btn btn-outline" data-share-invite="line">LINE</button>
-<a class="btn btn-outline" id="invite-image" href="/invite.png" download>${escapeHtml(d.share)} · 1080</a>
+<a class="btn btn-outline" id="invite-image" href="/invite.png" download>${escapeHtml(d.share)}</a>
 </p>
 <p class="msg-label">${escapeHtml(d.messagePreviewLabel)}</p>
 <p class="msg-preview" id="invite-message"></p>
@@ -143,7 +143,7 @@ ${opts.affiliate ? `<div class="panel-card"><h2>${escapeHtml(d.affTitle)}</h2>
 <div class="invite-stat"><b>${opts.affiliate.unclaimedTokens}</b><span>${escapeHtml(d.affUnclaimed)}</span></div>
 </div>
 <p class="muted">${escapeHtml(d.affNote)} ${escapeHtml(formatMinor(opts.affiliate.revenueMinor, opts.affiliate.revenueCurrency))} ${escapeHtml(d.affRevenue.toLowerCase())}.</p>
-<p class="muted">${escapeHtml(d.affClaimNote)}</p>
+<p class="muted">${escapeHtml(fmt(d.affClaimNote, { min: formatMinor(opts.affiliate.minimumMinor, opts.affiliate.revenueCurrency) }))}</p>
 ${opts.affiliate.pendingTokens > 0
   ? `<p class="muted">${escapeHtml(d.affPending)}: ${opts.affiliate.pendingTokens}</p>`
   : opts.affiliate.unclaimedTokens > 0
