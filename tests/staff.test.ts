@@ -2,10 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 const STAFF = { subject: "s", email: "maew@pragmaticonline.com", role: "admin" as const };
 import app, {
-  formatMinor,
   renderAffiliatesPage,
   renderInvitesPage,
-  summarizeAffiliatePayments,
   allowlistedRole,
   canAdmin,
   canMutate,
@@ -21,6 +19,7 @@ import app, {
   shellPage,
   verifyAccessToken,
 } from "../src/staff";
+import { formatMinor, summarizeAffiliatePayments } from "../src/lib/affiliate";
 import { staffAuditEvents, staffUsers } from "../src/db/schema";
 
 const TEAM = "https://pragmaticonline.cloudflareaccess.com";

@@ -4,6 +4,7 @@
 // identity must map to an active staff_users row or the allowlist.
 // Roles mirror blognice: read_only < support < admin.
 import { Hono, type Context } from "hono";
+import { summarizeAffiliatePayments, formatMinor, type AffiliatePayment } from "./lib/affiliate";
 import { and, count, desc, eq, inArray, like, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { d1PrefsStore } from "./db/prefs-store";
@@ -1397,35 +1398,6 @@ export function renderAffiliatesPage(
       `<div class="card"><h2 style="margin-top:0">Enable tracking</h2>${search}${found}</div>` +
       `<div class="card"><h2 style="margin-top:0">Partners</h2>${list}</div>`,
   );
-}
-
-export type AffiliatePayment = {
-  userId: string; day: string; delta: number; ref: string;
-  amount: number | null; currency: string | null; paymentMethod: string | null;
-};
-
-/** Sum top-up rows into a gross revenue figure (minor units, e.g. satang). */
-export function summarizeAffiliatePayments(rows: AffiliatePayment[]): { count: number; totalMinor: number; currency: string } {
-  let totalMinor = 0;
-  const currencies = new Map<string, number>();
-  for (const r of rows) {
-    if (typeof r.amount === "number") {
-      totalMinor += r.amount;
-      const cur = (r.currency || "THB").toUpperCase();
-      currencies.set(cur, (currencies.get(cur) ?? 0) + r.amount);
-    }
-  }
-  let currency = "THB";
-  let best = -1;
-  for (const [cur, sum] of currencies) {
-    if (sum > best) { best = sum; currency = cur; }
-  }
-  return { count: rows.length, totalMinor, currency };
-}
-
-export function formatMinor(minor: number, currency: string): string {
-  const symbol = currency === "THB" ? "\u0e3f" : currency + " ";
-  return `${symbol}${(minor / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 const app = new Hono<{ Bindings: StaffEnv }>();

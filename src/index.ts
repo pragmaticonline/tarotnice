@@ -96,6 +96,7 @@ import {
   type LedgerRow,
 } from "./lib/wallet";
 import { checkinWeek } from "./lib/checkin";
+import { summarizeAffiliatePayments } from "./lib/affiliate";
 import { sweepStuckReadings } from "./lib/sweep";
 import { checkoutReturnUrls } from "./routes/billing";
 
@@ -1202,6 +1203,33 @@ app.get("/billing", async (c) => {
   const today = bangkokDay();
   await ensureDailyGrant(store, user.id, today);
   const balance = await walletState(store, user.id, today);
+  // Affiliate dashboard (staff-flagged users only; payer identities stay
+  // on the staff side — the user sees day/amount/method per payment).
+  let affiliate: {
+    invited: number; converted: number;
+    payments: { day: string; delta: number; amount: number | null; currency: string | null; paymentMethod: string | null }[];
+    revenueMinor: number; revenueCurrency: string;
+  } | null = null;
+  try {
+    const flag = await store.getAffiliate(user.id);
+    if (flag) {
+      const [friends, stats] = await Promise.all([
+        store.listReferralFriends(user.id),
+        store.referralStats(user.id),
+      ]);
+      const rows = await store.topupsForUsers(friends.map((f) => f.visitorUserId));
+      const publicRows = rows.map((r) => ({
+        day: r.day, delta: r.delta, amount: r.amount, currency: r.currency, paymentMethod: r.paymentMethod,
+      }));
+      const sum = summarizeAffiliatePayments(publicRows.map((r) => ({ ...r, userId: "", ref: "" })));
+      affiliate = {
+        invited: stats.invited, converted: stats.converted, payments: publicRows,
+        revenueMinor: sum.totalMinor, revenueCurrency: sum.currency,
+      };
+    }
+  } catch {
+    affiliate = null;
+  }
   return c.html(
     billingPage({
       ui,
@@ -1210,6 +1238,7 @@ app.get("/billing", async (c) => {
       balance: balance.wallet,
       freeLeft: balance.dailyLeft,
       account: await pageAccount(c.env?.DB, user),
+      affiliate,
     }),
   );
 });

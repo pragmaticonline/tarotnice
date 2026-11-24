@@ -6,6 +6,7 @@ import { escapeHtml } from "../lib/html";
 import { fmt, t, type UiLang } from "../lib/i18n";
 import { PACK_LIST, tokensConfigured, type StripeEnv } from "../lib/stripe";
 import { LINE_WELCOME_BONUS_TOKENS } from "../lib/wallet";
+import { formatMinor } from "../lib/affiliate";
 import { headerHtml, pageShell, siteFooterHtml, type HeaderAccount } from "./shell";
 
 /** Same-origin return path for post-billing navigation. Single leading
@@ -38,6 +39,12 @@ export function billingPage(opts: {
   freeLeft: number;
   /** Server-rendered header initial + token balance (no first-paint flash). */
   account?: HeaderAccount;
+  /** Affiliate dashboard (only present when staff flagged this user). */
+  affiliate?: {
+    invited: number; converted: number;
+    payments: { day: string; delta: number; amount: number | null; currency: string | null; paymentMethod: string | null }[];
+    revenueMinor: number; revenueCurrency: string;
+  } | null;
 }): string {
   const d = t(opts.ui);
   const configured = tokensConfigured(opts.env);
@@ -123,6 +130,15 @@ ${configured ? `<h2>${escapeHtml(d.packsTitle)}</h2>
 <div class="invite-stat"><b id="stat-read">0</b><span>${escapeHtml(d.statFirstReading)}</span></div>
 <div class="invite-stat"><b id="stat-earned">0</b><span>${escapeHtml(d.statEarned)}</span></div>
 </div>
+${opts.affiliate ? `<div class="panel-card"><h2>${escapeHtml(d.affTitle)}</h2>
+<div class="invite-stats">
+<div class="invite-stat"><b>${opts.affiliate.invited}</b><span>${escapeHtml(d.statJoined)}</span></div>
+<div class="invite-stat"><b>${opts.affiliate.converted}</b><span>${escapeHtml(d.statFirstReading)}</span></div>
+<div class="invite-stat"><b>${opts.affiliate.payments.length}</b><span>${escapeHtml(d.affPayments)}</span></div>
+<div class="invite-stat"><b>${escapeHtml(formatMinor(opts.affiliate.revenueMinor, opts.affiliate.revenueCurrency))}</b><span>${escapeHtml(d.affRevenue)}</span></div>
+</div>
+<p class="muted">${escapeHtml(d.affNote)}</p>
+${opts.affiliate.payments.length ? `<table class="grid"><thead><tr><th>${escapeHtml(d.affDate)}</th><th class="num">Tokens</th><th class="num">Amount</th><th>Method</th></tr></thead><tbody>${opts.affiliate.payments.map((r) => `<tr><td>${escapeHtml(r.day)}</td><td class="num">+${r.delta}</td><td class="num">${r.amount === null ? "\u2014" : escapeHtml(formatMinor(r.amount, r.currency ?? "THB"))}</td><td>${escapeHtml(r.paymentMethod ?? "\u2014")}</td></tr>`).join("")}</tbody></table>` : `<p class="muted">${escapeHtml(d.affEmpty)}</p>`}</div>` : ""}
 <h3>${escapeHtml(d.yourFriends)} <span id="friends-counts"></span></h3>
 <p class="friends-progress" id="friends-progress"></p>
 <ul class="friend-list" id="friend-list"></ul>
