@@ -319,27 +319,43 @@ ${headerHtml({ ui: opts.ui, streak: { current: 0, longest: 0, activeToday: false
 
 /** Standalone Invite page (design board: Invite friends). Reuses the
  *  billing.js referrals wiring (same element ids, all guarded). */
-export function invitePage(opts: { ui: UiLang; origin: string; account?: HeaderAccount }): string {
+export function invitePage(opts: {
+  ui: UiLang; origin: string; account?: HeaderAccount;
+  /** Server-rendered invite data (code, stats, friends). */
+  invite?: {
+    code: string; link: string; invited: number; converted: number; earned: number;
+    friends: { name: string | null; status: "rewarded" | "read" | "joined" }[];
+  };
+}): string {
   const d = t(opts.ui);
+  const inv = opts.invite;
+  const friendItems = (inv?.friends ?? []).map((f) => {
+    const nm = f.name ?? d.mjAnon;
+    const label = f.status === "rewarded" ? d.mjPlus5 : f.status === "read" ? d.statFirstReading : d.mjFrWait;
+    const pill = f.status === "joined" ? "pill-waiting" : "pill-earned";
+    return `<li class="friend-row"><span class="friend-ava">${escapeHtml((nm || "?").charAt(0).toUpperCase())}</span><span class="friend-name">${escapeHtml(nm)}</span><span class="friend-status ${pill}">${escapeHtml(label)}</span></li>`;
+  }).join("");
   const body = `<main>
 ${headerHtml({ ui: opts.ui, streak: { current: 0, longest: 0, activeToday: false }, path: "/invite", account: opts.account })}
 <div class="invite-head"><img src="/mascot/ngern-sitting.svg" alt="" width="64" height="64"><span><h1 class="display">${escapeHtml(d.invitePageTitle)}</h1><span class="invite-sub">${escapeHtml(d.invitePageSub)}</span></span></div>
 <section class="hero-card invite-hero">
 <p class="invite-code-label"><small>${escapeHtml(d.inviteYourCode)}</small></p>
-<p class="invite-code-row"><b id="invite-code" class="value code-value"></b> <button type="button" class="btn btn-outline btn-sm" id="copy-code">${escapeHtml(d.copyCodeBtn)}</button></p>
+<p class="invite-code-row"><b id="invite-code" class="value code-value">${escapeHtml(inv?.code ?? "")}</b> <button type="button" class="btn btn-outline btn-sm" id="copy-code">${escapeHtml(d.copyCodeBtn)}</button></p>
+<span id="invite-link" hidden>${escapeHtml(inv?.link ?? "")}</span>
+<p class="msg-preview" id="invite-message" hidden>${escapeHtml(inv ? fmt(d.inviteMessage, { code: inv.code, link: inv.link }) : "")}</p>
 <div class="share-grid">
 <button type="button" class="btn btn-sm btn-line" data-share-invite="line">${escapeHtml(d.shareOnLine)}</button>
 <button type="button" class="btn btn-sm btn-gold" id="copy-link">${escapeHtml(d.copyInviteLink)}</button>
-<a class="btn btn-sm btn-outline" id="invite-image" href="/invite.png" download>${escapeHtml(d.saveImage)}</a>
+<a class="btn btn-sm btn-outline" id="invite-image" href="/invite/${escapeHtml(inv?.code ?? "")}.png?lang=${opts.ui}" download>${escapeHtml(d.saveImage)}</a>
 </div>
 </section>
 <section class="panel-card invite-stats-card">
 <div class="invite-stats">
-<div class="invite-stat"><b id="stat-joined" class="stat-value">0</b><span>${escapeHtml(d.statJoined)}</span></div>
-<div class="invite-stat"><b id="stat-read" class="stat-value">0</b><span>${escapeHtml(d.statFirstReading)}</span></div>
-<div class="invite-stat"><b id="stat-earned" class="stat-value">0</b><span>${escapeHtml(d.statEarned)}</span></div>
+<div class="invite-stat"><b id="stat-joined" class="stat-value">${inv?.invited ?? 0}</b><span>${escapeHtml(d.statJoined)}</span></div>
+<div class="invite-stat"><b id="stat-read" class="stat-value">${inv?.converted ?? 0}</b><span>${escapeHtml(d.statFirstReading)}</span></div>
+<div class="invite-stat"><b id="stat-earned" class="stat-value">${inv?.earned ?? 0}</b><span>${escapeHtml(d.statEarned)}</span></div>
 </div>
-<ul class="friend-list" id="friend-list"></ul>
+<ul class="friend-list" id="friend-list">${friendItems}</ul>
 </section>
 <p class="invite-terms muted">${escapeHtml(d.inviteRules)} \u00b7 <a href="/terms">${escapeHtml(d.terms)}</a></p>
 </main>`;

@@ -197,12 +197,28 @@ describe("payment result boards", () => {
 
 describe("invite + 404 boards", () => {
   it("invite page renders code, share actions and stat tiles", () => {
-    const html = invitePage({ ui: "en", origin: "" });
+    const html = invitePage({
+      ui: "en", origin: "",
+      invite: {
+        code: "NICE-EF7J", link: "https://tarotnice.com/r/NICE-EF7J",
+        invited: 2, converted: 1, earned: 5,
+        friends: [{ name: "Ray", status: "rewarded" }, { name: null, status: "joined" }],
+      },
+    });
     expect(html).toContain("Your friend gets 10 bonus tokens.");
+    expect(html).toContain("NICE-EF7J");
     expect(html).toContain('id="stat-joined"');
+    expect(html).toContain(">2</b>");
     expect(html).toContain('id="stat-earned"');
+    expect(html).toContain(">5</b>");
+    expect(html).toContain("Ray");
+    expect(html).toContain("+5 tokens");
+    expect(html).toContain('href="/invite/NICE-EF7J.png?lang=en"');
     expect(html).toContain("Share on LINE");
     expect(html).toContain('href="/terms"');
+    const src = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
+    expect(src).toContain('app.get("/invite"');
+    expect(src).toContain("ensureInviteCode(user.id");
   });
 
   it("invite board parity: purple hero card, share grid, 3-col stats, no Facebook", () => {

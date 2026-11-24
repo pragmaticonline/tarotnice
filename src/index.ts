@@ -1188,7 +1188,34 @@ app.get("/invite", async (c) => {
   if (!user || !isRegisteredUser(user)) {
     return c.redirect(`/sign-in?return=${encodeURIComponent("/invite")}`, 302);
   }
-  return c.html(invitePage({ ui: requestUiLang(c), origin: new URL(c.req.url).origin, account: await pageAccount(c.env?.DB, user) }));
+  const ui = requestUiLang(c);
+  const origin = new URL(c.req.url).origin;
+  const store = d1TarotStore(c.env.DB);
+  const code = await store.ensureInviteCode(user.id, inviteCodeFor(user.id)).catch(() => inviteCodeFor(user.id));
+  const [friends, stats, allRows] = await Promise.all([
+    store.listReferralFriends(user.id).catch(() => []),
+    store.referralStats(user.id).catch(() => ({ invited: 0, converted: 0 })),
+    store.ledgerRows(user.id).catch(() => []),
+  ]);
+  const rewardedRefs = new Set(
+    allRows.filter((r) => r.reason === "referral" && !r.ref.startsWith("friend-bonus:") && !r.ref.startsWith("friend-topup-bonus:")).map((r) => r.ref),
+  );
+  const earned = allRows
+    .filter((r) => r.reason === "referral" && !r.ref.startsWith("friend-bonus:") && !r.ref.startsWith("friend-topup-bonus:"))
+    .reduce((sum, r) => sum + r.delta, 0);
+  return c.html(invitePage({
+    ui, origin, account: await pageAccount(c.env.DB, user),
+    invite: {
+      code, link: `${origin}/r/${code}`,
+      invited: stats.invited, converted: stats.converted, earned,
+      friends: friends.map((f) => {
+        let status: "rewarded" | "read" | "joined" = "joined";
+        if (rewardedRefs.has(f.visitorUserId)) status = "rewarded";
+        else if (f.firstReadingAt) status = "read";
+        return { name: maskName(f.nickname), status };
+      }),
+    },
+  }));
 });
 
 // Billing: token packs, history, invite panel. Registered users only;
