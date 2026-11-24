@@ -237,7 +237,7 @@ describe("invite + 404 boards", () => {
 describe("LINE redeem prompt", () => {
   it("appears below the redeem field on the billing page", () => {
     for (const ui of ["en", "th"] as const) {
-      const html = billingPage({ ui, origin: "", env: {}, balance: 0, freeLeft: 0 });
+      const html = billingPage({ ui, origin: "", env: {}, balance: 0, freeLeft: 0, invite: { code: "NICE-TEST", link: "https://tarotnice.com/r/NICE-TEST", message: "", friends: [], joined: 0, converted: 0, tokensEarned: 0, rewardToday: 0, rewardCap: 3 } });
       const d = t(ui);
       expect(html).toContain("line-redeem-note");
       expect(html).toContain('href="https://lin.ee/tMMzlAg"');
@@ -313,8 +313,8 @@ describe("tokens wording everywhere, never credits", () => {
 
   it("billing invite tab uses the board copy: +5 tokens per first reading", () => {
     expect(t("en").inviteSub).toBe(
-      "Your friend gets 10 bonus tokens. You get +5 tokens when they finish their first reading.",
+      "Share your code or link \u2014 you and your friend both get tokens.",
     );
-    expect(t("th").inviteSub).toContain("+5 \u0e42\u0e17\u0e40\u0e04\u0e19");
+    expect(t("th").inviteSub).toContain("\u0e42\u0e17\u0e40\u0e04\u0e19");
   });
 });

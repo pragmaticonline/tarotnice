@@ -22,6 +22,7 @@ export type LedgerSource = "daily" | "wallet";
 export type LedgerRow = {
   delta: number;
   reason: LedgerReason;
+  ref?: string;
   source: LedgerSource | null;
   /** Bangkok day (YYYY-MM-DD) the row belongs to. */
   day: string;
@@ -69,7 +70,12 @@ export function dailyStatus(
 
 /** Referral rewards granted inside the given Bangkok day. */
 export function rewardsTodayCount(rows: LedgerRow[], today: string): number {
-  return rows.filter((r) => r.reason === "referral" && r.day === today).length;
+  return rows.filter((r) => r.reason === "referral" && r.day === today && !isFriendTopupBonus(r)).length;
+}
+
+/** The friend's own 10%-per-top-up bonus: referral reason, but never a +5. */
+export function isFriendTopupBonus(r: { reason: string; ref?: string }): boolean {
+  return r.reason === "referral" && (r.ref ?? "").startsWith("friend-topup-bonus:");
 }
 
 export type TransactionFilter = "all" | "topup" | "daily" | "reading";

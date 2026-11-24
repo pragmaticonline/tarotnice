@@ -140,7 +140,7 @@ describe("affiliate tracking", () => {
     expect(html).not.toContain("next");
     const empty = renderAffiliatesPage(STAFF, "", [], []);
     expect(empty).toContain("No affiliates yet");
-    expect(empty).toContain("No pending payout claims.");
+    expect(empty).toContain("No pending payout requests.");
   });
 
   it("invite page shows the affiliate toggle and referred payments", () => {
@@ -166,16 +166,16 @@ describe("affiliate tracking", () => {
     expect(reader).not.toContain('action="/affiliates/');
   });
 
-  it("payout queue shows pending claims with approve and deny forms", () => {
+  it("payout queue shows pending requests with a mark-paid form", () => {
     const html = renderAffiliatesPage(STAFF, "", [], [], [
-      { id: "cl1", userId: "u9", email: "maew@example.com", tokens: 30, createdAt: Date.UTC(2026, 10, 20) },
+      { id: "pay1", userId: "u9", email: "maew@example.com", amountMinor: 162000, requestedAt: Date.UTC(2026, 10, 20) },
     ]);
-    expect(html).toContain("Payout claims");
+    expect(html).toContain("Payout requests");
     expect(html).toContain("maew@example.com");
-    expect(html).toContain("/affiliates/claims/cl1/approve");
-    expect(html).toContain("/affiliates/claims/cl1/deny");
-    expect(html).toContain('name="granted"');
-    expect(html).toContain('name="reason"');
+    expect(html).toContain("/affiliates/payouts/pay1/pay");
+    expect(html).toContain('name="note"');
+    expect(html).toContain("Mark paid");
+    expect(html).toContain("\u0e3f1,620.00");
   });
 
   it("affiliate routes gate on role and audit everything", () => {
@@ -183,15 +183,13 @@ describe("affiliate tracking", () => {
     expect(src).toContain('app.get("/affiliates"');
     expect(src).toContain('app.post("/affiliates/:userId/enable"');
     expect(src).toContain('app.post("/affiliates/:userId/disable"');
-    expect(src).toContain('app.post("/affiliates/claims/:claimId/approve"');
-    expect(src).toContain('app.post("/affiliates/claims/:claimId/deny"');
+    expect(src).toContain('app.post("/affiliates/payouts/:payoutId/pay"');
+    expect(src).toContain("payAffiliatePayout(");
     expect(src).toContain("affiliate.enable");
     expect(src).toContain("affiliate.disable");
-    expect(src).toContain("affiliate_claim.approve");
-    expect(src).toContain("affiliate_claim.deny");
-    expect(src).toContain("claimAffiliateClaim(");
-    expect(src).toContain("decideAffiliateClaim(");
-    expect(src).toContain("affiliate-claim:${claimId}");
+    expect(src).toContain("affiliate_payout.pay");
+    expect(src).not.toContain("decideAffiliateClaim(");
+    expect(src).not.toContain("/claims/");
     expect(src).toContain("SUPPORT_GRANT_CAP");
     const main = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
     expect(main).toContain('"affiliate_payment"');

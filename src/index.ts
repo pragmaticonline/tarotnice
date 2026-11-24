@@ -96,7 +96,7 @@ import {
   type LedgerRow,
 } from "./lib/wallet";
 import { checkinWeek } from "./lib/checkin";
-import { AFFILIATE_MIN_PAYOUT_MINOR, affiliatePayoutValue, affiliateShare, affiliateTokenBalance, affiliateTokensEarned, friendTopupBonus, summarizeAffiliatePayments, topupsSinceReferral } from "./lib/affiliate";
+import { AFFILIATE_MIN_PAYOUT_MINOR, affiliateShare, friendTopupBonus, summarizeAffiliatePayments, topupsSinceReferral } from "./lib/affiliate";
 import { sweepStuckReadings } from "./lib/sweep";
 import { checkoutReturnUrls } from "./routes/billing";
 
@@ -1203,43 +1203,90 @@ app.get("/billing", async (c) => {
   const today = bangkokDay();
   await ensureDailyGrant(store, user.id, today);
   const balance = await walletState(store, user.id, today);
-  // Affiliate dashboard (staff-flagged users only; payer identities stay
-  // on the staff side — the user sees day/amount/method per payment).
+  // Invite + affiliate tab (v2): server-rendered for every registered user.
+  // The affiliate cash section only renders when staff flagged this user.
+  const origin = new URL(c.req.url).origin;
+  const code = await store.ensureInviteCode(user.id, inviteCodeFor(user.id)).catch(() => inviteCodeFor(user.id));
+  const link = `${origin}/r/${code}`;
+  let invite: {
+    code: string; link: string; message: string;
+    friends: { name: string | null; status: "rewarded" | "read" | "joined"; joinedAt: number; readAt: number | null; purchases: number }[];
+    joined: number; converted: number; tokensEarned: number;
+    rewardToday: number; rewardCap: number;
+  } = {
+    code, link, message: "", friends: [],
+    joined: 0, converted: 0, tokensEarned: 0, rewardToday: 0, rewardCap: REFERRAL_DAILY_CAP,
+  };
   let affiliate: {
-    invited: number; converted: number;
-    payments: { day: string; delta: number; amount: number | null; currency: string | null; paymentMethod: string | null }[];
+    payments: { day: string; delta: number; amount: number | null; currency: string | null; paymentMethod: string | null; shareMinor: number | null }[];
     revenueMinor: number; revenueCurrency: string; shareMinor: number;
-    earnedTokens: number; claimedTokens: number; pendingTokens: number; unclaimedTokens: number;
-    unclaimedMinor: number; minimumMinor: number; canClaim: boolean;
-    claims: { day: string; tokens: number; granted: number | null; status: string }[];
+    paidMinor: number; payoutCount: number; unpaidMinor: number; canRequest: boolean;
+    openRequest: { amountMinor: number; requestedAt: number } | null;
+    payouts: { requestedAt: number; paidAt: number | null; amountMinor: number; currency: string; status: string }[];
   } | null = null;
   try {
+    const [friends, stats, allRows] = await Promise.all([
+      store.listReferralFriends(user.id),
+      store.referralStats(user.id),
+      store.ledgerRows(user.id),
+    ]);
+    const todayRows: LedgerRow[] = (await store.ledgerRowsForDay(user.id, today)).map((r) => ({
+      delta: r.delta,
+      reason: r.reason as LedgerRow["reason"],
+      ref: r.ref,
+      source: (r.source as LedgerRow["source"]) ?? null,
+      day: r.day,
+      createdAt: r.createdAt,
+    }));
+    const rewarded = new Set(
+      allRows
+        .filter((r) => r.reason === "referral" && !r.ref.startsWith("friend-bonus:") && !r.ref.startsWith("friend-topup-bonus:"))
+        .map((r) => r.ref),
+    );
+    const topups = friends.length ? await store.topupsForUsers(friends.map((f) => f.visitorUserId)) : [];
+    const referredDay = new Map(friends.map((f) => [f.visitorUserId, bangkokDay(new Date(f.createdAt))] as [string, string]));
+    const rows = topupsSinceReferral(topups, referredDay);
+    const perUser = new Map<string, number>();
+    for (const r of rows) perUser.set(r.userId, (perUser.get(r.userId) ?? 0) + 1);
+    const friendList = friends.map((f) => {
+      let status: "rewarded" | "read" | "joined" = "joined";
+      if (rewarded.has(f.visitorUserId)) status = "rewarded";
+      else if (f.firstReadingAt) status = "read";
+      else if (!f.isAnonymous) status = "joined";
+      return {
+        name: maskName(f.nickname),
+        status, joinedAt: f.createdAt, readAt: f.firstReadingAt,
+        purchases: perUser.get(f.visitorUserId) ?? 0,
+      };
+    });
+    invite = {
+      code, link, message: fmt(t(ui).affMsg, { code, link }),
+      friends: friendList, joined: stats.invited, converted: stats.converted,
+      tokensEarned: allRows
+        .filter((r) => r.reason === "referral" && !r.ref.startsWith("friend-bonus:") && !r.ref.startsWith("friend-topup-bonus:"))
+        .reduce((sum, r) => sum + r.delta, 0),
+      rewardToday: rewardsTodayCount(todayRows, today), rewardCap: REFERRAL_DAILY_CAP,
+    };
     const flag = await store.getAffiliate(user.id);
     if (flag) {
-      const [friends, stats, claimRows] = await Promise.all([
-        store.listReferralFriends(user.id),
-        store.referralStats(user.id),
-        store.affiliateClaims(user.id),
-      ]);
-      const referredDay = new Map(friends.map((f) => [f.visitorUserId, bangkokDay(new Date(f.createdAt))] as [string, string]));
-      const rows = topupsSinceReferral(await store.topupsForUsers(friends.map((f) => f.visitorUserId)), referredDay);
       const publicRows = rows.map((r) => ({
         day: r.day, delta: r.delta, amount: r.amount, currency: r.currency, paymentMethod: r.paymentMethod,
+        shareMinor: typeof r.amount === "number" ? affiliateShare(r.amount) : null,
       }));
-      const sum = summarizeAffiliatePayments(publicRows.map((r) => ({ ...r, userId: "", ref: "" })));
-      const earnedTokens = affiliateTokensEarned(publicRows.map((r) => ({ delta: r.delta })));
-      const bal = affiliateTokenBalance(earnedTokens, claimRows);
-      const val = affiliatePayoutValue(publicRows.map((r) => ({ delta: r.delta, amount: r.amount })), claimRows);
+      const sum = summarizeAffiliatePayments(rows.map((r) => ({ userId: "", ref: "", day: r.day, delta: r.delta, amount: r.amount, currency: r.currency, paymentMethod: r.paymentMethod })));
+      const share = affiliateShare(sum.totalMinor);
+      const payouts = await store.affiliatePayouts(user.id);
+      const paid = payouts.filter((x) => x.status === "paid");
+      const paidMinor = paid.reduce((n, x) => n + x.amountMinor, 0);
+      const unpaid = Math.max(0, share - paidMinor);
+      const open = await store.openAffiliatePayout(user.id);
       affiliate = {
-        invited: stats.invited, converted: stats.converted, payments: publicRows,
-        revenueMinor: sum.totalMinor, revenueCurrency: sum.currency,
-        shareMinor: affiliateShare(sum.totalMinor),
-        earnedTokens, claimedTokens: bal.claimed, pendingTokens: bal.pending, unclaimedTokens: bal.unclaimed,
-        unclaimedMinor: Math.round(val.unclaimedMinor), minimumMinor: val.minimumMinor, canClaim: val.canClaim,
-        claims: claimRows.map((cl) => ({
-          day: new Date(cl.createdAt).toISOString().slice(0, 10),
-          tokens: cl.tokens, granted: cl.grantedTokens, status: cl.status,
-        })),
+        payments: publicRows,
+        revenueMinor: sum.totalMinor, revenueCurrency: sum.currency, shareMinor: share,
+        paidMinor, payoutCount: paid.length, unpaidMinor: unpaid,
+        canRequest: unpaid >= AFFILIATE_MIN_PAYOUT_MINOR && !open,
+        openRequest: open ? { amountMinor: open.amountMinor, requestedAt: open.requestedAt } : null,
+        payouts: payouts.map((x) => ({ requestedAt: x.requestedAt, paidAt: x.paidAt, amountMinor: x.amountMinor, currency: x.currency, status: x.status })),
       };
     }
   } catch {
@@ -1253,6 +1300,7 @@ app.get("/billing", async (c) => {
       balance: balance.wallet,
       freeLeft: balance.dailyLeft,
       account: await pageAccount(c.env?.DB, user),
+      invite,
       affiliate,
     }),
   );
@@ -2035,10 +2083,10 @@ async function rewardReferrer(
 ): Promise<void> {
   try {
     if (referrerId === refereeId) return;
-    const dayRows = await store.ledgerRowsForDay(referrerId, today);
-    const todayLedger: LedgerRow[] = dayRows.map((r) => ({
+    const todayLedger: LedgerRow[] = (await store.ledgerRowsForDay(referrerId, today)).map((r) => ({
       delta: r.delta,
       reason: r.reason as LedgerRow["reason"],
+      ref: r.ref,
       source: (r.source as LedgerRow["source"]) ?? null,
       day: r.day,
       createdAt: r.createdAt,
@@ -2434,6 +2482,7 @@ app.get("/api/me/referrals", async (c) => {
   const todayRows: LedgerRow[] = (await store.ledgerRowsForDay(user.id, today)).map((r) => ({
     delta: r.delta,
     reason: r.reason as LedgerRow["reason"],
+    ref: r.ref,
     source: (r.source as LedgerRow["source"]) ?? null,
     day: r.day,
     createdAt: r.createdAt,
@@ -2456,7 +2505,7 @@ app.get("/api/me/referrals", async (c) => {
     rewardToday: rewardsTodayCount(todayRows, today),
     rewardCap: REFERRAL_DAILY_CAP,
     totalEarned: allRows
-      .filter((r) => r.reason === "referral" && !r.ref.startsWith("friend-bonus:"))
+      .filter((r) => r.reason === "referral" && !r.ref.startsWith("friend-bonus:") && !r.ref.startsWith("friend-topup-bonus:"))
       .reduce((sum, r) => sum + r.delta, 0),
     friends: list,
   });
@@ -2464,38 +2513,34 @@ app.get("/api/me/referrals", async (c) => {
 
 // Token-pack checkout (nicelingo model): registered users only, prices
 // are Dashboard objects referenced by env id — clients never name amounts.
-/** Affiliate payout claim (registered affiliates only): files a pending
- * claim for the full unclaimed token balance. Staff approve in the staff
- * tool, choosing the final granted amount; the grant lands as an
- * affiliate_claim ledger row (idempotent per claim id). */
-app.post("/api/me/affiliate/claim", async (c) => {
+/** Affiliate cash payout request (registered affiliates only): files a
+ * request for the full unpaid 20% balance once it reaches the minimum.
+ * One open request at a time; staff transfer the money by bank, then
+ * mark the request paid in the staff tool. */
+app.post("/api/me/affiliate/payout", async (c) => {
   const user = await authedUser(c);
   if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
   if (user.isAnonymous) return c.json({ error: "registration_required" }, 403);
   const store = d1TarotStore(c.env.DB);
   const flag = await store.getAffiliate(user.id).catch(() => null);
   if (!flag) return c.json({ error: "not_affiliate" }, 403);
-  const [friends, claims] = await Promise.all([
+  const [friends, payouts] = await Promise.all([
     store.listReferralFriends(user.id).catch(() => []),
-    store.affiliateClaims(user.id).catch(() => []),
+    store.affiliatePayouts(user.id).catch(() => []),
   ]);
-  const referredDay = new Map(friends.map((f: { visitorUserId: string; createdAt: number }) =>
-    [f.visitorUserId, bangkokDay(new Date(f.createdAt))] as [string, string]));
-  const allTopups = friends.length ? await store.topupsForUsers(friends.map((f: { visitorUserId: string }) => f.visitorUserId)).catch(() => []) : [];
-  const topups = topupsSinceReferral(allTopups, referredDay);
-  const earned = affiliateTokensEarned(topups.map((r) => ({ delta: r.delta })));
-  const bal = affiliateTokenBalance(earned, claims);
-  if (bal.unclaimed <= 0) return c.json({ ok: false, error: "nothing_to_claim", unclaimed: 0 }, 409);
-  const val = affiliatePayoutValue(topups.map((r) => ({ delta: r.delta, amount: r.amount ?? null })), claims);
-  if (!val.canClaim) {
-    return c.json({
-      ok: false, error: "below_minimum",
-      unclaimedMinor: Math.round(val.unclaimedMinor), minimumMinor: AFFILIATE_MIN_PAYOUT_MINOR,
-    }, 409);
+  const referredDay = new Map(friends.map((f: { visitorUserId: string; createdAt: number }) => [f.visitorUserId, bangkokDay(new Date(f.createdAt))] as [string, string]));
+  const topups = friends.length ? await store.topupsForUsers(friends.map((f: { visitorUserId: string }) => f.visitorUserId)).catch(() => []) : [];
+  const rows = topupsSinceReferral(topups, referredDay);
+  const sum = summarizeAffiliatePayments(rows);
+  const share = affiliateShare(sum.totalMinor);
+  const paid = payouts.filter((x) => x.status === "paid").reduce((n, x) => n + x.amountMinor, 0);
+  const unpaid = Math.max(0, share - paid);
+  if (unpaid < AFFILIATE_MIN_PAYOUT_MINOR) {
+    return c.json({ ok: false, error: "below_minimum", unpaidMinor: unpaid, minimumMinor: AFFILIATE_MIN_PAYOUT_MINOR }, 409);
   }
-  const id = await store.createAffiliateClaim(user.id, bal.unclaimed).catch(() => null);
-  if (!id) return c.json({ error: "claim_failed" }, 500);
-  return c.json({ ok: true, claimId: id, tokens: bal.unclaimed });
+  const id = await store.createAffiliatePayout(user.id, unpaid, sum.currency).catch(() => null);
+  if (!id) return c.json({ ok: false, error: "already_requested" }, 409);
+  return c.json({ ok: true, payoutId: id, amountMinor: unpaid });
 });
 
 app.post("/api/billing/checkout", async (c) => {

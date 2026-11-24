@@ -1,6 +1,6 @@
 // Billing page behaviour: pack checkout, Transactions filters with
-// cursor paging, and the Referrals tab (invite code/link copy, share
-// targets, friends list). Strings are rendered server-side; this file
+// cursor paging, and the Invite tab (copy buttons, LINE share, payout
+// request). Content is server-rendered; this file only wires actions.
 // only wires data. Text labels come from the JSON payloads' `label`
 // fields so EN/TH stay in one place (the i18n dict on the server).
 (function () {
@@ -24,9 +24,6 @@
       txReadingDaily: "Question (free tokens)", txReadingWallet: "Question (tokens)",
       txReferral: "Invite bonus", txReferralFriend: "Friend code bonus", txTopupBonus: "Friend top-up bonus", txWelcome: "Welcome bonus", txPromo: "Promo bonus", txStaffGrant: "Staff grant", txAffiliateClaim: "Affiliate payout", txCheckin: "Daily check-in", txLineGift: "LINE friend gift",
       available: "Available", used: "Used", expired: "Expired",
-      friend: "Friend", waiting: "Waiting for first reading",
-      rewarded: "+5 tokens", joined: "Joined", read: "First reading done",
-      counts: function (j, r, b, cap) { return j + " joined · " + r + " read · Bonus today " + b + "/" + cap; },
       copied: "Copied",
     },
     th: {
@@ -34,9 +31,6 @@
       txReadingDaily: "\u0e04\u0e33\u0e16\u0e32\u0e21 (\u0e42\u0e17\u0e40\u0e04\u0e19\u0e1f\u0e23\u0e35)", txReadingWallet: "\u0e04\u0e33\u0e16\u0e32\u0e21 (\u0e42\u0e17\u0e40\u0e04\u0e19)",
       txReferral: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e0a\u0e27\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19", txReferralFriend: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e42\u0e04\u0e49\u0e14\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19", txTopupBonus: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e40\u0e15\u0e34\u0e21\u0e40\u0e07\u0e34\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19", txWelcome: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e15\u0e49\u0e2d\u0e19\u0e23\u0e31\u0e1a", txPromo: "\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e42\u0e1b\u0e23\u0e42\u0e21\u0e0a\u0e31\u0e19", txStaffGrant: "\u0e42\u0e17\u0e40\u0e04\u0e19\u0e08\u0e32\u0e01\u0e17\u0e35\u0e21\u0e07\u0e32\u0e19", txCheckin: "\u0e40\u0e0a\u0e47\u0e01\u0e2d\u0e34\u0e19\u0e23\u0e32\u0e22\u0e27\u0e31\u0e19", txLineGift: "\u0e02\u0e2d\u0e07\u0e02\u0e27\u0e31\u0e0d\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19 LINE", txAffiliateClaim: "\u0e04\u0e48\u0e32\u0e15\u0e2d\u0e1a\u0e41\u0e17\u0e19\u0e1e\u0e32\u0e23\u0e4c\u0e17\u0e40\u0e19\u0e2d\u0e23\u0e4c",
       available: "\u0e43\u0e0a\u0e49\u0e44\u0e14\u0e49", used: "\u0e43\u0e0a\u0e49\u0e41\u0e25\u0e49\u0e27", expired: "\u0e2b\u0e21\u0e14\u0e2d\u0e32\u0e22\u0e38",
-      friend: "\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19", waiting: "\u0e23\u0e2d\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e14\u0e39\u0e14\u0e27\u0e07\u0e04\u0e23\u0e31\u0e49\u0e07\u0e41\u0e23\u0e01",
-      rewarded: "+5 \u0e42\u0e17\u0e40\u0e04\u0e19", joined: "\u0e2a\u0e21\u0e31\u0e04\u0e23\u0e41\u0e25\u0e49\u0e27", read: "\u0e14\u0e39\u0e14\u0e27\u0e07\u0e41\u0e23\u0e01\u0e41\u0e25\u0e49\u0e27",
-      counts: function (j, r, b, cap) { return "\u0e40\u0e02\u0e49\u0e32\u0e23\u0e48\u0e27\u0e21 " + j + " \u00b7 \u0e14\u0e39\u0e14\u0e27\u0e07 " + r + " \u00b7 \u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49 " + b + "/" + cap; },
       copied: "\u0e04\u0e31\u0e14\u0e25\u0e2d\u0e01\u0e41\u0e25\u0e49\u0e27",
     },
   }[lang];
@@ -182,7 +176,7 @@
   if (txMore) txMore.addEventListener("click", loadTx);
   if (txList) loadTx();
 
-  // --- Referrals ---
+  // --- Invite + affiliate tab (v2: everything server-rendered) ---
   function copyText(text, btn) {
     function done() {
       if (!btn) return;
@@ -194,58 +188,43 @@
       navigator.clipboard.writeText(text).then(done).catch(done);
     } else { done(); }
   }
-
-  var inviteData = null;
-  api("/api/me/referrals").then(function (r) {
-    if (r.status !== 200) return;
-    inviteData = r.data;
-    var codeEl = $("invite-code");
-    var linkEl = $("invite-link");
-    var msgEl = $("invite-message");
-    var imgEl = $("invite-image");
-    if (codeEl) codeEl.textContent = inviteData.code;
-    if (linkEl) linkEl.textContent = inviteData.link;
-    if (imgEl) imgEl.href = "/invite/" + encodeURIComponent(inviteData.code) + ".png?lang=" + lang;
-    var msg = lang === "th"
-      ? "\u0e21\u0e32\u0e14\u0e39\u0e14\u0e27\u0e07\u0e44\u0e1e\u0e48\u0e17\u0e32\u0e42\u0e23\u0e15\u0e4c\u0e17\u0e35\u0e48 TarotNice \u0e01\u0e31\u0e19 \u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e1e\u0e48 3 \u0e43\u0e1a\u0e40\u0e2d\u0e07 \u0e16\u0e32\u0e21\u0e44\u0e14\u0e49\u0e17\u0e38\u0e01\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 \u0e2a\u0e21\u0e31\u0e04\u0e23\u0e14\u0e49\u0e27\u0e22\u0e42\u0e04\u0e49\u0e14 {code} \u0e23\u0e31\u0e1a 20 \u0e42\u0e17\u0e40\u0e04\u0e19 {link}"
-      : "Try tarot readings on TarotNice. Pick 3 cards yourself and ask about anything. Sign up with my code {code} and get 20 tokens. {link}";
-    if (msgEl) msgEl.textContent = msg.replace("{code}", inviteData.code).replace("{link}", inviteData.link);
-    var countsEl = $("friends-counts");
-    var progEl = $("friends-progress");
-    var friends = inviteData.friends || [];
-    var joined = friends.filter(function (f) { return f.status !== "joined" || true; }).length;
-    var read = friends.filter(function (f) { return f.status === "read" || f.status === "rewarded"; }).length;
-    if (countsEl) countsEl.textContent = "(" + friends.length + ")";
-    if (progEl) progEl.textContent = ui.counts(joined, read, inviteData.rewardToday || 0, inviteData.rewardCap || 3);
-    var statJoined = $("stat-joined"); if (statJoined) statJoined.textContent = String(friends.length);
-    var statRead = $("stat-read"); if (statRead) statRead.textContent = String(read);
-    var statEarned = $("stat-earned"); if (statEarned) statEarned.textContent = String(inviteData.totalEarned || 0);
-    var list = $("friend-list");
-    if (list) {
-      list.innerHTML = friends.map(function (f) {
-        var initial = esc((f.name || ui.friend).charAt(0).toUpperCase() || "?");
-        var earned = f.status === "rewarded" || f.status === "read";
-        var label = f.status === "rewarded" ? ui.rewarded : f.status === "read" ? ui.read : f.status === "joined" ? ui.joined : ui.waiting;
-        return '<li class="friend-row"><span class="friend-ava">' + initial + '</span><span class="friend-name">' + esc(f.name || ui.friend) + '</span><span class="friend-status ' + (earned ? "pill-earned" : "pill-waiting") + '">' + esc(label) + "</span></li>";
-      }).join("");
-    }
-    var copyCode = $("copy-code");
-    var copyLink = $("copy-link");
-    if (copyCode) copyCode.addEventListener("click", function () { copyText(inviteData.code, copyCode); });
-    if (copyLink) copyLink.addEventListener("click", function () { copyText(inviteData.link, copyLink); });
-    document.querySelectorAll("[data-share-invite]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        var url = inviteData.link;
-        // The invite message already ends with the link; LINE appends
-        // the url= value to the text, so strip the link from the text
-        // or the shared message carries the link twice.
-        var text = (msgEl ? msgEl.textContent : "").split(url).join("").trim();
-        var target = btn.getAttribute("data-share-invite");
-        if (target !== "line") return;
-        var shareUrl = "https://social-plugins.line.me/lineit/share?url=" + encodeURIComponent(url) +
-          (text ? "&text=" + encodeURIComponent(text) : "");
-        window.open(shareUrl, "_blank", "noopener,width=640,height=560");
-      });
+  function wireCopy(id, getText) {
+    var btn = $(id);
+    if (btn) btn.addEventListener("click", function () { copyText(getText(), btn); });
+  }
+  wireCopy("copy-code", function () { var el = $("invite-code"); return el ? el.textContent : ""; });
+  wireCopy("copy-link", function () { var el = $("invite-link"); return el ? el.textContent : ""; });
+  wireCopy("copy-msg", function () { var el = $("invite-message"); return el ? el.textContent : ""; });
+  document.querySelectorAll("[data-share-invite]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var linkEl = $("invite-link");
+      var msgEl = $("invite-message");
+      var url = linkEl ? linkEl.textContent.trim() : "";
+      var text = msgEl ? msgEl.textContent : "";
+      // The invite message already ends with the link; LINE appends
+      // the url= value to the text, so strip the link from the text
+      // or the shared message carries the link twice.
+      if (url) text = text.split(url).join("").trim();
+      var target = btn.getAttribute("data-share-invite");
+      if (target !== "line") return;
+      var shareUrl = "https://social-plugins.line.me/lineit/share?url=" + encodeURIComponent(url) +
+        (text ? "&text=" + encodeURIComponent(text) : "");
+      window.open(shareUrl, "_blank", "noopener,width=640,height=560");
     });
-  }).catch(function () {});
+  });
+
+  // --- Affiliate cash payout request ---
+  var payoutBtn = $("aff-payout");
+  if (payoutBtn) {
+    payoutBtn.addEventListener("click", function () {
+      var msg = $("aff-payout-msg");
+      var s = window.__tnAffPay || {};
+      payoutBtn.disabled = true;
+      api("/api/me/affiliate/payout", { method: "POST", body: "{}" }).then(function (r) {
+        if (r.status === 200) { location.reload(); return; }
+        payoutBtn.disabled = false;
+        if (msg) msg.textContent = s.fail || "error";
+      }).catch(function () { payoutBtn.disabled = false; });
+    });
+  }
 })();

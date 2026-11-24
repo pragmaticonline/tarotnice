@@ -672,74 +672,84 @@ export function d1TarotStore(db: D1Database) {
         .limit(1000);
     },
 
-    /** File an affiliate payout claim for the full requested amount. */
-    async createAffiliateClaim(userId: string, tokens: number): Promise<string | null> {
-      const id = `affclaim-${Date.now().toString(36)}-${Math.floor(Math.random() * 0xffff).toString(16)}`;
+    /** File a cash payout request for the full unpaid minor balance. Only
+     *  one open request per affiliate: returns null when one is pending. */
+    async createAffiliatePayout(userId: string, amountMinor: number, currency: string): Promise<string | null> {
+      const open = await orm
+        .select({ id: schema.affiliatePayouts.id })
+        .from(schema.affiliatePayouts)
+        .where(and(eq(schema.affiliatePayouts.userId, userId), eq(schema.affiliatePayouts.status, "requested")))
+        .limit(1);
+      if (open.length) return null;
+      const id = `affpay-${Date.now().toString(36)}-${Math.floor(Math.random() * 0xffff).toString(16)}`;
       const rows = await orm
-        .insert(schema.affiliateClaims)
-        .values({ id, userId, tokens, grantedTokens: null, status: "pending", reason: null, createdAt: Date.now(), decidedAt: null, decidedBy: null })
+        .insert(schema.affiliatePayouts)
+        .values({ id, userId, amountMinor, currency, status: "requested", requestedAt: Date.now(), paidAt: null, paidBy: null, note: null })
         .onConflictDoNothing()
-        .returning({ id: schema.affiliateClaims.id })
+        .returning({ id: schema.affiliatePayouts.id })
         .catch(() => []);
       return rows.length ? rows[0].id : null;
     },
 
-    async affiliateClaim(id: string): Promise<{
-      id: string; userId: string; tokens: number; grantedTokens: number | null;
-      status: string; reason: string | null; createdAt: number; decidedAt: number | null; decidedBy: string | null;
+    async affiliatePayout(id: string): Promise<{
+      id: string; userId: string; amountMinor: number; currency: string; status: string;
+      requestedAt: number; paidAt: number | null; paidBy: string | null; note: string | null;
     } | null> {
       const rows = await orm
-        .select({
-          id: schema.affiliateClaims.id, userId: schema.affiliateClaims.userId, tokens: schema.affiliateClaims.tokens,
-          grantedTokens: schema.affiliateClaims.grantedTokens, status: schema.affiliateClaims.status, reason: schema.affiliateClaims.reason,
-          createdAt: schema.affiliateClaims.createdAt, decidedAt: schema.affiliateClaims.decidedAt, decidedBy: schema.affiliateClaims.decidedBy,
-        })
-        .from(schema.affiliateClaims)
-        .where(eq(schema.affiliateClaims.id, id))
+        .select()
+        .from(schema.affiliatePayouts)
+        .where(eq(schema.affiliatePayouts.id, id))
         .limit(1);
       return rows[0] ?? null;
     },
 
-    /** Atomically take a pending claim for decision; false if already decided. */
-    async claimAffiliateClaim(id: string): Promise<boolean> {
-      const rows = await orm
-        .update(schema.affiliateClaims)
-        .set({ status: "deciding" })
-        .where(and(eq(schema.affiliateClaims.id, id), eq(schema.affiliateClaims.status, "pending")))
-        .returning({ id: schema.affiliateClaims.id });
-      return rows.length > 0;
-    },
-
-    async decideAffiliateClaim(id: string, approved: boolean, grantedTokens: number | null, by: string, reason: string | null): Promise<void> {
-      await orm
-        .update(schema.affiliateClaims)
-        .set({ status: approved ? "approved" : "denied", grantedTokens, reason, decidedAt: Date.now(), decidedBy: by })
-        .where(and(eq(schema.affiliateClaims.id, id), eq(schema.affiliateClaims.status, "deciding")));
-    },
-
-    async affiliateClaims(userId: string): Promise<{
-      id: string; tokens: number; grantedTokens: number | null; status: string; reason: string | null; createdAt: number; decidedAt: number | null;
+    async affiliatePayouts(userId: string): Promise<{
+      id: string; amountMinor: number; currency: string; status: string;
+      requestedAt: number; paidAt: number | null; note: string | null;
     }[]> {
       return orm
         .select({
-          id: schema.affiliateClaims.id, tokens: schema.affiliateClaims.tokens, grantedTokens: schema.affiliateClaims.grantedTokens,
-          status: schema.affiliateClaims.status, reason: schema.affiliateClaims.reason,
-          createdAt: schema.affiliateClaims.createdAt, decidedAt: schema.affiliateClaims.decidedAt,
+          id: schema.affiliatePayouts.id, amountMinor: schema.affiliatePayouts.amountMinor, currency: schema.affiliatePayouts.currency,
+          status: schema.affiliatePayouts.status, requestedAt: schema.affiliatePayouts.requestedAt,
+          paidAt: schema.affiliatePayouts.paidAt, note: schema.affiliatePayouts.note,
         })
-        .from(schema.affiliateClaims)
-        .where(eq(schema.affiliateClaims.userId, userId))
-        .orderBy(desc(schema.affiliateClaims.createdAt))
+        .from(schema.affiliatePayouts)
+        .where(eq(schema.affiliatePayouts.userId, userId))
+        .orderBy(desc(schema.affiliatePayouts.requestedAt))
         .limit(50);
     },
 
-    async pendingAffiliateClaims(): Promise<{
-      id: string; userId: string; tokens: number; createdAt: number;
+    async openAffiliatePayout(userId: string): Promise<{
+      id: string; amountMinor: number; currency: string; requestedAt: number;
+    } | null> {
+      const rows = await orm
+        .select({ id: schema.affiliatePayouts.id, amountMinor: schema.affiliatePayouts.amountMinor, currency: schema.affiliatePayouts.currency, requestedAt: schema.affiliatePayouts.requestedAt })
+        .from(schema.affiliatePayouts)
+        .where(and(eq(schema.affiliatePayouts.userId, userId), eq(schema.affiliatePayouts.status, "requested")))
+        .orderBy(desc(schema.affiliatePayouts.requestedAt))
+        .limit(1);
+      return rows[0] ?? null;
+    },
+
+    /** Mark a requested payout paid after the bank transfer. Conditional on
+     *  status so two staff can't pay the same request twice. */
+    async payAffiliatePayout(id: string, by: string, note: string | null): Promise<boolean> {
+      const rows = await orm
+        .update(schema.affiliatePayouts)
+        .set({ status: "paid", paidAt: Date.now(), paidBy: by, note })
+        .where(and(eq(schema.affiliatePayouts.id, id), eq(schema.affiliatePayouts.status, "requested")))
+        .returning({ id: schema.affiliatePayouts.id });
+      return rows.length > 0;
+    },
+
+    async pendingAffiliatePayouts(): Promise<{
+      id: string; userId: string; amountMinor: number; currency: string; requestedAt: number;
     }[]> {
       return orm
-        .select({ id: schema.affiliateClaims.id, userId: schema.affiliateClaims.userId, tokens: schema.affiliateClaims.tokens, createdAt: schema.affiliateClaims.createdAt })
-        .from(schema.affiliateClaims)
-        .where(eq(schema.affiliateClaims.status, "pending"))
-        .orderBy(asc(schema.affiliateClaims.createdAt))
+        .select({ id: schema.affiliatePayouts.id, userId: schema.affiliatePayouts.userId, amountMinor: schema.affiliatePayouts.amountMinor, currency: schema.affiliatePayouts.currency, requestedAt: schema.affiliatePayouts.requestedAt })
+        .from(schema.affiliatePayouts)
+        .where(eq(schema.affiliatePayouts.status, "requested"))
+        .orderBy(asc(schema.affiliatePayouts.requestedAt))
         .limit(100);
     },
 
@@ -759,7 +769,7 @@ export function d1TarotStore(db: D1Database) {
 
     /** Today's rows only (daily-bucket math + referral cap window). */
     async ledgerRowsForDay(userId: string, day: string): Promise<{
-      delta: number; reason: string; source: string | null; day: string; createdAt: number;
+      delta: number; reason: string; source: string | null; day: string; createdAt: number; ref: string;
     }[]> {
       const rows = await orm
         .select({
@@ -768,6 +778,7 @@ export function d1TarotStore(db: D1Database) {
           source: schema.tokenLedger.source,
           day: schema.tokenLedger.day,
           createdAt: schema.tokenLedger.createdAt,
+          ref: schema.tokenLedger.ref,
         })
         .from(schema.tokenLedger)
         .where(and(eq(schema.tokenLedger.userId, userId), eq(schema.tokenLedger.day, day)));

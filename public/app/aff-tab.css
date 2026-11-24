@@ -1,0 +1,110 @@
+.u-tab{--bg:#f6f1fa;--bg-2:#fbe9e1;--ink:#2e2547;--muted:#76698f;--accent:#4a3d78;--gold:#b0832f;--gold-dim:#cdb27a;--face:#fffaf0;--line:#ead9b0;--ok:#2f7a4f;--okbg:#e3f3e8;--wait:#8a6a2a;--waitbg:#f6ecd6;max-width:720px;margin:0 auto}
+.u-tab *{box-sizing:border-box}
+.u-tab .u-page{background:linear-gradient(180deg,var(--bg-2),var(--bg) 280px);border-radius:18px;padding:28px 28px 40px;box-shadow:0 10px 40px rgba(46,37,71,.15)}
+.u-tab h1, .u-tab h2{font-family:var(--f-display);color:var(--accent);font-weight:600;margin:0;line-height:1.2}
+.u-tab h1{font-size:30px}
+.u-tab h2{font-size:22px}
+.u-tab .tabs{display:flex;gap:8px;margin-bottom:22px}
+.u-tab .tabs button{border:1.5px solid var(--gold-dim);border-radius:999px;padding:8px 18px;font-size:14px;font:inherit;background:transparent;cursor:pointer;color:inherit}
+.u-tab .tabs button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fffaf2}
+.u-tab .sub{color:var(--muted);margin:6px 0 20px;font-size:15px}
+.u-tab .card{position:relative;background:var(--face);border:1.5px solid var(--line);border-radius:18px;padding:22px}
+.u-tab section{margin-top:28px}
+.u-tab .sh{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.u-tab .lbl{font-size:13px;color:var(--muted);letter-spacing:.02em}
+.u-tab .code{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 4px}
+.u-tab .code b{font-size:34px;letter-spacing:.08em;font-weight:600;color:var(--ink)}
+.u-tab .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:12px;font:600 14px var(--f-body);cursor:pointer;border:1.5px solid var(--accent);background:transparent;color:var(--accent);white-space:nowrap}
+.u-tab .btn.solid{background:var(--accent);color:#fffaf2}
+.u-tab .btn.line{background:#06C755;border-color:#06C755;color:#fff}
+.u-tab .btn.gold{background:linear-gradient(135deg,#f6e2b0,#e2bf72);border-color:#b0832f;color:#2e2547}
+.u-tab .btn[disabled]{opacity:.55;cursor:not-allowed}
+.u-tab .link{display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 10px 10px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff}
+.u-tab .link span{flex:1;min-width:0;font-size:14px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.u-tab .reuse{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ok);background:var(--okbg);border-radius:999px;padding:4px 10px;margin-top:4px}
+.u-tab .share{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.u-tab .share .btn{width:100%}
+.u-tab details{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px}
+.u-tab summary{cursor:pointer;font-size:14px;color:var(--accent);font-weight:600}
+.u-tab .msg{margin-top:10px;font-size:14px;line-height:1.6;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px}
+.u-tab .aff{background:linear-gradient(160deg,#4a3d78,#2e2547);color:#fff;border:0}
+.u-tab .aff h2{color:#f6e2b0}
+.u-tab .badge{font-size:12px;font-weight:600;background:#f6e2b0;color:#2e2547;border-radius:999px;padding:4px 10px}
+.u-tab .aff .lead{color:#d9d1ee;font-size:14px;line-height:1.6;margin:6px 0 18px}
+.u-tab .hero{background:rgba(255,255,255,.08);border:1px solid rgba(246,226,176,.35);border-radius:14px;padding:18px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center}
+.u-tab .hero .k{font-size:13px;color:#d9d1ee}
+.u-tab .hero .v{font-size:34px;font-weight:600;color:#f6e2b0;line-height:1.1;margin:2px 0}
+.u-tab .hero .s{font-size:13px;color:#d9d1ee}
+.u-tab .prog{grid-column:1/-1}
+.u-tab .track{height:8px;border-radius:99px;background:rgba(255,255,255,.15);overflow:hidden}
+.u-tab .track i{display:block;height:100%;min-width:8px;background:linear-gradient(90deg,#f6e2b0,#e2bf72);border-radius:99px}
+.u-tab .prog p{margin:6px 0 0;font-size:12.5px;color:#d9d1ee}
+.u-tab .lockwrap{text-align:center}
+.u-tab .lockwrap small{display:block;margin-top:6px;font-size:12px;color:#d9d1ee}
+.u-tab .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.u-tab .tile{border-radius:14px;padding:14px;min-height:92px}
+.u-tab .aff .tile{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14)}
+.u-tab .card:not(.aff) .tile{background:#fff;border:1.5px solid var(--line)}
+.u-tab .tile .n{font-size:22px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums}
+.u-tab .aff .tile .n{color:#fff}
+.u-tab .tile .t{font-size:13px;color:var(--muted);margin-bottom:6px}
+.u-tab .aff .tile .t, .u-tab .aff .tile .s{color:#cfc6e6}
+.u-tab .tile .s{font-size:12px;color:var(--muted);margin-top:2px}
+.u-tab .subh{font-size:15px;font-weight:600;margin:22px 0 8px;color:#f6e2b0}
+.u-tab table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.u-tab th{text-align:left;font-weight:400;font-size:12.5px;color:#cfc6e6;padding:8px 8px;border-bottom:1px solid rgba(255,255,255,.18)}
+.u-tab td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.1)}
+.u-tab td.r, .u-tab th.r{text-align:right}
+.u-tab td.plus{color:#f6e2b0;font-weight:600}
+.u-tab .steps{margin:0;padding-left:20px;color:#d9d1ee;font-size:13.5px;line-height:1.7}
+.u-tab .steps li{margin:2px 0}
+.u-tab .empty{font-size:13.5px;color:#cfc6e6;line-height:1.6;background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.2);border-radius:12px;padding:12px 14px}
+.u-tab .earn{display:grid;grid-template-columns:1.3fr 1fr 1fr;border:1.5px solid var(--line);border-radius:14px;overflow:hidden;background:#fff}
+.u-tab .earn>div{padding:12px 14px;border-top:1px solid var(--line);font-size:14px}
+.u-tab .earn>.hd{border-top:0;background:#f4effc;color:var(--accent);font-weight:600;font-size:13px}
+.u-tab .earn .when{display:flex;gap:10px;align-items:flex-start}
+.u-tab .earn .num{flex:none;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.u-tab .earn .v{font-weight:600}
+.u-tab .earn .v.dash{color:#c9bfd8;font-weight:400}
+.u-tab .earn .vs{display:block;font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}
+.u-tab .earn .you{background:#fffaf0}
+.u-tab .earn .aff3{background:#f8f3ff}
+.u-tab .earn .aff3.you{background:#fff6dc}
+.u-tab .tag{display:inline-block;font-size:11px;font-weight:600;color:#7a5a12;background:#f6e2b0;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:1px}
+.u-tab .cap{font-size:12.5px;color:var(--muted)}
+.u-tab .list{margin-top:14px;border-top:1px solid var(--line)}
+.u-tab .row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.u-tab .av{width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;flex:none}
+.u-tab .row .nm{flex:1;min-width:0}
+.u-tab .row .nm b{display:block;font-weight:600}
+.u-tab .row .nm small{color:var(--muted);font-size:12.5px}
+.u-tab .pill{font-size:12.5px;font-weight:600;border-radius:999px;padding:4px 10px;white-space:nowrap}
+.u-tab .pill.ok{color:var(--ok);background:var(--okbg)}
+.u-tab .pill.wait{color:var(--wait);background:var(--waitbg)}
+.u-tab .fine{margin:22px 0 0;padding:0 0 0 18px;color:var(--muted);font-size:12.5px;line-height:1.7}
+.u-tab [data-aff]{display:none}
+.u-tab .u-page.isaff [data-aff]{display:block}
+.u-tab .u-page.isaff .earn [data-aff]{display:flex}
+.u-tab .earn [data-aff].v-cell{display:none}
+.u-tab .u-page.isaff .earn [data-aff].v-cell{display:block}
+@media (max-width:560px){
+.u-tab .u-page{width:390px;padding:20px 16px 32px}
+.u-tab h1{font-size:26px}
+.u-tab .card{padding:18px 16px}
+.u-tab .code b{font-size:28px}
+.u-tab .hero{grid-template-columns:1fr}
+.u-tab .tile{padding:12px 10px;min-height:84px}
+.u-tab .tile .n{font-size:18px}
+.u-tab .tile .t{font-size:12px}
+.u-tab table thead{display:none}
+.u-tab table, .u-tab .m tbody, .u-tab .m tr, .u-tab .m td{display:block}
+.u-tab tr{display:grid;grid-template-columns:1fr auto;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.12)}
+.u-tab td{border:0;padding:1px 0}
+.u-tab td:nth-child(2){grid-row:2;color:#cfc6e6;font-size:13px}
+.u-tab td:nth-child(3){grid-row:3;color:#cfc6e6;font-size:13px}
+.u-tab td:nth-child(4){grid-row:1/4;grid-column:2;align-self:center}
+.u-tab .earn{grid-template-columns:1fr 1fr}
+.u-tab .earn .when{grid-column:1/-1;background:#faf7ff;border-top:1px solid var(--line)}
+.u-tab .earn>.hd.w{display:none}
+.u-tab .earn>.hd{border-top:0}
+}

@@ -115,25 +115,26 @@ export const affiliates = sqliteTable("affiliates", {
   note: text("note"),
 });
 
-// Affiliate payout claims: the affiliate taps Claim for their unclaimed
-// token balance; staff approves (tokens land) or denies with a reason.
-export const affiliateClaims = sqliteTable(
-  "affiliate_claims",
+// Affiliate cash payouts: the affiliate taps Request payout once their 20%
+// share reaches the minimum; staff transfers the money by bank, then marks
+// the request paid (amount + transfer note). One open request at a time.
+export const affiliatePayouts = sqliteTable(
+  "affiliate_payouts",
   {
     id: text("id").primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    tokens: integer("tokens").notNull(),
-    grantedTokens: integer("granted_tokens"),
-    status: text("status").notNull(), // pending|approved|denied
-    reason: text("reason"),
-    createdAt: integer("created_at").notNull(),
-    decidedAt: integer("decided_at"),
-    decidedBy: text("decided_by"),
+    amountMinor: integer("amount_minor").notNull(),
+    currency: text("currency").notNull().default("THB"),
+    status: text("status").notNull(), // requested|paid
+    requestedAt: integer("requested_at").notNull(),
+    paidAt: integer("paid_at"),
+    paidBy: text("paid_by"),
+    note: text("note"),
   },
   (t) => ({
-    statusIdx: index("idx_affiliate_claims_status").on(t.status, t.createdAt),
+    statusIdx: index("idx_affiliate_payouts_status").on(t.status, t.requestedAt),
   }),
 );
 

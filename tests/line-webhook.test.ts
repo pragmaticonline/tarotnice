@@ -71,12 +71,15 @@ describe("LINE Messaging client", () => {
   it("redeem box invites LINE adds with the live bonus amount", () => {
     expect(t("en").lineRedeemCta).toContain("{n}");
     expect(t("th").lineRedeemCta).toContain("{n}");
-    const en = billingPage({ ui: "en", origin: "", env: {} as never, balance: 0, freeLeft: 0 });
+    const en = billingPage({ ui: "en", origin: "", env: {} as never, balance: 0, freeLeft: 0 , invite: {
+        code: "NICE-TEST", link: "https://tarotnice.com/r/NICE-TEST", message: "",
+        friends: [], joined: 0, converted: 0, tokensEarned: 0, rewardToday: 0, rewardCap: 3,
+      },});
     expect(en).toContain("get 5 free tokens right away");
     expect(en).toContain("https://lin.ee/tMMzlAg");
     expect(en).toContain("https://scdn.line-apps.com/n/line_add_friends/btn/en.png");
     expect(en).not.toContain("line-add-btn");
-    const th = billingPage({ ui: "th", origin: "", env: {} as never, balance: 0, freeLeft: 0 });
+    const th = billingPage({ ui: "th", origin: "", env: {} as never, balance: 0, freeLeft: 0, invite: { code: "NICE-TEST", link: "https://tarotnice.com/r/NICE-TEST", message: "", friends: [], joined: 0, converted: 0, tokensEarned: 0, rewardToday: 0, rewardCap: 3 } });
     expect(th).toContain("\u0e23\u0e31\u0e1a\u0e1f\u0e23\u0e35\u0e17\u0e31\u0e19\u0e17\u0e35 5 \u0e42\u0e17\u0e40\u0e04\u0e19");
     expect(th).toContain("https://scdn.line-apps.com/n/line_add_friends/btn/th.png");
   });

@@ -1360,13 +1360,13 @@ export type AffiliateRow = {
   payments: number; revenueMinor: number;
 };
 
-export type PendingClaim = {
-  id: string; userId: string; email: string | null; tokens: number; createdAt: number;
+export type PendingPayout = {
+  id: string; userId: string; email: string | null; amountMinor: number; requestedAt: number;
 };
 
 export function renderAffiliatesPage(
   staff: StaffIdentity, q: string, hits: StaffUserHit[], rows: AffiliateRow[],
-  claims: PendingClaim[] = [],
+  payouts: PendingPayout[] = [],
 ): string {
   const search = `<form method="get" action="/affiliates" class="search">
 <input type="search" name="q" value="${escapeHtml(q)}" placeholder="find a user to enable: email, user id, or nickname">
@@ -1395,29 +1395,25 @@ export function renderAffiliatesPage(
         )
         .join("")}</tbody></table>`
     : `<div class="empty">No affiliates yet. Search above to enable the first one.</div>`;
-  const queue = claims.length
-    ? `<table><thead><tr><th>Affiliate</th><th class="num">Claimed</th><th>Filed</th><th>Approve (granted tokens + reason)</th><th>Deny (reason)</th></tr></thead><tbody>${claims
+  const queue = payouts.length
+    ? `<table><thead><tr><th>Affiliate</th><th class="num">Requested</th><th>Filed</th><th>Mark paid (bank transfer ref + note)</th></tr></thead><tbody>${payouts
         .map(
-          (cl) =>
-            `<tr><td><a href="/invites?user=${escapeHtml(cl.userId)}">${escapeHtml(cl.email ?? cl.userId)}</a></td>` +
-            `<td class="num">${cl.tokens}</td>` +
-            `<td>${escapeHtml(new Date(cl.createdAt).toISOString().slice(0, 10))}</td>` +
-            `<td><form method="post" action="/affiliates/claims/${escapeHtml(cl.id)}/approve" style="display:flex;gap:6px;align-items:center">` +
-            `<input type="number" name="granted" min="1" value="${cl.tokens}" required style="width:6em">` +
-            `<input type="text" name="reason" placeholder="payout ref / note" required style="min-width:12em">` +
-            `<button class="btn" type="submit">Approve &amp; pay</button></form></td>` +
-            `<td><form method="post" action="/affiliates/claims/${escapeHtml(cl.id)}/deny" style="display:flex;gap:6px;align-items:center">` +
-            `<input type="text" name="reason" placeholder="why denied" required>` +
-            `<button class="btn" type="submit">Deny</button></form></td></tr>`,
+          (p) =>
+            `<tr><td><a href="/invites?user=${escapeHtml(p.userId)}">${escapeHtml(p.email ?? p.userId)}</a></td>` +
+            `<td class="num">${escapeHtml(formatMinor(p.amountMinor, "THB"))}</td>` +
+            `<td>${escapeHtml(new Date(p.requestedAt).toISOString().slice(0, 10))}</td>` +
+            `<td><form method="post" action="/affiliates/payouts/${escapeHtml(p.id)}/pay" style="display:flex;gap:6px;align-items:center">` +
+            `<input type="text" name="note" placeholder="transfer ref, tax withheld" required style="min-width:16em">` +
+            `<button class="btn" type="submit">Mark paid</button></form></td></tr>`,
         )
         .join("")}</tbody></table>`
-    : `<div class="empty">No pending payout claims.</div>`;
+    : `<div class="empty">No pending payout requests.</div>`;
   return shellChrome(
     staff,
     "Affiliates",
     "/affiliates",
     `<div class="top"><h1>Affiliates</h1><small>invite codes with signup + payment tracking</small></div>` +
-      `<div class="card"><h2 style="margin-top:0">Payout claims</h2>${queue}</div>` +
+      `<div class="card"><h2 style="margin-top:0">Payout requests</h2>${queue}</div>` +
       `<div class="card"><h2 style="margin-top:0">Enable tracking</h2>${search}${found}</div>` +
       `<div class="card"><h2 style="margin-top:0">Partners</h2>${list}</div>`,
   );
@@ -1856,22 +1852,22 @@ app.get("/affiliates", async (c) => {
       rows = [];
     }
   }
-  let claims: PendingClaim[] = [];
+  let payouts: PendingPayout[] = [];
   if (c.env?.DB) {
     try {
       const store = d1TarotStore(c.env.DB);
-      const pending = await store.pendingAffiliateClaims();
+      const pending = await store.pendingAffiliatePayouts();
       const orm = drizzle(c.env.DB);
       const cu = pending.length
         ? await orm.select({ id: user.id, email: user.email }).from(user).where(inArray(user.id, pending.map((x) => x.userId))).catch(() => [] as { id: string; email: string }[])
         : [];
       const emailById = new Map(cu.map((u) => [u.id, u.email]));
-      claims = pending.map((x) => ({ ...x, email: emailById.get(x.userId) ?? null }));
+      payouts = pending.map((x) => ({ ...x, email: emailById.get(x.userId) ?? null }));
     } catch {
-      claims = [];
+      payouts = [];
     }
   }
-  return c.html(renderAffiliatesPage(staff, q, hits, rows, claims));
+  return c.html(renderAffiliatesPage(staff, q, hits, rows, payouts));
 });
 
 app.post("/affiliates/:userId/enable", async (c) => {
@@ -1895,76 +1891,34 @@ app.post("/affiliates/:userId/enable", async (c) => {
   return c.redirect(`/affiliates`, 302);
 });
 
-app.post("/affiliates/claims/:claimId/approve", async (c) => {
+app.post("/affiliates/payouts/:payoutId/pay", async (c) => {
   const staff = c.get("staff" as never) as StaffIdentity;
   if (!canMutate(staff)) return c.text("Support role or above required.", 403);
-  const claimId = c.req.param("claimId") ?? "";
-  if (!claimId || !c.env?.DB) return c.json({ error: "unknown_claim" }, 404);
+  const payoutId = c.req.param("payoutId") ?? "";
+  if (!payoutId || !c.env?.DB) return c.json({ error: "unknown_payout" }, 404);
   const body = await readInput(c as never);
-  const granted = Math.floor(Number((body as Record<string, unknown>).granted ?? NaN));
-  const reason = String((body as Record<string, unknown>).reason ?? "").trim();
-  if (!Number.isFinite(granted) || granted <= 0) {
-    if (wantsJson(c)) return c.json({ error: "Enter the granted token amount." }, 400);
-    return c.redirect("/affiliates", 302);
-  }
-  if (!reason) {
-    if (wantsJson(c)) return c.json({ error: "A reason is required." }, 400);
+  const note = String((body as Record<string, unknown>).note ?? "").trim();
+  if (!note) {
+    if (wantsJson(c)) return c.json({ error: "A transfer note is required." }, 400);
     return c.redirect("/affiliates", 302);
   }
   const store = d1TarotStore(c.env.DB);
-  const claim = await store.affiliateClaim(claimId).catch(() => null);
-  if (!claim) return c.json({ error: "unknown_claim" }, 404);
-  if (claim.status !== "pending") {
-    if (wantsJson(c)) return c.json({ ok: true, status: claim.status });
+  const payout = await store.affiliatePayout(payoutId).catch(() => null);
+  if (!payout) return c.json({ error: "unknown_payout" }, 404);
+  if (payout.status !== "requested") {
+    if (wantsJson(c)) return c.json({ ok: true, status: payout.status });
     return c.redirect("/affiliates", 302);
   }
-  // pending -> deciding is the single-winner gate; the ledger insert below
-  // is idempotent on (user, reason, ref), so a retry can never double-pay.
-  const won = await store.claimAffiliateClaim(claimId).catch(() => false);
+  // Conditional update is the single-winner gate: two staff marking the
+  // same request paid at once cannot double-record it.
+  const won = await store.payAffiliatePayout(payoutId, staff.email, note).catch(() => false);
   if (!won) {
-    if (wantsJson(c)) return c.json({ ok: true, status: "decided" });
+    if (wantsJson(c)) return c.json({ ok: true, status: "paid" });
     return c.redirect("/affiliates", 302);
   }
-  await store.postLedger({
-    userId: claim.userId, delta: granted, reason: "affiliate_claim",
-    ref: `affiliate-claim:${claimId}`, day: bangkokDay(),
-  }).catch(() => {});
-  await store.decideAffiliateClaim(claimId, true, granted, staff.email, reason).catch(() => {});
   await recordAudit(c.env.DB, staff, {
-    action: "affiliate_claim.approve", targetType: "user", targetId: claim.userId,
-    reason, result: "ok", after: { claimId, claimed: claim.tokens, granted },
-  }).catch(() => {});
-  if (wantsJson(c)) return c.json({ ok: true, granted });
-  return c.redirect("/affiliates", 302);
-});
-
-app.post("/affiliates/claims/:claimId/deny", async (c) => {
-  const staff = c.get("staff" as never) as StaffIdentity;
-  if (!canMutate(staff)) return c.text("Support role or above required.", 403);
-  const claimId = c.req.param("claimId") ?? "";
-  if (!claimId || !c.env?.DB) return c.json({ error: "unknown_claim" }, 404);
-  const body = await readInput(c as never);
-  const reason = String((body as Record<string, unknown>).reason ?? "").trim();
-  if (!reason) {
-    if (wantsJson(c)) return c.json({ error: "A reason is required." }, 400);
-    return c.redirect("/affiliates", 302);
-  }
-  const store = d1TarotStore(c.env.DB);
-  const claim = await store.affiliateClaim(claimId).catch(() => null);
-  if (!claim) return c.json({ error: "unknown_claim" }, 404);
-  if (claim.status !== "pending") {
-    if (wantsJson(c)) return c.json({ ok: true, status: claim.status });
-    return c.redirect("/affiliates", 302);
-  }
-  const won = await store.claimAffiliateClaim(claimId).catch(() => false);
-  if (!won) {
-    if (wantsJson(c)) return c.json({ ok: true, status: "decided" });
-    return c.redirect("/affiliates", 302);
-  }
-  await store.decideAffiliateClaim(claimId, false, null, staff.email, reason).catch(() => {});
-  await recordAudit(c.env.DB, staff, {
-    action: "affiliate_claim.deny", targetType: "user", targetId: claim.userId,
-    reason, result: "ok", after: { claimId, claimed: claim.tokens },
+    action: "affiliate_payout.pay", targetType: "user", targetId: payout.userId,
+    reason: note, result: "ok", after: { payoutId, amountMinor: payout.amountMinor },
   }).catch(() => {});
   if (wantsJson(c)) return c.json({ ok: true });
   return c.redirect("/affiliates", 302);

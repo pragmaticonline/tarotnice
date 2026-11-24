@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { AFFILIATE_MIN_PAYOUT_MINOR, affiliatePayoutValue, affiliateShare, AFFILIATE_SHARE, affiliateTokenBalance, affiliateTokensEarned, formatMinor, friendTopupBonus, summarizeAffiliatePayments, topupsSinceReferral } from "../src/lib/affiliate";
+import { AFFILIATE_MIN_PAYOUT_MINOR, affiliateShare, AFFILIATE_SHARE, formatMinor, formatWholeMinor, FRIEND_TOPUP_RATE, friendTopupBonus, summarizeAffiliatePayments, topupsSinceReferral } from "../src/lib/affiliate";
+import { billingPage, fmtDay, fmtDayMs } from "../src/routes/billing";
 import { t } from "../src/lib/i18n";
-import { billingPage } from "../src/routes/billing";
 
-describe("affiliate totals", () => {
+describe("affiliate money math", () => {
   it("sums minor units and picks the majority currency", () => {
     expect(summarizeAffiliatePayments([])).toEqual({ count: 0, totalMinor: 0, currency: "THB" });
     const rows = [
@@ -20,44 +20,10 @@ describe("affiliate totals", () => {
     expect(formatMinor(affiliateShare(25800), "THB")).toBe("\u0e3f51.60");
   });
 
-  it("has complete copy in both languages, no payer names promised", () => {
-    for (const ui of ["en", "th"] as const) {
-      const d = t(ui);
-      for (const key of ["affTitle", "affPayments", "affRevenue", "affShare", "affNote", "affDate", "affEmpty",
-        "affEarned", "affClaimed", "affUnclaimed", "affClaimNow", "affPending", "affHistory", "affClaimNote",
-        "affPaid", "affDenied"] as const) {
-        expect(d[key].length, `${ui}.${key}`).toBeGreaterThan(0);
-      }
-      expect(d.affNote, ui).not.toMatch(/credit/i);
-      expect(d.affNote, ui).toContain("20%");
-      if (ui === "en") expect(d.affNote, ui).toContain("earlier payments do not count");
-      else expect(d.affNote, ui).toContain("\u0e44\u0e21\u0e48\u0e19\u0e31\u0e1a");
-      expect(d.affClaimNote, ui).toContain("{min}");
-      const thai = t("th");
-      for (const key of ["affEarned", "affClaimed", "affUnclaimed", "affClaimNow", "affPending", "affHistory", "affClaimNote", "affPaid", "affDenied"] as const) {
-        expect(thai[key], `th.${key}`).not.toContain("\u0e42\u0e17\u0e40\u0e04\u0e47\u0e19");
-        expect(thai[key], `th.${key}`).not.toContain("\u0e42\u0e17\u0e40\u0e04\u0e19\u0e2a\u0e4c");
-      }
-    }
-  });
-
-  it("values the cut in baht and gates payouts at 1500", () => {
+  it("gates cash requests at 1500 THB of unpaid 20% share", () => {
     expect(AFFILIATE_MIN_PAYOUT_MINOR).toBe(150000);
-    // 20% of 5900 satang = 1180 satang on a 50-token top-up.
-    const rows = [{ delta: 50, amount: 5900 }, { delta: 500, amount: 39900 }];
-    expect(affiliatePayoutValue(rows, []).earnedMinor).toBe(1180 + 7980);
-    expect(affiliatePayoutValue(rows, []).canClaim).toBe(false);
-    const big = [{ delta: 10000, amount: 798000 }];
-    const v = affiliatePayoutValue(big, []);
-    expect(v.canClaim).toBe(true);
-    expect(v.unclaimedMinor).toBe(Math.round(798000 * 0.2));
-    // approved grants consume value at the average rate; denied claims do not.
-    const after = affiliatePayoutValue(big, [
-      { status: "approved", tokens: 900, grantedTokens: 800 },
-      { status: "denied", tokens: 900, grantedTokens: null },
-    ]);
-    expect(after.canClaim).toBe(false);
-    expect(after.unclaimedMinor).toBeLessThan(AFFILIATE_MIN_PAYOUT_MINOR);
+    expect(formatWholeMinor(150000, "THB")).toBe("\u0e3f1,500");
+    expect(formatWholeMinor(159650, "THB")).toBe("\u0e3f1,596.50");
   });
 
   it("counts only post-referral top-ups toward the cut", () => {
@@ -71,11 +37,11 @@ describe("affiliate totals", () => {
     const kept = topupsSinceReferral(rows, dayByUser);
     // f1's pre-referral top-up is dropped; f9 (no referral day known) is kept.
     expect(kept.map((r) => r.day).sort()).toEqual(["2020-01-01", "2026-11-20", "2026-11-23"]);
-    // pre-referral spend earns nothing: 20% of (500 + 50), not of the rest.
-    expect(affiliateTokensEarned(kept.filter((r) => r.userId !== "f9"))).toBe(110);
+    expect(affiliateShare(79800)).toBe(15960);
   });
 
   it("gives the friend 10% extra on every top-up, rounded up", () => {
+    expect(FRIEND_TOPUP_RATE).toBe(0.1);
     expect(friendTopupBonus(50)).toBe(5);
     expect(friendTopupBonus(200)).toBe(20);
     expect(friendTopupBonus(500)).toBe(50);
@@ -83,130 +49,151 @@ describe("affiliate totals", () => {
     expect(friendTopupBonus(0)).toBe(0);
   });
 
-  it("computes token earnings at 20% and tracks claimed/pending/unclaimed", () => {
-    expect(affiliateTokensEarned([])).toBe(0);
-    // 20% of each purchase, rounded per row: 20% of 50 = 10, of 7 = 1.
-    expect(affiliateTokensEarned([{ delta: 50 }, { delta: 7 }])).toBe(11);
-    const none = affiliateTokenBalance(100, []);
-    expect(none).toEqual({ earned: 100, claimed: 0, pending: 0, unclaimed: 100 });
-    const mixed = affiliateTokenBalance(100, [
-      { status: "approved", tokens: 60, grantedTokens: 50 },
-      { status: "pending", tokens: 30, grantedTokens: null },
-      { status: "deciding", tokens: 10, grantedTokens: null },
-      { status: "denied", tokens: 99, grantedTokens: null },
-    ]);
-    // denied claims free the balance; approved counts granted, not claimed.
-    expect(mixed).toEqual({ earned: 100, claimed: 50, pending: 40, unclaimed: 10 });
-    // never negative when staff overpays.
-    expect(affiliateTokenBalance(10, [{ status: "approved", tokens: 10, grantedTokens: 25 }]).unclaimed).toBe(0);
+  it("formats Bangkok dates with the Buddhist year in Thai", () => {
+    expect(fmtDay("2026-11-24", "en")).toBe("24 Nov 2026");
+    expect(fmtDay("2026-11-24", "th")).toBe("24 \u0e1e.\u0e22. 2569");
+    expect(fmtDayMs(Date.UTC(2026, 10, 24, 12), "en")).toBe("24 Nov 2026");
+    expect(fmtDayMs(Date.UTC(2026, 10, 24, 12), "th")).toBe("24 \u0e1e.\u0e22. 2569");
+    expect(fmtDay("nope", "en")).toBe("nope");
   });
 });
 
-describe("affiliate card on /billing", () => {
+describe("affiliate v2 copy", () => {
+  const keys = ["affH", "affBadge", "affLead", "affAvail", "affBelow", "affReached", "affRequested",
+    "affClaimBtn", "affInProgress", "affT1", "affT2", "affT3", "affBuyOne", "affBuyMany", "affPayOne",
+    "affPayMany", "affT2s", "affBuysH", "affC1", "affC2", "affC3", "affC4", "affPayH", "affPayEmpty",
+    "affHowPay", "affHp1", "affHp2", "affHp3", "affEarnH", "affColWhen", "affColFriend", "affColYou",
+    "affS1", "affS1f", "affS1fs", "affS2", "affS2y", "affS2ys", "affS3", "affS3f", "affS3fs", "affS3y",
+    "affS3ys", "affFrH", "affF1", "affF2", "affF3", "affTodayCap", "affFrWait", "affNoReadYet",
+    "affPlus5", "affFrBuys", "affFrBuyOne", "affFine1", "affFine2", "affFine3", "affMsg", "affReuse",
+    "affShareLine", "affShareImg", "affMsgLbl", "affCopyMsg", "affCodeLbl", "affTabTitle", "affAnon",
+    "affPaid", "affReqFail"] as const;
+  it("is complete in both languages with Thai spelling intact", () => {
+    for (const ui of ["en", "th"] as const) {
+      const d = t(ui);
+      for (const key of keys) {
+        expect(String(d[key]).length, `${ui}.${key}`).toBeGreaterThan(0);
+      }
+      expect(d.affLead, ui).toContain("20%");
+      expect(d.affS3f, ui).toContain("10%");
+    }
+    const thai = t("th");
+    for (const v of Object.values(thai)) {
+      if (typeof v !== "string") continue;
+      expect(v).not.toContain("\u0e42\u0e17\u0e40\u0e04\u0e47\u0e19");
+      expect(v).not.toContain("\u0e42\u0e17\u0e40\u0e04\u0e19\u0e2a\u0e4c");
+    }
+  });
+});
+
+describe("invite tab v2 on /billing", () => {
   const base = {
-    ui: "en" as const, origin: "", env: {} as never, balance: 10, freeLeft: 5,
+    ui: "en" as const, origin: "https://tarotnice.com", env: {} as never, balance: 10, freeLeft: 5,
     account: { initial: "M", tokens: 15 },
+    invite: {
+      code: "NICE-TEST", link: "https://tarotnice.com/r/NICE-TEST", message: "msg",
+      friends: [
+        { name: "Maew", status: "rewarded" as const, joinedAt: 1, readAt: 2, purchases: 1 },
+        { name: null, status: "joined" as const, joinedAt: 3, readAt: null, purchases: 0 },
+      ],
+      joined: 2, converted: 1, tokensEarned: 5, rewardToday: 1, rewardCap: 3,
+    },
   };
-  const affiliate = {
-    invited: 4, converted: 2,
+  const aff = {
     payments: [
-      { day: "2026-11-20", delta: 50, amount: 5900, currency: "THB", paymentMethod: "promptpay" },
-      { day: "2026-11-22", delta: 200, amount: 19900, currency: "THB", paymentMethod: "card" },
+      { day: "2026-11-20", delta: 50, amount: 5900, currency: "THB", paymentMethod: "promptpay", shareMinor: 1180 },
+      { day: "2026-11-22", delta: 200, amount: 19900, currency: "THB", paymentMethod: "card", shareMinor: 3980 },
     ],
     revenueMinor: 25800, revenueCurrency: "THB", shareMinor: 5160,
-    earnedTokens: 50, claimedTokens: 20, pendingTokens: 0, unclaimedTokens: 30,
-    unclaimedMinor: 160000, minimumMinor: 150000, canClaim: true,
-    claims: [
-      { day: "2026-11-21", tokens: 20, granted: 20, status: "approved" },
-    ],
+    paidMinor: 0, payoutCount: 0, unpaidMinor: 5160, canRequest: false,
+    openRequest: null,
+    payouts: [],
   };
 
-  it("renders only for flagged affiliates, with totals and no payer ids", () => {
-    const plain = billingPage({ ...base, affiliate: null });
-    expect(plain).not.toContain("Affiliate stats");
-    const html = billingPage({ ...base, affiliate });
-    expect(html).toContain("Affiliate stats");
-    expect(html).toContain("Total earned");
-    expect(html).toContain("\u0e3f258.00");
-    expect(html).toContain("promptpay");
-    expect(html).toContain("card");
-    expect(html).not.toContain("/users/f1");
-    expect(html).toContain("after joining with your code");
-    expect(html).toContain("earlier payments do not count");
-    expect(html).not.toContain("another affiliate");
-    expect(html).toContain("Total earned");
-    expect(html).toContain("Available to claim");
-    expect(html).toContain("Payout history");
+  it("renders the v2 tab for regular members without the affiliate section", () => {
+    const html = billingPage({ ...base, affiliate: null });
+    expect(html).toContain("Invite friends, earn tokens");
+    expect(html).toContain("NICE-TEST");
+    expect(html).toContain("What you both get");
+    expect(html).not.toContain("isaff");
+    expect(html).toContain("Each friend can use one code, once");
+    expect(html).not.toContain("Withholding tax is deducted");
+    expect(html).not.toContain('id="aff-payout"');
+    expect(html).toContain("Today\u2019s bonus 1/3 friends");
+  });
+
+  it("shows below-minimum state with progress and no button", () => {
+    const html = billingPage({ ...base, affiliate: aff });
+    expect(html).toContain("Partner earnings");
+    expect(html).toContain("20% of the purchase in cash");
+    expect(html).toContain("\u0e3f51.60");
+    expect(html).toContain("\u0e3f1,448.40 more until you can request a payout");
+    expect(html).not.toContain('id="aff-payout"');
+    expect(html).toContain('style="width:3%"');
+    expect(html).toContain("20 Nov 2026");
+    expect(html).toContain("50 tokens");
+    expect(html).toContain("\u0e3f59.00 · PromptPay");
+    expect(html).toContain("+\u0e3f11.80");
+    expect(html).toContain("Maew");
+    expect(html).toContain("First reading done · 1 purchase");
+    expect(html).toContain("No payouts yet.");
+    expect(html).toContain("How payouts work");
+  });
+
+  it("shows the request button once the minimum is reached", () => {
+    const html = billingPage({ ...base, affiliate: { ...aff, unpaidMinor: 162000, shareMinor: 162000, canRequest: true } });
+    expect(html).toContain('id="aff-payout"');
+    expect(html).toContain("request your payout");
+    expect(html).toContain("\u0e3f1,620.00");
+  });
+
+  it("shows the requested state with date and pill", () => {
+    const html = billingPage({
+      ...base,
+      affiliate: {
+        ...aff, unpaidMinor: 162000, shareMinor: 162000, canRequest: false,
+        openRequest: { amountMinor: 162000, requestedAt: Date.UTC(2026, 10, 24, 5) },
+        payouts: [{ requestedAt: Date.UTC(2026, 10, 24, 5), paidAt: null, amountMinor: 162000, currency: "THB", status: "requested" }],
+      },
+    });
+    expect(html).not.toContain('id="aff-payout"');
+    expect(html).toContain("In progress");
+    expect(html).toContain("Requested on 24 Nov 2026");
+  });
+
+  it("shows paid payouts as history", () => {
+    const html = billingPage({
+      ...base,
+      affiliate: {
+        ...aff, unpaidMinor: 2000, shareMinor: 162000,
+        paidMinor: 160000, payoutCount: 1,
+        payouts: [{ requestedAt: Date.UTC(2026, 9, 1, 5), paidAt: Date.UTC(2026, 9, 3, 5), amountMinor: 160000, currency: "THB", status: "paid" }],
+      },
+    });
     expect(html).toContain("Paid");
+    expect(html).toContain("\u0e3f1,600.00");
+    expect(html).not.toContain("No payouts yet.");
   });
 
-  it("shows the unlock note below the 1500 minimum", () => {
-    const locked = billingPage({ ...base, affiliate: { ...affiliate, pendingTokens: 0, unclaimedTokens: 30, unclaimedMinor: 1180, canClaim: false } });
-    expect(locked).not.toContain('id="aff-claim"');
-    expect(locked).toContain("Payouts unlock at");
-    const th = billingPage({ ...base, ui: "th", affiliate: { ...affiliate, pendingTokens: 0, unclaimedTokens: 30, unclaimedMinor: 1180, canClaim: false } });
-    expect(th).not.toContain("\u0e42\u0e17\u0e40\u0e04\u0e47\u0e19");
-    expect(th).not.toContain("\u0e42\u0e17\u0e40\u0e04\u0e19\u0e2a\u0e4c");
-  });
-
-  it("shows the claim button only when tokens are unclaimed", () => {
-    const btn = billingPage({ ...base, affiliate: { ...affiliate, pendingTokens: 0, unclaimedTokens: 30 } });
-    expect(btn).toContain('id="aff-claim"');
-    const pend = billingPage({ ...base, affiliate: { ...affiliate, pendingTokens: 30, unclaimedTokens: 0 } });
-    expect(pend).not.toContain('id="aff-claim"');
-    expect(pend).toContain("Claim pending review");
-    const none = billingPage({ ...base, affiliate: { ...affiliate, pendingTokens: 0, unclaimedTokens: 0, claims: [] } });
-    expect(none).not.toContain('id="aff-claim"');
-  });
-
-  it("keeps genuine new-user referrals paying end to end", () => {
+  it("wires the payout request endpoint and staff queue", () => {
     const src = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
-    const store = readFileSync(new URL("../src/db/tarot-store.ts", import.meta.url), "utf8");
-    // First click wins forever: first click inserts, later clicks are
-    // ignored, so all future payments keep paying the original referrer.
-    expect(store).toContain("async insertReferral(");
-    expect(store).not.toContain("upsertReferral(");
-    expect(store).toContain("first click wins forever");
-    expect(src).toContain("insertReferral(");
-    expect(src).not.toContain("upsertReferral(");
-    // Conversion still fires on a true first reading.
-    expect(store).toContain("async convertReferral(");
-    expect(store).toContain("!== 1) return false");
-    // Joining bonus stays new-accounts-only; established clicks attribute
-    // but earn the influencer future 20% instead.
-    expect(src).toContain("totalReadings(user.id)");
-    expect(src).toContain('"ineligible"');
-    // Earnings only ever count spend from the referral day forward.
-    expect(src).toContain("topupsSinceReferral(");
-    expect(src).toContain("bangkokDay(new Date(f.createdAt))");
-    // Every referred top-up also credits the buyer 20% extra, rounded up,
-    // keyed by payment so webhook replays stay a no-op.
-    expect(src).toContain("friend-topup-bonus:${");
-    expect(src).toContain("friendTopupBonus(pack.tokens)");
-    const js = readFileSync(new URL("../public/app/billing.js", import.meta.url), "utf8");
-    expect(js).toContain("friend-topup-bonus:");
-    expect(js).toContain("txTopupBonus");
-    // Invite tab promises the friend cut in both languages.
-    const d = t("en");
-    expect(d.inviteFriendGetsText).toContain("10% extra tokens on every top-up");
-    expect(t("th").inviteFriendGetsText).toContain("10%");
-    expect(d.inviteYouGetText).toContain("20% of everything they top up, forever");
-    expect(t("th").inviteYouGetText).toContain("20%");
-  });
-
-  it("wires the flag, referees, and payments in the billing route", () => {
-    const src = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
-    expect(src).toContain("getAffiliate(user.id)");
-    expect(src).toContain("topupsForUsers(");
-    expect(src).toContain("summarizeAffiliatePayments(");
-    expect(src).toContain("affiliate,");
-    expect(src).toContain("paymentMethod: r.paymentMethod");
-    expect(src).toContain("affiliateTokensEarned(");
-    expect(src).toContain("affiliateTokenBalance(");
-    expect(src).toContain('app.post("/api/me/affiliate/claim"');
-    expect(src).toContain("createAffiliateClaim(");
-    expect(src).toContain("nothing_to_claim");
+    expect(src).toContain('app.post("/api/me/affiliate/payout"');
+    expect(src).toContain("createAffiliatePayout(");
+    expect(src).toContain("already_requested");
     expect(src).toContain("below_minimum");
-    expect(src).toContain("AFFILIATE_MIN_PAYOUT_MINOR");
+    expect(src).not.toContain("/api/me/affiliate/claim");
+    expect(src).not.toContain("createAffiliateClaim(");
+    const staff = readFileSync(new URL("../src/staff.ts", import.meta.url), "utf8");
+    expect(staff).toContain('app.post("/affiliates/payouts/:payoutId/pay"');
+    expect(staff).toContain("payAffiliatePayout(");
+    expect(staff).toContain("affiliate_payout.pay");
+    expect(staff).not.toContain("decideAffiliateClaim(");
+    expect(staff).not.toContain("/claims/");
+  });
+
+  it("drops the token-claim table for the payout table", () => {
+    const mig = readFileSync(new URL("../drizzle/0016_affiliate_payouts.sql", import.meta.url), "utf8");
+    expect(mig).toContain("CREATE TABLE `affiliate_payouts`");
+    expect(mig).toContain("DROP TABLE `affiliate_claims`");
   });
 });

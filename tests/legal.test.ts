@@ -131,12 +131,18 @@ describe("GET /policies, /cookies, /security", () => {
       STRIPE_PACK_PREMIUM_PRICE_ID: "price_premium",
     } as never;
     for (const ui of ["en", "th"] as const) {
-      const html = billingPage({ ui, origin: "", env: stripeEnv, balance: 10, freeLeft: 5 });
+      const html = billingPage({ ui, origin: "", env: stripeEnv, balance: 10, freeLeft: 5 , invite: {
+        code: "NICE-TEST", link: "https://tarotnice.com/r/NICE-TEST", message: "",
+        friends: [], joined: 0, converted: 0, tokensEarned: 0, rewardToday: 0, rewardCap: 3,
+      },});
       expect(html).toContain("/pay-visa.svg");
       expect(html).toContain("/pay-mastercard.svg");
       expect(html).toContain("/pay-promptpay.png");
     }
-    expect(billingPage({ ui: "en", origin: "", env: stripeEnv, balance: 0, freeLeft: 0 })).toContain("Secure payments by Stripe");
+    expect(billingPage({ ui: "en", origin: "", env: stripeEnv, balance: 0, freeLeft: 0 , invite: {
+        code: "NICE-TEST", link: "https://tarotnice.com/r/NICE-TEST", message: "",
+        friends: [], joined: 0, converted: 0, tokensEarned: 0, rewardToday: 0, rewardCap: 3,
+      },})).toContain("Secure payments by Stripe");
   });
 
   it("sitemap lists the public policy pages", async () => {

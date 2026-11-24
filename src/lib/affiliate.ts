@@ -9,11 +9,6 @@ export function affiliateShare(totalMinor: number, rate: number = AFFILIATE_SHAR
   return Math.round(totalMinor * rate);
 }
 
-/** Token earnings from referred top-ups: 20% of each purchase, rounded. */
-export function affiliateTokensEarned(rows: { delta: number }[], rate: number = AFFILIATE_SHARE): number {
-  return rows.reduce((sum, r) => sum + Math.round(r.delta * rate), 0);
-}
-
 export type AffiliatePayment = {
   userId: string;
   day: string;
@@ -47,33 +42,9 @@ export function summarizeAffiliatePayments(rows: AffiliatePayment[]): {
   return { count: rows.length, totalMinor, currency };
 }
 
-/** Minimum payout value: claims unlock once the unclaimed cut is worth this
- * (minor units, i.e. 150000 = 1500 THB at current pack prices). */
+/** Minimum payout value: requests unlock once the unpaid 20% cut reaches
+ * this (minor units, i.e. 150000 = 1500 THB). */
 export const AFFILIATE_MIN_PAYOUT_MINOR = 150000;
-
-/** Baht value of the affiliate's cut, from each top-up's own pack price.
- * Rows without a recorded amount still earn tokens but carry no value here,
- * so the average — and the gate below — stays conservative. */
-export function affiliatePayoutValue(
-  rows: { delta: number; amount: number | null }[],
-  claims: { status: string; tokens: number; grantedTokens: number | null }[],
-  minimumMinor: number = AFFILIATE_MIN_PAYOUT_MINOR,
-): { earnedMinor: number; unclaimedMinor: number; minimumMinor: number; canClaim: boolean } {
-  let earnedMinor = 0;
-  for (const r of rows) {
-    if (typeof r.amount === "number") earnedMinor += Math.round(r.amount * AFFILIATE_SHARE);
-  }
-  const earnedTokens = affiliateTokensEarned(rows);
-  const avg = earnedTokens > 0 ? earnedMinor / earnedTokens : 0;
-  let claimedTokens = 0;
-  let pendingTokens = 0;
-  for (const c of claims) {
-    if (c.status === "approved") claimedTokens += c.grantedTokens ?? c.tokens;
-    else if (c.status === "pending" || c.status === "deciding") pendingTokens += c.tokens;
-  }
-  const unclaimedMinor = Math.max(0, earnedMinor - (claimedTokens + pendingTokens) * avg);
-  return { earnedMinor, unclaimedMinor, minimumMinor, canClaim: unclaimedMinor >= minimumMinor };
-}
 
 /** Keep only top-ups from on/after each referee's referral day, so the
  * 20% cut never reaches back to spend from before the referral. Rows for
@@ -93,21 +64,16 @@ export function friendTopupBonus(tokens: number, rate: number = FRIEND_TOPUP_RAT
   return Math.ceil(tokens * rate);
 }
 
-/** Affiliate token balance: earned from referees minus what's been paid out. */
-export function affiliateTokenBalance(
-  earnedTokens: number,
-  claims: { status: string; tokens: number; grantedTokens: number | null }[],
-): { earned: number; claimed: number; pending: number; unclaimed: number } {
-  let claimed = 0;
-  let pending = 0;
-  for (const c of claims) {
-    if (c.status === "approved") claimed += c.grantedTokens ?? c.tokens;
-    else if (c.status === "pending" || c.status === "deciding") pending += c.tokens;
-  }
-  return { earned: earnedTokens, claimed, pending, unclaimed: Math.max(0, earnedTokens - claimed - pending) };
-}
-
 export function formatMinor(minor: number, currency: string): string {
   const symbol = currency === "THB" ? "\u0e3f" : currency + " ";
   return `${symbol}${(minor / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+/** Whole-unit formatting for round thresholds (1500 not 1500.00). */
+export function formatWholeMinor(minor: number, currency: string): string {
+  if (Number.isInteger(minor / 100)) {
+    const symbol = currency === "THB" ? "\u0e3f" : currency + " ";
+    return `${symbol}${(minor / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+  }
+  return formatMinor(minor, currency);
 }

@@ -98,8 +98,12 @@ describe("rewardsTodayCount / filter mapping", () => {
       row(50, "topup", "2026-10-26"),
     ];
     expect(rewardsTodayCount(rows, "2026-10-26")).toBe(1);
-    // Design rule: inviter earns +5 tokens per friend, max 3 friends
-    // (+15 tokens) a day.
+    // The friend's own 10%-per-top-up bonus shares the referral reason
+    // but must never consume the inviter's +5 daily cap.
+    expect(rewardsTodayCount([
+      ...rows,
+      { ...row(5, "referral", "2026-10-26"), ref: "friend-topup-bonus:pi_1" },
+    ], "2026-10-26")).toBe(1);
     expect(REFERRAL_DAILY_CAP).toBe(3);
     expect(REFERRAL_DAILY_CAP * 5).toBe(15);
   });
