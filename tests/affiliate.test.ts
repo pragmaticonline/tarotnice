@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { AFFILIATE_MIN_PAYOUT_MINOR, affiliatePayoutValue, affiliateShare, AFFILIATE_SHARE, affiliateTokenBalance, affiliateTokensEarned, formatMinor, summarizeAffiliatePayments } from "../src/lib/affiliate";
+import { AFFILIATE_MIN_PAYOUT_MINOR, affiliatePayoutValue, affiliateShare, AFFILIATE_SHARE, affiliateTokenBalance, affiliateTokensEarned, formatMinor, summarizeAffiliatePayments, topupsSinceReferral } from "../src/lib/affiliate";
 import { t } from "../src/lib/i18n";
 import { billingPage } from "../src/routes/billing";
 
@@ -56,6 +56,21 @@ describe("affiliate totals", () => {
     ]);
     expect(after.canClaim).toBe(false);
     expect(after.unclaimedMinor).toBeLessThan(AFFILIATE_MIN_PAYOUT_MINOR);
+  });
+
+  it("counts only post-referral top-ups toward the cut", () => {
+    const dayByUser = new Map([["f1", "2026-11-20"], ["f2", "2026-11-22"]]);
+    const rows = [
+      { userId: "f1", day: "2026-11-19", delta: 500, amount: 39900 },
+      { userId: "f1", day: "2026-11-20", delta: 500, amount: 39900 },
+      { userId: "f2", day: "2026-11-23", delta: 50, amount: 5900 },
+      { userId: "f9", day: "2020-01-01", delta: 5000, amount: 399000 },
+    ];
+    const kept = topupsSinceReferral(rows, dayByUser);
+    // f1's pre-referral top-up is dropped; f9 (no referral day known) is kept.
+    expect(kept.map((r) => r.day).sort()).toEqual(["2020-01-01", "2026-11-20", "2026-11-23"]);
+    // pre-referral spend earns nothing: 20% of (500 + 50), not of the rest.
+    expect(affiliateTokensEarned(kept.filter((r) => r.userId !== "f9"))).toBe(110);
   });
 
   it("computes token earnings at 20% and tracks claimed/pending/unclaimed", () => {
@@ -130,6 +145,29 @@ describe("affiliate card on /billing", () => {
     expect(pend).toContain("Claim pending review");
     const none = billingPage({ ...base, affiliate: { ...affiliate, pendingTokens: 0, unclaimedTokens: 0, claims: [] } });
     expect(none).not.toContain('id="aff-claim"');
+  });
+
+  it("keeps genuine new-user referrals paying end to end", () => {
+    const src = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
+    const store = readFileSync(new URL("../src/db/tarot-store.ts", import.meta.url), "utf8");
+    // Latest click wins: first click inserts, later clicks move the row and
+    // re-scope the 20% from the new click day; firstReadingAt is kept.
+    expect(store).toContain("async upsertReferral(");
+    expect(store).toContain("totalReadings(visitorId)");
+    expect(store).toContain("firstReadingAt is never");
+    expect(store).toContain('"inserted" | "updated" | "kept"');
+    expect(src).toContain("upsertReferral(");
+    expect(src).not.toContain("insertReferral(");
+    // Conversion still fires on a true first reading.
+    expect(store).toContain("async convertReferral(");
+    expect(store).toContain("!== 1) return false");
+    // Joining bonus stays new-accounts-only; established clicks attribute
+    // but earn the influencer future 20% instead.
+    expect(src).toContain("totalReadings(user.id)");
+    expect(src).toContain('"ineligible"');
+    // Earnings only ever count spend from the referral day forward.
+    expect(src).toContain("topupsSinceReferral(");
+    expect(src).toContain("bangkokDay(new Date(f.createdAt))");
   });
 
   it("wires the flag, referees, and payments in the billing route", () => {

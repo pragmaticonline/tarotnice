@@ -86,7 +86,7 @@
           return;
         }
         msg.style.color = "";
-        msg.textContent = r.data.error === "expired_code" ? (s.expired || "Expired") : r.data.error === "already_used" ? (s.used || "Already used") : r.data.error === "own_code" ? (s.own || "Own code") : (s.invalid || "Invalid code");
+        msg.textContent = r.data.error === "expired_code" ? (s.expired || "Expired") : r.data.error === "already_used" ? (s.used || "Already used") : r.data.error === "own_code" ? (s.own || "Own code") : r.data.error === "ineligible" ? (s.newOnly || "New accounts only") : (s.invalid || "Invalid code");
       }).catch(function () {});
     });
   }

@@ -87,7 +87,7 @@ ${configured ? `<h2>${escapeHtml(d.packsTitle)}</h2>
 <p><a href="https://lin.ee/tMMzlAg" target="_blank" rel="noopener"><img src="https://scdn.line-apps.com/n/line_add_friends/btn/${opts.ui === "th" ? "th" : "en"}.png" alt="${escapeHtml(opts.ui === "th" ? "\u0e40\u0e1e\u0e34\u0e48\u0e21\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19" : "Add friend")}" height="36" border="0"></a></p>
 <p class="auth-err" id="redeem-msg" role="alert"></p>
 </section>
-<script>window.__tnRedeemStrings=${JSON.stringify({ ok: d.redeemOk, invalid: d.redeemInvalid, expired: d.redeemExpired, used: d.redeemUsed, own: d.redeemOwn })};window.__tnTxStrings=${JSON.stringify({ read: d.readThisReading, receipt: d.viewReceipt })};</script>
+<script>window.__tnRedeemStrings=${JSON.stringify({ ok: d.redeemOk, invalid: d.redeemInvalid, expired: d.redeemExpired, used: d.redeemUsed, own: d.redeemOwn, newOnly: d.redeemNewOnly })};window.__tnTxStrings=${JSON.stringify({ read: d.readThisReading, receipt: d.viewReceipt })};</script>
 <section class="history" id="activity" aria-label="${escapeHtml(d.historyTxTitle)}">
 <div class="tabs" role="tablist">
 <button type="button" role="tab" aria-selected="true" data-tab="tx">${escapeHtml(d.txTab)}</button>

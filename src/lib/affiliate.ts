@@ -75,6 +75,16 @@ export function affiliatePayoutValue(
   return { earnedMinor, unclaimedMinor, minimumMinor, canClaim: unclaimedMinor >= minimumMinor };
 }
 
+/** Keep only top-ups from on/after each referee's referral day, so the
+ * 20% cut never reaches back to spend from before the referral. Rows for
+ * referees with no known referral day are kept (fail open). */
+export function topupsSinceReferral<T extends { userId: string; day: string }>(
+  rows: T[],
+  referredDayByUser: ReadonlyMap<string, string>,
+): T[] {
+  return rows.filter((r) => r.day >= (referredDayByUser.get(r.userId) ?? ""));
+}
+
 /** Affiliate token balance: earned from referees minus what's been paid out. */
 export function affiliateTokenBalance(
   earnedTokens: number,

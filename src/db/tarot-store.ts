@@ -430,11 +430,37 @@ export function d1TarotStore(db: D1Database) {
       return { shareId: row.shareId, referrerId: row.referrerUserId, converted: row.firstReadingAt !== null };
     },
 
-    async insertReferral(visitorId: string, shareId: string, referrerId: string): Promise<void> {
-      await orm
+    /** All-time non-failed readings: >0 means this is an established
+     *  account, not a fresh signup. */
+    async totalReadings(userId: string): Promise<number> {
+      const rows = await orm
+        .select({ id: schema.readings.id })
+        .from(schema.readings)
+        .where(and(eq(schema.readings.userId, userId), ne(schema.readings.status, "failed")));
+      return rows.length;
+    },
+
+    /** Attribute a referee to a referrer — latest click wins. A first-ever
+     *  click inserts; a later click moves the row to the new referrer with a
+     *  fresh createdAt, so their 20% runs from that day forward and the old
+     *  referrer keeps everything earned before. firstReadingAt is never
+     *  touched, so the +5 can only ever pay once. Returns what happened. */
+    async upsertReferral(visitorId: string, shareId: string, referrerId: string): Promise<"inserted" | "updated" | "kept"> {
+      const existing = await this.getReferral(visitorId).catch(() => null);
+      if (existing) {
+        if (existing.referrerId === referrerId) return "kept";
+        await orm
+          .update(schema.referrals)
+          .set({ shareId, referrerUserId: referrerId, createdAt: Date.now() })
+          .where(eq(schema.referrals.visitorUserId, visitorId));
+        return "updated";
+      }
+      const rows = await orm
         .insert(schema.referrals)
         .values({ visitorUserId: visitorId, shareId, referrerUserId: referrerId, createdAt: Date.now() })
-        .onConflictDoNothing();
+        .onConflictDoNothing()
+        .returning({ visitorUserId: schema.referrals.visitorUserId });
+      return rows.length > 0 ? "inserted" : "kept";
     },
 
     /** Conversions (first readings) attributed to a referrer since epoch ms. */
@@ -446,7 +472,12 @@ export function d1TarotStore(db: D1Database) {
       return rows.filter((r) => r.at !== null).length;
     },
 
+    /** Stamp a first reading — only when it really is the user's first
+     *  reading ever. Called right after a reading completes, so exactly 1
+     *  row means first-ever; anything else is old activity and must not
+     *  convert (or pay the referrer). */
     async convertReferral(visitorId: string): Promise<boolean> {
+      if ((await this.totalReadings(visitorId).catch(() => 0)) !== 1) return false;
       const rows = await orm
         .update(schema.referrals)
         .set({ firstReadingAt: Date.now() })

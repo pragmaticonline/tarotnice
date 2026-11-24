@@ -96,7 +96,7 @@ import {
   type LedgerRow,
 } from "./lib/wallet";
 import { checkinWeek } from "./lib/checkin";
-import { AFFILIATE_MIN_PAYOUT_MINOR, affiliatePayoutValue, affiliateShare, affiliateTokenBalance, affiliateTokensEarned, summarizeAffiliatePayments } from "./lib/affiliate";
+import { AFFILIATE_MIN_PAYOUT_MINOR, affiliatePayoutValue, affiliateShare, affiliateTokenBalance, affiliateTokensEarned, summarizeAffiliatePayments, topupsSinceReferral } from "./lib/affiliate";
 import { sweepStuckReadings } from "./lib/sweep";
 import { checkoutReturnUrls } from "./routes/billing";
 
@@ -1221,7 +1221,8 @@ app.get("/billing", async (c) => {
         store.referralStats(user.id),
         store.affiliateClaims(user.id),
       ]);
-      const rows = await store.topupsForUsers(friends.map((f) => f.visitorUserId));
+      const referredDay = new Map(friends.map((f) => [f.visitorUserId, bangkokDay(new Date(f.createdAt))] as [string, string]));
+      const rows = topupsSinceReferral(await store.topupsForUsers(friends.map((f) => f.visitorUserId)), referredDay);
       const publicRows = rows.map((r) => ({
         day: r.day, delta: r.delta, amount: r.amount, currency: r.currency, paymentMethod: r.paymentMethod,
       }));
@@ -1942,7 +1943,7 @@ async function resolveRefOwner(
   return owner.userId;
 }
 
-/** Attribute a referred visitor once (first touch wins). */
+/** Attribute a referred visitor (latest click wins; see upsertReferral). */
 async function attributeReferral(
   c: { env: Env; req: { raw: Request; header: (n: string) => string | undefined } },
   store: ReturnType<typeof d1TarotStore>,
@@ -1951,11 +1952,11 @@ async function attributeReferral(
   const ref = refCookie(c);
   if (!ref) return;
   try {
-    if (await store.getReferral(userId)) return;
     const ownerId = await resolveRefOwner(store, ref, userId);
     if (!ownerId) return;
-    await store.insertReferral(userId, ref, ownerId);
-    recordEvent(c.env, { name: "referral_signup", ...requestContext(c), userKind: "anon" });
+    if ((await store.upsertReferral(userId, ref, ownerId).catch(() => "kept" as const)) === "inserted") {
+      recordEvent(c.env, { name: "referral_signup", ...requestContext(c), userKind: "anon" });
+    }
   } catch {
     /* attribution is best-effort */
   }
@@ -2087,11 +2088,15 @@ app.get("/api/me/summary", async (c) => {
     // ledger ref makes this idempotent with /api/me/invite, so the
     // email flow calling that endpoint too can never double-grant.
     await attributeReferral(c, store, user.id).catch(() => {});
+    // Joining bonus is for new accounts only: an established user clicking a
+    // link still (re-)attributes via upsertReferral, but gets no bonus.
     if (await store.getReferral(user.id).catch(() => null)) {
-      await store.postLedger({
-        userId: user.id, delta: REFERRAL_FRIEND_BONUS_TOKENS, reason: "referral",
-        ref: `friend-bonus:${user.id}`, day: today,
-      }).catch(() => false);
+      if ((await store.totalReadings(user.id).catch(() => 1)) === 0) {
+        await store.postLedger({
+          userId: user.id, delta: REFERRAL_FRIEND_BONUS_TOKENS, reason: "referral",
+          ref: `friend-bonus:${user.id}`, day: today,
+        }).catch(() => false);
+      }
     }
   }
   // Unwedge a dead stream (claimed >3 min ago, never finished) so the
@@ -2195,7 +2200,7 @@ app.get("/api/me/invite/lookup", async (c) => {
 });
 
 type RedeemOk = { kind: "invite" | "promo"; code: string; bonus: number };
-type RedeemErr = { error: "invalid_code" | "expired_code" | "already_used" | "own_code" };
+type RedeemErr = { error: "invalid_code" | "expired_code" | "already_used" | "own_code" | "ineligible" };
 
 /**
  * Resolve a typed redeem code (Top-up sheet + Wallet redeem boards).
@@ -2229,6 +2234,7 @@ function redeemErrorStatus(error: RedeemErr["error"]): 400 | 404 | 409 | 410 {
   if (error === "invalid_code") return 404;
   if (error === "expired_code") return 410;
   if (error === "already_used") return 409;
+  if (error === "ineligible") return 409;
   return 400;
 }
 
@@ -2256,8 +2262,11 @@ app.post("/api/me/redeem", async (c) => {
   const today = bangkokDay();
   if (resolved.kind === "invite") {
     const ownerId = await store.inviteOwner(resolved.code);
-    if (ownerId && !(await store.getReferral(user.id))) {
-      await store.insertReferral(user.id, inviteRefFor(ownerId), ownerId);
+    if (ownerId) {
+      await store.upsertReferral(user.id, inviteRefFor(ownerId), ownerId).catch(() => "kept");
+    }
+    if ((await store.totalReadings(user.id).catch(() => 1)) > 0) {
+      return c.json({ error: "ineligible" }, 409);
     }
     const granted = await store.postLedger({
       userId: user.id, delta: resolved.bonus, reason: "referral",
@@ -2301,9 +2310,9 @@ app.get("/api/me/export", async (c) => {
 
 /**
  * Redeem an invite code (design board 3): attribute this registered
- * user to the code's owner (first touch wins) and grant the one-off
- * +5-token joining bonus. Called after sign-up with the applied code,
- * or with the saved ref cookie when no code is typed.
+ * user to the code's owner (latest click wins) and grant the one-off
+ * joining bonus for new accounts. Called after sign-up with the applied
+ * code, or with the saved ref cookie when no code is typed.
  */
 app.post("/api/me/invite", async (c) => {
   const user = await authedUser(c);
@@ -2330,23 +2339,24 @@ app.post("/api/me/invite", async (c) => {
       ref = refCookie(c);
     }
     if (ref) {
-      if (!(await store.getReferral(user.id))) {
-        const ownerId = await resolveRefOwner(store, ref, user.id);
-        if (ownerId) {
-          await store.insertReferral(user.id, ref, ownerId);
+      const ownerId = await resolveRefOwner(store, ref, user.id);
+      if (ownerId) {
+        const res = await store.upsertReferral(user.id, ref, ownerId).catch(() => "kept" as const);
+        if (res === "inserted") {
           recordEvent(c.env, { name: "referral_signup", ...requestContext(c), userKind: userKind(user) });
         }
       }
     }
     const referral = await store.getReferral(user.id);
     if (!referral) return c.json({ attributed: false, bonus: 0 });
-    const granted = await store.postLedger({
+    const fresh = (await store.totalReadings(user.id).catch(() => 1)) === 0;
+    const granted = fresh ? await store.postLedger({
       userId: user.id,
       delta: REFERRAL_FRIEND_BONUS_TOKENS,
       reason: "referral",
       ref: `friend-bonus:${user.id}`,
       day: today,
-    });
+    }) : false;
     return c.json({ attributed: true, bonus: granted ? REFERRAL_FRIEND_BONUS_TOKENS : 0 });
   } catch {
     return c.json({ error: "invite_failed" }, 500);
@@ -2467,7 +2477,10 @@ app.post("/api/me/affiliate/claim", async (c) => {
     store.listReferralFriends(user.id).catch(() => []),
     store.affiliateClaims(user.id).catch(() => []),
   ]);
-  const topups = friends.length ? await store.topupsForUsers(friends.map((f: { visitorUserId: string }) => f.visitorUserId)).catch(() => []) : [];
+  const referredDay = new Map(friends.map((f: { visitorUserId: string; createdAt: number }) =>
+    [f.visitorUserId, bangkokDay(new Date(f.createdAt))] as [string, string]));
+  const allTopups = friends.length ? await store.topupsForUsers(friends.map((f: { visitorUserId: string }) => f.visitorUserId)).catch(() => []) : [];
+  const topups = topupsSinceReferral(allTopups, referredDay);
   const earned = affiliateTokensEarned(topups.map((r) => ({ delta: r.delta })));
   const bal = affiliateTokenBalance(earned, claims);
   if (bal.unclaimed <= 0) return c.json({ ok: false, error: "nothing_to_claim", unclaimed: 0 }, 409);
@@ -2597,8 +2610,8 @@ app.post("/api/billing/webhook", async (c) => {
           if (!isInvite) await store.recordRedemption(redeemCode, userId).catch(() => false);
           if (isInvite) {
             const ownerId = await store.inviteOwner(redeemCode).catch(() => null);
-            if (ownerId && ownerId !== userId && !(await store.getReferral(userId))) {
-              await store.insertReferral(userId, inviteRefFor(ownerId), ownerId).catch(() => {});
+            if (ownerId && ownerId !== userId) {
+              await store.upsertReferral(userId, inviteRefFor(ownerId), ownerId).catch(() => {});
             }
           }
           await store.postLedger({
