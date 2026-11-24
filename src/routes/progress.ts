@@ -232,7 +232,7 @@ function inviteCard(ui: UiLang, d: ReturnType<typeof t>, invite: { code: string;
     `<div style="padding:10px 6px;border-radius:12px;background:#fffaf0;display:flex;flex-direction:column;gap:2px"><span style="font-size:20px;font-weight:600;color:#4a3d78">${invite.earned}</span><span style="font-size:12px;color:#6b5f85">${escapeHtml(d.mjEarned)}</span></div>` +
     `</div>` +
     `<div style="display:flex;flex-wrap:wrap;gap:10px">` +
-    `<a href="${shareUrl}" target="_blank" rel="noopener" style="flex:1 1 180px;display:inline-flex;align-items:center;justify-content:center;height:48px;border-radius:12px;background:#06c755;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600">${escapeHtml(d.mjShareLine)}</a>` +
+    `<a href="${shareUrl}" target="_blank" rel="noopener" style="flex:1 1 180px;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;border-radius:12px;background:#06c755;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600"><svg viewBox="0 0 40 36" width="24" height="22" aria-hidden="true"><path d="M20 3c-9.4 0-17 6-17 13.3 0 4.3 2.8 8 7 10.1-.3 1.1-1.1 3.9-3.9 4.9 0 0 4.1.3 7.7-2 .9.2 3.5.6 6.2.6 9.4 0 17-6 17-13.3S29.4 3 20 3z" fill="#fff"/><text x="20" y="20.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="9" font-weight="900" fill="#06C755">LINE</text></svg>${escapeHtml(d.mjShareLine)}</a>` +
     `<button type="button" data-copy-invite="${escapeHtml(invite.link)}" data-copied="${escapeHtml(d.copiedBtn)}" style="flex:1 1 180px;height:48px;border:1.5px solid #4a3d78;border-radius:12px;background:#fffaf0;color:#4a3d78;font-size:15px;font-weight:600;cursor:pointer">${escapeHtml(d.mjCopyLink)}</button>` +
     `</div></section>`;
 }

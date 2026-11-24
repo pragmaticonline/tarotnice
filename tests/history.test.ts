@@ -245,6 +245,9 @@ describe("progressPage", () => {
     expect(html).toContain("Invite friends");
     expect(html).toContain("NICE-TEST");
     expect(html).toContain("https://social-plugins.line.me/lineit/share?url=");
+    // LINE branding icon sits before the Share on LINE label.
+    expect(html).toContain('viewBox="0 0 40 36"');
+    expect(html.indexOf('viewBox="0 0 40 36"')).toBeLessThan(html.indexOf("Share on LINE"));
   });
 
   it("builds month helpers on Bangkok boundaries", () => {
