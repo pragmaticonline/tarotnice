@@ -2538,6 +2538,22 @@ app.post("/api/billing/webhook", async (c) => {
         if (typeof session.customer === "string") {
           await store.setStripeCustomer(userId, session.customer);
         }
+        // Affiliate tracking (Cloudflare-side visibility; the D1 ledger
+        // row above is the permanent record): note who referred the payer.
+        try {
+          const ref = await store.getReferral(userId);
+          if (ref) {
+            recordEvent(c.env, {
+              name: "affiliate_payment",
+              detail: session.id,
+              kind: receipt.paymentMethod ?? undefined,
+              value: typeof receipt.amount === "number" ? receipt.amount : undefined,
+              userKind: "user",
+            });
+          }
+        } catch {
+          /* analytics is best-effort */
+        }
         await store.markStripeEvent(event.id, "processed", userId);
       } else {
         // QR methods can complete unpaid; the async event grants the tokens later.

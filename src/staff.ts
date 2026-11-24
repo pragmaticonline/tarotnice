@@ -356,6 +356,7 @@ const NAV_ITEMS: { href: string; label: string }[] = [
   { href: "/", label: "Overview" },
   { href: "/users", label: "Users" },
   { href: "/stuck", label: "Stuck readings" },
+  { href: "/affiliates", label: "Affiliates" },
   { href: "/grants", label: "Token grants" },
   { href: "/invites", label: "Invites" },
 ];
@@ -1256,7 +1257,17 @@ export async function inviteDetail(db: D1Database, userId: string): Promise<Invi
   };
 }
 
-export function renderInvitesPage(staff: StaffIdentity, q: string, detail: InviteDetail | null, lookedUp: boolean): string {
+export type InviteAffiliate = {
+  active: boolean;
+  enabledAt?: number;
+  enabledBy?: string;
+  payments: AffiliatePayment[];
+};
+
+export function renderInvitesPage(
+  staff: StaffIdentity, q: string, detail: InviteDetail | null, lookedUp: boolean,
+  affiliate?: InviteAffiliate | null,
+): string {
   const search = `<form method="get" action="/invites" class="search">
 <input type="search" name="user" value="${escapeHtml(q)}" placeholder="user id or email">
 <button class="btn" type="submit">Look up</button>
@@ -1299,7 +1310,7 @@ export function renderInvitesPage(staff: StaffIdentity, q: string, detail: Invit
 <h2 style="font-size:15px;margin:14px 0 6px">Invited by</h2>
 <p>${d.invitedBy ? `<a href="/invites?user=${encodeURIComponent(d.invitedBy.userId)}">${escapeHtml(d.invitedBy.nickname ?? d.invitedBy.email ?? d.invitedBy.userId)}</a> <span class="muted">(${escapeHtml(d.invitedBy.code ?? "code unknown")})</span>` : '<span class="muted">\u2014</span>'}</p>
 <h2 style="font-size:15px;margin:14px 0 6px">Used by (${d.invited} joined \u00b7 ${d.converted} converted)</h2>${friends}
-<h2 style="font-size:15px;margin:14px 0 6px">Rewards paid (+${d.rewardsTotal} tokens)</h2>${rewards}</div>`;
+<h2 style="font-size:15px;margin:14px 0 6px">Rewards paid (+${d.rewardsTotal} tokens)</h2>${rewards}${affiliateSection(staff, d, affiliate)}</div>`;
   }
   return shellChrome(
     staff,
@@ -1307,6 +1318,114 @@ export function renderInvitesPage(staff: StaffIdentity, q: string, detail: Invit
     "/invites",
     `<div class="top"><h1>Invites</h1><small>codes, attribution, inviter rewards</small></div>${body}`,
   );
+}
+
+function affiliateSection(
+  staff: StaffIdentity,
+  d: InviteDetail,
+  affiliate?: InviteAffiliate | null,
+): string {
+  const sum = summarizeAffiliatePayments(affiliate?.payments ?? []);
+  const rows = (affiliate?.payments ?? []).length
+    ? `<table><thead><tr><th>Day</th><th class="num">Tokens</th><th class="num">Amount</th><th>Method</th><th>Payer</th></tr></thead><tbody>${(affiliate?.payments ?? [])
+        .map(
+          (t) =>
+            `<tr><td>${escapeHtml(t.day)}</td><td class="num">+${t.delta}</td>` +
+            `<td class="num">${t.amount === null ? '<span class="muted">\u2014</span>' : escapeHtml(formatMinor(t.amount, t.currency ?? "THB"))}</td>` +
+            `<td>${escapeHtml(t.paymentMethod ?? "\u2014")}</td>` +
+            `<td><a href="/users/${escapeHtml(t.userId)}">${escapeHtml(t.userId)}</a></td></tr>`,
+        )
+        .join("")}</tbody></table>`
+    : `<div class="empty">No payments recorded yet. New referred payments appear here automatically.</div>`;
+  const mayEdit = canMutate(staff);
+  const enableForm = (action: string, label: string, placeholder: string, field: "note" | "reason") =>
+    mayEdit
+      ? `<form method="post" action="${action}" class="filters"><label>${field === "note" ? "Note (optional)" : "Reason (required)"}<input type="text" name="${field}"${field === "reason" ? " required" : ""} maxlength="500" placeholder="${placeholder}"></label><button class="btn" type="submit">${label}</button></form>`
+      : `<p class="muted">Ask support or an admin to change this.</p>`;
+  const status = affiliate?.active
+    ? `<p><span class="badge">affiliate</span> <span class="muted">since ${escapeHtml(new Date(affiliate.enabledAt ?? 0).toISOString().slice(0, 10))}${affiliate.enabledBy ? ` by ${escapeHtml(affiliate.enabledBy)}` : ""}</span></p>
+${enableForm(`/affiliates/${escapeHtml(d.userId)}/disable`, "Disable", "Why disable tracking?", "reason")}`
+    : `<p><span class="muted">Not an affiliate. Enabling tracks this code's signups and payments; the code and rewards keep working exactly as before.</span></p>
+${enableForm(`/affiliates/${escapeHtml(d.userId)}/enable`, "Enable affiliate tracking", "e.g. LINE OA partner", "note")}`;
+  const payBlock = affiliate?.active
+    ? `<h2 style="font-size:15px;margin:14px 0 6px">Referred payments (${sum.count} \u00b7 ${escapeHtml(formatMinor(sum.totalMinor, sum.currency))} gross)</h2>${rows}`
+    : ``;
+  return `<h2 style="font-size:15px;margin:14px 0 6px">Affiliate</h2>${status}${payBlock}`;
+}
+
+export type AffiliateRow = {
+  userId: string; email: string | null; nickname: string | null;
+  enabledAt: number; enabledBy: string; invited: number; converted: number;
+  payments: number; revenueMinor: number;
+};
+
+export function renderAffiliatesPage(
+  staff: StaffIdentity, q: string, hits: StaffUserHit[], rows: AffiliateRow[],
+): string {
+  const search = `<form method="get" action="/affiliates" class="search">
+<input type="search" name="q" value="${escapeHtml(q)}" placeholder="find a user to enable: email, user id, or nickname">
+<button class="btn" type="submit">Search</button>
+</form>`;
+  const found = !q
+    ? ``
+    : hits.length
+      ? `<table><thead><tr><th>User</th><th>Email</th><th></th></tr></thead><tbody>${hits
+          .map(
+            (h) =>
+              `<tr><td><a href="/invites?user=${escapeHtml(h.id)}">${escapeHtml(h.nickname ?? h.name)}</a></td>` +
+              `<td>${escapeHtml(h.email)}</td>` +
+              `<td><form method="post" action="/affiliates/${escapeHtml(h.id)}/enable"><button class="btn" type="submit">Enable</button></form></td></tr>`,
+          )
+          .join("")}</tbody></table>`
+      : `<div class="empty">No users match.</div>`;
+  const list = rows.length
+    ? `<table><thead><tr><th>Affiliate</th><th>Since</th><th class="num">Joined</th><th class="num">Converted</th><th class="num">Payments</th><th class="num">Revenue</th></tr></thead><tbody>${rows
+        .map(
+          (r) =>
+            `<tr><td><a href="/invites?user=${escapeHtml(r.userId)}">${escapeHtml(r.nickname ?? r.email ?? r.userId)}</a></td>` +
+            `<td>${escapeHtml(new Date(r.enabledAt).toISOString().slice(0, 10))}</td>` +
+            `<td class="num">${r.invited}</td><td class="num">${r.converted}</td>` +
+            `<td class="num">${r.payments}</td><td class="num">${escapeHtml(formatMinor(r.revenueMinor, "THB"))}</td></tr>`,
+        )
+        .join("")}</tbody></table>`
+    : `<div class="empty">No affiliates yet. Search above to enable the first one.</div>`;
+  return shellChrome(
+    staff,
+    "Affiliates",
+    "/affiliates",
+    `<div class="top"><h1>Affiliates</h1><small>invite codes with signup + payment tracking</small></div>` +
+      `<div class="card"><h2 style="margin-top:0">Enable tracking</h2>${search}${found}</div>` +
+      `<div class="card"><h2 style="margin-top:0">Partners</h2>${list}</div>`,
+  );
+}
+
+export type AffiliatePayment = {
+  userId: string; day: string; delta: number; ref: string;
+  amount: number | null; currency: string | null; paymentMethod: string | null;
+};
+
+/** Sum top-up rows into a gross revenue figure (minor units, e.g. satang). */
+export function summarizeAffiliatePayments(rows: AffiliatePayment[]): { count: number; totalMinor: number; currency: string } {
+  let totalMinor = 0;
+  const currencies = new Map<string, number>();
+  for (const r of rows) {
+    if (typeof r.amount === "number") {
+      totalMinor += r.amount;
+      const cur = (r.currency || "THB").toUpperCase();
+      currencies.set(cur, (currencies.get(cur) ?? 0) + r.amount);
+    }
+  }
+  let currency = "THB";
+  let best = -1;
+  for (const [cur, sum] of currencies) {
+    if (sum > best) { best = sum; currency = cur; }
+  }
+  return { count: rows.length, totalMinor, currency };
+}
+
+export function formatMinor(minor: number, currency: string): string {
+  const symbol = currency === "THB" ? "\u0e3f" : currency + " ";
+  return `${symbol}${(minor / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 const app = new Hono<{ Bindings: StaffEnv }>();
@@ -1642,7 +1761,18 @@ app.get("/invites", async (c) => {
     }
     if (id) detail = await inviteDetail(c.env.DB, id).catch(() => null);
   }
-  return c.html(renderInvitesPage(staff, q, detail, q !== ""));
+  let affiliate: InviteAffiliate | null = null;
+  if (detail && c.env?.DB) {
+    const store = d1TarotStore(c.env.DB);
+    const flag = await store.getAffiliate(detail.userId).catch(() => null);
+    const payments = detail.friends.length
+      ? await store.topupsForUsers(detail.friends.map((f) => f.userId)).catch(() => [])
+      : [];
+    affiliate = flag
+      ? { active: true, enabledAt: flag.enabledAt, enabledBy: flag.enabledBy, payments }
+      : { active: false, payments };
+  }
+  return c.html(renderInvitesPage(staff, q, detail, q !== "", affiliate));
 });
 
 async function setInviteCodeEnabled(
@@ -1691,6 +1821,88 @@ app.post("/invites/:userId/enable", async (c) => {
   const staff = c.get("staff" as never) as StaffIdentity;
   if (!canAdmin(staff)) return c.text("Admin role required.", 403);
   return setInviteCodeEnabled(c, staff, true);
+});
+
+// Affiliates: staff-enabled tracking on top of invite codes.
+// An affiliate's code works exactly like before; this only unlocks
+// per-referred-user signup and payment tracking below.
+app.get("/affiliates", async (c) => {
+  const staff = c.get("staff" as never) as StaffIdentity;
+  const q = ((c.req.query("q") as string | undefined) ?? "").trim();
+  const hits = q && c.env?.DB ? await findUsers(c.env.DB, q).catch(() => []) : [];
+  let rows: { userId: string; email: string | null; nickname: string | null; enabledAt: number; enabledBy: string; invited: number; converted: number; payments: number; revenueMinor: number }[] = [];
+  if (c.env?.DB) {
+    try {
+      const store = d1TarotStore(c.env.DB);
+      const flags = await store.listAffiliates();
+      const orm = drizzle(c.env.DB);
+      const users = flags.length
+        ? await orm.select({ id: user.id, email: user.email }).from(user).where(inArray(user.id, flags.map((f) => f.userId))).catch(() => [] as { id: string; email: string }[])
+        : [];
+      const emailById = new Map(users.map((u) => [u.id, u.email]));
+      const nicks = flags.length
+        ? await orm.select({ userId: userPrefs.userId, nickname: userPrefs.nickname }).from(userPrefs).where(inArray(userPrefs.userId, flags.map((f) => f.userId))).catch(() => [] as { userId: string; nickname: string | null }[])
+        : [];
+      const nickById = new Map(nicks.map((r) => [r.userId, r.nickname]));
+      rows = await Promise.all(
+        flags.map(async (f) => {
+          const refereeIds = (await store.listReferralFriends(f.userId).catch(() => [])).map((r) => r.visitorUserId);
+          const payments = await store.topupsForUsers(refereeIds).catch(() => []);
+          const sum = summarizeAffiliatePayments(payments);
+          const stats = await store.referralStats(f.userId).catch(() => ({ invited: 0, converted: 0 }));
+          return {
+            userId: f.userId, email: emailById.get(f.userId) ?? null, nickname: nickById.get(f.userId) ?? null,
+            enabledAt: f.enabledAt, enabledBy: f.enabledBy, invited: stats.invited, converted: stats.converted,
+            payments: sum.count, revenueMinor: sum.totalMinor,
+          };
+        }),
+      );
+    } catch {
+      rows = [];
+    }
+  }
+  return c.html(renderAffiliatesPage(staff, q, hits, rows));
+});
+
+app.post("/affiliates/:userId/enable", async (c) => {
+  const staff = c.get("staff" as never) as StaffIdentity;
+  if (!canMutate(staff)) return c.text("Support role or above required.", 403);
+  const userId = c.req.param("userId") ?? "";
+  if (!userId) return c.json({ error: "unknown_user" }, 404);
+  if (!c.env?.DB) return c.json({ error: "unavailable" }, 503);
+  const body = await readInput(c as never);
+  const noteRaw = String((body as Record<string, unknown>).note ?? "").trim();
+  const note = noteRaw ? noteRaw.slice(0, 500) : null;
+  const store = d1TarotStore(c.env.DB);
+  const detail = await userDetail(c.env.DB, userId).catch(() => null);
+  if (!detail) return c.json({ error: "unknown_user" }, 404);
+  await store.setAffiliate(userId, staff.email, note);
+  await recordAudit(c.env.DB, staff, {
+    action: "affiliate.enable", targetType: "user", targetId: userId,
+    reason: "Enable affiliate tracking for this user.", result: "ok", after: { note },
+  }).catch(() => {});
+  if (wantsJson(c)) return c.json({ ok: true });
+  return c.redirect(`/affiliates`, 302);
+});
+
+app.post("/affiliates/:userId/disable", async (c) => {
+  const staff = c.get("staff" as never) as StaffIdentity;
+  if (!canMutate(staff)) return c.text("Support role or above required.", 403);
+  const userId = c.req.param("userId") ?? "";
+  if (!userId || !c.env?.DB) return c.json({ error: "unknown_user" }, 404);
+  const body = await readInput(c as never);
+  const reason = String((body as Record<string, unknown>).reason ?? "").trim();
+  if (!reason) {
+    if (wantsJson(c)) return c.json({ error: "A reason is required." }, 400);
+    return c.redirect(`/invites?user=${encodeURIComponent(userId)}`, 302);
+  }
+  await d1TarotStore(c.env.DB).removeAffiliate(userId);
+  await recordAudit(c.env.DB, staff, {
+    action: "affiliate.disable", targetType: "user", targetId: userId,
+    reason, result: "ok",
+  }).catch(() => {});
+  if (wantsJson(c)) return c.json({ ok: true });
+  return c.redirect(`/invites?user=${encodeURIComponent(userId)}`, 302);
 });
 
 app.notFound((c) => c.text("Not found.", 404));

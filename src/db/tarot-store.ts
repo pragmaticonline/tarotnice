@@ -592,6 +592,65 @@ export function d1TarotStore(db: D1Database) {
       };
     },
 
+    /** Affiliate flag for one user, if staff enabled it. */
+    async getAffiliate(userId: string): Promise<{ userId: string; enabledAt: number; enabledBy: string; note: string | null } | null> {
+      const rows = await orm
+        .select({ userId: schema.affiliates.userId, enabledAt: schema.affiliates.enabledAt, enabledBy: schema.affiliates.enabledBy, note: schema.affiliates.note })
+        .from(schema.affiliates)
+        .where(eq(schema.affiliates.userId, userId))
+        .limit(1);
+      return rows[0] ?? null;
+    },
+
+    /** Mark a user as affiliate (idempotent). */
+    async setAffiliate(userId: string, enabledBy: string, note: string | null): Promise<void> {
+      await orm
+        .insert(schema.affiliates)
+        .values({ userId, enabledAt: Date.now(), enabledBy, note })
+        .onConflictDoNothing();
+    },
+
+    /** Remove the affiliate flag (tracking rows stay as history). */
+    async removeAffiliate(userId: string): Promise<void> {
+      await orm.delete(schema.affiliates).where(eq(schema.affiliates.userId, userId));
+    },
+
+    /** Every affiliate flag, newest first. */
+    async listAffiliates(): Promise<{ userId: string; enabledAt: number; enabledBy: string; note: string | null }[]> {
+      return orm
+        .select({ userId: schema.affiliates.userId, enabledAt: schema.affiliates.enabledAt, enabledBy: schema.affiliates.enabledBy, note: schema.affiliates.note })
+        .from(schema.affiliates)
+        .orderBy(desc(schema.affiliates.enabledAt));
+    },
+
+    /**
+     * Top-up ledger rows for a set of users (affiliate revenue view).
+     * Amounts are Stripe minor units with currency; method is the
+     * charge type (card, promptpay, ...). Gross: clawbacks post as
+     * separate refund rows and are not netted here.
+     */
+    async topupsForUsers(userIds: string[]): Promise<{
+      userId: string; day: string; delta: number; ref: string; createdAt: number;
+      amount: number | null; currency: string | null; paymentMethod: string | null;
+    }[]> {
+      if (!userIds.length) return [];
+      return orm
+        .select({
+          userId: schema.tokenLedger.userId,
+          day: schema.tokenLedger.day,
+          delta: schema.tokenLedger.delta,
+          ref: schema.tokenLedger.ref,
+          createdAt: schema.tokenLedger.createdAt,
+          amount: schema.tokenLedger.amount,
+          currency: schema.tokenLedger.currency,
+          paymentMethod: schema.tokenLedger.paymentMethod,
+        })
+        .from(schema.tokenLedger)
+        .where(and(eq(schema.tokenLedger.reason, "topup"), inArray(schema.tokenLedger.userId, userIds)))
+        .orderBy(desc(schema.tokenLedger.createdAt))
+        .limit(1000);
+    },
+
     // --- Token wallet (balances derive from these rows; lib/wallet.ts) ---
 
     /** All ledger rows for a user, newest first. */

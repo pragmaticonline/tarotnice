@@ -2,6 +2,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 const STAFF = { subject: "s", email: "maew@pragmaticonline.com", role: "admin" as const };
 import app, {
+  formatMinor,
+  renderAffiliatesPage,
+  renderInvitesPage,
+  summarizeAffiliatePayments,
   allowlistedRole,
   canAdmin,
   canMutate,
@@ -109,6 +113,75 @@ describe("staff roles", () => {
     expect(canMutate({ subject: "s", email: "e", role: "admin" })).toBe(true);
     expect(canAdmin({ subject: "s", email: "e", role: "support" })).toBe(false);
     expect(canAdmin({ subject: "s", email: "e", role: "admin" })).toBe(true);
+  });
+});
+
+describe("affiliate tracking", () => {
+  it("sums referred payments in minor units", () => {
+    expect(summarizeAffiliatePayments([])).toEqual({ count: 0, totalMinor: 0, currency: "THB" });
+    const rows = [
+      { userId: "f1", day: "2026-11-01", delta: 50, ref: "pi_1", createdAt: 1, amount: 5900, currency: "thb", paymentMethod: "promptpay" },
+      { userId: "f1", day: "2026-11-02", delta: 200, ref: "pi_2", createdAt: 2, amount: 19900, currency: "THB", paymentMethod: "card" },
+      { userId: "f2", day: "2026-11-03", delta: 50, ref: "pi_3", createdAt: 3, amount: null, currency: null, paymentMethod: null },
+    ];
+    expect(summarizeAffiliatePayments(rows)).toEqual({ count: 3, totalMinor: 25800, currency: "THB" });
+    expect(formatMinor(25800, "THB")).toBe("\u0e3f258.00");
+    expect(formatMinor(100, "USD")).toBe("USD 1.00");
+  });
+
+  it("affiliates directory lists partners with totals and enable search", () => {
+    const html = renderAffiliatesPage(STAFF, "maew", [
+      { id: "u9", email: "maew@example.com", name: "Maew", nickname: "Maew" },
+    ], [
+      { userId: "u9", email: "maew@example.com", nickname: "Maew", enabledAt: Date.UTC(2026, 10, 1), enabledBy: "admin@x.y", invited: 2, converted: 1, payments: 1, revenueMinor: 5900 },
+    ]);
+    expect(html).toContain("Affiliates");
+    expect(html).toContain("/invites?user=u9");
+    expect(html).toContain("\u0e3f59.00");
+    expect(html).not.toContain("next");
+    const empty = renderAffiliatesPage(STAFF, "", [], []);
+    expect(empty).toContain("No affiliates yet");
+  });
+
+  it("invite page shows the affiliate toggle and referred payments", () => {
+    const base = {
+      id: "u9", email: "m@x.y", name: "M", nickname: "M", providers: [] as string[], createdAt: 1,
+      emailVerified: false, isAnonymous: false, wallet: 0, dailyLeft: 0, readings: 0, dailies: 0,
+      inviteCode: "NICE-AAAA", invitedBy: null, invited: 0, converted: 0,
+      recentReadings: [], recentTx: [],
+    };
+    const off = renderInvitesPage(STAFF, "u9", { ...base, friends: [], rewards: [], rewardsTotal: 0 }, true, { active: false, payments: [] });
+    expect(off).toContain("Enable affiliate tracking");
+    expect(off).not.toContain("Referred payments");
+    const on = renderInvitesPage(STAFF, "u9", { ...base, friends: [], rewards: [], rewardsTotal: 0 }, true, {
+      active: true, enabledAt: Date.UTC(2026, 10, 1), enabledBy: "a@x.y",
+      payments: [{ userId: "f1", day: "2026-11-01", delta: 50, ref: "pi_1", amount: 5900, currency: "THB", paymentMethod: "promptpay" }],
+    });
+    expect(on).toContain("affiliate");
+    expect(on).toContain("Referred payments");
+    expect(on).toContain("\u0e3f59.00");
+    expect(on).toContain("promptpay");
+    const reader = renderInvitesPage({ subject: "s", email: "e", role: "read_only" }, "u9", { ...base, friends: [], rewards: [], rewardsTotal: 0 }, true, { active: false, payments: [] });
+    expect(reader).toContain("Ask support or an admin");
+    expect(reader).not.toContain('action="/affiliates/');
+  });
+
+  it("affiliate routes gate on role and audit everything", () => {
+    const src = readFileSync(new URL("../src/staff.ts", import.meta.url), "utf8");
+    expect(src).toContain('app.get("/affiliates"');
+    expect(src).toContain('app.post("/affiliates/:userId/enable"');
+    expect(src).toContain('app.post("/affiliates/:userId/disable"');
+    expect(src).toContain("affiliate.enable");
+    expect(src).toContain("affiliate.disable");
+    expect(src).toContain("SUPPORT_GRANT_CAP");
+    const main = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
+    expect(main).toContain('"affiliate_payment"');
+  });
+
+  it("affiliates migration keys on the user", () => {
+    const sql = readFileSync(new URL("../drizzle/0014_affiliates.sql", import.meta.url), "utf8");
+    expect(sql).toContain("CREATE TABLE `affiliates`");
+    expect(sql).toContain("PRIMARY KEY");
   });
 });
 

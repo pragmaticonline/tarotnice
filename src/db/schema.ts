@@ -103,6 +103,18 @@ export const userPrefs = sqliteTable("user_prefs", {
   updatedAt: integer("updated_at").notNull(),
 });
 
+// Affiliate partners: presence of a row means the user's invite code
+// doubles as an affiliate link. Enabled per user by staff; referrals
+// keep working exactly as before (same +5 token reward, same codes).
+export const affiliates = sqliteTable("affiliates", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  enabledAt: integer("enabled_at").notNull(),
+  enabledBy: text("enabled_by").notNull(), // staff subject/email
+  note: text("note"),
+});
+
 export const dailyDraws = sqliteTable(
   "daily_draws",
   {
