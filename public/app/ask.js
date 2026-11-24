@@ -101,10 +101,10 @@
     m.innerHTML = MOUSE_SVG;
     guide.appendChild(m);
     var svg = m.querySelector("svg");
+    var caught = false;
     if (svg) {
       svg.style.pointerEvents = "auto";
       svg.style.cursor = "pointer";
-      var caught = false;
       svg.addEventListener("click", function (ev) {
         if (caught) return;
         caught = true;
@@ -140,10 +140,43 @@
     var look = function (x) {
       for (var i = 0; i < pupils.length; i++) pupils[i].style.transform = "translate(" + x + "px,1px)";
     };
+    var resetLook = function () {
+      for (var i = 0; i < pupils.length; i++) {
+        pupils[i].style.transform = "";
+        pupils[i].style.transition = "";
+      }
+    };
     look(fromLeft ? -3.5 : 3.5);
-    setTimeout(function () { look(fromLeft ? 3.5 : -3.5); }, MOUSE_RUN / 2);
+    // Track the mouse's real rendered position every frame: the old
+    // two-pose flip fired at a fixed 1.8s while the dash crosses at
+    // ~2.0s (width-dependent), and the pupils' .3s CSS transition
+    // lagged behind the jump, so the gaze felt out of sync. Measuring
+    // getBoundingClientRect keeps eyes glued to the mouse at any
+    // width or direction; without rects, fall back to the timed flip.
+    var svgEl = m.querySelector ? m.querySelector("svg") : null;
+    var canTrack = !!(svgEl && svgEl.getBoundingClientRect && pupils.length && pupils[0].getBoundingClientRect);
+    if (canTrack) {
+      for (var i = 0; i < pupils.length; i++) pupils[i].style.transition = "none";
+      var raf = (window.requestAnimationFrame)
+        ? function (fn) { return window.requestAnimationFrame(fn); }
+        : function (fn) { return setTimeout(function () { fn(Date.now()); }, 16); };
+      var started = Date.now();
+      var track = function () {
+        if (caught) { resetLook(); return; }
+        var mr = svgEl.getBoundingClientRect();
+        var pr = pupils[0].getBoundingClientRect();
+        var dx = (mr.left + mr.width / 2) - (pr.left + pr.width / 2);
+        var x = Math.max(-3.5, Math.min(3.5, dx / 50));
+        look(x);
+        if (Date.now() - started < MOUSE_RUN + 200) raf(track);
+        else resetLook();
+      };
+      raf(track);
+    } else {
+      setTimeout(function () { look(fromLeft ? 3.5 : -3.5); }, MOUSE_RUN / 2);
+    }
     setTimeout(function () {
-      for (var i = 0; i < pupils.length; i++) pupils[i].style.transform = "";
+      resetLook();
       if (m.parentNode) m.parentNode.removeChild(m);
       else if (m.remove) m.remove();
     }, MOUSE_RUN + 200);
