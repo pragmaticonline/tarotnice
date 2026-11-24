@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { AFFILIATE_MIN_PAYOUT_MINOR, affiliatePayoutValue, affiliateShare, AFFILIATE_SHARE, affiliateTokenBalance, affiliateTokensEarned, formatMinor, summarizeAffiliatePayments, topupsSinceReferral } from "../src/lib/affiliate";
+import { AFFILIATE_MIN_PAYOUT_MINOR, affiliatePayoutValue, affiliateShare, AFFILIATE_SHARE, affiliateTokenBalance, affiliateTokensEarned, formatMinor, friendTopupBonus, summarizeAffiliatePayments, topupsSinceReferral } from "../src/lib/affiliate";
 import { t } from "../src/lib/i18n";
 import { billingPage } from "../src/routes/billing";
 
@@ -30,6 +30,8 @@ describe("affiliate totals", () => {
       }
       expect(d.affNote, ui).not.toMatch(/credit/i);
       expect(d.affNote, ui).toContain("20%");
+      if (ui === "en") expect(d.affNote, ui).toContain("earlier payments do not count");
+      else expect(d.affNote, ui).toContain("\u0e44\u0e21\u0e48\u0e19\u0e31\u0e1a");
       expect(d.affClaimNote, ui).toContain("{min}");
       const thai = t("th");
       for (const key of ["affEarned", "affClaimed", "affUnclaimed", "affClaimNow", "affPending", "affHistory", "affClaimNote", "affPaid", "affDenied"] as const) {
@@ -71,6 +73,14 @@ describe("affiliate totals", () => {
     expect(kept.map((r) => r.day).sort()).toEqual(["2020-01-01", "2026-11-20", "2026-11-23"]);
     // pre-referral spend earns nothing: 20% of (500 + 50), not of the rest.
     expect(affiliateTokensEarned(kept.filter((r) => r.userId !== "f9"))).toBe(110);
+  });
+
+  it("gives the friend 10% extra on every top-up, rounded up", () => {
+    expect(friendTopupBonus(50)).toBe(5);
+    expect(friendTopupBonus(200)).toBe(20);
+    expect(friendTopupBonus(500)).toBe(50);
+    expect(friendTopupBonus(7)).toBe(1);
+    expect(friendTopupBonus(0)).toBe(0);
   });
 
   it("computes token earnings at 20% and tracks claimed/pending/unclaimed", () => {
@@ -121,7 +131,9 @@ describe("affiliate card on /billing", () => {
     expect(html).toContain("promptpay");
     expect(html).toContain("card");
     expect(html).not.toContain("/users/f1");
-    expect(html).toContain("20% of each referred top-up");
+    expect(html).toContain("after joining with your code");
+    expect(html).toContain("earlier payments do not count");
+    expect(html).not.toContain("another affiliate");
     expect(html).toContain("Total earned");
     expect(html).toContain("Available to claim");
     expect(html).toContain("Payout history");
@@ -150,14 +162,13 @@ describe("affiliate card on /billing", () => {
   it("keeps genuine new-user referrals paying end to end", () => {
     const src = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
     const store = readFileSync(new URL("../src/db/tarot-store.ts", import.meta.url), "utf8");
-    // Latest click wins: first click inserts, later clicks move the row and
-    // re-scope the 20% from the new click day; firstReadingAt is kept.
-    expect(store).toContain("async upsertReferral(");
-    expect(store).toContain("totalReadings(visitorId)");
-    expect(store).toContain("firstReadingAt is never");
-    expect(store).toContain('"inserted" | "updated" | "kept"');
-    expect(src).toContain("upsertReferral(");
-    expect(src).not.toContain("insertReferral(");
+    // First click wins forever: first click inserts, later clicks are
+    // ignored, so all future payments keep paying the original referrer.
+    expect(store).toContain("async insertReferral(");
+    expect(store).not.toContain("upsertReferral(");
+    expect(store).toContain("first click wins forever");
+    expect(src).toContain("insertReferral(");
+    expect(src).not.toContain("upsertReferral(");
     // Conversion still fires on a true first reading.
     expect(store).toContain("async convertReferral(");
     expect(store).toContain("!== 1) return false");
@@ -168,6 +179,19 @@ describe("affiliate card on /billing", () => {
     // Earnings only ever count spend from the referral day forward.
     expect(src).toContain("topupsSinceReferral(");
     expect(src).toContain("bangkokDay(new Date(f.createdAt))");
+    // Every referred top-up also credits the buyer 20% extra, rounded up,
+    // keyed by payment so webhook replays stay a no-op.
+    expect(src).toContain("friend-topup-bonus:${");
+    expect(src).toContain("friendTopupBonus(pack.tokens)");
+    const js = readFileSync(new URL("../public/app/billing.js", import.meta.url), "utf8");
+    expect(js).toContain("friend-topup-bonus:");
+    expect(js).toContain("txTopupBonus");
+    // Invite tab promises the friend cut in both languages.
+    const d = t("en");
+    expect(d.inviteFriendGetsText).toContain("10% extra tokens on every top-up");
+    expect(t("th").inviteFriendGetsText).toContain("10%");
+    expect(d.inviteYouGetText).toContain("20% of everything they top up, forever");
+    expect(t("th").inviteYouGetText).toContain("20%");
   });
 
   it("wires the flag, referees, and payments in the billing route", () => {

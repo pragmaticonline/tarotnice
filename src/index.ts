@@ -96,7 +96,7 @@ import {
   type LedgerRow,
 } from "./lib/wallet";
 import { checkinWeek } from "./lib/checkin";
-import { AFFILIATE_MIN_PAYOUT_MINOR, affiliatePayoutValue, affiliateShare, affiliateTokenBalance, affiliateTokensEarned, summarizeAffiliatePayments, topupsSinceReferral } from "./lib/affiliate";
+import { AFFILIATE_MIN_PAYOUT_MINOR, affiliatePayoutValue, affiliateShare, affiliateTokenBalance, affiliateTokensEarned, friendTopupBonus, summarizeAffiliatePayments, topupsSinceReferral } from "./lib/affiliate";
 import { sweepStuckReadings } from "./lib/sweep";
 import { checkoutReturnUrls } from "./routes/billing";
 
@@ -1943,7 +1943,7 @@ async function resolveRefOwner(
   return owner.userId;
 }
 
-/** Attribute a referred visitor (latest click wins; see upsertReferral). */
+/** Attribute a referred visitor (first click wins forever). */
 async function attributeReferral(
   c: { env: Env; req: { raw: Request; header: (n: string) => string | undefined } },
   store: ReturnType<typeof d1TarotStore>,
@@ -1952,9 +1952,10 @@ async function attributeReferral(
   const ref = refCookie(c);
   if (!ref) return;
   try {
+    if (await store.getReferral(userId)) return;
     const ownerId = await resolveRefOwner(store, ref, userId);
     if (!ownerId) return;
-    if ((await store.upsertReferral(userId, ref, ownerId).catch(() => "kept" as const)) === "inserted") {
+    if (await store.insertReferral(userId, ref, ownerId).catch(() => false)) {
       recordEvent(c.env, { name: "referral_signup", ...requestContext(c), userKind: "anon" });
     }
   } catch {
@@ -2262,8 +2263,8 @@ app.post("/api/me/redeem", async (c) => {
   const today = bangkokDay();
   if (resolved.kind === "invite") {
     const ownerId = await store.inviteOwner(resolved.code);
-    if (ownerId) {
-      await store.upsertReferral(user.id, inviteRefFor(ownerId), ownerId).catch(() => "kept");
+    if (ownerId && !(await store.getReferral(user.id))) {
+      await store.insertReferral(user.id, inviteRefFor(ownerId), ownerId).catch(() => false);
     }
     if ((await store.totalReadings(user.id).catch(() => 1)) > 0) {
       return c.json({ error: "ineligible" }, 409);
@@ -2310,7 +2311,7 @@ app.get("/api/me/export", async (c) => {
 
 /**
  * Redeem an invite code (design board 3): attribute this registered
- * user to the code's owner (latest click wins) and grant the one-off
+ * user to the code's owner (first click wins forever) and grant the one-off
  * joining bonus for new accounts. Called after sign-up with the applied
  * code, or with the saved ref cookie when no code is typed.
  */
@@ -2339,11 +2340,12 @@ app.post("/api/me/invite", async (c) => {
       ref = refCookie(c);
     }
     if (ref) {
-      const ownerId = await resolveRefOwner(store, ref, user.id);
-      if (ownerId) {
-        const res = await store.upsertReferral(user.id, ref, ownerId).catch(() => "kept" as const);
-        if (res === "inserted") {
-          recordEvent(c.env, { name: "referral_signup", ...requestContext(c), userKind: userKind(user) });
+      if (!(await store.getReferral(user.id))) {
+        const ownerId = await resolveRefOwner(store, ref, user.id);
+        if (ownerId) {
+          if (await store.insertReferral(user.id, ref, ownerId).catch(() => false)) {
+            recordEvent(c.env, { name: "referral_signup", ...requestContext(c), userKind: userKind(user) });
+          }
         }
       }
     }
@@ -2600,6 +2602,18 @@ app.post("/api/billing/webhook", async (c) => {
           receiptUrl: receipt.receiptUrl,
           paymentMethod: receipt.paymentMethod,
         });
+        // Referred buyers get 20% extra tokens on every top-up (rounded
+        // up), credited with the pack. Keyed by payment so a webhook
+        // replay is a no-op; unattributed buyers get nothing.
+        if (await store.getReferral(userId).catch(() => null)) {
+          await store.postLedger({
+            userId,
+            delta: friendTopupBonus(pack.tokens),
+            reason: "referral",
+            ref: `friend-topup-bonus:${receipt.paymentIntentId ?? session.id}`,
+            day: today,
+          }).catch(() => {});
+        }
         // Redeem code applied in the pack sheet: bonus lands with the
         // pack, exactly once (ref keys by checkout session; a webhook
         // replay is a no-op).
@@ -2610,8 +2624,8 @@ app.post("/api/billing/webhook", async (c) => {
           if (!isInvite) await store.recordRedemption(redeemCode, userId).catch(() => false);
           if (isInvite) {
             const ownerId = await store.inviteOwner(redeemCode).catch(() => null);
-            if (ownerId && ownerId !== userId) {
-              await store.upsertReferral(userId, inviteRefFor(ownerId), ownerId).catch(() => {});
+            if (ownerId && ownerId !== userId && !(await store.getReferral(userId))) {
+              await store.insertReferral(userId, inviteRefFor(ownerId), ownerId).catch(() => {});
             }
           }
           await store.postLedger({

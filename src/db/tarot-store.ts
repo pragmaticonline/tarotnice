@@ -440,27 +440,17 @@ export function d1TarotStore(db: D1Database) {
       return rows.length;
     },
 
-    /** Attribute a referee to a referrer — latest click wins. A first-ever
-     *  click inserts; a later click moves the row to the new referrer with a
-     *  fresh createdAt, so their 20% runs from that day forward and the old
-     *  referrer keeps everything earned before. firstReadingAt is never
-     *  touched, so the +5 can only ever pay once. Returns what happened. */
-    async upsertReferral(visitorId: string, shareId: string, referrerId: string): Promise<"inserted" | "updated" | "kept"> {
-      const existing = await this.getReferral(visitorId).catch(() => null);
-      if (existing) {
-        if (existing.referrerId === referrerId) return "kept";
-        await orm
-          .update(schema.referrals)
-          .set({ shareId, referrerUserId: referrerId, createdAt: Date.now() })
-          .where(eq(schema.referrals.visitorUserId, visitorId));
-        return "updated";
-      }
+    /** Attribute a referee to a referrer — first click wins forever. The
+     *  first-ever click inserts; later clicks are ignored, so all future
+     *  payments keep paying the original referrer. firstReadingAt is never
+     *  touched, so the +5 can only ever pay once. */
+    async insertReferral(visitorId: string, shareId: string, referrerId: string): Promise<boolean> {
       const rows = await orm
         .insert(schema.referrals)
         .values({ visitorUserId: visitorId, shareId, referrerUserId: referrerId, createdAt: Date.now() })
         .onConflictDoNothing()
         .returning({ visitorUserId: schema.referrals.visitorUserId });
-      return rows.length > 0 ? "inserted" : "kept";
+      return rows.length > 0;
     },
 
     /** Conversions (first readings) attributed to a referrer since epoch ms. */

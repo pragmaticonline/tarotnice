@@ -85,6 +85,14 @@ export function topupsSinceReferral<T extends { userId: string; day: string }>(
   return rows.filter((r) => r.day >= (referredDayByUser.get(r.userId) ?? ""));
 }
 
+/** Friend's per-top-up bonus rate: 10% extra tokens, rounded up. */
+export const FRIEND_TOPUP_RATE = 0.1;
+
+/** Friend's cut on each referred top-up: 10% extra tokens, rounded up. */
+export function friendTopupBonus(tokens: number, rate: number = FRIEND_TOPUP_RATE): number {
+  return Math.ceil(tokens * rate);
+}
+
 /** Affiliate token balance: earned from referees minus what's been paid out. */
 export function affiliateTokenBalance(
   earnedTokens: number,
