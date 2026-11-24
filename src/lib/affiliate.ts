@@ -9,6 +9,11 @@ export function affiliateShare(totalMinor: number, rate: number = AFFILIATE_SHAR
   return Math.round(totalMinor * rate);
 }
 
+/** Token earnings from referred top-ups: 20% of each purchase, rounded. */
+export function affiliateTokensEarned(rows: { delta: number }[], rate: number = AFFILIATE_SHARE): number {
+  return rows.reduce((sum, r) => sum + Math.round(r.delta * rate), 0);
+}
+
 export type AffiliatePayment = {
   userId: string;
   day: string;
@@ -40,6 +45,20 @@ export function summarizeAffiliatePayments(rows: AffiliatePayment[]): {
     if (sum > best) { best = sum; currency = cur; }
   }
   return { count: rows.length, totalMinor, currency };
+}
+
+/** Affiliate token balance: earned from referees minus what's been paid out. */
+export function affiliateTokenBalance(
+  earnedTokens: number,
+  claims: { status: string; tokens: number; grantedTokens: number | null }[],
+): { earned: number; claimed: number; pending: number; unclaimed: number } {
+  let claimed = 0;
+  let pending = 0;
+  for (const c of claims) {
+    if (c.status === "approved") claimed += c.grantedTokens ?? c.tokens;
+    else if (c.status === "pending" || c.status === "deciding") pending += c.tokens;
+  }
+  return { earned: earnedTokens, claimed, pending, unclaimed: Math.max(0, earnedTokens - claimed - pending) };
 }
 
 export function formatMinor(minor: number, currency: string): string {

@@ -96,7 +96,7 @@ import {
   type LedgerRow,
 } from "./lib/wallet";
 import { checkinWeek } from "./lib/checkin";
-import { affiliateShare, summarizeAffiliatePayments } from "./lib/affiliate";
+import { affiliateShare, affiliateTokenBalance, affiliateTokensEarned, summarizeAffiliatePayments } from "./lib/affiliate";
 import { sweepStuckReadings } from "./lib/sweep";
 import { checkoutReturnUrls } from "./routes/billing";
 
@@ -1209,23 +1209,33 @@ app.get("/billing", async (c) => {
     invited: number; converted: number;
     payments: { day: string; delta: number; amount: number | null; currency: string | null; paymentMethod: string | null }[];
     revenueMinor: number; revenueCurrency: string; shareMinor: number;
+    earnedTokens: number; claimedTokens: number; pendingTokens: number; unclaimedTokens: number;
+    claims: { day: string; tokens: number; granted: number | null; status: string }[];
   } | null = null;
   try {
     const flag = await store.getAffiliate(user.id);
     if (flag) {
-      const [friends, stats] = await Promise.all([
+      const [friends, stats, claimRows] = await Promise.all([
         store.listReferralFriends(user.id),
         store.referralStats(user.id),
+        store.affiliateClaims(user.id),
       ]);
       const rows = await store.topupsForUsers(friends.map((f) => f.visitorUserId));
       const publicRows = rows.map((r) => ({
         day: r.day, delta: r.delta, amount: r.amount, currency: r.currency, paymentMethod: r.paymentMethod,
       }));
       const sum = summarizeAffiliatePayments(publicRows.map((r) => ({ ...r, userId: "", ref: "" })));
+      const earnedTokens = affiliateTokensEarned(publicRows.map((r) => ({ delta: r.delta })));
+      const bal = affiliateTokenBalance(earnedTokens, claimRows);
       affiliate = {
         invited: stats.invited, converted: stats.converted, payments: publicRows,
         revenueMinor: sum.totalMinor, revenueCurrency: sum.currency,
         shareMinor: affiliateShare(sum.totalMinor),
+        earnedTokens, claimedTokens: bal.claimed, pendingTokens: bal.pending, unclaimedTokens: bal.unclaimed,
+        claims: claimRows.map((cl) => ({
+          day: new Date(cl.createdAt).toISOString().slice(0, 10),
+          tokens: cl.tokens, granted: cl.grantedTokens, status: cl.status,
+        })),
       };
     }
   } catch {
@@ -2439,6 +2449,30 @@ app.get("/api/me/referrals", async (c) => {
 
 // Token-pack checkout (nicelingo model): registered users only, prices
 // are Dashboard objects referenced by env id — clients never name amounts.
+/** Affiliate payout claim (registered affiliates only): files a pending
+ * claim for the full unclaimed token balance. Staff approve in the staff
+ * tool, choosing the final granted amount; the grant lands as an
+ * affiliate_claim ledger row (idempotent per claim id). */
+app.post("/api/me/affiliate/claim", async (c) => {
+  const user = await authedUser(c);
+  if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);
+  if (user.isAnonymous) return c.json({ error: "registration_required" }, 403);
+  const store = d1TarotStore(c.env.DB);
+  const flag = await store.getAffiliate(user.id).catch(() => null);
+  if (!flag) return c.json({ error: "not_affiliate" }, 403);
+  const [friends, claims] = await Promise.all([
+    store.listReferralFriends(user.id).catch(() => []),
+    store.affiliateClaims(user.id).catch(() => []),
+  ]);
+  const topups = friends.length ? await store.topupsForUsers(friends.map((f: { visitorUserId: string }) => f.visitorUserId)).catch(() => []) : [];
+  const earned = affiliateTokensEarned(topups.map((r) => ({ delta: r.delta })));
+  const bal = affiliateTokenBalance(earned, claims);
+  if (bal.unclaimed <= 0) return c.json({ ok: false, error: "nothing_to_claim", unclaimed: 0 }, 409);
+  const id = await store.createAffiliateClaim(user.id, bal.unclaimed).catch(() => null);
+  if (!id) return c.json({ error: "claim_failed" }, 500);
+  return c.json({ ok: true, claimId: id, tokens: bal.unclaimed });
+});
+
 app.post("/api/billing/checkout", async (c) => {
   const user = await authedUser(c);
   if (!user || !c.env?.DB) return c.json({ error: "unauthorized" }, 401);

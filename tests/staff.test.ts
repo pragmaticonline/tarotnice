@@ -140,6 +140,7 @@ describe("affiliate tracking", () => {
     expect(html).not.toContain("next");
     const empty = renderAffiliatesPage(STAFF, "", [], []);
     expect(empty).toContain("No affiliates yet");
+    expect(empty).toContain("No pending payout claims.");
   });
 
   it("invite page shows the affiliate toggle and referred payments", () => {
@@ -165,13 +166,32 @@ describe("affiliate tracking", () => {
     expect(reader).not.toContain('action="/affiliates/');
   });
 
+  it("payout queue shows pending claims with approve and deny forms", () => {
+    const html = renderAffiliatesPage(STAFF, "", [], [], [
+      { id: "cl1", userId: "u9", email: "maew@example.com", tokens: 30, createdAt: Date.UTC(2026, 10, 20) },
+    ]);
+    expect(html).toContain("Payout claims");
+    expect(html).toContain("maew@example.com");
+    expect(html).toContain("/affiliates/claims/cl1/approve");
+    expect(html).toContain("/affiliates/claims/cl1/deny");
+    expect(html).toContain('name="granted"');
+    expect(html).toContain('name="reason"');
+  });
+
   it("affiliate routes gate on role and audit everything", () => {
     const src = readFileSync(new URL("../src/staff.ts", import.meta.url), "utf8");
     expect(src).toContain('app.get("/affiliates"');
     expect(src).toContain('app.post("/affiliates/:userId/enable"');
     expect(src).toContain('app.post("/affiliates/:userId/disable"');
+    expect(src).toContain('app.post("/affiliates/claims/:claimId/approve"');
+    expect(src).toContain('app.post("/affiliates/claims/:claimId/deny"');
     expect(src).toContain("affiliate.enable");
     expect(src).toContain("affiliate.disable");
+    expect(src).toContain("affiliate_claim.approve");
+    expect(src).toContain("affiliate_claim.deny");
+    expect(src).toContain("claimAffiliateClaim(");
+    expect(src).toContain("decideAffiliateClaim(");
+    expect(src).toContain("affiliate-claim:${claimId}");
     expect(src).toContain("SUPPORT_GRANT_CAP");
     const main = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
     expect(main).toContain('"affiliate_payment"');

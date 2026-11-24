@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, lt, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lt, ne, sql } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import * as schema from "./schema";
 
@@ -649,6 +649,77 @@ export function d1TarotStore(db: D1Database) {
         .where(and(eq(schema.tokenLedger.reason, "topup"), inArray(schema.tokenLedger.userId, userIds)))
         .orderBy(desc(schema.tokenLedger.createdAt))
         .limit(1000);
+    },
+
+    /** File an affiliate payout claim for the full requested amount. */
+    async createAffiliateClaim(userId: string, tokens: number): Promise<string | null> {
+      const id = `affclaim-${Date.now().toString(36)}-${Math.floor(Math.random() * 0xffff).toString(16)}`;
+      const rows = await orm
+        .insert(schema.affiliateClaims)
+        .values({ id, userId, tokens, grantedTokens: null, status: "pending", reason: null, createdAt: Date.now(), decidedAt: null, decidedBy: null })
+        .onConflictDoNothing()
+        .returning({ id: schema.affiliateClaims.id })
+        .catch(() => []);
+      return rows.length ? rows[0].id : null;
+    },
+
+    async affiliateClaim(id: string): Promise<{
+      id: string; userId: string; tokens: number; grantedTokens: number | null;
+      status: string; reason: string | null; createdAt: number; decidedAt: number | null; decidedBy: string | null;
+    } | null> {
+      const rows = await orm
+        .select({
+          id: schema.affiliateClaims.id, userId: schema.affiliateClaims.userId, tokens: schema.affiliateClaims.tokens,
+          grantedTokens: schema.affiliateClaims.grantedTokens, status: schema.affiliateClaims.status, reason: schema.affiliateClaims.reason,
+          createdAt: schema.affiliateClaims.createdAt, decidedAt: schema.affiliateClaims.decidedAt, decidedBy: schema.affiliateClaims.decidedBy,
+        })
+        .from(schema.affiliateClaims)
+        .where(eq(schema.affiliateClaims.id, id))
+        .limit(1);
+      return rows[0] ?? null;
+    },
+
+    /** Atomically take a pending claim for decision; false if already decided. */
+    async claimAffiliateClaim(id: string): Promise<boolean> {
+      const rows = await orm
+        .update(schema.affiliateClaims)
+        .set({ status: "deciding" })
+        .where(and(eq(schema.affiliateClaims.id, id), eq(schema.affiliateClaims.status, "pending")))
+        .returning({ id: schema.affiliateClaims.id });
+      return rows.length > 0;
+    },
+
+    async decideAffiliateClaim(id: string, approved: boolean, grantedTokens: number | null, by: string, reason: string | null): Promise<void> {
+      await orm
+        .update(schema.affiliateClaims)
+        .set({ status: approved ? "approved" : "denied", grantedTokens, reason, decidedAt: Date.now(), decidedBy: by })
+        .where(and(eq(schema.affiliateClaims.id, id), eq(schema.affiliateClaims.status, "deciding")));
+    },
+
+    async affiliateClaims(userId: string): Promise<{
+      id: string; tokens: number; grantedTokens: number | null; status: string; reason: string | null; createdAt: number; decidedAt: number | null;
+    }[]> {
+      return orm
+        .select({
+          id: schema.affiliateClaims.id, tokens: schema.affiliateClaims.tokens, grantedTokens: schema.affiliateClaims.grantedTokens,
+          status: schema.affiliateClaims.status, reason: schema.affiliateClaims.reason,
+          createdAt: schema.affiliateClaims.createdAt, decidedAt: schema.affiliateClaims.decidedAt,
+        })
+        .from(schema.affiliateClaims)
+        .where(eq(schema.affiliateClaims.userId, userId))
+        .orderBy(desc(schema.affiliateClaims.createdAt))
+        .limit(50);
+    },
+
+    async pendingAffiliateClaims(): Promise<{
+      id: string; userId: string; tokens: number; createdAt: number;
+    }[]> {
+      return orm
+        .select({ id: schema.affiliateClaims.id, userId: schema.affiliateClaims.userId, tokens: schema.affiliateClaims.tokens, createdAt: schema.affiliateClaims.createdAt })
+        .from(schema.affiliateClaims)
+        .where(eq(schema.affiliateClaims.status, "pending"))
+        .orderBy(asc(schema.affiliateClaims.createdAt))
+        .limit(100);
     },
 
     // --- Token wallet (balances derive from these rows; lib/wallet.ts) ---

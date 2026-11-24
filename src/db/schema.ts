@@ -115,6 +115,28 @@ export const affiliates = sqliteTable("affiliates", {
   note: text("note"),
 });
 
+// Affiliate payout claims: the affiliate taps Claim for their unclaimed
+// token balance; staff approves (tokens land) or denies with a reason.
+export const affiliateClaims = sqliteTable(
+  "affiliate_claims",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    tokens: integer("tokens").notNull(),
+    grantedTokens: integer("granted_tokens"),
+    status: text("status").notNull(), // pending|approved|denied
+    reason: text("reason"),
+    createdAt: integer("created_at").notNull(),
+    decidedAt: integer("decided_at"),
+    decidedBy: text("decided_by"),
+  },
+  (t) => ({
+    statusIdx: index("idx_affiliate_claims_status").on(t.status, t.createdAt),
+  }),
+);
+
 export const dailyDraws = sqliteTable(
   "daily_draws",
   {
