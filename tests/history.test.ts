@@ -191,39 +191,58 @@ describe("historyDetailPage", () => {
 });
 
 describe("progressPage", () => {
-  const days = Array.from({ length: 14 }, (_, i) => ({
-    date: `2026-10-${String(9 + i).padStart(2, "0")}`,
-    active: i % 2 === 0,
+  const days = monthGridDays(new Set(["2026-11-04", "2026-11-20"]), "2026-11").map((d) => ({
+    ...d, selected: d.date === "2026-11-20", isToday: d.date === "2026-11-20", topics: d.date === "2026-11-04" ? ["money"] : [],
   }));
   const cardNames: Record<number, string> = { 0: "The Fool", 1: "The Magician" };
+  const cardImage: Record<number, string> = { 0: "/static/cards/major-00.webp", 1: "/static/cards/major-01.webp" };
+  const base = {
+    ui: "en" as const, origin: "https://tarotnice.com", streak: STREAK, drewToday: true, tokens: 15,
+    calMonth: "2026-11", calDays: days, monthLabel: "November 2026", monthPrev: "2026-10", monthNext: "2026-12",
+    selectedDay: "2026-11-20",
+    entries: [{
+      date: "2026-11-20", time: "17:21", topic: "money", topicLabel: "Money",
+      question: "Raise?", cardsLabel: "Ace of Pentacles", id: "r1",
+    }],
+    owned: [0, 1], cardNames, cardImage, suitFilter: "all",
+    invite: { code: "NICE-TEST", link: "https://tarotnice.com/r/NICE-TEST", invited: 2, converted: 1, earned: 5, rewardToday: 1, rewardCap: 3 },
+    milestones: [
+      { key: "streak-7", icon: "\U0001F525", label: "7-day streak", sub: "2 days to go", pct: 71, done: false },
+      { key: "full-deck", icon: "\U0001F0A0", label: "Full deck: 78 cards", sub: "Achieved", pct: 100, done: true },
+    ],
+    readings: 5,
+    checkin: { claimedToday: false, total: 0, week: [] as never[] },
+  };
 
-  it("renders streak, 14-day grid, 78-cell deck, referrals, milestones", () => {
-    const html = progressPage({
-      ui: "en", origin: "https://tarotnice.com", streak: STREAK, days,
-      owned: [0, 1], cardNames,
-      referrals: { invited: 2, converted: 1 }, bonusOn: false,
-      milestones: [
-        { key: "first", label: "First reading", achieved: true },
-        { key: "streak7", label: "7-day streak", achieved: false },
-      ],
-      readings: 5,
-      checkin: { claimedToday: false, total: 0, week: [] },
-    });
+  it("renders h1, checkin first, streak, month grid, collection, milestones, invite", () => {
+    const html = progressPage(base);
     expect(html).toContain("noindex");
-    expect(html).toContain("2 / 78");
-    expect(html).toContain("2 friends joined, 1 drew a reading.");
-    expect(html).toContain("data-share-badge=\"first\"");
-    expect(html).not.toContain("data-share-badge=\"streak7\"");
-    expect(html).toContain("The Fool");
-    const cells = html.match(/cal-cell/g)?.length ?? 0;
-    expect(cells).toBeGreaterThanOrEqual(14);
-    // Design board F: streak hero, 5-week grid, collection bar.
-    expect(html).toContain("journey-hero");
-    expect(html).toContain("Last 5 weeks");
-    expect(html).toContain("collection-bar");
-    expect(html).toContain("2 / 78 collected");
-    const deck = html.match(/deck-cell/g)?.length ?? 0;
-    expect(deck).toBeGreaterThanOrEqual(78);
+    expect(html).toContain("My journey");
+    expect(html).toContain("All readings");
+    expect(html).toContain('href="/history"');
+    // check-in card first, streak right after
+    expect(html.indexOf('id="ci-card"')).toBeLessThan(html.indexOf("Current streak"));
+    // month grid: 30 day links, padded weeks, no leakage
+    expect(html.match(/day=2026-11-\d\d"/g)?.length ?? 0).toBe(30);
+    expect(html).not.toContain("2026-10-");
+    expect(html).not.toContain("2026-12-");
+    expect(html).toContain("November 2026");
+    expect(html).toContain('href="/progress?month=2026-10"');
+    expect(html).toContain('href="/progress?month=2026-12"');
+    expect(html).toContain('aria-label="Previous month"');
+    // topic dot for the money reading
+    expect(html).toContain("#c2477a");
+    // selected day events render with time + link
+    expect(html).toContain("17:21");
+    expect(html).toContain('href="/history/r1"');
+    // collection grid + milestones + invite
+    expect(html).toContain("Card collection");
+    expect(html).toContain(">2</b> / 78");
+    expect(html).toContain("Milestones");
+    expect(html).toContain("7-day streak");
+    expect(html).toContain("Invite friends");
+    expect(html).toContain("NICE-TEST");
+    expect(html).toContain("https://social-plugins.line.me/lineit/share?url=");
   });
 
   it("builds month helpers on Bangkok boundaries", () => {
@@ -243,29 +262,8 @@ describe("progressPage", () => {
     expect(nov.filter((d) => d.active).map((d) => d.date)).toEqual(["2026-11-04"]);
     expect(monthGridDays(new Set(), "2026-02")).toHaveLength(28);
   });
-
-  it("renders a full labelled month with padded weeks and arrows", () => {
-    const days = monthGridDays(new Set(["2026-11-04"]), "2026-11");
-    const html = progressPage({
-      ui: "en", origin: "https://tarotnice.com", streak: STREAK, days,
-      owned: [], cardNames: {},
-      referrals: { invited: 0, converted: 0 }, bonusOn: false,
-      milestones: [], readings: 1,
-      checkin: { claimedToday: false, total: 0, week: [] },
-      monthLabel: "November 2026", monthPrev: "2026-10", monthNext: "2026-12",
-    });
-    expect(html).toContain("November 2026");
-    // 30 day buttons, none from October or December.
-    expect(html.match(/data-cal-day="/g)?.length ?? 0).toBe(30);
-    expect(html).not.toContain("2026-10-");
-    expect(html).not.toContain("2026-12-");
-    // Nov 2026 starts on a Sunday: 6 lead + 6 trail blanks pad the grid.
-    expect(html.match(/cal-cell blank/g)?.length ?? 0).toBe(12);
-    expect(html).toContain('href="/progress?month=2026-10"');
-    expect(html).toContain('href="/progress?month=2026-12"');
-    expect(html).toContain('aria-label="Previous month"');
-  });
 });
+
 
 describe("library pages", () => {
   const card = {
@@ -309,42 +307,30 @@ describe("library pages", () => {
   });
 });
 
-describe("spec milestones + badge shares (M2)", () => {
-  it("renders streak-tier badges with share buttons only when achieved", () => {
+describe("spec milestones (M2)", () => {
+  it("renders milestone cards with progress, no share buttons", () => {
     const html = progressPage({
-      ui: "en", origin: "https://tarotnice.com",
-      streak: { current: 5, longest: 9, activeToday: true },
-      days: [], owned: [0], cardNames: { 0: "The Fool" },
-      referrals: { invited: 0, converted: 0 }, bonusOn: false,
+      ui: "en", origin: "https://tarotnice.com", streak: { current: 5, longest: 9, activeToday: true },
+      drewToday: true, tokens: 9,
+      calMonth: "2026-11",
+      calDays: monthGridDays(new Set(), "2026-11").map((d) => ({ ...d, selected: false, isToday: false, topics: [] as string[] })),
+      monthLabel: "November 2026", monthPrev: "2026-10", monthNext: "2026-12", selectedDay: "2026-11-01",
+      entries: [], owned: [0], cardNames: { 0: "The Fool" }, cardImage: { 0: "/static/cards/major-00.webp" }, suitFilter: "all",
+      invite: { code: "NICE-T", link: "https://tarotnice.com/r/NICE-T", invited: 0, converted: 0, earned: 0, rewardToday: 0, rewardCap: 3 },
       milestones: [
-        { key: "streak-3", label: "3-day streak", achieved: true },
-        { key: "streak-14", label: "14-day streak", achieved: false },
-        { key: "collection", label: "All 78 daily cards", achieved: false },
+        { key: "streak-3", icon: "\U0001F525", label: "3-day streak", sub: "Achieved", pct: 100, done: true },
+        { key: "streak-14", icon: "\U0001F525", label: "14-day streak", sub: "5 days to go", pct: 64, done: false },
+        { key: "full-deck", icon: "\U0001F0A0", label: "Full deck: 78 cards", sub: "77 cards to go", pct: 1, done: false },
       ],
       readings: 3,
       checkin: { claimedToday: false, total: 0, week: [] },
-      recentDaily: [{ name: "The Fool", image: "/static/cards/major-00.webp", day: "2026-10-22" }],
     });
-    expect(html).toContain('data-share-badge="streak-3"');
-    expect(html).not.toContain('data-share-badge="streak-14"');
-    expect(html).not.toContain('data-share-badge="collection"');
-    expect(html).toContain("Recent daily cards");
-    expect(html).toContain("/static/cards/major-00.webp");
-  });
-
-  it("badge landing renders label + CTA and 404s unknown ids at the route", async () => {
-    const html = badgeLandingPage({
-      origin: "https://tarotnice.com", shareId: "AbC123XyZ9", ui: "en",
-      label: "7-day streak", ogImage: "https://tarotnice.com/b/AbC123XyZ9/og.png",
-    });
-    expect(html).toContain("7-day streak");
-    expect(html).toContain("noindex");
-    expect(html).toContain("/?ref=AbC123XyZ9");
-    expect((await app.request("/b/ZZZZZZZZZZ")).status).toBe(410);
-    expect((await app.request("/api/share", {
-      method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ kind: "badge", ref: "streak-7" }),
-    })).status).toBe(401);
+    expect(html).toContain("Milestones");
+    expect(html).toContain("3-day streak");
+    expect(html).toContain("Achieved");
+    expect(html).toContain("5 days to go");
+    expect(html).not.toContain("data-share-badge");
+    expect(html).not.toContain("Recent daily cards");
   });
 });
 

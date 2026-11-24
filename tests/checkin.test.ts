@@ -92,22 +92,31 @@ describe("checkin card on My journey", () => {
     ui: "en" as const,
     origin: "https://tarotnice.com",
     streak: STREAK,
-    days: [],
-    owned: [],
-    cardNames: {},
-    referrals: { invited: 0, converted: 0 },
-    bonusOn: false,
+    drewToday: false,
+    tokens: 15,
+    calMonth: "2026-11",
+    calDays: [] as { date: string; active: boolean; selected: boolean; isToday: boolean; topics: string[] }[],
+    monthLabel: "November 2026",
+    monthPrev: "2026-10",
+    monthNext: "2026-12",
+    selectedDay: "2026-11-20",
+    entries: [],
+    owned: [] as number[],
+    cardNames: {} as Record<number, string>,
+    cardImage: {} as Record<number, string>,
+    suitFilter: "all",
+    invite: { code: "NICE-TEST", link: "https://tarotnice.com/r/NICE-TEST", invited: 0, converted: 0, earned: 0, rewardToday: 0, rewardCap: 3 },
     milestones: [],
     readings: 0,
   };
   const week = checkinWeek("2026-11-25", ["2026-11-23"], "2026-11-01", "en");
 
-  it("renders first, before the reading-streak hero", () => {
+  it("renders first, before the reading-streak card", () => {
     const html = progressPage({
       ...base,
       checkin: { claimedToday: false, total: 2, week },
     });
-    expect(html.indexOf('id="ci-card"')).toBeLessThan(html.indexOf("journey-hero"));
+    expect(html.indexOf('id="ci-card"')).toBeLessThan(html.indexOf("Current streak"));
     expect(html).toContain("Daily check-in");
     expect(html).toContain("Claim today\u2019s 1 token");
     expect(html).toContain('id="ci-claim"');
@@ -164,14 +173,15 @@ describe("checkin wiring", () => {
     expect(billing).toContain("Daily check-in");
   });
 
-  it("header dot and plain journey row with dot are wired to paint()", () => {
+  it("header dot and gold journey row with claim pill are wired to paint()", () => {
     const shell = src("../src/routes/shell.ts");
     expect(shell).toContain("menu-dot");
     expect(shell).toContain("data-checkin-dot");
-    expect(shell).not.toContain('class="journey-row"');
+    expect(shell).toContain('class="journey-row"');
     expect(shell).toContain("data-journey-row");
     expect(shell).toContain("data-checkin-dot-menu");
-    expect(shell).not.toContain("data-checkin-pill");
+    expect(shell).toContain("data-checkin-claim");
+    expect(shell).toContain("mjMenuClaim");
     expect(shell).toContain("checkinMenuWaiting");
     const progress = src("../public/app/progress.js");
     expect(progress).toContain("/api/checkin/claim");
@@ -205,5 +215,61 @@ describe("auto-refund sweeper", () => {
     const store = src("../src/db/tarot-store.ts");
     expect(store).toContain("stuckReadings");
     expect(store).toContain("failStuckReading");
+  });
+});
+
+describe("my journey v2", () => {
+  const src = (p: string) => readFileSync(new URL(p, import.meta.url), "utf8");
+  const keys = ["mjAllReadings", "mjKeepStreak", "mjReadings", "mjNoReading", "mjColNote", "mjUnit",
+    "mjAll", "mjLocked", "mjLibrary", "mjG0", "mjG1", "mjG2", "mjG3", "mjG4", "mjMsTitle", "mjMsDone",
+    "mjLeftR", "mjLeftD", "mjLeftC", "mjStreakN", "mjFullDeck", "mjFirstReading", "mjFiveReadings",
+    "mjInvTitle", "mjInvSub", "mjJoined", "mjDrew", "mjEarned", "mjShareLine", "mjCopyLink",
+    "mjTodayCap", "mjFrWait", "mjNoReadYet", "mjPlus5", "mjAnon", "mjMenuClaim"] as const;
+
+  it("has complete copy in both languages with correct Thai spelling", () => {
+    for (const ui of ["en", "th"] as const) {
+      const d = t(ui);
+      for (const key of keys) {
+        expect(String(d[key]).length, `${ui}.${key}`).toBeGreaterThan(0);
+      }
+      expect(d.mjInvSub, ui).toContain("20");
+      expect(d.mjStreakN, ui).toContain("{n}");
+    }
+    const thai = t("th");
+    for (const v of Object.values(thai)) {
+      if (typeof v !== "string") continue;
+      expect(v).not.toContain("\u0e42\u0e17\u0e40\u0e04\u0e47\u0e19");
+      expect(v).not.toContain("\u0e42\u0e17\u0e40\u0e04\u0e19\u0e2a\u0e4c");
+    }
+    // No mixed-script confusables in new keys.
+    expect(t("th").mjKeepStreak).toContain("\u0e19\u0e49\u0e2d\u0e07\u0e40\u0e07\u0e34\u0e19");
+  });
+
+  it("drawer journey row is gold with a claim pill", () => {
+    const shell = src("../src/routes/shell.ts");
+    expect(shell).toContain('class="journey-row"');
+    expect(shell).toContain("data-checkin-claim");
+    expect(shell).toContain("mjMenuClaim");
+  });
+
+  it("progress.js wires chips toggle and copy without day navigation", () => {
+    const js = src("../public/app/progress.js");
+    expect(js).toContain("data-coll-toggle");
+    expect(js).toContain("data-copy-invite");
+    expect(js).toContain("data-checkin-claim");
+    expect(js).not.toContain("selectDay");
+    expect(js).not.toContain("data-share-badge");
+    expect(js).not.toContain("data-cal-day");
+  });
+
+  it("route supplies invite, earnings, selected day and new milestones", () => {
+    const index = src("../src/index.ts");
+    expect(index).toContain("ensureInviteCode(user.id");
+    expect(index).toContain("selectedDay");
+    expect(index).toContain("topicsByDay");
+    expect(index).toContain("suitFilter");
+    expect(index).toContain("full-deck");
+    expect(index).not.toContain('recentDaily: recent.map');
+    expect(index).not.toContain("bonusOn: c.env.REFERRAL_BONUS");
   });
 });

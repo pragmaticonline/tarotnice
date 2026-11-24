@@ -52,8 +52,14 @@ const PAGES: Record<string, string> = {
   }),
   progress: progressPage({
     ui: "en", origin: "https://tarotnice.com", streak: STREAK,
-    days: [], owned: [], cardNames: {}, referrals: { invited: 0, converted: 0 },
-    bonusOn: false, milestones: [], readings: 0,
+    drewToday: false, tokens: 0,
+    calMonth: "2026-11",
+    calDays: [],
+    monthLabel: "November 2026", monthPrev: "2026-10", monthNext: "2026-12",
+    selectedDay: "2026-11-01", entries: [],
+    owned: [], cardNames: {}, cardImage: {}, suitFilter: "all",
+    invite: { code: "NICE-T", link: "https://tarotnice.com/r/NICE-T", invited: 0, converted: 0, earned: 0, rewardToday: 0, rewardCap: 3 },
+    milestones: [], readings: 0,
   }),
   shareLanding: shareLandingPage({
     kind: "reading", origin: "https://tarotnice.com", shareId: "AbC123XyZ9", ui: "en",

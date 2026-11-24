@@ -26,7 +26,7 @@ const THEME_TOGGLE = `<script>(function(){function paint(){try{var night=documen
 const AUTH_LINK = `<script>(function(){
 function q(s){return document.querySelector(s)}function qa(s){return document.querySelectorAll(s)}
 function paint(d){try{
- if(d.checkin){var showDot=!!(d.user&&!d.user.isAnonymous&&!d.checkin.claimedToday);var dots=qa("[data-checkin-dot]");for(var j=0;j<dots.length;j++)dots[j].hidden=!showDot;var mdots=qa("[data-checkin-dot-menu]");for(var k=0;k<mdots.length;k++)mdots[k].hidden=!showDot;var mbs=qa("[data-drawer-open]");for(var m=0;m<mbs.length;m++){var wl=mbs[m].getAttribute(showDot?"data-menu-waiting":"data-menu-label");if(wl)mbs[m].setAttribute("aria-label",wl)}}
+ if(d.checkin){var showDot=!!(d.user&&!d.user.isAnonymous&&!d.checkin.claimedToday);var dots=qa("[data-checkin-dot]");for(var j=0;j<dots.length;j++)dots[j].hidden=!showDot;var mdots=qa("[data-checkin-dot-menu]");for(var k=0;k<mdots.length;k++)mdots[k].hidden=!showDot;var cps=qa("[data-checkin-claim]");for(var p=0;p<cps.length;p++)cps[p].hidden=!showDot;var mbs=qa("[data-drawer-open]");for(var m=0;m<mbs.length;m++){var wl=mbs[m].getAttribute(showDot?"data-menu-waiting":"data-menu-label");if(wl)mbs[m].setAttribute("aria-label",wl)}}
  if(d.tokens){var total=Math.max(0,d.tokens.freeLeft||0)+Math.max(0,d.tokens.balance||0);var chips=qa("[data-token-chip]");for(var j=0;j<chips.length;j++){chips[j].hidden=false;var n=chips[j].querySelector("[data-token-count]");if(n)n.textContent=String(total)}var c=q("[data-drawer-tokens]");if(c)c.textContent=String(total);var w=q("[data-drawer-wallet-count]");if(w)w.textContent=String(total)}
  if(d.streak){var sc=d.streak.current||0;var st=q("[data-drawer-streak]");if(st)st.textContent=String(sc);var un=q("[data-drawer-day-unit]");if(un)un.textContent=sc===1?un.getAttribute("data-one"):un.getAttribute("data-many")}
  if(typeof d.historyCount==="number"){var hc=q("[data-drawer-history-count]");if(hc){hc.hidden=d.historyCount===0;hc.textContent=String(d.historyCount)}}
@@ -242,7 +242,7 @@ export function drawerHtml(ui: UiLang): string {
   </div>
   <nav class="drawer-nav">
     <a href="/history">${escapeHtml(d.historyTitle)} <span class="drawer-count" data-drawer-history-count hidden></span></a>
-    <a data-journey-row href="/progress"><span>${escapeHtml(d.drawerJourney)}</span><span class="journey-dot" data-checkin-dot-menu hidden aria-hidden="true"></span></a>
+    <a data-journey-row href="/progress" class="journey-row"><span>${escapeHtml(d.drawerJourney)}</span><span class="journey-dot" data-checkin-dot-menu hidden aria-hidden="true"></span><span class="journey-claim" data-checkin-claim hidden>${escapeHtml(d.mjMenuClaim)}</span></a>
     <a href="/invite">${escapeHtml(d.refTab)} <span class="drawer-pill">${escapeHtml(d.invitePill)}</span></a>
     <a class="line-friends-link" href="https://lin.ee/WqBRZjA" target="_blank" rel="noopener"><span class="drawer-line-icon" aria-hidden="true"></span>${escapeHtml(d.lineFriends)}</a>
     <a href="/cards">${escapeHtml(d.cardsTitle)}</a>

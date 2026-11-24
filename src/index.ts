@@ -88,6 +88,7 @@ import {
   REFERRAL_REWARD_TOKENS,
   TOKENS_PER_QUESTION,
   WELCOME_TOKENS,
+  isFriendTopupBonus,
   isTransactionFilter,
   planSpend,
   reasonsForFilter,
@@ -1673,14 +1674,14 @@ app.get("/progress", async (c) => {
   const ui = requestUiLang(c);
   const lang = ui === "th" ? "th" : "en";
   const store = d1TarotStore(c.env.DB);
-  const [stats, days, ownedAll, referrals, cards, recent, windowReadings] = await Promise.all([
+  const [stats, days, ownedAll, referrals, cards, windowReadings, ledgerAll] = await Promise.all([
     store.progressStats(user.id),
     store.activityDays(user.id),
     store.collection(user.id),
     store.referralStats(user.id),
     store.listCards(lang),
-    store.recentDailies(user.id, 7),
-    store.listReadings(user.id, null, 30),
+    store.listReadings(user.id, null, 100),
+    store.ledgerRows(user.id).catch(() => [] as { delta: number; reason: string; ref: string }[]),
   ]);
   const ownedDaily = ownedAll;
   const d = t(ui);
@@ -1688,19 +1689,25 @@ app.get("/progress", async (c) => {
   const byId = new Map(cards.map((card) => [card.id, card]));
   const cardNames: Record<number, string> = {};
   for (const card of cards) cardNames[card.id] = card.name;
-  // SPEC §5.4: streak badges at 3/7/14/30/78/100 (shareable via
-  // kind:'badge'), deck = cards drawn as DAILY cards only.
+  // My-journey milestones: first + fifth readings, streaks, full deck.
+  // Icon + copy mirror the design file; the sub line counts down.
+  const msRow = (
+    key: string, icon: string, label: string, cur: number, goal: number,
+    leftKey: "mjLeftR" | "mjLeftD" | "mjLeftC",
+  ) => {
+    const done = cur >= goal;
+    return {
+      key, icon, label, done,
+      sub: done ? d.mjMsDone : fmt(d[leftKey], { n: goal - cur }),
+      pct: Math.max(0, Math.min(100, Math.round((cur / goal) * 100))),
+    };
+  };
   const milestones = [
-    ...STREAK_TIERS.map((tier) => ({
-      key: `streak-${tier}`,
-      label: d.msStreakDays.replace("{n}", String(tier)),
-      achieved: streak.longest >= tier,
-      left: streak.longest >= tier ? undefined : fmt(d.leftToGo, { n: tier - streak.longest }),
-    })),
-    {
-      key: "collection", label: d.msCollection, achieved: ownedDaily.length >= 78,
-      left: ownedDaily.length >= 78 ? undefined : fmt(d.leftToGo, { n: 78 - ownedDaily.length }),
-    },
+    msRow("first-reading", "\u2605", d.mjFirstReading, stats.readings, 1, "mjLeftR"),
+    msRow("five-readings", "\u2605", d.mjFiveReadings, stats.readings, 5, "mjLeftR"),
+    ...[3, 7, 14, 30, 100].map((n) =>
+      msRow(`streak-${n}`, "\U0001F525", fmt(d.mjStreakN, { n }), streak.longest, n, "mjLeftD")),
+    msRow("full-deck", "\U0001F0A0", d.mjFullDeck, ownedDaily.length, 78, "mjLeftC"),
   ];
   // The grid always covers the labelled month (from its 1st to its
   // last day), navigable with ?month=YYYY-MM. A trailing window no
@@ -1720,53 +1727,96 @@ app.get("/progress", async (c) => {
   const shiftMonth = (d: Date) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
   const monthPrev = shiftMonth(new Date(Date.UTC(calYear, calMon - 2, 1)));
   const monthNext = shiftMonth(new Date(Date.UTC(calYear, calMon, 1)));
+  const calDates = new Set(calDays.map((day) => day.date));
+  const topicsByDay = new Map<string, string[]>();
+  for (const r of windowReadings) {
+    if (!calDates.has(r.day)) continue;
+    const list = topicsByDay.get(r.day) ?? [];
+    if (!list.includes(r.topic)) list.push(r.topic);
+    topicsByDay.set(r.day, list);
+  }
+  const monthDays = calDays.map((day) => day.date);
+  const rawDay = c.req.query("day");
+  const selectedDay = rawDay && /^\d{4}-\d{2}-\d{2}$/.test(rawDay) && calDates.has(rawDay)
+    ? rawDay
+    : monthDays.includes(bangkokDay()) ? bangkokDay() : monthDays[0];
   const entries = windowReadings
-    .filter((r) => calDays.some((day) => day.date === r.day))
+    .filter((r) => r.day === selectedDay)
     .map((r) => ({
       date: r.day,
-      timeLabel: readingDateLabel(ui, r.createdAt),
+      time: bangkokTime(r.createdAt),
+      topic: r.topic,
       topicLabel: topicLabel(ui, r.topic),
       question: r.question,
       cardsLabel: r.cards.map((card) => byId.get(card.id)?.name ?? `#${card.id}`).join(" \u00b7 "),
       id: r.id,
     }));
-  const [claimedDays, progressAccount] = await Promise.all([
+  const [claimedDays, progressAccount, progressLedger] = await Promise.all([
     store.checkinDays(user.id).catch(() => [] as string[]),
     store.accountInfo(user.id).catch(() => null),
+    store.ledgerRows(user.id).catch(() => [] as { delta: number; reason: string; ref: string }[]),
   ]);
   const progressClaimed = new Set(claimedDays);
   const progressToday = bangkokDay();
   const progressSignup = progressAccount?.createdAt ? bangkokDay(new Date(progressAccount.createdAt)) : null;
+  const progressAccountFull = await pageAccount(c.env.DB, user);
+  const inviteCode = await store.ensureInviteCode(user.id, inviteCodeFor(user.id)).catch(() => inviteCodeFor(user.id));
+  const inviteLink = `${new URL(c.req.url).origin}/r/${inviteCode}`;
+  const validSuits = ["all", "major", "wands", "cups", "swords", "pentacles"];
+  const suitRaw = (c.req.query("suit") ?? "all").toLowerCase();
+  const suitFilter = validSuits.includes(suitRaw) ? suitRaw : "all";
+  const earnedTokens = progressLedger
+    .filter((r) => r.reason === "referral" && !r.ref.startsWith("friend-bonus:") && !isFriendTopupBonus(r))
+    .reduce((sum, r) => sum + r.delta, 0);
+  const cardImage: Record<number, string> = {};
+  for (const card of cards) cardImage[card.id] = `/static/${card.imageKey}.webp`;
   return c.html(
     progressPage({
       ui,
       origin: new URL(c.req.url).origin,
       streak,
-      account: await pageAccount(c.env.DB, user),
+      account: progressAccountFull,
       checkin: {
         claimedToday: progressClaimed.has(progressToday),
         total: claimedDays.length,
         week: checkinWeek(progressToday, progressClaimed, progressSignup, ui),
       },
-      days: calDays,
-      entries,
+      drewToday: days.includes(progressToday),
+      tokens: progressAccountFull?.tokens ?? 0,
+      calMonth,
+      calDays: calDays.map((day) => ({
+        date: day.date,
+        active: day.active,
+        selected: day.date === selectedDay,
+        isToday: day.date === progressToday,
+        topics: (topicsByDay.get(day.date) ?? []).slice(0, 3),
+      })),
       monthLabel,
       monthPrev,
       monthNext,
+      selectedDay,
+      entries,
       owned: ownedDaily,
       cardNames,
-      referrals,
-      bonusOn: c.env.REFERRAL_BONUS === "1",
+      cardImage,
+      suitFilter,
+      invite: {
+        code: inviteCode,
+        link: inviteLink,
+        invited: referrals.invited,
+        converted: referrals.converted,
+        earned: earnedTokens,
+        rewardToday: rewardsTodayCount(
+          (await store.ledgerRowsForDay(user.id, progressToday).catch(() => [])).map((r) => ({
+            delta: r.delta, reason: r.reason as LedgerRow["reason"], ref: r.ref,
+            source: (r.source as LedgerRow["source"]) ?? null, day: r.day, createdAt: r.createdAt,
+          })),
+          progressToday,
+        ),
+        rewardCap: REFERRAL_DAILY_CAP,
+      },
       milestones,
       readings: stats.readings,
-      recentDaily: recent.map((r) => {
-        const view = byId.get(r.cardId);
-        return {
-          name: view?.name ?? `#${r.cardId}`,
-          image: view ? `/static/${view.imageKey}.webp` : "",
-          day: r.day,
-        };
-      }),
     }),
   );
 });
@@ -1775,6 +1825,12 @@ app.get("/progress", async (c) => {
 export function bangkokMonth(now: Date): string {
   const bkk = new Date(now.getTime() + 7 * 3600 * 1000);
   return `${bkk.getUTCFullYear()}-${String(bkk.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+/** Bangkok wall-clock HH:MM for an instant. */
+export function bangkokTime(now: number): string {
+  const t = new Date(now + 7 * 3600 * 1000);
+  return `${String(t.getUTCHours()).padStart(2, "0")}:${String(t.getUTCMinutes()).padStart(2, "0")}`;
 }
 
 /** Validated ?month=YYYY-MM, or null when missing or malformed. */
