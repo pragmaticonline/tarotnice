@@ -43,7 +43,7 @@ export function billingPage(opts: {
   affiliate?: {
     invited: number; converted: number;
     payments: { day: string; delta: number; amount: number | null; currency: string | null; paymentMethod: string | null }[];
-    revenueMinor: number; revenueCurrency: string;
+    revenueMinor: number; revenueCurrency: string; shareMinor: number;
   } | null;
 }): string {
   const d = t(opts.ui);
@@ -135,9 +135,9 @@ ${opts.affiliate ? `<div class="panel-card"><h2>${escapeHtml(d.affTitle)}</h2>
 <div class="invite-stat"><b>${opts.affiliate.invited}</b><span>${escapeHtml(d.statJoined)}</span></div>
 <div class="invite-stat"><b>${opts.affiliate.converted}</b><span>${escapeHtml(d.statFirstReading)}</span></div>
 <div class="invite-stat"><b>${opts.affiliate.payments.length}</b><span>${escapeHtml(d.affPayments)}</span></div>
-<div class="invite-stat"><b>${escapeHtml(formatMinor(opts.affiliate.revenueMinor, opts.affiliate.revenueCurrency))}</b><span>${escapeHtml(d.affRevenue)}</span></div>
+<div class="invite-stat"><b>${escapeHtml(formatMinor(opts.affiliate.shareMinor, opts.affiliate.revenueCurrency))}</b><span>${escapeHtml(d.affShare)}</span></div>
 </div>
-<p class="muted">${escapeHtml(d.affNote)}</p>
+<p class="muted">${escapeHtml(d.affNote)} ${escapeHtml(formatMinor(opts.affiliate.revenueMinor, opts.affiliate.revenueCurrency))} ${escapeHtml(d.affRevenue.toLowerCase())}.</p>
 ${opts.affiliate.payments.length ? `<table class="grid"><thead><tr><th>${escapeHtml(d.affDate)}</th><th class="num">Tokens</th><th class="num">Amount</th><th>Method</th></tr></thead><tbody>${opts.affiliate.payments.map((r) => `<tr><td>${escapeHtml(r.day)}</td><td class="num">+${r.delta}</td><td class="num">${r.amount === null ? "\u2014" : escapeHtml(formatMinor(r.amount, r.currency ?? "THB"))}</td><td>${escapeHtml(r.paymentMethod ?? "\u2014")}</td></tr>`).join("")}</tbody></table>` : `<p class="muted">${escapeHtml(d.affEmpty)}</p>`}</div>` : ""}
 <h3>${escapeHtml(d.yourFriends)} <span id="friends-counts"></span></h3>
 <p class="friends-progress" id="friends-progress"></p>

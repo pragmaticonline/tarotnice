@@ -96,7 +96,7 @@ import {
   type LedgerRow,
 } from "./lib/wallet";
 import { checkinWeek } from "./lib/checkin";
-import { summarizeAffiliatePayments } from "./lib/affiliate";
+import { affiliateShare, summarizeAffiliatePayments } from "./lib/affiliate";
 import { sweepStuckReadings } from "./lib/sweep";
 import { checkoutReturnUrls } from "./routes/billing";
 
@@ -1208,7 +1208,7 @@ app.get("/billing", async (c) => {
   let affiliate: {
     invited: number; converted: number;
     payments: { day: string; delta: number; amount: number | null; currency: string | null; paymentMethod: string | null }[];
-    revenueMinor: number; revenueCurrency: string;
+    revenueMinor: number; revenueCurrency: string; shareMinor: number;
   } | null = null;
   try {
     const flag = await store.getAffiliate(user.id);
@@ -1225,6 +1225,7 @@ app.get("/billing", async (c) => {
       affiliate = {
         invited: stats.invited, converted: stats.converted, payments: publicRows,
         revenueMinor: sum.totalMinor, revenueCurrency: sum.currency,
+        shareMinor: affiliateShare(sum.totalMinor),
       };
     }
   } catch {

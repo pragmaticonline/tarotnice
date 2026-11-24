@@ -1,6 +1,14 @@
 // Affiliate helpers shared by the staff worker and the public billing page.
 // Money is summed from ledger top-up rows (Stripe minor units), which live
 // in D1 permanently — no retention window, no extra rollup table.
+/** Affiliate revenue share of gross referred payments. */
+export const AFFILIATE_SHARE = 0.2;
+
+/** The affiliate's cut, rounded to whole minor units (no fractional satang). */
+export function affiliateShare(totalMinor: number, rate: number = AFFILIATE_SHARE): number {
+  return Math.round(totalMinor * rate);
+}
+
 export type AffiliatePayment = {
   userId: string;
   day: string;

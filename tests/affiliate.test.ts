@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { formatMinor, summarizeAffiliatePayments } from "../src/lib/affiliate";
+import { affiliateShare, AFFILIATE_SHARE, formatMinor, summarizeAffiliatePayments } from "../src/lib/affiliate";
 import { t } from "../src/lib/i18n";
 import { billingPage } from "../src/routes/billing";
 
@@ -14,12 +14,16 @@ describe("affiliate totals", () => {
     ];
     expect(summarizeAffiliatePayments(rows)).toEqual({ count: 3, totalMinor: 25800, currency: "THB" });
     expect(formatMinor(25800, "THB")).toBe("\u0e3f258.00");
+    expect(AFFILIATE_SHARE).toBe(0.2);
+    expect(affiliateShare(25800)).toBe(5160);
+    expect(affiliateShare(199)).toBe(40);
+    expect(formatMinor(affiliateShare(25800), "THB")).toBe("\u0e3f51.60");
   });
 
   it("has complete copy in both languages, no payer names promised", () => {
     for (const ui of ["en", "th"] as const) {
       const d = t(ui);
-      for (const key of ["affTitle", "affPayments", "affRevenue", "affNote", "affDate", "affEmpty"] as const) {
+      for (const key of ["affTitle", "affPayments", "affRevenue", "affShare", "affNote", "affDate", "affEmpty"] as const) {
         expect(d[key].length, `${ui}.${key}`).toBeGreaterThan(0);
       }
       expect(d.affNote, ui).not.toMatch(/credit/i);
@@ -38,7 +42,7 @@ describe("affiliate card on /billing", () => {
       { day: "2026-11-20", delta: 50, amount: 5900, currency: "THB", paymentMethod: "promptpay" },
       { day: "2026-11-22", delta: 200, amount: 19900, currency: "THB", paymentMethod: "card" },
     ],
-    revenueMinor: 25800, revenueCurrency: "THB",
+    revenueMinor: 25800, revenueCurrency: "THB", shareMinor: 5160,
   };
 
   it("renders only for flagged affiliates, with totals and no payer ids", () => {
@@ -46,6 +50,8 @@ describe("affiliate card on /billing", () => {
     expect(plain).not.toContain("Affiliate stats");
     const html = billingPage({ ...base, affiliate });
     expect(html).toContain("Affiliate stats");
+    expect(html).toContain("Your share (20%)");
+    expect(html).toContain("\u0e3f51.60");
     expect(html).toContain("\u0e3f258.00");
     expect(html).toContain("promptpay");
     expect(html).toContain("card");
