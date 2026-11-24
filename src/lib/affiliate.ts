@@ -47,6 +47,34 @@ export function summarizeAffiliatePayments(rows: AffiliatePayment[]): {
   return { count: rows.length, totalMinor, currency };
 }
 
+/** Minimum payout value: claims unlock once the unclaimed cut is worth this
+ * (minor units, i.e. 150000 = 1500 THB at current pack prices). */
+export const AFFILIATE_MIN_PAYOUT_MINOR = 150000;
+
+/** Baht value of the affiliate's cut, from each top-up's own pack price.
+ * Rows without a recorded amount still earn tokens but carry no value here,
+ * so the average — and the gate below — stays conservative. */
+export function affiliatePayoutValue(
+  rows: { delta: number; amount: number | null }[],
+  claims: { status: string; tokens: number; grantedTokens: number | null }[],
+  minimumMinor: number = AFFILIATE_MIN_PAYOUT_MINOR,
+): { earnedMinor: number; unclaimedMinor: number; minimumMinor: number; canClaim: boolean } {
+  let earnedMinor = 0;
+  for (const r of rows) {
+    if (typeof r.amount === "number") earnedMinor += Math.round(r.amount * AFFILIATE_SHARE);
+  }
+  const earnedTokens = affiliateTokensEarned(rows);
+  const avg = earnedTokens > 0 ? earnedMinor / earnedTokens : 0;
+  let claimedTokens = 0;
+  let pendingTokens = 0;
+  for (const c of claims) {
+    if (c.status === "approved") claimedTokens += c.grantedTokens ?? c.tokens;
+    else if (c.status === "pending" || c.status === "deciding") pendingTokens += c.tokens;
+  }
+  const unclaimedMinor = Math.max(0, earnedMinor - (claimedTokens + pendingTokens) * avg);
+  return { earnedMinor, unclaimedMinor, minimumMinor, canClaim: unclaimedMinor >= minimumMinor };
+}
+
 /** Affiliate token balance: earned from referees minus what's been paid out. */
 export function affiliateTokenBalance(
   earnedTokens: number,

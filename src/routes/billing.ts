@@ -45,6 +45,7 @@ export function billingPage(opts: {
     payments: { day: string; delta: number; amount: number | null; currency: string | null; paymentMethod: string | null }[];
     revenueMinor: number; revenueCurrency: string; shareMinor: number;
     earnedTokens: number; claimedTokens: number; pendingTokens: number; unclaimedTokens: number;
+    unclaimedMinor: number; minimumMinor: number; canClaim: boolean;
     claims: { day: string; tokens: number; granted: number | null; status: string }[];
   } | null;
 }): string {
@@ -146,7 +147,9 @@ ${opts.affiliate ? `<div class="panel-card"><h2>${escapeHtml(d.affTitle)}</h2>
 ${opts.affiliate.pendingTokens > 0
   ? `<p class="muted">${escapeHtml(d.affPending)}: ${opts.affiliate.pendingTokens}</p>`
   : opts.affiliate.unclaimedTokens > 0
-    ? `<p><button type="button" class="btn" id="aff-claim">${escapeHtml(fmt(d.affClaimNow, { n: opts.affiliate.unclaimedTokens }))}</button></p><p class="auth-err" id="aff-claim-msg" role="alert"></p>`
+    ? opts.affiliate.canClaim
+      ? `<p><button type="button" class="btn" id="aff-claim">${escapeHtml(fmt(d.affClaimNow, { n: opts.affiliate.unclaimedTokens }))}</button></p><p class="auth-err" id="aff-claim-msg" role="alert"></p>`
+      : `<p class="muted">${escapeHtml(fmt(d.affMinNote, { min: formatMinor(opts.affiliate.minimumMinor, opts.affiliate.revenueCurrency), yours: formatMinor(opts.affiliate.unclaimedMinor, opts.affiliate.revenueCurrency) }))}</p>`
     : ``}
 ${opts.affiliate.claims.length ? `<h3>${escapeHtml(d.affHistory)}</h3><table class="grid"><thead><tr><th>${escapeHtml(d.affDate)}</th><th class="num">${escapeHtml(d.affClaimed)}</th><th class="num">${escapeHtml(d.affPaid)}</th><th></th></tr></thead><tbody>${opts.affiliate.claims.map((cl) => `<tr><td>${escapeHtml(cl.day)}</td><td class="num">${cl.tokens}</td><td class="num">${cl.granted === null ? "\u2014" : cl.granted}</td><td>${escapeHtml(cl.status === "approved" ? d.affPaid : cl.status === "denied" ? d.affDenied : d.affPending)}</td></tr>`).join("")}</tbody></table>` : ``}
 ${opts.affiliate.payments.length ? `<table class="grid"><thead><tr><th>${escapeHtml(d.affDate)}</th><th class="num">Tokens</th><th class="num">Amount</th><th>Method</th></tr></thead><tbody>${opts.affiliate.payments.map((r) => `<tr><td>${escapeHtml(r.day)}</td><td class="num">+${r.delta}</td><td class="num">${r.amount === null ? "\u2014" : escapeHtml(formatMinor(r.amount, r.currency ?? "THB"))}</td><td>${escapeHtml(r.paymentMethod ?? "\u2014")}</td></tr>`).join("")}</tbody></table>` : `<p class="muted">${escapeHtml(d.affEmpty)}</p>`}</div>` : ""}

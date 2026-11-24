@@ -96,7 +96,7 @@ import {
   type LedgerRow,
 } from "./lib/wallet";
 import { checkinWeek } from "./lib/checkin";
-import { affiliateShare, affiliateTokenBalance, affiliateTokensEarned, summarizeAffiliatePayments } from "./lib/affiliate";
+import { AFFILIATE_MIN_PAYOUT_MINOR, affiliatePayoutValue, affiliateShare, affiliateTokenBalance, affiliateTokensEarned, summarizeAffiliatePayments } from "./lib/affiliate";
 import { sweepStuckReadings } from "./lib/sweep";
 import { checkoutReturnUrls } from "./routes/billing";
 
@@ -1210,6 +1210,7 @@ app.get("/billing", async (c) => {
     payments: { day: string; delta: number; amount: number | null; currency: string | null; paymentMethod: string | null }[];
     revenueMinor: number; revenueCurrency: string; shareMinor: number;
     earnedTokens: number; claimedTokens: number; pendingTokens: number; unclaimedTokens: number;
+    unclaimedMinor: number; minimumMinor: number; canClaim: boolean;
     claims: { day: string; tokens: number; granted: number | null; status: string }[];
   } | null = null;
   try {
@@ -1227,11 +1228,13 @@ app.get("/billing", async (c) => {
       const sum = summarizeAffiliatePayments(publicRows.map((r) => ({ ...r, userId: "", ref: "" })));
       const earnedTokens = affiliateTokensEarned(publicRows.map((r) => ({ delta: r.delta })));
       const bal = affiliateTokenBalance(earnedTokens, claimRows);
+      const val = affiliatePayoutValue(publicRows.map((r) => ({ delta: r.delta, amount: r.amount })), claimRows);
       affiliate = {
         invited: stats.invited, converted: stats.converted, payments: publicRows,
         revenueMinor: sum.totalMinor, revenueCurrency: sum.currency,
         shareMinor: affiliateShare(sum.totalMinor),
         earnedTokens, claimedTokens: bal.claimed, pendingTokens: bal.pending, unclaimedTokens: bal.unclaimed,
+        unclaimedMinor: Math.round(val.unclaimedMinor), minimumMinor: val.minimumMinor, canClaim: val.canClaim,
         claims: claimRows.map((cl) => ({
           day: new Date(cl.createdAt).toISOString().slice(0, 10),
           tokens: cl.tokens, granted: cl.grantedTokens, status: cl.status,
@@ -2468,6 +2471,13 @@ app.post("/api/me/affiliate/claim", async (c) => {
   const earned = affiliateTokensEarned(topups.map((r) => ({ delta: r.delta })));
   const bal = affiliateTokenBalance(earned, claims);
   if (bal.unclaimed <= 0) return c.json({ ok: false, error: "nothing_to_claim", unclaimed: 0 }, 409);
+  const val = affiliatePayoutValue(topups.map((r) => ({ delta: r.delta, amount: r.amount ?? null })), claims);
+  if (!val.canClaim) {
+    return c.json({
+      ok: false, error: "below_minimum",
+      unclaimedMinor: Math.round(val.unclaimedMinor), minimumMinor: AFFILIATE_MIN_PAYOUT_MINOR,
+    }, 409);
+  }
   const id = await store.createAffiliateClaim(user.id, bal.unclaimed).catch(() => null);
   if (!id) return c.json({ error: "claim_failed" }, 500);
   return c.json({ ok: true, claimId: id, tokens: bal.unclaimed });

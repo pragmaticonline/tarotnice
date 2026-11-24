@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { affiliateShare, AFFILIATE_SHARE, affiliateTokenBalance, affiliateTokensEarned, formatMinor, summarizeAffiliatePayments } from "../src/lib/affiliate";
+import { AFFILIATE_MIN_PAYOUT_MINOR, affiliatePayoutValue, affiliateShare, AFFILIATE_SHARE, affiliateTokenBalance, affiliateTokensEarned, formatMinor, summarizeAffiliatePayments } from "../src/lib/affiliate";
 import { t } from "../src/lib/i18n";
 import { billingPage } from "../src/routes/billing";
 
@@ -37,6 +37,25 @@ describe("affiliate totals", () => {
     }
   });
 
+  it("values the cut in baht and gates payouts at 1500", () => {
+    expect(AFFILIATE_MIN_PAYOUT_MINOR).toBe(150000);
+    // 20% of 5900 satang = 1180 satang on a 50-token top-up.
+    const rows = [{ delta: 50, amount: 5900 }, { delta: 500, amount: 39900 }];
+    expect(affiliatePayoutValue(rows, []).earnedMinor).toBe(1180 + 7980);
+    expect(affiliatePayoutValue(rows, []).canClaim).toBe(false);
+    const big = [{ delta: 10000, amount: 798000 }];
+    const v = affiliatePayoutValue(big, []);
+    expect(v.canClaim).toBe(true);
+    expect(v.unclaimedMinor).toBe(Math.round(798000 * 0.2));
+    // approved grants consume value at the average rate; denied claims do not.
+    const after = affiliatePayoutValue(big, [
+      { status: "approved", tokens: 900, grantedTokens: 800 },
+      { status: "denied", tokens: 900, grantedTokens: null },
+    ]);
+    expect(after.canClaim).toBe(false);
+    expect(after.unclaimedMinor).toBeLessThan(AFFILIATE_MIN_PAYOUT_MINOR);
+  });
+
   it("computes token earnings at 20% and tracks claimed/pending/unclaimed", () => {
     expect(affiliateTokensEarned([])).toBe(0);
     // 20% of each purchase, rounded per row: 20% of 50 = 10, of 7 = 1.
@@ -69,6 +88,7 @@ describe("affiliate card on /billing", () => {
     ],
     revenueMinor: 25800, revenueCurrency: "THB", shareMinor: 5160,
     earnedTokens: 50, claimedTokens: 20, pendingTokens: 0, unclaimedTokens: 30,
+    unclaimedMinor: 160000, minimumMinor: 150000, canClaim: true,
     claims: [
       { day: "2026-11-21", tokens: 20, granted: 20, status: "approved" },
     ],
@@ -89,6 +109,15 @@ describe("affiliate card on /billing", () => {
     expect(html).toContain("Available to claim");
     expect(html).toContain("Payout history");
     expect(html).toContain("Paid");
+  });
+
+  it("shows the unlock note below the 1500 minimum", () => {
+    const locked = billingPage({ ...base, affiliate: { ...affiliate, pendingTokens: 0, unclaimedTokens: 30, unclaimedMinor: 1180, canClaim: false } });
+    expect(locked).not.toContain('id="aff-claim"');
+    expect(locked).toContain("Payouts unlock at");
+    const th = billingPage({ ...base, ui: "th", affiliate: { ...affiliate, pendingTokens: 0, unclaimedTokens: 30, unclaimedMinor: 1180, canClaim: false } });
+    expect(th).not.toContain("\u0e42\u0e17\u0e40\u0e04\u0e47\u0e19");
+    expect(th).not.toContain("\u0e42\u0e17\u0e40\u0e04\u0e19\u0e2a\u0e4c");
   });
 
   it("shows the claim button only when tokens are unclaimed", () => {
@@ -113,5 +142,7 @@ describe("affiliate card on /billing", () => {
     expect(src).toContain('app.post("/api/me/affiliate/claim"');
     expect(src).toContain("createAffiliateClaim(");
     expect(src).toContain("nothing_to_claim");
+    expect(src).toContain("below_minimum");
+    expect(src).toContain("AFFILIATE_MIN_PAYOUT_MINOR");
   });
 });
