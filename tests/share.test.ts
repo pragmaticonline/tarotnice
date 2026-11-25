@@ -209,7 +209,7 @@ describe("share question toggle reuses images instead of regening", () => {
     // First visit to this variant regens server-side: the old image
     // goes away and the loader says so until the new one arrives.
     expect(removed).toContain("loaded");
-    expect(msg.textContent).toBe("Regenerating your image…");
+    expect(msg.textContent).toBe("Generating your image…");
     expect(loader.hidden).toBe(false);
     await flush(); await flush();
     expect(h.posts.length).toBe(2);
