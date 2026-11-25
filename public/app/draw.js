@@ -780,7 +780,17 @@
         return "<p>" + html + "</p>";
       }).join("");
       if (summaryText && !glanceDone) {
-        out += '<p class="sec sec-summary">' + esc(summaryText) + "</p>";
+        // No overview paragraph (the new format starts with the cards,
+        // or the first block is a section header): the lead still gets
+        // its At-a-glance box at the top, with no body text, instead of
+        // dropping to the bottom as a duplicate-looking summary. This
+        // runs on every stream re-render, so the box appears as soon as
+        // the summary line arrives, before the cards finish streaming.
+        out =
+          '<div class="sec sec-glance"><h2 class="sec-title">' +
+          (lang === "th" ? "\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21" : "At a glance") + "</h2>" +
+          '<p class="glance-lead">' + esc(summaryText) + "</p></div>" +
+          out;
       }
       synth.innerHTML = out;
     }

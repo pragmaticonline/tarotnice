@@ -542,4 +542,51 @@ describe("renderReading positions", () => {
     expect(html).toContain("Two of Wands");
     expect(html).toContain("glance-lead");
   });
+
+  it("renders the At-a-glance box at the top with no overview paragraph (th)", () => {
+    const html = renderOnce(
+      "\u0e2a\u0e23\u0e38\u0e1b: \u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49 \u2014 \u0e44\u0e1e\u0e48\u0e1a\u0e2d\u0e01\u0e43\u0e2b\u0e49\u0e23\u0e2d\u0e08\u0e31\u0e07\u0e2b\u0e27\u0e30\u0e01\u0e48\u0e2d\u0e19\n\n" +
+        "1 · \u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e2b\u0e19\u0e38\u0e19 — **Two of Wands**: \u0e1e\u0e25\u0e31\u0e07\u0e2b\u0e19\u0e38\u0e19\u0e43\u0e2b\u0e49\u0e40\u0e23\u0e34\u0e48\u0e21\n\n" +
+        "2 · \u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e02\u0e27\u0e32\u0e07 — **Eight of Cups**: \u0e04\u0e27\u0e32\u0e21\u0e25\u0e31\u0e07\u0e40\u0e25\u0e02\u0e27\u0e32\u0e07\u0e2d\u0e22\u0e39\u0e48\n\n" +
+        "3 · \u0e41\u0e19\u0e27\u0e42\u0e19\u0e49\u0e21\u0e04\u0e33\u0e15\u0e2d\u0e1a — **The Star**: \u0e04\u0e33\u0e15\u0e2d\u0e1a\u0e08\u0e30\u0e21\u0e32\u0e40\u0e21\u0e37\u0e48\u0e2d\u0e1e\u0e23\u0e49\u0e2d\u0e21\n\n" +
+        "**\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33:** \u0e1e\u0e31\u0e01\u0e01\u0e48\u0e2d\u0e19\u0e41\u0e25\u0e49\u0e27\u0e04\u0e48\u0e2d\u0e22\u0e40\u0e14\u0e34\u0e19\n\n" +
+        "**\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e17\u0e33\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22:**\n- \u0e19\u0e2d\u0e19\u0e43\u0e2b\u0e49\u0e1e\u0e2d\n- \u0e16\u0e32\u0e21\u0e04\u0e23\u0e31\u0e49\u0e07\u0e40\u0e14\u0e35\u0e22\u0e27\n\n" +
+        "**\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21\u0e15\u0e48\u0e2d:**\n- Q\u0e1e\u0e25\u0e31\u0e07\u0e2b\u0e19\u0e38\u0e19\u0e43\u0e2b\u0e49\u0e40\u0e23\u0e34\u0e48\u0e21\n- Q\u0e04\u0e27\u0e32\u0e21\u0e25\u0e31\u0e07\u0e40\u0e25\u0e02\u0e27\u0e32\u0e07\u0e2d\u0e22\u0e39\u0e48",
+      "th",
+    );
+    const boxAt = html.indexOf("sec-glance");
+    expect(boxAt).toBeGreaterThanOrEqual(0);
+    expect(boxAt).toBeLessThan(html.indexOf("card-row"));
+    expect(html).toContain('<p class="glance-lead">\u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49 \u2014 \u0e44\u0e1e\u0e48\u0e1a\u0e2d\u0e01\u0e43\u0e2b\u0e49\u0e23\u0e2d\u0e08\u0e31\u0e07\u0e2b\u0e27\u0e30\u0e01\u0e48\u0e2d\u0e19</p>');
+    expect(html).not.toContain("glance-text");
+    expect(html).not.toContain("sec-summary");
+    expect(html).toContain("\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21");
+  });
+
+  it("renders the At-a-glance box at the top with no overview paragraph (en)", () => {
+    const html = renderOnce(
+      "Summary: Not yet — wait for the right moment.\n\n" +
+        "1 · What supports — **Two of Wands**: A clear plan helps.\n\n" +
+        "2 · What blocks — **Eight of Cups**: Walking away feels hard.\n\n" +
+        "3 · Likely answer — **The Star**: Hope steadies the path.\n\n" +
+        "**Guidance:** Hold steady and prepare.\n\n" +
+        "**What to do:**\n- Rest well\n- Ask once\n\n" +
+        "**Explore further:**\n- What helps most?\n- When to act?",
+    );
+    const boxAt = html.indexOf("sec-glance");
+    expect(boxAt).toBeGreaterThanOrEqual(0);
+    expect(boxAt).toBeLessThan(html.indexOf("card-row"));
+    expect(html).toContain("Not yet — wait for the right moment.");
+    expect(html).not.toContain("glance-text");
+    expect(html).not.toContain("sec-summary");
+    expect(html).toContain("At a glance");
+  });
+
+  it("shows the At-a-glance box as soon as the summary line arrives", () => {
+    const html = renderOnce("\u0e2a\u0e23\u0e38\u0e1b: \u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49 \u2014 \u0e44\u0e1e\u0e48\u0e1a\u0e2d\u0e01\u0e43\u0e2b\u0e49\u0e23\u0e2d\u0e08\u0e31\u0e07\u0e2b\u0e27\u0e30\u0e01\u0e48\u0e2d\u0e19", "th");
+    expect(html).toContain("sec-glance");
+    expect(html).toContain("\u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49 \u2014 \u0e44\u0e1e\u0e48\u0e1a\u0e2d\u0e01\u0e43\u0e2b\u0e49\u0e23\u0e2d\u0e08\u0e31\u0e07\u0e2b\u0e27\u0e30\u0e01\u0e48\u0e2d\u0e19");
+    expect(html).not.toContain("sec-summary");
+  });
 });
+

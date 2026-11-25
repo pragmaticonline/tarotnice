@@ -93,12 +93,12 @@ const TOPIC_PATTERNS: { topic: Topic; re: RegExp }[] = [
 ];
 
 /**
- * Deck questions ("สำรับเทวาลัยเข้ากันไหม", "should I buy this deck")
- * must stay "general": Thai ใช้งาน (to use) contains งาน (work), so
+ * Deck questions ("samrap Tevalai khao-kan-mai", "should I buy this deck")
+ * must stay "general": Thai "chai-ngan" (to use) contains "ngan" (work), so
  * without this guard every deck-use question miscategorises as career
  * and drags the reading into work topics.
  */
-const DECK_RE = /สำรับ|\bdeck\b|ทาโรต์|tarot/i;
+const DECK_RE = /\u0e2a\u0e33\u0e23\u0e31\u0e1a|\bdeck\b|\u0e17\u0e32\u0e42\u0e23\u0e15\u0e4c|tarot/i;
 
 /** Best-guess topic from question wording, "general" when nothing hits. */
 export function guessTopic(question: string): Topic {
@@ -233,10 +233,10 @@ const GENERAL_SPREAD = {
 };
 /**
  * Choice-of-2/3 spreads name the options the user wrote
- * ("Tea or coffee?", "should I stay or go", "เทวาลัย vs ทอธ").
+ * ("Tea or coffee?", "should I stay or go", "Tevalai vs Thoth").
  * Question framing around the options is stripped
- * ("Should I ...", "ควร...", "choose between ...", trailing
- * "ไหม / ดี / อันไหน / which is better"). A trailing "not" / "ไหม"
+ * ("Should I ...", "khuan...", "choose between ...", trailing
+ * "mai / dee / an-nai / which is better"). A trailing "not" / "mai"
  * fragment means yes/no, not a choice. Returns 2-3 cleaned options
  * (each capped so position labels stay short) or null.
  */
