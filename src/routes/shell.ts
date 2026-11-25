@@ -80,6 +80,8 @@ document.addEventListener("change",function(e){var n=e.target&&e.target.closest?
 document.addEventListener("keydown",function(e){if(e.key==="Escape")closeDrawer()});
 var langs=qa("[data-drawer-lang]");for(var i=0;i<langs.length;i++){langs[i].setAttribute("href",location.pathname+"?ui="+langs[i].getAttribute("data-drawer-lang"));if(langs[i].getAttribute("data-drawer-lang")===document.documentElement.lang)langs[i].setAttribute("aria-current","true")}
 markTheme();load();
+window.addEventListener("pageshow",function(e){if(e.persisted)load();});
+document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")load();});
 })();</script>`;
 
 const DESCRIPTION = "Free tarot readings, every day. Draw your daily card and ask a free question every day.";

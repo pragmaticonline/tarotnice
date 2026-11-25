@@ -31,13 +31,15 @@ const RANK = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "P", "Kn", "Q",
 
 const CI_GEM = `<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3h11l4.5 6-10 12L2 9z" fill="#8b6fe0"/><path d="M2 9h20l-10 12z" fill="#6a4fc9"/><path d="M8.5 9L12 3l3.5 6z" fill="#b9a5f5"/><path d="M12 21L8.5 9h7z" fill="#7b5cd1"/></svg>`;
 
+const CI_GEM_SM = `<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3h11l4.5 6-10 12L2 9z" fill="#8b6fe0"/><path d="M2 9h20l-10 12z" fill="#6a4fc9"/><path d="M8.5 9L12 3l3.5 6z" fill="#b9a5f5"/><path d="M12 21L8.5 9h7z" fill="#7b5cd1"/></svg>`;
+
 type StampState = "got" | "miss" | "today" | "gotToday" | "next";
 
 function stampStyle(state: StampState): { bg: string; border: string; lblFg: string; wt: number; icon: string; iconBg: string; iconFg: string; iconBorder: string; amt: string; amtFg: string; anim: string } {
   const base = { wt: 500, anim: "none" };
   if (state === "got") return { ...base, bg: "#f6e7c4", border: "1px solid #e2bf72", lblFg: "#6b5f85", icon: "\u2713", iconBg: "#b0832f", iconFg: "#fffaf2", iconBorder: "0", amt: "+1", amtFg: "#8a6a2a" };
   if (state === "miss") return { ...base, bg: "#f1ece2", border: "1px dashed #d8ccb4", lblFg: "#a79fb8", icon: "\u2715", iconBg: "transparent", iconFg: "#b9b0c7", iconBorder: "1.5px dashed #cfc5d9", amt: "\u2013", amtFg: "#a79fb8" };
-  if (state === "today") return { ...base, wt: 700, bg: "linear-gradient(160deg,#fff1cc,#f3d68f)", border: "2px solid #b0832f", lblFg: "#2e2547", icon: "\ud83d\udcae", iconBg: "#fffaf0", iconFg: "#4a3d78", iconBorder: "1.5px solid #b0832f", amt: "+1", amtFg: "#2e2547", anim: "tnPulse 1.8s infinite" };
+  if (state === "today") return { ...base, wt: 700, bg: "linear-gradient(160deg,#fff1cc,#f3d68f)", border: "2px solid #b0832f", lblFg: "#2e2547", icon: CI_GEM_SM, iconBg: "#fffaf0", iconFg: "#4a3d78", iconBorder: "1.5px solid #b0832f", amt: "+1", amtFg: "#2e2547", anim: "tnPulse 1.8s infinite" };
   if (state === "gotToday") return { ...base, wt: 700, bg: "#4a3d78", border: "2px solid #4a3d78", lblFg: "#f3dca6", icon: "\u2713", iconBg: "#f3dca6", iconFg: "#4a3d78", iconBorder: "0", amt: "+1", amtFg: "#fffaf2" };
   return { ...base, bg: "#ffffff", border: "1px solid #efe5cf", lblFg: "#8a7fa3", icon: "\u00b7", iconBg: "#f6f1fa", iconFg: "#b9b0c7", iconBorder: "0", amt: "+1", amtFg: "#8a7fa3" };
 }
@@ -81,7 +83,7 @@ function streakCard(ui: UiLang, d: ReturnType<typeof t>, streak: StreakInfo, rea
     `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">` +
     `<div style="padding:10px 12px;border-radius:12px;background:rgba(255,250,242,.06);display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:#e6dcf7">${escapeHtml(d.bestTitle)}</span><span style="font-size:20px;font-weight:600">${streak.longest}</span></div>` +
     `<div style="padding:10px 12px;border-radius:12px;background:rgba(255,250,242,.06);display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:#e6dcf7">${escapeHtml(d.mjReadings)}</span><span style="font-size:20px;font-weight:600">${readings}</span></div>` +
-    `<div style="padding:10px 12px;border-radius:12px;background:rgba(255,250,242,.06);display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:#e6dcf7">${escapeHtml(d.drawerTokens)}</span><span style="font-size:20px;font-weight:600">${tokens}</span></div>` +
+    `<div style="padding:10px 12px;border-radius:12px;background:rgba(255,250,242,.06);display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:#e6dcf7">${escapeHtml(d.drawerTokens)}</span><span style="font-size:20px;font-weight:600" data-token-count>${tokens}</span></div>` +
     `</div>` +
     (drewToday ? "" :
       `<a href="/" style="display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;padding:0 16px;border-radius:12px;background:#f3dca6;color:#2e2547;text-decoration:none;font-size:15px;font-weight:600"><span>${escapeHtml(d.mjKeepStreak)}</span><span aria-hidden="true">›</span></a>`) +

@@ -2196,6 +2196,7 @@ function authedUser(c: { env: AuthEnv; req: { raw: { headers: Headers } } }) {
 // Everything the client needs on load: user, prefs, streak, quota,
 // Server wins over localStorage.
 app.get("/api/me/summary", async (c) => {
+  c.header("Cache-Control", "private, no-store");
   const ui = requestUiLang(c);
   const user = await authedUser(c);
   if (!user || !c.env?.DB) {

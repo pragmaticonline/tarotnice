@@ -69,11 +69,24 @@
   function applyClaimed(total) {
     var card = document.getElementById("ci-card");
     if (card) card.setAttribute("data-claimed", "true");
-    var stamp = document.querySelector('.ci-stamp[data-state="today"]');
+    var stamp = document.querySelector('[data-ci-stamp][data-state="today"]');
     if (stamp) {
       stamp.setAttribute("data-state", "gotToday");
+      stamp.style.background = "#4a3d78";
+      stamp.style.border = "2px solid #4a3d78";
+      stamp.style.animation = "none";
+      var kids = stamp.children;
+      if (kids && kids.length >= 3) {
+        kids[0].style.color = "#f3dca6";
+        kids[2].style.color = "#fffaf2";
+      }
       var icon = stamp.querySelector("[data-ci-icon]");
-      if (icon) icon.textContent = "\u2713";
+      if (icon) {
+        icon.textContent = "\u2713";
+        icon.style.background = "#f3dca6";
+        icon.style.color = "#4a3d78";
+        icon.style.border = "0";
+      }
       var doneAria = stamp.getAttribute("data-aria-done");
       if (doneAria) stamp.setAttribute("aria-label", doneAria);
     }
