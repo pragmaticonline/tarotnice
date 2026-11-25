@@ -190,6 +190,10 @@ describe("share question toggle reuses images instead of regening", () => {
     const sheet = makeEl();
     const bySel: Record<string, El> = {};
     const img = makeEl(); const toggle = makeEl(); const targets = makeEl(); const loader = makeEl();
+    const removed: string[] = [];
+    const msg = { textContent: "" };
+    (img as unknown as { classList: { remove: (c: string) => void } }).classList.remove = (c: string) => { removed.push(c); };
+    (loader as unknown as { querySelector: (s: string) => unknown }).querySelector = () => msg;
     bySel[".story"] = img; bySel["#share-show-q"] = toggle; bySel[".targets"] = targets; bySel[".story-loading"] = loader;
     (sheet as unknown as { querySelector: (s: string) => El | null }).querySelector = (s: string) => bySel[s] ?? null;
     doc.createElement = () => sheet as unknown as El;
@@ -202,8 +206,10 @@ describe("share question toggle reuses images instead of regening", () => {
     expect(loader.hidden).toBe(true);
     toggle.checked = true;
     toggle.listeners["change"]({});
-    // First visit to this variant regens server-side: the spinner
-    // shows again until the new image arrives.
+    // First visit to this variant regens server-side: the old image
+    // goes away and the loader says so until the new one arrives.
+    expect(removed).toContain("loaded");
+    expect(msg.textContent).toBe("Regenerating your image…");
     expect(loader.hidden).toBe(false);
     await flush(); await flush();
     expect(h.posts.length).toBe(2);
