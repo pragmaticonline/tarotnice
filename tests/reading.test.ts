@@ -483,7 +483,7 @@ describe("pickSpread", () => {
     expect(en.system).toContain("For each card, in draw order");
     expect(en.system).toContain("2\u20133 sentences");
     expect(en.system).toContain("exactly 2 follow-up questions");
-    expect(en.system).toContain("If the user message names an anchor card, build the reading around it");
+    expect(en.system).toContain("If the user message names a key card, build the reading around it");
     expect(en.system).not.toContain("**What next:**");
     const th = buildReadingPrompt({
       lang: "th", topic: "general", question: "Should I quit my job?",
@@ -1028,7 +1028,7 @@ describe("method rules in system prompts", () => {
     expect(en).toContain("The LAST card weighs most");
     expect(en).toContain("good \u2013 bad \u2013 good");
     expect(en).toContain("the opposite meaning (last resort)");
-    expect(en).toContain("If the user message names an anchor card");
+    expect(en).toContain("If the user message names a key card");
   });
   it("teaches answer types with yes-no patterns in Thai", () => {
     expect(th).toContain("\u0e44\u0e1e\u0e48\u0e43\u0e1a\u0e2a\u0e38\u0e14\u0e17\u0e49\u0e32\u0e22\u0e19\u0e49\u0e33\u0e2b\u0e19\u0e31\u0e01\u0e2a\u0e38\u0e14");
