@@ -562,7 +562,7 @@
         // The model sometimes echoes the anchor instruction as its
         // own line ("\u0e41\u0e01\u0e19\u0e02\u0e2d\u0e07\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 — **Death**"): meta, never reading content.
         // It must not land in the At-a-glance box or anywhere else.
-        if (/^(?:\*\*)?(?:\u0e41\u0e01\u0e19\u0e02\u0e2d\u0e07\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07|\u0e41\u0e01\u0e19\u0e02\u0e2d\u0e07\u0e04\u0e33\u0e2d\u0e48\u0e32\u0e19|\u0e44\u0e1e\u0e48\u0e41\u0e01\u0e19|Anchor card|The core of the matter)\s*[\u2014\u2013:\-]/.test(bt)) return "";
+        if (/^(?:\*\*)?(?:\u0e41\u0e01\u0e19\u0e02\u0e2d\u0e07\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07|\u0e41\u0e01\u0e19\u0e02\u0e2d\u0e07\u0e04\u0e33\u0e2d\u0e48\u0e32\u0e19|\u0e44\u0e1e\u0e48\u0e43\u0e1a\u0e2a\u0e33\u0e04\u0e31\u0e0d|\u0e44\u0e1e\u0e48\u0e41\u0e01\u0e19|Anchor card|Key card|The core of the matter)\s*[\u2014\u2013:\-]/.test(bt)) return "";
         // A per-card closer renders on its own line with a gap, summary
         // text in italic. (The closing Summary was already lifted out.)
         var sumBody = null;
