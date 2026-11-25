@@ -558,6 +558,24 @@ button.token-chip{font:inherit;cursor:pointer;background:none}
 .pack-radio input{accent-color:var(--accent)}
 .guest-gate{border:1.5px solid var(--gold-dim);border-radius:16px;padding:1.1rem 1.2rem;margin:1.2rem 0;background:var(--card-face);color:var(--card-ink)}
 .guest-gate-actions{display:flex;flex-direction:column;gap:.6rem}
+/* Sign-in nudge: signed-out landing popup with the sign-in options. */
+#signin-nudge[hidden]{display:none}
+#signin-nudge{position:fixed;inset:0;z-index:30}
+.nudge-backdrop{position:absolute;inset:0;background:rgba(21,18,43,.55)}
+.nudge-panel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 48px);overflow-y:auto;background:var(--card-face);color:var(--card-ink);border:1px solid var(--gold-dim);border-radius:16px;padding:1.75rem;box-shadow:0 24px 64px rgba(0,0,0,.35)}
+.nudge-panel h2{margin:0 0 .5rem;padding-right:2rem}
+.nudge-panel p{line-height:1.5}
+.nudge-x{position:absolute;top:.6rem;right:.6rem;width:2.5rem;height:2.5rem;display:inline-flex;align-items:center;justify-content:center;background:none;border:0;border-radius:8px;color:var(--card-ink);font-size:1.5rem;cursor:pointer}
+.nudge-opts{display:flex;flex-direction:column;gap:.6rem;margin-top:1rem}
+.nudge-opts .btn{width:100%}
+.nudge-line{background:#06C755;border-color:#06C755;color:#fff}
+.nudge-line svg{width:1.5rem;height:auto;flex:none}
+.nudge-or{text-align:center;opacity:.75;margin:1rem 0 .2rem}
+.nudge-alt{display:flex;flex-direction:column;gap:.6rem}
+.nudge-alt .btn{width:100%}
+.nudge-register{text-align:center}
+.nudge-later{text-align:center;margin:.5rem 0 0}
+.nudge-later-btn{background:none;border:0;color:var(--accent);font:inherit;cursor:pointer;text-decoration:underline;padding:.5rem}
 .legal-tabs{display:flex;gap:.5rem;margin:1rem 0}
 .legal-toc{border:1px solid var(--gold-dim);border-radius:14px;padding:.8rem 1.1rem;margin:1rem 0}
 .share-cta{text-align:center;padding:1.5rem 0}

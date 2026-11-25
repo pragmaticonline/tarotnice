@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import app from "../src/index";
 import { t } from "../src/lib/i18n";
 import { homePage } from "../src/routes/home";
@@ -154,6 +155,54 @@ describe("GET / (draw screen)", () => {
       // inside the user-opened pack sheet.
       expect(html.indexOf("pack-sheet")).toBeLessThan(html.indexOf("line-redeem-note"));
     }
+  });
+
+  it("nudges signed-out landings with the sign-in options and the token grant", () => {
+    for (const ui of ["en", "th"] as const) {
+      const html = homePage({ uiLang: ui });
+      const d = t(ui);
+      expect(html).toContain('id="signin-nudge"');
+      expect(html).toContain('role="dialog"');
+      expect(html).toContain(d.nudgeTitle);
+      expect(html).toContain(d.nudgeText);
+      expect(html).toContain(d.nudgeLater);
+      expect(html).toContain('data-nudge-social="google"');
+      expect(html).toContain(d.continueWithGoogle);
+      expect(html).toContain(d.orUseEmail);
+      expect(html).toContain('href="/sign-in"');
+      expect(html).toContain('href="/register"');
+      expect(html).toContain("data-nudge-close");
+      // The grant wording matches the wallet: +10 tokens is 2 questions.
+      expect(d.nudgeTitle).toContain("2");
+    }
+    expect(homePage({ uiLang: "en" })).toContain("Sign in, get 2 free questions");
+    // LINE button only when the route passes a configured LINE login.
+    expect(homePage({ uiLang: "en" })).not.toContain('data-nudge-social="line"');
+    const withLine = homePage({ uiLang: "en", social: { google: true, line: true } });
+    expect(withLine).toContain('data-nudge-social="line"');
+    // Registered visitors never get the markup (the route hides it).
+    expect(homePage({ uiLang: "en", nudge: false })).not.toContain("signin-nudge");
+    // No credit wording, in either language.
+    expect(homePage({ uiLang: "en" })).not.toContain("credit");
+    expect(homePage({ uiLang: "th" })).not.toContain("\u0e40\u0e04\u0e23\u0e14\u0e34\u0e15");
+  });
+
+  it("serves the nudge hidden on / for signed-out visitors", async () => {
+    const html = await (await app.request("/")).text();
+    expect(html).toContain('id="signin-nudge" hidden');
+    expect(html).toContain('data-nudge-social="google"');
+  });
+
+  it("home.js shows the nudge for guests and wires the real sign-in flow", () => {
+    const js = readFileSync(new URL("../public/app/home.js", import.meta.url), "utf8");
+    expect(js).toContain("signin-nudge");
+    expect(js).toContain("tarot:summary");
+    expect(js).toContain("isAnonymous");
+    expect(js).toContain("data-nudge-social");
+    expect(js).toContain("data-nudge-close");
+    expect(js).toContain("/api/auth/sign-in/social");
+    expect(js).toContain('callbackURL: "/"');
+    expect(js).toContain("Escape");
   });
 
   it("has no standalone follow-up input box (Follow up button covers it)", () => {

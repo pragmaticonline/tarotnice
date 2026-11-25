@@ -306,7 +306,8 @@ app.get("/", async (c) => {
       invite = { code, inviterName: null };
     }
   }
-  return c.html(homePage({ origin, uiLang: requestUiLang(c), turnstileSiteKey: c.env?.TURNSTILE_SITE_KEY, invite, account: await pageAccount(c.env?.DB, await currentUser(c)) }));
+  const viewer = await currentUser(c);
+  return c.html(homePage({ origin, uiLang: requestUiLang(c), turnstileSiteKey: c.env?.TURNSTILE_SITE_KEY, invite, account: await pageAccount(c.env?.DB, viewer), social: { google: true, line: lineConfigured(c.env) && LINE_LOGIN_VISIBLE }, nudge: !isRegisteredUser(viewer) }));
 });
 
 app.get("/robots.txt", (c) => {

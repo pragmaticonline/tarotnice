@@ -8,6 +8,7 @@ import { isInviteCode } from "../lib/invite";
 import { PACK_LIST } from "../lib/stripe";
 import { computeStreak, localDayString } from "../lib/streaks";
 import { headerHtml, pageShell, siteFooterHtml, type HeaderAccount } from "./shell";
+import { LINE_ICON, type SocialOpts } from "./auth-pages";
 
 export type HomeOpts = {
   uiLang?: UiLang;
@@ -19,6 +20,10 @@ export type HomeOpts = {
   invite?: { code: string; inviterName: string | null } | null;
   /** Server-rendered header initial + token balance (no first-paint flash). */
   account?: HeaderAccount;
+  /** Social sign-in buttons in the guest nudge (defaults: Google only). */
+  social?: SocialOpts;
+  /** Render the signed-out sign-in nudge (default true; the route hides it for registered users). */
+  nudge?: boolean;
 };
 
 export type Topic = "love" | "career" | "money" | "health" | "general";
@@ -40,6 +45,31 @@ function quotaRow(ui: UiLang): string {
   // Loading line (never a wrong count) until home.js paints fresh
   // /api/me/summary numbers. Dots reuse the .wdots pulse pattern.
   return `<span class="quota" role="status"><span class="moonstone" data-quota-gem hidden aria-hidden="true"></span><span data-quota-label>${escapeHtml(d.quotaLoading)}<span class="wdots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span></span></span>`;
+}
+
+// Sign-in nudge: a popup for signed-out landings with the real
+// sign-in options (Google, LINE when configured, email) and the
+// first-sign-in token grant. Server-rendered hidden; home.js reveals
+// it when /api/me/summary reports a guest or anonymous user.
+function signinNudge(ui: UiLang, social: SocialOpts): string {
+  const d = t(ui);
+  const lineBtn = social.line
+    ? `<button class="btn btn-outline nudge-line" type="button" data-nudge-social="line">${LINE_ICON}<span>${escapeHtml(d.continueWithLine)}</span></button>`
+    : "";
+  return `<div id="signin-nudge" hidden>` +
+    `<div class="nudge-backdrop" data-nudge-close></div>` +
+    `<div class="nudge-panel" role="dialog" aria-modal="true" aria-labelledby="nudge-title">` +
+    `<button type="button" class="nudge-x" data-nudge-close aria-label="${escapeHtml(d.nudgeLater)}">&times;</button>` +
+    `<h2 id="nudge-title">${escapeHtml(d.nudgeTitle)}</h2>` +
+    `<p>${escapeHtml(d.nudgeText)}</p>` +
+    `<div class="nudge-opts">` +
+    `<button class="btn btn-outline" type="button" data-nudge-social="google"><b aria-hidden="true">G</b><span>${escapeHtml(d.continueWithGoogle)}</span></button>` +
+    lineBtn +
+    `</div>` +
+    `<p class="nudge-or">${escapeHtml(d.orUseEmail)}</p>` +
+    `<p class="nudge-alt"><a class="btn btn-outline" href="/sign-in">${escapeHtml(d.signIn)}</a> <a class="nudge-register" href="/register">${escapeHtml(d.newToTarotNice)} ${escapeHtml(d.createAccountHeading)}</a></p>` +
+    `<p class="nudge-later"><button type="button" class="nudge-later-btn" data-nudge-close>${escapeHtml(d.nudgeLater)}</button></p>` +
+    `</div></div>`;
 }
 
 export function homePage(opts: HomeOpts = {}): string {
@@ -66,7 +96,8 @@ export function homePage(opts: HomeOpts = {}): string {
 </section>
 `
     : "";
-  const body = `<main>
+  const nudge = opts.nudge === false ? "" : signinNudge(ui, opts.social ?? { google: true });
+  const body = `${nudge}<main>
 ${inviteBanner}${steps}
 <section id="step-ask" data-step="1">
 <div class="guide guide-ask s-idle" id="guide-ask"><span class="ngern-wrap">${NGERN_SITTING_SVG}</span><p class="bubble">${escapeHtml(d.hintIdle)}</p></div>

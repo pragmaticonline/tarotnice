@@ -147,6 +147,44 @@
     if (Date.now() - lastLoad > 60000) load();
   }
 
+  // Sign-in nudge: signed-out landings get a popup with the real
+  // sign-in options. Shown once the summary proves the visitor is a
+  // guest or anonymous; registered users never got the markup.
+  function hideNudge() {
+    var n = document.getElementById("signin-nudge");
+    if (n) n.hidden = true;
+  }
+  function showNudge() {
+    var n = document.getElementById("signin-nudge");
+    if (!n || !n.hidden) return;
+    n.hidden = false;
+    var x = n.querySelector(".nudge-x");
+    if (x && x.focus) x.focus();
+  }
+  function nudgeSocial(provider) {
+    fetch("/api/auth/sign-in/social", {
+      method: "POST", credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(provider === "line"
+        ? { provider: provider, callbackURL: "/", errorCallbackURL: location.pathname, additionalParams: { bot_prompt: "normal" } }
+        : { provider: provider, callbackURL: "/", errorCallbackURL: location.pathname }),
+    }).then(function (res) { return res.json().catch(function () { return {}; }); })
+      .then(function (data) { if (data && data.url) location.href = data.url; })
+      .catch(function () {});
+  }
+  document.addEventListener("click", function (e) {
+    var t = e.target && e.target.closest ? e.target : null;
+    if (!t) return;
+    if (t.closest("[data-nudge-close]")) { hideNudge(); return; }
+    var s = t.closest("[data-nudge-social]");
+    if (s) nudgeSocial(s.getAttribute("data-nudge-social"));
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") hideNudge(); });
+  document.addEventListener("tarot:summary", function (e) {
+    var u = e.detail && e.detail.user;
+    if (!u || u.isAnonymous) showNudge();
+  });
+
   window.TarotHome = window.TarotHome || {};
   window.TarotHome.refresh = load;
   document.addEventListener("visibilitychange", function () {
