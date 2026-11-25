@@ -105,6 +105,9 @@
     document.body.appendChild(sheet);
 
     var share = null;
+    // One finished share per question variant ("1"/"0"): toggling
+    // back reuses the kept image instead of POSTing a regen.
+    var shareCache = {};
     var img = sheet.querySelector(".story");
     var loader = sheet.querySelector(".story-loading");
     var targets = sheet.querySelector(".targets");
@@ -116,10 +119,18 @@
     async function load() {
       try {
         var toggle = sheet.querySelector("#share-show-q");
-        share = await createShare(kind, ref, toggle ? toggle.checked : false);
+        var want = toggle && toggle.checked ? "1" : "0";
+        var cached = shareCache[want];
+        if (cached) {
+          // Instant swap to the kept image; the POST below still
+          // persists the choice (og image + landing page follow it).
+          share = cached;
+          img.src = share.storyImageUrl;
+          renderTargets();
+        }
+        share = shareCache[want] = await createShare(kind, ref, want === "1");
       } catch (e) {
-        sheet.remove();
-        return;
+        if (!cached) { sheet.remove(); return; }
       }
       img.src = share.storyImageUrl;
       img.alt = "TarotNice";

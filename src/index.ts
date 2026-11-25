@@ -860,7 +860,7 @@ app.post("/api/share", async (c) => {
   return c.json({
     shareId,
     url: `${origin}${base}`,
-    storyImageUrl: `${origin}${base}/story.png?lang=${lang}&mode=${mode}`,
+    storyImageUrl: `${origin}${base}/story.png?lang=${lang}&mode=${mode}&q=${showQuestion ? 1 : 0}`,
     ogImageUrl: `${origin}${base}/og.png?lang=${lang}&mode=${mode}`,
   });
 });
@@ -1134,7 +1134,12 @@ async function shareImageResponse(
     if (qLang !== "en" && qLang !== "th") lang = row.lang === "th" ? "th" : "en";
     cards = row.cards;
     summary = row.aiSummary ?? "";
-    if (img === "story" && row.showQuestion) question = row.question;
+    // An explicit q= flag overrides the stored choice (the sheet keeps
+    // both variants and swaps between them without regenerating).
+    // Without it, crawlers and old links fall back to the stored flag.
+    const qShow = c.req.query("q");
+    const showQ = qShow === "1" ? true : qShow === "0" ? false : row.showQuestion;
+    if (img === "story" && showQ) question = row.question;
   } else {
     const row = await store.getDailyByShare(shareId);
     if (!row) return empty;

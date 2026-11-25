@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import vm from "node:vm";
 import app from "../src/index";
 import { fixThai, wrapText } from "../src/lib/share-images";
 import { shareLandingPage, unsharedPage } from "../src/routes/share";
@@ -121,6 +122,104 @@ describe("share image language follows the sharer, not the reading", () => {
     const images = readFileSync(new URL("../src/lib/share-images.ts", import.meta.url), "utf8");
     // The hidden-question wording, as \u escapes in source.
     expect(images).toContain("\\u0e04\\u0e33\\u0e16\\u0e32\\u0e21\\u0e16\\u0e39\\u0e01\\u0e0b\\u0e48\\u0e2d\\u0e19\\u0e44\\u0e27\\u0e49");
+  });
+});
+
+describe("share question toggle reuses images instead of regening", () => {
+  function makeEl() {
+    return {
+      innerHTML: "",
+      textContent: "",
+      style: {},
+      dataset: {},
+      hidden: false,
+      src: "",
+      alt: "",
+      href: "",
+      download: "",
+      className: "",
+      checked: false,
+      listeners: {} as Record<string, (e: unknown) => void>,
+      addEventListener(ev: string, fn: (e: unknown) => void) { this.listeners[ev] = fn; },
+      setAttribute() {},
+      appendChild(c: unknown) { return c; },
+      querySelector() { return null; },
+    };
+  }
+  type El = ReturnType<typeof makeEl>;
+
+  function loadShare() {
+    const posts: { url: string; body: Record<string, unknown> }[] = [];
+    const sandbox: Record<string, unknown> = {
+      window: {},
+      document: {
+        createElement: () => makeEl(),
+        getElementById: () => null,
+        body: { appendChild: () => {} },
+        addEventListener: () => {},
+        querySelector: () => null,
+        documentElement: { lang: "en", getAttribute: () => "day" },
+      },
+      navigator: { userAgent: "test" },
+      setTimeout: () => 0,
+      clearTimeout: () => {},
+      File: class {},
+    };
+    (sandbox as Record<string, unknown>).fetch = (url: unknown, opts?: { method?: string; body?: string }) => {
+      if (opts && opts.method === "POST" && String(url).indexOf("/api/share") === 0) {
+        const body = JSON.parse(opts.body || "{}") as Record<string, unknown>;
+        posts.push({ url: String(url), body });
+        const q = body.showQuestion ? "1" : "0";
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ shareId: "s1", url: "https://x/r/s1", storyImageUrl: "https://x/r/s1/story.png?lang=en&mode=day&q=" + q }),
+        });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}), blob: () => Promise.resolve({}) });
+    };
+    vm.runInContext(readFileSync(new URL("../public/app/share.js", import.meta.url), "utf8"), vm.createContext(sandbox), { filename: "share.js" });
+    return { sandbox, posts };
+  }
+  const flush = () => new Promise<void>((r) => setTimeout(r, 5));
+
+  it("posts once per variant and reuses both images on toggle", async () => {
+    const h = loadShare();
+    const { TarotShare } = h.sandbox.window as unknown as { TarotShare: { open: (k: string, r: string) => void } };
+    const doc = h.sandbox.document as { createElement: (t: string) => El; body: { appendChild: (c: unknown) => void } };
+    const sheet = makeEl();
+    const bySel: Record<string, El> = {};
+    const img = makeEl(); const toggle = makeEl(); const targets = makeEl(); const loader = makeEl();
+    bySel[".story"] = img; bySel["#share-show-q"] = toggle; bySel[".targets"] = targets; bySel[".story-loading"] = loader;
+    (sheet as unknown as { querySelector: (s: string) => El | null }).querySelector = (s: string) => bySel[s] ?? null;
+    doc.createElement = () => sheet as unknown as El;
+    TarotShare.open("reading", "r1");
+    await flush(); await flush();
+    expect(h.posts.length).toBe(1);
+    expect(h.posts[0].body.showQuestion).toBe(false);
+    expect(img.src).toContain("q=0");
+    toggle.checked = true;
+    toggle.listeners["change"]({});
+    await flush(); await flush();
+    expect(h.posts.length).toBe(2);
+    expect(h.posts[1].body.showQuestion).toBe(true);
+    expect(img.src).toContain("q=1");
+    // Toggle back off: the kept image swaps in instantly (before
+    // the persistence POST resolves), then the choice is persisted.
+    toggle.checked = false;
+    toggle.listeners["change"]({});
+    // Swapped synchronously from the kept image (the POST below only
+    // persists the choice; the response can't have arrived yet).
+    expect(img.src).toContain("q=0");
+    await flush(); await flush();
+    expect(h.posts.length).toBe(3);
+    expect(h.posts[2].body.showQuestion).toBe(false);
+    expect(img.src).toContain("q=0");
+  });
+
+  it("encodes the question flag in the story image URL", () => {
+    const server = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
+    expect(server).toContain("story.png?lang=${lang}&mode=${mode}&q=${showQuestion ? 1 : 0}");
+    expect(server).toContain('c.req.query("q")');
   });
 });
 
