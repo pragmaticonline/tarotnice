@@ -6,6 +6,7 @@ import {
   cleanQuestion,
   crisisMessage,
   drawReadingCards,
+  extractOptions,
   guessTopic,
   classifyCrisis,
   crisisWatchHit,
@@ -48,6 +49,7 @@ describe("question validation", () => {
     expect(guessTopic("should I take the new job?")).toBe("career");
     expect(guessTopic("how can I feel less stressed?")).toBe("health");
     expect(guessTopic("what should I focus on this week?")).toBe("general");
+    expect(guessTopic("Should I buy this tarot deck?")).toBe("general");
   });
 
   it("validates topic and lang enums", () => {
@@ -139,7 +141,7 @@ describe("prompt builder", () => {
       prev: [], nickname: null,
     });
     expect(user).toContain("The Lovers");
-    expect(system).toContain("The Star");
+    expect(system).toContain("Two of Wands");
   });
 
   it("builds server-side prompts with topic notes and continuity", () => {
@@ -181,15 +183,15 @@ describe("prompt builder", () => {
         cards: [toPromptCard(card, false, "general")],
         prev: [], nickname: null,
       });
-      expect(system).toContain("Imagery");
+      expect(system).toContain(lang === "en" ? "CARD IMAGERY" : "Imagery");
     }
     const { system } = buildReadingPrompt({
       lang: "en", topic: "general", question: "What lies ahead?",
       cards: [toPromptCard(card, false, "general")],
       prev: [], nickname: null,
     });
-    expect(system).toContain("every card paragraph must mention at least one");
-    expect(system).toContain("never invent visual details");
+    expect(system).toContain("Never invent details.");
+    expect(system).toContain("DO NOT describe the pictures");
   });
 
   it("asks the question-first and one-story shape in both languages", () => {
@@ -198,22 +200,24 @@ describe("prompt builder", () => {
       cards: [toPromptCard(card, false, "general")],
       prev: [], nickname: null,
     }).system;
-    expect(en).toContain("QUESTION FIRST");
-    expect(en).toContain("TELL ONE STORY");
-    expect(en).toContain("Use ONLY elements");
-    expect(en).toContain("2-4 sentences");
-    expect(en).toContain("answering it directly in its first words");
-    expect(en).toContain("Your energy");
+    for (const marker of [
+      "HOW NGERN READS",
+      "STEP 1 \u2014 UNDERSTAND THE QUESTION FIRST",
+      "TRANSLATE, DON'T COPY",
+      "STEP 3 \u2014 READ THE THREE CARDS",
+      "DO NOT describe the pictures",
+      "STEP 6 \u2014 OUTPUT",
+      "NGERN'S VOICE",
+      "\u0e1e\u0e25\u0e31\u0e07\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13",
+    ]) expect(en).toContain(marker);
     const th = buildReadingPrompt({
       lang: "th", topic: "general", question: "\u0e2a\u0e33\u0e23\u0e31\u0e1a\u0e40\u0e17\u0e27\u0e32\u0e25\u0e31\u0e22\u0e40\u0e02\u0e49\u0e32\u0e01\u0e31\u0e19\u0e44\u0e2b\u0e21",
       cards: [toPromptCard(card, false, "general")],
       prev: [], nickname: null,
     }).system;
-    expect(th).toContain("\u0e2d\u0e48\u0e32\u0e19\u0e04\u0e33\u0e16\u0e32\u0e21\u0e01\u0e48\u0e2d\u0e19\u0e40\u0e2a\u0e21\u0e2d");
-    expect(th).toContain("\u0e2d\u0e48\u0e32\u0e19\u0e20\u0e32\u0e1e \u0e40\u0e25\u0e48\u0e32\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e40\u0e14\u0e35\u0e22\u0e27");
-    expect(th).toContain("\u0e2b\u0e49\u0e32\u0e21\u0e41\u0e15\u0e48\u0e07\u0e23\u0e32\u0e22\u0e25\u0e30\u0e40\u0e2d\u0e35\u0e22\u0e14\u0e20\u0e32\u0e1e\u0e40\u0e1e\u0e34\u0e48\u0e21");
-    expect(th).toContain("\u0e22\u0e48\u0e2d\u0e2b\u0e19\u0e49\u0e32\u0e44\u0e1e\u0e48\u0e25\u0e30 2-4 \u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04");
-    expect(th).toContain("\u0e2a\u0e23\u0e38\u0e1b: ");
+    for (const marker of [
+      "\u0e27\u0e34\u0e18\u0e35\u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e02\u0e2d\u0e07\u0e40\u0e07\u0e32\u0e30", "STEP 1 \u2014 \u0e40\u0e02\u0e49\u0e32\u0e43\u0e08\u0e04\u0e33\u0e16\u0e32\u0e21\u0e01\u0e48\u0e2d\u0e19", "\u0e2d\u0e22\u0e48\u0e32\u0e1a\u0e23\u0e23\u0e22\u0e32\u0e22\u0e20\u0e32\u0e1e\u0e43\u0e2b\u0e49\u0e1c\u0e39\u0e49\u0e43\u0e0a\u0e49\u0e1f\u0e31\u0e07", "\u0e2a\u0e23\u0e38\u0e1b: ", "\u0e40\u0e2a\u0e35\u0e22\u0e07\u0e02\u0e2d\u0e07\u0e40\u0e07\u0e32\u0e30",
+    ]) expect(th).toContain(marker);
   });
 
   it("tells the Thai prompt to spell every word completely (no dropped letters)", () => {
@@ -269,26 +273,35 @@ describe("pickSpread", () => {
     ]);
   });
 
-  it("picks a decision spread for should-I questions", () => {
+  it("reads should-I questions as yes-no", () => {
     expect(pickSpread("Should I quit my job?", "career", "en")).toEqual([
-      "Am I where I want to be",
-      "What are my options",
-      "What do I fear the most",
+      "What supports",
+      "What blocks",
+      "Likely answer",
     ]);
   });
 
-  it("picks a decision spread for Thai should-I questions", () => {
-    const spread = pickSpread("\u0e04\u0e27\u0e23\u0e25\u0e32\u0e2d\u0e2d\u0e01\u0e14\u0e35\u0e44\u0e2b\u0e21", "career", "th");
-    expect(spread).toHaveLength(3);
-    expect(new Set(spread).size).toBe(3);
-    expect(spread.join(" ")).not.toContain("Past");
+  it("reads Thai should-I questions as yes-no", () => {
+    expect(pickSpread("\u0e04\u0e27\u0e23\u0e25\u0e32\u0e2d\u0e2d\u0e01\u0e14\u0e35\u0e44\u0e2b\u0e21", "career", "th")).toEqual([
+      "\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e2b\u0e19\u0e38\u0e19",
+      "\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e02\u0e27\u0e32\u0e07",
+      "\u0e41\u0e19\u0e27\u0e42\u0e19\u0e49\u0e21\u0e04\u0e33\u0e15\u0e2d\u0e1a",
+    ]);
   });
 
-  it("picks a relationship spread for love topics", () => {
+  it("picks a get-back spread for come-back questions", () => {
     expect(pickSpread("Will we get back together?", "love", "en")).toEqual([
-      "Me",
-      "Partner",
-      "What we are building together",
+      "What pulls you together",
+      "What pushes apart",
+      "What needs care",
+    ]);
+  });
+
+  it("picks relationship positions for love topics", () => {
+    expect(pickSpread("My partner and I keep fighting", "love", "en")).toEqual([
+      "You",
+      "The other side",
+      "The relationship",
     ]);
   });
 
@@ -310,10 +323,60 @@ describe("pickSpread", () => {
 
   it("falls back to a general spread", () => {
     expect(pickSpread("What do I need to know right now?", "general", "en")).toEqual([
-      "The energy around my situation",
-      "What I need to know",
-      "Advice for the situation",
+      "The situation",
+      "What to handle",
+      "Advice",
     ]);
+  });
+
+  it("extracts two options from choice questions (en+th)", () => {
+    expect(extractOptions("Tea or coffee?")).toEqual(["Tea", "coffee"]);
+    expect(extractOptions("Should I stay or go?")).toEqual(["stay", "go"]);
+    expect(extractOptions("\u0e04\u0e27\u0e23\u0e25\u0e32\u0e2d\u0e2d\u0e01\u0e2b\u0e23\u0e37\u0e2d\u0e2d\u0e22\u0e39\u0e48\u0e15\u0e48\u0e2d")).toEqual(["\u0e25\u0e32\u0e2d\u0e2d\u0e01", "\u0e2d\u0e22\u0e39\u0e48\u0e15\u0e48\u0e2d"]);
+    expect(extractOptions("Will he come back or not?")).toBeNull();
+    expect(extractOptions("What should I focus on this week?")).toBeNull();
+  });
+
+  it("extracts three options for choice-of-3", () => {
+    expect(extractOptions("\u0e40\u0e17\u0e27\u0e32\u0e25\u0e31\u0e22 vs \u0e17\u0e2d\u0e18 vs \u0e2a\u0e21\u0e34\u0e18")).toEqual(["\u0e40\u0e17\u0e27\u0e32\u0e25\u0e31\u0e22", "\u0e17\u0e2d\u0e18", "\u0e2a\u0e21\u0e34\u0e18"]);
+  });
+
+  it("names the options in choice spreads (en+th)", () => {
+    expect(pickSpread("Tea or coffee?", "general", "en")).toEqual([
+      "Option A: Tea",
+      "The heart of the matter",
+      "Option B: coffee",
+    ]);
+    expect(pickSpread("\u0e04\u0e27\u0e23\u0e25\u0e32\u0e2d\u0e2d\u0e01\u0e2b\u0e23\u0e37\u0e2d\u0e2d\u0e22\u0e39\u0e48\u0e15\u0e48\u0e2d", "general", "th")).toEqual([
+      "\u0e17\u0e32\u0e07\u0e40\u0e25\u0e37\u0e2d\u0e01 A: \u0e25\u0e32\u0e2d\u0e2d\u0e01",
+      "\u0e2b\u0e31\u0e27\u0e43\u0e08\u0e02\u0e2d\u0e07\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07",
+      "\u0e17\u0e32\u0e07\u0e40\u0e25\u0e37\u0e2d\u0e01 B: \u0e2d\u0e22\u0e39\u0e48\u0e15\u0e48\u0e2d",
+    ]);
+    expect(pickSpread("\u0e40\u0e17\u0e27\u0e32\u0e25\u0e31\u0e22 vs \u0e17\u0e2d\u0e18 vs \u0e2a\u0e21\u0e34\u0e18", "general", "th")).toEqual(["\u0e40\u0e17\u0e27\u0e32\u0e25\u0e31\u0e22", "\u0e17\u0e2d\u0e18", "\u0e2a\u0e21\u0e34\u0e18"]);
+  });
+
+  it("reads yes-no and fit questions by type (en+th)", () => {
+    expect(pickSpread("Will I pass the exam?", "general", "en")).toEqual([
+      "What supports",
+      "What blocks",
+      "Likely answer",
+    ]);
+    expect(pickSpread("\u0e08\u0e30\u0e2a\u0e2d\u0e1a\u0e1c\u0e48\u0e32\u0e19\u0e44\u0e2b\u0e21", "general", "th")).toEqual(["\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e2b\u0e19\u0e38\u0e19", "\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e02\u0e27\u0e32\u0e07", "\u0e41\u0e19\u0e27\u0e42\u0e19\u0e49\u0e21\u0e04\u0e33\u0e15\u0e2d\u0e1a"]);
+    expect(pickSpread("\u0e40\u0e23\u0e32\u0e40\u0e2b\u0e21\u0e32\u0e30\u0e01\u0e31\u0e19\u0e44\u0e2b\u0e21", "general", "th")).toEqual(["\u0e1e\u0e25\u0e31\u0e07\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13", "\u0e1e\u0e25\u0e31\u0e07\u0e02\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e1d\u0e48\u0e32\u0e22", "\u0e04\u0e27\u0e32\u0e21\u0e40\u0e02\u0e49\u0e32\u0e01\u0e31\u0e19"]);
+  });
+
+  it("covers goal, problem, feelings, lost-object and what-to-do questions", () => {
+    expect(pickSpread("How can I achieve my goal?", "general", "en")[0]).toBe("Where you are");
+    expect(pickSpread("I feel stuck at work", "general", "en")[0]).toBe("The root cause");
+    expect(pickSpread("I am feeling anxious lately", "general", "en")[0]).toBe("Thoughts");
+    expect(pickSpread("Where did I lose my keys?", "general", "en")).toEqual([
+      "What was lost",
+      "Where to look",
+      "How to find it",
+    ]);
+    expect(pickSpread("What should I do about this?", "general", "en")[0]).toBe("Stop");
+    expect(pickSpread("\u0e01\u0e38\u0e0d\u0e41\u0e08\u0e2b\u0e32\u0e22\u0e44\u0e1b\u0e44\u0e2b\u0e19", "general", "th")).toEqual(["\u0e17\u0e35\u0e48\u0e2b\u0e32\u0e22\u0e44\u0e1b", "\u0e17\u0e35\u0e48\u0e17\u0e35\u0e48\u0e04\u0e27\u0e23\u0e2b\u0e32", "\u0e27\u0e34\u0e18\u0e35\u0e40\u0e08\u0e2d"]);
+    expect(pickSpread("\u0e04\u0e27\u0e23\u0e17\u0e33\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23\u0e14\u0e35", "general", "th")[0]).toBe("\u0e2b\u0e22\u0e38\u0e14");
   });
 
   it("is deterministic: same question always yields the same spread", () => {
@@ -321,16 +384,16 @@ describe("pickSpread", () => {
     expect(pickSpread(q, "general", "en")).toEqual(pickSpread(q, "general", "en"));
   });
 
-  it("prefers the work spread over love for career/money topics", () => {
+  it("reads will-questions as yes-no even for career/money topics", () => {
     expect(pickSpread("Will my husband's salary increase?", "career", "en")).toEqual([
-      "Situation",
-      "Challenge",
-      "Resolution",
+      "What supports",
+      "What blocks",
+      "Likely answer",
     ]);
     expect(pickSpread("\u0e40\u0e07\u0e34\u0e19\u0e40\u0e14\u0e37\u0e2d\u0e19\u0e02\u0e2d\u0e07\u0e2a\u0e32\u0e21\u0e35\u0e08\u0e30\u0e02\u0e36\u0e49\u0e19\u0e44\u0e2b\u0e21", "money", "th")).toEqual([
-      "\u0e2a\u0e16\u0e32\u0e19\u0e01\u0e32\u0e23\u0e13\u0e4c",
-      "\u0e04\u0e27\u0e32\u0e21\u0e17\u0e49\u0e32\u0e17\u0e32\u0e22",
-      "\u0e17\u0e32\u0e07\u0e2d\u0e2d\u0e01",
+      "\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e2b\u0e19\u0e38\u0e19",
+      "\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e02\u0e27\u0e32\u0e07",
+      "\u0e41\u0e19\u0e27\u0e42\u0e19\u0e49\u0e21\u0e04\u0e33\u0e15\u0e2d\u0e1a",
     ]);
   });
 
@@ -350,7 +413,7 @@ describe("pickSpread", () => {
       lang: "en", topic: "general", question: "Should I quit my job?",
       cards: [pc, pc, pc], prev: [], nickname: null,
     });
-    expect(user).toContain("What are my options");
+    expect(user).toContain("What supports");
     expect(user).toContain("Card 1");
   });
 
@@ -373,142 +436,133 @@ describe("pickSpread", () => {
     }
   });
 
-  it("teaches pair-reading and timing from RWS canon", () => {
+  it("teaches story links and timing from RWS canon", () => {
     for (const lang of ["en", "th"] as const) {
       const { system } = buildReadingPrompt({
         lang, topic: "general", question: "Should I quit my job?",
         cards: [], prev: [], nickname: null,
       });
-      expect(system).toMatch(/pairs|\u0e04\u0e39\u0e48/u);
-      expect(system).toMatch(/Wands.*days|\u0e44\u0e21\u0e49.*\u0e27\u0e31\u0e19/u);
+      expect(system).toMatch(/cause \/ contrast \/ progression|\u0e42\u0e22\u0e07\u0e44\u0e1e\u0e48\u0e14\u0e49\u0e27\u0e22\u0e04\u0e33\u0e1a\u0e2d\u0e01\u0e40\u0e2b\u0e15\u0e38/u);
+      expect(system).toMatch(/Wands days to weeks|\u0e44\u0e21\u0e49\u0e04\u0e37\u0e2d\u0e27\u0e31\u0e19\u0e16\u0e36\u0e07\u0e2a\u0e31\u0e1b\u0e14\u0e32\u0e2b\u0e4c/u);
     }
   });
 
-  it("requires the Overview to answer the question first, then tell one story", () => {
+  it("puts the Summary first, then card stories, with no Overview", () => {
     const en = buildReadingPrompt({
       lang: "en", topic: "general", question: "Should I quit my job?",
       cards: [], prev: [], nickname: null,
     });
-    expect(en.system).toContain("Sentence 1 answers the question as asked");
-    expect(en.system).toContain("Sentences 2-3 tell the one story");
-    expect(en.system).toContain("First line starting with \"Summary: \"");
-    expect(en.system).not.toContain("**What next:**");
+    expect(en.system).toContain("The Summary line comes FIRST");
+    expect(en.system).not.toContain("Overview:");
+    expect(en.system).toContain("For each card, in draw order");
+    expect(en.system).toContain("2\u20133 sentences");
     expect(en.system).toContain("exactly 2 follow-up questions");
     expect(en.system).toContain("If the user message names an anchor card, build the reading around it");
-    expect(en.system).toContain("No advice here");
+    expect(en.system).not.toContain("**What next:**");
     const th = buildReadingPrompt({
       lang: "th", topic: "general", question: "Should I quit my job?",
       cards: [], prev: [], nickname: null,
     });
-    expect(th.system).toContain("\u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04\u0e41\u0e23\u0e01\u0e15\u0e2d\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21");
-    expect(th.system).toContain("\u0e44\u0e21\u0e48\u0e21\u0e35\u0e04\u0e33\u0e41\u0e19\u0e30\u0e19\u0e33\u0e15\u0e23\u0e07\u0e19\u0e35\u0e49");
-    expect(th.user).toContain("2-3");
-    expect(en.user).toContain("sentence 1 answers the question as asked");
+    expect(th.system).toContain("\u0e1a\u0e23\u0e23\u0e17\u0e31\u0e14\u0e2a\u0e23\u0e38\u0e1b\u0e21\u0e32\u0e01\u0e48\u0e2d\u0e19");
+    expect(th.system).not.toContain("\u0e40\u0e23\u0e34\u0e48\u0e21\u0e14\u0e49\u0e27\u0e22\u0e43\u0e08\u0e04\u0e27\u0e32\u0e21\u0e2b\u0e25\u0e31\u0e01");
+    expect(th.user).toContain("\u0e40\u0e25\u0e48\u0e32\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e40\u0e14\u0e35\u0e22\u0e27\u0e2a\u0e32\u0e21\u0e09\u0e32\u0e01\u0e15\u0e48\u0e2d\u0e40\u0e19\u0e37\u0e48\u0e2d\u0e07");
+    expect(en.user).toContain("three-scene story");
   });
 
-  it("builds a story map with one plot and one answer sentence", () => {
+  it("encodes HOW NGERN READS steps in both languages", () => {
     for (const lang of ["en", "th"] as const) {
       const { system } = buildReadingPrompt({
         lang, topic: "general", question: "Should I quit my job?",
         cards: [], prev: [], nickname: null,
       });
-      expect(system).toContain("story map");
+      expect(system).toContain("STEP 2");
+      expect(system).toContain("STEP 4");
     }
     const en = buildReadingPrompt({
       lang: "en", topic: "general", question: "Should I quit my job?",
       cards: [], prev: [], nickname: null,
     });
-    expect(en.system).toContain("card 1 sets the scene, card 2 turns it, card 3 steadies or resolves it");
-    expect(en.system).toContain("Write that sentence first");
-    expect(en.system).toContain("never confirming a future event");
-    expect(en.system).toContain("every card paragraph must mention at least one");
-    expect(en.system).toContain("never invent visual details");
-    expect(en.system).toContain("Each section has one job and must add something new");
-    expect(en.system).toContain("If a sentence would fit any other spread, rewrite it for this one");
-  });
-
-  it("gives both languages the same reasoning chain and combined guidance", () => {
-    const en = buildReadingPrompt({
-      lang: "en", topic: "general", question: "Should I quit my job?",
-      cards: [], prev: [], nickname: null,
-    });
-    expect(en.system).toContain("Reasoning chain");
-    expect(en.system).toContain("role in the whole three-card picture");
-    expect(en.system).toContain("combined message of all three cards");
-    expect(en.system).toContain("base it mainly on cards 2 and 3");
+    expect(en.system).toContain("HOW NGERN READS (replaces ALL older reading-method rules)");
+    expect(en.system).toContain("STEP 1 \u2014 UNDERSTAND THE QUESTION FIRST");
+    expect(en.system).toContain("STEP 5 \u2014 ANSWER TYPES");
+    expect(en.system).toContain("No closing paragraph that repeats the Summary");
+    expect(en.system).toContain("the opposite meaning (last resort)");
     const th = buildReadingPrompt({
       lang: "th", topic: "general", question: "Should I quit my job?",
       cards: [], prev: [], nickname: null,
     });
-    expect(th.system).toContain("\u0e25\u0e33\u0e14\u0e31\u0e1a\u0e01\u0e32\u0e23\u0e15\u0e35\u0e04\u0e27\u0e32\u0e21");
-    expect(th.system).toContain("\u0e1a\u0e17\u0e1a\u0e32\u0e17\u0e02\u0e2d\u0e07\u0e43\u0e1a\u0e19\u0e35\u0e49\u0e43\u0e19\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21");
-    expect(th.system).toContain("\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e23\u0e27\u0e21\u0e02\u0e2d\u0e07\u0e44\u0e1e\u0e48\u0e17\u0e31\u0e49\u0e07\u0e2a\u0e32\u0e21");
-    expect(th.system).toContain("\u0e15\u0e31\u0e49\u0e07\u0e2b\u0e25\u0e31\u0e01\u0e08\u0e32\u0e01\u0e44\u0e1e\u0e48\u0e43\u0e1a\u0e17\u0e35\u0e48 2 \u0e41\u0e25\u0e30 3");
+    expect(th.system).toContain("\u0e27\u0e34\u0e18\u0e35\u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e02\u0e2d\u0e07\u0e40\u0e07\u0e32\u0e30");
+    expect(th.system).toContain("STEP 4 \u2014 \u0e44\u0e1e\u0e48\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27");
+    expect(th.system).toContain("\u0e1a\u0e23\u0e23\u0e17\u0e31\u0e14\u0e2a\u0e23\u0e38\u0e1b\u0e21\u0e32\u0e01\u0e48\u0e2d\u0e19");
+    expect(th.system).toContain("\u0e44\u0e21\u0e48\u0e21\u0e35\u0e22\u0e48\u0e2d\u0e2b\u0e19\u0e49\u0e32\u0e1b\u0e34\u0e14\u0e17\u0e49\u0e32\u0e22\u0e17\u0e35\u0e48\u0e1e\u0e39\u0e14\u0e2a\u0e23\u0e38\u0e1b\u0e0b\u0e49\u0e33");
   });
 
-  it("teaches narrative card relationships with integrity in both languages", () => {
+  it("derives guidance from the whole spread in both languages", () => {
+    const en = buildReadingPrompt({
+      lang: "en", topic: "general", question: "Should I quit my job?",
+      cards: [], prev: [], nickname: null,
+    });
+    expect(en.system).toContain("combined message of the spread");
+    expect(en.system).toContain("never from a single card's meaning");
+    expect(en.system).toContain("stay inside the question's scope");
+    const th = buildReadingPrompt({
+      lang: "th", topic: "general", question: "Should I quit my job?",
+      cards: [], prev: [], nickname: null,
+    });
+    expect(th.system).toContain("\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21\u0e02\u0e2d\u0e07\u0e44\u0e1e\u0e48\u0e17\u0e31\u0e49\u0e07\u0e2a\u0e33\u0e23\u0e31\u0e1a");
+    expect(th.system).toContain("\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e08\u0e32\u0e01\u0e44\u0e1e\u0e48\u0e43\u0e1a\u0e40\u0e14\u0e35\u0e22\u0e27");
+    expect(th.system).toContain("\u0e2d\u0e22\u0e39\u0e48\u0e43\u0e19\u0e02\u0e2d\u0e1a\u0e40\u0e02\u0e15\u0e04\u0e33\u0e16\u0e32\u0e21");
+  });
+
+  it("reads pictures without inventing in both languages", () => {
     const en = buildReadingPrompt({
       lang: "en", topic: "general", question: "Should I quit my job?",
       cards: [], prev: [], nickname: null,
     });
     for (const phrase of [
-      "reinforcement",
-      "cause and effect",
-      "progression",
-      "resolution",
-      "Never invent a connection",
-      "blocked, internalized, delayed",
-      "strengthen, balance, or challenge",
-      "mixed messages",
-      "distinct layer",
-      "guaranteed event",
+      "colours (red = action",
+      "facing direction",
+      "Never invent details",
+      "let the number add meaning",
+      "Wheel of Fortune = depends on timing",
+      "STEP 5",
     ]) expect(en.system).toContain(phrase);
     const th = buildReadingPrompt({
       lang: "th", topic: "general", question: "Should I quit my job?",
       cards: [], prev: [], nickname: null,
     });
     for (const phrase of [
-      "\u0e01\u0e32\u0e23\u0e40\u0e2a\u0e23\u0e34\u0e21\u0e01\u0e31\u0e19",
-      "\u0e40\u0e2b\u0e15\u0e38\u0e41\u0e25\u0e30\u0e1c\u0e25",
-      "\u0e2b\u0e49\u0e32\u0e21\u0e41\u0e15\u0e48\u0e07\u0e04\u0e27\u0e32\u0e21\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e42\u0e22\u0e07",
-      "\u0e44\u0e1e\u0e48\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27",
-      "\u0e44\u0e21\u0e48\u0e17\u0e27\u0e19\u0e04\u0e27\u0e32\u0e21\u0e2b\u0e21\u0e32\u0e22",
-      "\u0e15\u0e2d\u0e1a\u0e1b\u0e23\u0e30\u0e40\u0e14\u0e47\u0e19\u0e2b\u0e25\u0e31\u0e01\u0e15\u0e23\u0e07",
+      "\u0e2a\u0e35 (\u0e41\u0e14\u0e07 = \u0e25\u0e07\u0e21\u0e37\u0e2d\u0e17\u0e33",
+      "\u0e17\u0e34\u0e28\u0e17\u0e35\u0e48\u0e2b\u0e31\u0e19",
+      "\u0e2b\u0e49\u0e32\u0e21\u0e41\u0e15\u0e48\u0e07\u0e23\u0e32\u0e22\u0e25\u0e30\u0e40\u0e2d\u0e35\u0e22\u0e14\u0e40\u0e1e\u0e34\u0e48\u0e21",
+      "\u0e44\u0e1e\u0e48\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27\u0e21\u0e31\u0e01\u0e19\u0e31\u0e1a\u0e27\u0e48\u0e32\u0e22\u0e32\u0e01",
+      "\u0e40\u0e17\u0e27\u0e32\u0e25\u0e31\u0e22\u0e40\u0e2b\u0e21\u0e32\u0e30\u0e01\u0e27\u0e48\u0e32 \u0e40\u0e1e\u0e23\u0e32\u0e30",
     ]) expect(th.system).toContain(phrase);
   });
 
-  it("uses the central interpretation framework in both languages", () => {
+  it("organises the method as HOW NGERN READS steps", () => {
     const en = buildReadingPrompt({
       lang: "en", topic: "general", question: "Should I quit my job?",
       cards: [], prev: [], nickname: null,
     });
     for (const step of [
-      "Central interpretation framework",
-      "Card 1 meaning in context",
-      "Card 2 meaning in context",
-      "Card 3 meaning in context",
-      "Relationship between cards",
-      "Overall synthesis",
-      "Answer to question",
-      "Guidance",
-      "Actions",
-      "Follow-up questions",
+      "HOW NGERN READS",
+      "STEP 2 \u2014 CHOOSE POSITIONS BY TYPE",
+      "STEP 3 \u2014 READ THE THREE CARDS",
+      "STEP 5 \u2014 ANSWER TYPES",
+      "STEP 6 \u2014 OUTPUT",
+      "Fit / compatibility",
+      "Choice of 2 (A vs B)",
     ]) expect(en.system).toContain(step);
     const th = buildReadingPrompt({
       lang: "th", topic: "general", question: "Should I quit my job?",
       cards: [], prev: [], nickname: null,
     });
-    expect(th.system).toContain("\u0e01\u0e23\u0e2d\u0e1a\u0e01\u0e32\u0e23\u0e15\u0e35\u0e04\u0e27\u0e32\u0e21\u0e01\u0e25\u0e32\u0e07");
-    expect(th.system).toContain("\u0e04\u0e27\u0e32\u0e21\u0e2a\u0e31\u0e21\u0e1e\u0e31\u0e19\u0e18\u0e4c\u0e23\u0e30\u0e2b\u0e27\u0e48\u0e32\u0e07\u0e44\u0e1e\u0e48");
-    expect(th.system).toContain("\u0e04\u0e33\u0e15\u0e2d\u0e1a\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21");
-    // Framework presents through visible sections, ends with Summary,
-    // and each card paragraph closes with its own summary sentence.
-    expect(en.system).toContain("11) Summary");
-    expect(en.system).toContain("summarizes this card's message for the question");
-    expect(en.system).toContain("The written reading presents this framework as");
-    expect(th.system).toContain("\u0e2a\u0e23\u0e38\u0e1b (Summary)");
-    expect(th.system).toContain("\u0e2a\u0e23\u0e38\u0e1b\u0e2a\u0e32\u0e23\u0e02\u0e2d\u0e07\u0e44\u0e1e\u0e48\u0e43\u0e1a\u0e19\u0e35\u0e49\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21");
-    expect(th.system).toContain("\u0e1a\u0e17\u0e17\u0e33\u0e19\u0e32\u0e22\u0e17\u0e35\u0e48\u0e40\u0e02\u0e35\u0e22\u0e19\u0e19\u0e33\u0e40\u0e2a\u0e19\u0e2d\u0e01\u0e23\u0e2d\u0e1a\u0e19\u0e35\u0e49\u0e14\u0e31\u0e07\u0e19\u0e35\u0e49");
+    expect(th.system).toContain("\u0e27\u0e34\u0e18\u0e35\u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e02\u0e2d\u0e07\u0e40\u0e07\u0e32\u0e30");
+    expect(th.system).toContain("STEP 2 \u2014 \u0e40\u0e25\u0e37\u0e2d\u0e01\u0e15\u0e33\u0e41\u0e2b\u0e19\u0e48\u0e07\u0e15\u0e32\u0e21\u0e1b\u0e23\u0e30\u0e40\u0e20\u0e17\u0e04\u0e33\u0e16\u0e32\u0e21");
+    expect(th.system).toContain("\u0e40\u0e02\u0e49\u0e32\u0e01\u0e31\u0e19\u0e44\u0e14\u0e49\u0e44\u0e2b\u0e21");
+    expect(th.system).toContain("\u0e1a\u0e23\u0e23\u0e17\u0e31\u0e14\u0e2a\u0e23\u0e38\u0e1b\u0e21\u0e32\u0e01\u0e48\u0e2d\u0e19");
+    expect(th.system).toContain("\u0e40\u0e17\u0e27\u0e32\u0e25\u0e31\u0e22\u0e40\u0e2b\u0e21\u0e32\u0e30\u0e01\u0e27\u0e48\u0e32 \u0e40\u0e1e\u0e23\u0e32\u0e30");
   });
 
   it("keeps mode names, numbers and energy summaries out of the structure", () => {
@@ -520,10 +574,9 @@ describe("pickSpread", () => {
     expect(system).not.toContain("One paragraph per card");
     expect(system).not.toContain("dominant suit/element");
     expect(system).not.toMatch(/[0-9]\) Overview/);
-    expect(system).toContain("only when it adds meaning");
-    expect(system).toContain("Do not repeat the card name");
-    expect(system).toContain("Overview 2-3 sentences");
-    expect(system).toContain("each card paragraph 2-4 sentences");
+    expect(system).toContain("stay inside the question's scope");
+    expect(system).toContain("Name the question's subject");
+    expect(system).toContain("2\u20133 sentences");
   });
 });
 
@@ -882,14 +935,17 @@ describe("method rules in system prompts", () => {
   ];
   const en = buildReadingPrompt({ lang: "en", topic: "general", question: "hello", cards: dummy, prev: [], nickname: null }).system;
   const th = buildReadingPrompt({ lang: "th", topic: "general", question: "hello", cards: dummy, prev: [], nickname: null }).system;
-  it("teaches reframing and yes-no answers in English", () => {
-    expect(en).toContain("Reframe questions that ask fate");
-    expect(en).toContain("Yes/no questions");
+  it("teaches answer types with yes-no patterns in English", () => {
+    expect(en).toContain("STEP 5 \u2014 ANSWER TYPES");
+    expect(en).toContain("The LAST card weighs most");
+    expect(en).toContain("good \u2013 bad \u2013 good");
+    expect(en).toContain("the opposite meaning (last resort)");
     expect(en).toContain("If the user message names an anchor card");
   });
-  it("teaches reframing and yes-no answers in Thai", () => {
-    expect(th).toContain("\u0e01\u0e32\u0e23\u0e1b\u0e23\u0e31\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21:");
-    expect(th).toContain("\u0e04\u0e33\u0e16\u0e32\u0e21\u0e43\u0e0a\u0e48\u0e2b\u0e23\u0e37\u0e2d\u0e44\u0e21\u0e48:");
+  it("teaches answer types with yes-no patterns in Thai", () => {
+    expect(th).toContain("\u0e44\u0e1e\u0e48\u0e43\u0e1a\u0e2a\u0e38\u0e14\u0e17\u0e49\u0e32\u0e22\u0e19\u0e49\u0e33\u0e2b\u0e19\u0e31\u0e01\u0e2a\u0e38\u0e14");
+    expect(th).toContain("\u0e14\u0e35 \u2013 \u0e41\u0e22\u0e48 \u2013 \u0e14\u0e35");
+    expect(th).toContain("\u0e1a\u0e23\u0e23\u0e17\u0e31\u0e14\u0e2a\u0e23\u0e38\u0e1b\u0e1a\u0e2d\u0e01\u0e41\u0e19\u0e27\u0e42\u0e19\u0e49\u0e21\u0e01\u0e48\u0e2d\u0e19");
     expect(th).toContain("\u0e44\u0e1e\u0e48\u0e41\u0e01\u0e19");
   });
 });
