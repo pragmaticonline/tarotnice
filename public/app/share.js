@@ -127,6 +127,11 @@
           share = cached;
           img.src = share.storyImageUrl;
           renderTargets();
+        } else if (loader) {
+          // First visit to this variant renders server-side and
+          // downloads ~1MB: show the spinner so the old image
+          // lingering meanwhile does not read as "nothing happened".
+          loader.hidden = false;
         }
         share = shareCache[want] = await createShare(kind, ref, want === "1");
       } catch (e) {

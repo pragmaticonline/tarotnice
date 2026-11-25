@@ -203,6 +203,9 @@ describe("GET / (draw screen)", () => {
     expect(js).toContain("/api/auth/sign-in/social");
     expect(js).toContain('callbackURL: "/"');
     expect(js).toContain("Escape");
+    // One popup per tab session: shown once, then suppressed.
+    expect(js).toContain("sessionStorage");
+    expect(js).toContain("nudge-seen");
   });
 
   it("has no standalone follow-up input box (Follow up button covers it)", () => {

@@ -139,6 +139,7 @@ describe("share question toggle reuses images instead of regening", () => {
       download: "",
       className: "",
       checked: false,
+      classList: { add() {}, remove() {}, toggle() {}, contains: () => false },
       listeners: {} as Record<string, (e: unknown) => void>,
       addEventListener(ev: string, fn: (e: unknown) => void) { this.listeners[ev] = fn; },
       setAttribute() {},
@@ -197,12 +198,19 @@ describe("share question toggle reuses images instead of regening", () => {
     expect(h.posts.length).toBe(1);
     expect(h.posts[0].body.showQuestion).toBe(false);
     expect(img.src).toContain("q=0");
+    img.listeners["load"]({});
+    expect(loader.hidden).toBe(true);
     toggle.checked = true;
     toggle.listeners["change"]({});
+    // First visit to this variant regens server-side: the spinner
+    // shows again until the new image arrives.
+    expect(loader.hidden).toBe(false);
     await flush(); await flush();
     expect(h.posts.length).toBe(2);
     expect(h.posts[1].body.showQuestion).toBe(true);
     expect(img.src).toContain("q=1");
+    img.listeners["load"]({});
+    expect(loader.hidden).toBe(true);
     // Toggle back off: the kept image swaps in instantly (before
     // the persistence POST resolves), then the choice is persisted.
     toggle.checked = false;

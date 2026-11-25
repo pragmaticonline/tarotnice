@@ -154,9 +154,18 @@
     var n = document.getElementById("signin-nudge");
     if (n) n.hidden = true;
   }
+  // One popup per tab session: the summary event fires on every
+  // load and visibility refresh, which nagged returning visitors.
+  function nudgeSeen() {
+    try { return window.sessionStorage && window.sessionStorage.getItem("tarotnice:nudge-seen") === "1"; } catch (e) { return false; }
+  }
+  function markNudgeSeen() {
+    try { if (window.sessionStorage) window.sessionStorage.setItem("tarotnice:nudge-seen", "1"); } catch (e) {}
+  }
   function showNudge() {
     var n = document.getElementById("signin-nudge");
-    if (!n || !n.hidden) return;
+    if (!n || !n.hidden || nudgeSeen()) return;
+    markNudgeSeen();
     n.hidden = false;
     var x = n.querySelector(".nudge-x");
     if (x && x.focus) x.focus();
