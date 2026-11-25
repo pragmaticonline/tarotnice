@@ -129,6 +129,24 @@ describe("checkin card on My journey", () => {
     expect(html).toContain("Total check-ins:");
   });
 
+  it("offers signup instead of claim for signed-out visitors", () => {
+    for (const ui of ["en", "th"] as const) {
+      const html = progressPage({
+        ...base, ui, registered: false,
+        checkin: { claimedToday: false, total: 0, week: checkinWeek("2026-11-25", [], null, ui) },
+      });
+      const d = t(ui);
+      expect(html).toContain(d.checkinSignupCta);
+      expect(html).toContain(d.checkinSignupSub);
+      expect(html).toContain('href="/register?return=%2Fprogress"');
+      expect(html).not.toContain('id="ci-claim"');
+    }
+    expect(progressPage({
+      ...base, registered: false,
+      checkin: { claimedToday: false, total: 0, week: checkinWeek("2026-11-25", [], null, "en") },
+    })).toContain("Sign up to get your daily token");
+  });
+
   it("claimed state shows the green done box, no claim button", () => {
     const html = progressPage({
       ...base, ui: "th",

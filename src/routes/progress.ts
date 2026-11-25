@@ -44,7 +44,7 @@ function stampStyle(state: StampState): { bg: string; border: string; lblFg: str
   return { ...base, bg: "#ffffff", border: "1px solid #efe5cf", lblFg: "#8a7fa3", icon: "\u00b7", iconBg: "#f6f1fa", iconFg: "#b9b0c7", iconBorder: "0", amt: "+1", amtFg: "#8a7fa3" };
 }
 
-function checkinCard(ui: UiLang, d: ReturnType<typeof t>, checkin: { claimedToday: boolean; total: number; week: CheckinWeekDay[] }): string {
+function checkinCard(ui: UiLang, d: ReturnType<typeof t>, checkin: { claimedToday: boolean; total: number; week: CheckinWeekDay[] }, registered = true): string {
   const sep = ui === "th" ? " " : ", ";
   const stamp = (w: CheckinWeekDay): string => {
     const state: StampState = w.status === "claimed" ? "got" : w.status === "missed" ? "miss" : w.status === "today" ? "today" : w.status === "gotToday" ? "gotToday" : "next";
@@ -62,7 +62,9 @@ function checkinCard(ui: UiLang, d: ReturnType<typeof t>, checkin: { claimedToda
     `<div style="display:flex;flex-direction:column;gap:2px"><h2 id="ci-h" style="margin:0;font-size:20px;font-weight:600;color:#4a3d78">${escapeHtml(d.checkinTitle)}</h2>` +
     `<span style="font-size:13px;line-height:1.5;color:#6b5f85">${escapeHtml(d.checkinSub)}<b id="ci-total" style="margin:0 4px;color:#2e2547">${checkin.total}</b>${escapeHtml(d.drawerDays)}</span></div>` +
     `<div role="list" style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px">${checkin.week.map(stamp).join("")}</div>` +
-    (claimed
+    (!registered
+      ? `<a href="/register?return=%2Fprogress" id="ci-signup" style="display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 12px;border:1px solid #b0832f;border-radius:12px;background:linear-gradient(135deg,#f6e2b0 0%,#e2bf72 100%);color:#2e2547;font-size:16px;font-weight:600;text-decoration:none;box-shadow:0 4px 14px rgba(176,131,47,.28)">${CI_GEM}<span>${escapeHtml(d.checkinSignupCta)}</span></a><span style="font-size:12px;line-height:1.5;color:#8a7fa3">${escapeHtml(d.checkinSignupSub)}</span>`
+      : claimed
       ? `<div id="ci-done" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 12px;border-radius:12px;background:#eef7f0;border:1px solid #cfe8d6;color:#2f7a43;font-size:15px;font-weight:600;text-align:center">${escapeHtml(d.checkinDone)}</div>`
       : `<button type="button" id="ci-claim" data-checkin-claim style="display:inline-flex;align-items:center;justify-content:center;gap:10px;height:52px;border:1px solid #b0832f;border-radius:12px;background:linear-gradient(135deg,#f6e2b0 0%,#e2bf72 100%);color:#2e2547;font-size:16px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(176,131,47,.28)">${CI_GEM}<span>${escapeHtml(d.checkinClaim)}</span></button><div id="ci-done" hidden style="align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 12px;border-radius:12px;background:#eef7f0;border:1px solid #cfe8d6;color:#2f7a43;font-size:15px;font-weight:600;text-align:center">${escapeHtml(d.checkinDone)}</div>`) +
     `<span style="font-size:12px;line-height:1.5;color:#8a7fa3">${escapeHtml(d.checkinRule)}</span></section>`;
@@ -266,6 +268,8 @@ export function progressPage(opts: {
   checkin?: { claimedToday: boolean; total: number; week: CheckinWeekDay[] };
   /** Server-rendered header initial + token balance (no first-paint flash). */
   account?: HeaderAccount;
+  /** Signed-out visitors get a signup CTA instead of the claim button. */
+  registered?: boolean;
 }): string {
   const d = t(opts.ui);
   const ui = opts.ui;
@@ -282,7 +286,7 @@ export function progressPage(opts: {
       `<div id="ci-toast" data-template="${escapeHtml(d.checkinToast)}" hidden role="status" style="position:fixed;top:84px;left:50%;transform:translateX(-50%);z-index:9;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;background:#2e2547;color:#fffaf2;font-size:14px;font-weight:600;box-shadow:0 8px 24px rgba(46,37,71,.3);white-space:nowrap;animation:tnPop 2.6s ease forwards"></div>` +
       `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h1 style="flex:1 1 auto;margin:0;font-size:28px;line-height:1.2;font-weight:600;color:#4a3d78">${escapeHtml(d.drawerJourney)}</h1>` +
       `<a href="/history" style="display:inline-flex;align-items:center;min-height:40px;font-size:14px;font-weight:600">${escapeHtml(d.mjAllReadings)}</a></div>` +
-      checkinCard(ui, d, opts.checkin ?? { claimedToday: false, total: 0, week: [] }) +
+      checkinCard(ui, d, opts.checkin ?? { claimedToday: false, total: 0, week: [] }, opts.registered !== false) +
       streakCard(ui, d, opts.streak, opts.readings, opts.tokens, opts.drewToday) +
       calendarCard(ui, d, {
         ym: opts.calMonth, prev: opts.monthPrev, next: opts.monthNext, label: opts.monthLabel, suit: opts.suitFilter,

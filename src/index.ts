@@ -1811,6 +1811,7 @@ app.get("/progress", async (c) => {
         total: claimedDays.length,
         week: checkinWeek(progressToday, progressClaimed, progressSignup, ui),
       },
+      registered: isRegisteredUser(user),
       drewToday: days.includes(progressToday),
       tokens: progressAccountFull?.tokens ?? 0,
       calMonth,
