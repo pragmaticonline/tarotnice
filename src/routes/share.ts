@@ -4,7 +4,7 @@
 // and the "get your own free reading" CTA carrying ?ref=.
 import { escapeHtml } from "../lib/html";
 import { fmt, t, type UiLang } from "../lib/i18n";
-import { brandHtml, pageShell } from "./shell";
+import { brandHtml, headerHtml, pageShell, type HeaderAccount } from "./shell";
 
 export type LandingCard = {
   image: string;
@@ -24,9 +24,19 @@ export function shareLandingPage(opts: {
   question: string | null;
   ogImage: string;
   ownerName?: string | null;
+  /** Signed-in viewer (server-rendered initial + balance); the AUTH_LINK
+   *  client script hydrates it, so logged-in visitors never see a
+   *  stale Sign in button. Guests get the neutral header. */
+  account?: HeaderAccount;
 }): string {
   const d = t(opts.ui);
   const cta = `/?ref=${encodeURIComponent(opts.shareId)}`;
+  const head = headerHtml({
+    ui: opts.ui,
+    streak: { current: 0, longest: 0, activeToday: false },
+    path: `/r/${opts.shareId}`,
+    account: opts.account ?? null,
+  });
   const cards = opts.cards
     .map(
       (card) =>
@@ -42,7 +52,7 @@ export function shareLandingPage(opts: {
     ogImage: opts.ogImage,
     ogLocale: opts.ui === "th" ? "th_TH" : "en_US",
     body:
-      `<header class="site-head">${brandHtml()}<span class="head-sp"></span><a class="lang-btn head-auth" href="/sign-in">${escapeHtml(d.signIn)}</a></header>` +
+      `${head}` +
       `<main class="landing">` +
       (opts.ownerName ? `<p class="land-shared-by">${escapeHtml(fmt(d.sharedBy, { name: opts.ownerName }))}</p>` : "") +
       `<div class="land-cards">${cards}</div>` +

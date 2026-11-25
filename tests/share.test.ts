@@ -102,6 +102,39 @@ describe("share landing pages", () => {
     expect(html).toContain('og:locale" content="th_TH"');
   });
 
+  it("shows the account header instead of a hardcoded Sign in link", () => {
+    const base = {
+      kind: "reading", origin: "https://tarotnice.com", shareId: "AbC123XyZ9",
+      ui: "en", cards: [], summary: "Trust the slow build.", question: null,
+      ogImage: "https://tarotnice.com/r/AbC123XyZ9/og.png",
+    } as const;
+    for (const account of [{ initial: "M", tokens: 7 }, null]) {
+      const html = shareLandingPage({ ...base, account });
+      expect(html).not.toContain('class="lang-btn head-auth"');
+      // Standard header: menu button for the drawer, token chip the
+      // AUTH_LINK client script hydrates for signed-in visitors.
+      expect(html).toContain("data-drawer-open");
+      expect(html).toContain("data-token-chip");
+    }
+    const signedIn = shareLandingPage({
+      ...base, account: { initial: "M", tokens: 7 },
+    });
+    expect(signedIn).toContain("data-avatar-initial");
+    expect(signedIn).toContain(">M</span>");
+    expect(signedIn).toContain("<b data-token-count>7</b>");
+  });
+
+  it("passes the signed-in viewer into both share landings", () => {
+    const src = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
+    for (const route of ['app.get("/r/:shareId"', 'app.get("/d/:shareId"']) {
+      const at = src.indexOf(route);
+      expect(at).toBeGreaterThan(-1);
+      const block = src.slice(at, at + 4000);
+      expect(block).toContain("const viewer = await currentUser(c)");
+      expect(block).toContain("account: await pageAccount(c.env.DB, viewer)");
+    }
+  });
+
   it("unshared page is friendly and points home", () => {
     const html = unsharedPage("https://tarotnice.com", "en");
     expect(html).toContain("share was removed");

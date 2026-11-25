@@ -969,7 +969,8 @@ app.get("/r/:shareId", async (c) => {
   const ownerPrefs = await d1PrefsStore(c.env.DB).get(row.userId).catch(() => null);
   const ownerName = ownerPrefs?.nickname ?? t(ui).aFriend;
   const cards = await landingCards(store, row.cards, ui);
-  recordEvent(c.env, { name: "share_landing", kind: "reading", ...requestContext(c), userKind: "guest" });
+  const viewer = await currentUser(c).catch(() => null);
+  recordEvent(c.env, { name: "share_landing", kind: "reading", ...requestContext(c), userKind: userKind(viewer) });
   return c.html(
     shareLandingPage({
       kind: "reading",
@@ -981,6 +982,7 @@ app.get("/r/:shareId", async (c) => {
       question: row.showQuestion ? row.question : null,
       ownerName,
       ogImage: `${origin}/r/${shareId}/og.png`,
+      account: await pageAccount(c.env.DB, viewer),
     }),
   );
 });
@@ -1001,7 +1003,8 @@ app.get("/d/:shareId", async (c) => {
   const row = await store.getDailyByShare(shareId);
   if (!row) return c.html(unsharedPage(origin, ui), 410);
   const cards = await landingCards(store, [{ id: row.cardId, reversed: row.reversed }], ui);
-  recordEvent(c.env, { name: "share_landing", kind: "daily", ...requestContext(c), userKind: "guest" });
+  const viewer = await currentUser(c).catch(() => null);
+  recordEvent(c.env, { name: "share_landing", kind: "daily", ...requestContext(c), userKind: userKind(viewer) });
   return c.html(
     shareLandingPage({
       kind: "daily",
@@ -1012,6 +1015,7 @@ app.get("/d/:shareId", async (c) => {
       summary: row.message,
       question: null,
       ogImage: `${origin}/d/${shareId}/og.png`,
+      account: await pageAccount(c.env.DB, viewer),
     }),
   );
 });
