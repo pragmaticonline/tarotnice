@@ -77,7 +77,7 @@ export function historyPage(opts: {
   const head = headerHtml({ ui: opts.ui, streak: opts.streak, path: "/history", account: opts.account });
   const topicLabels: Record<string, string> = {
     love: d.topicLove, career: d.topicCareer, money: d.topicMoney,
-    health: d.topicHealth, general: d.topicGeneral,
+    health: d.topicHealth, general: d.topicGeneral, find: d.topicFind,
   };
   const chips =
     `<div class="hist-chips" role="group">` +
@@ -292,6 +292,7 @@ export function historyDetailPage(opts: {
     // Overview paragraph: the lead already shows it, so it must not
     // render again as the overview body.
     const firstIsSummary = /^(?:\*\*)?(?:Summary|\u0e2a\u0e23\u0e38\u0e1b)\s*(?:\*\*)?\s*:/i.test(blocks[0] ?? "");
+    const firstIsAnchor = /^(?:\*\*)?(?:\u0e41\u0e01\u0e19\u0e02\u0e2d\u0e07\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07|\u0e41\u0e01\u0e19\u0e02\u0e2d\u0e07\u0e04\u0e33\u0e2d\u0e48\u0e32\u0e19|\u0e44\u0e1e\u0e48\u0e41\u0e01\u0e19|Anchor card|The core of the matter)\s*[\u2014\u2013:\-]/.test(blocks[0] ?? "");
     const overview = (blocks[0] ?? "").replace(
       /^\s*(?:\*\*)?(?:Overview|\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21)\s*(?:\*\*)?\s*:?\s*(?:\*\*)?\s*\n?/i,
       "",
@@ -310,7 +311,7 @@ export function historyDetailPage(opts: {
       if (s.kind === "card") cards.push(s.html);
       else if (s.html) sections.push(s.html);
     }
-    const overviewBody = firstIsSummary && r.summary ? "" : overview;
+    const overviewBody = firstIsAnchor || (firstIsSummary && r.summary) ? "" : overview;
     readingHtml =
       `<section class="panel-card detail-overview"><h2>${escapeHtml(d.overviewTitle)}</h2>` +
       (r.summary ? `<p class="detail-lead"><b>${escapeHtml(r.summary)}</b></p>` : "") +

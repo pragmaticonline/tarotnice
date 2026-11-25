@@ -1473,6 +1473,7 @@ function topicLabel(ui: UiLang, topic: string): string {
     : topic === "career" ? d.topicCareer
     : topic === "money" ? d.topicMoney
     : topic === "health" ? d.topicHealth
+    : topic === "find" ? d.topicFind
     : d.topicGeneral;
 }
 

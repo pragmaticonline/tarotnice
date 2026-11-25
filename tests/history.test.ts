@@ -196,6 +196,20 @@ describe("historyDetailPage", () => {
     expect(html.split("Trust the slow build.").length - 1).toBe(1);
   });
 
+  it("does not render an echoed anchor line as the overview body", () => {
+    const aiText = [
+      "\u0e41\u0e01\u0e19\u0e02\u0e2d\u0e07\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 \u2014 **Death**",
+      "Summary: Trust the slow build.",
+      "1 \u00b7 The situation \u2014 **The Lovers**\nA choice calls.",
+    ].join("\n\n");
+    const html = historyDetailPage({
+      ui: "th", origin: "https://tarotnice.com", streak: STREAK,
+      reading: { ...reading, aiText, summary: "Trust the slow build." },
+    });
+    expect(html).not.toContain("\u0e41\u0e01\u0e19\u0e02\u0e2d\u0e07\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07");
+    expect(html).toContain("Trust the slow build.");
+  });
+
   it("drops empty follow-up sections", () => {
     const aiText = ["Overview: You stand at a crossroads.", "Explore further:", "Summary: done."].join("\n\n");
     const html = historyDetailPage({

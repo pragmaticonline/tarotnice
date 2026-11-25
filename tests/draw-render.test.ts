@@ -582,6 +582,19 @@ describe("renderReading positions", () => {
     expect(html).toContain("At a glance");
   });
 
+  it("never renders an echoed anchor line in the glance box", () => {
+    const html = renderOnce(
+      "Summary: Not yet.\n\n" +
+        "\u0e41\u0e01\u0e19\u0e02\u0e2d\u0e07\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 \u2014 **Death**:\n\n" +
+        "1 \u00b7 What supports \u2014 **Two of Wands**: A plan helps.\n\n" +
+        "2 \u00b7 What blocks \u2014 **Eight of Cups**: Leaving is hard.\n\n" +
+        "3 \u00b7 Likely answer \u2014 **The Star**: Hope holds.",
+      "th",
+    );
+    expect(html).toContain("sec-glance");
+    expect(html).not.toContain("\u0e41\u0e01\u0e19\u0e02\u0e2d\u0e07\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07");
+  });
+
   it("shows the At-a-glance box as soon as the summary line arrives", () => {
     const html = renderOnce("\u0e2a\u0e23\u0e38\u0e1b: \u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49 \u2014 \u0e44\u0e1e\u0e48\u0e1a\u0e2d\u0e01\u0e43\u0e2b\u0e49\u0e23\u0e2d\u0e08\u0e31\u0e07\u0e2b\u0e27\u0e30\u0e01\u0e48\u0e2d\u0e19", "th");
     expect(html).toContain("sec-glance");

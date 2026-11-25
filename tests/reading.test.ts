@@ -380,6 +380,31 @@ describe("pickSpread", () => {
     expect(pickSpread("\u0e04\u0e27\u0e23\u0e17\u0e33\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23\u0e14\u0e35", "general", "th")[0]).toBe("\u0e2b\u0e22\u0e38\u0e14");
   });
 
+  it("classifies FIND by question word, not the polite ending (en+th)", () => {
+    const q = "\u0e21\u0e35\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2a\u0e48\u0e27\u0e19\u0e44\u0e2b\u0e19\u0e02\u0e2d\u0e07 TarotNice \u0e17\u0e35\u0e48\u0e09\u0e31\u0e19\u0e15\u0e49\u0e2d\u0e07\u0e17\u0e33\u0e43\u0e2b\u0e49\u0e0a\u0e31\u0e14\u0e40\u0e08\u0e19\u0e01\u0e27\u0e48\u0e32\u0e19\u0e35\u0e49\u0e01\u0e48\u0e2d\u0e19\u0e40\u0e23\u0e34\u0e48\u0e21\u0e42\u0e06\u0e29\u0e13\u0e32\u0e44\u0e2b\u0e21?";
+    expect(guessTopic(q)).toBe("find");
+    expect(pickSpread(q, guessTopic(q), "th")).toEqual(["\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e14\u0e35\u0e2d\u0e22\u0e39\u0e48\u0e41\u0e25\u0e49\u0e27", "\u0e08\u0e38\u0e14\u0e17\u0e35\u0e48\u0e15\u0e49\u0e2d\u0e07\u0e41\u0e01\u0e49", "\u0e04\u0e27\u0e23\u0e40\u0e23\u0e34\u0e48\u0e21\u0e08\u0e32\u0e01"]);
+    expect(guessTopic("Is there anything I should fix before running ads?")).toBe("find");
+    expect(pickSpread("Is there anything I should fix before running ads?", "find", "en")).toEqual([
+      "What's already working",
+      "What needs fixing",
+      "Where to start",
+    ]);
+    // A plain yes/no keeps the yes-no spread, never FIND.
+    expect(guessTopic("Should I start ads this month?")).not.toBe("find");
+    expect(pickSpread("Should I start ads this month?", "general", "en")).toEqual([
+      "What supports",
+      "What blocks",
+      "Likely answer",
+    ]);
+  });
+
+  it("classifies why/how/when by question word (server-side)", () => {
+    expect(pickSpread("Why is this happening?", "general", "en")[0]).toBe("The root cause");
+    expect(pickSpread("How can I reach my goal?", "general", "en")[0]).toBe("Where you are");
+    expect(pickSpread("When will things improve?", "general", "en")).toEqual(["Past", "Present", "Future"]);
+  });
+
   it("is deterministic: same question always yields the same spread", () => {
     const q = "Should I move to a new city?";
     expect(pickSpread(q, "general", "en")).toEqual(pickSpread(q, "general", "en"));
@@ -443,7 +468,7 @@ describe("pickSpread", () => {
         lang, topic: "general", question: "Should I quit my job?",
         cards: [], prev: [], nickname: null,
       });
-      expect(system).toMatch(/cause \/ contrast \/ progression|\u0e42\u0e22\u0e07\u0e44\u0e1e\u0e48\u0e14\u0e49\u0e27\u0e22\u0e04\u0e33\u0e1a\u0e2d\u0e01\u0e40\u0e2b\u0e15\u0e38/u);
+      expect(system).toMatch(/cause \/ contrast \/ progression|\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e14\u0e49\u0e27\u0e22\u0e04\u0e33\u0e1a\u0e2d\u0e01\u0e40\u0e2b\u0e15\u0e38/u);
       expect(system).toMatch(/Wands days to weeks|\u0e44\u0e21\u0e49\u0e04\u0e37\u0e2d\u0e27\u0e31\u0e19\u0e16\u0e36\u0e07\u0e2a\u0e31\u0e1b\u0e14\u0e32\u0e2b\u0e4c/u);
     }
   });
@@ -466,8 +491,8 @@ describe("pickSpread", () => {
     });
     expect(th.system).toContain("\u0e1a\u0e23\u0e23\u0e17\u0e31\u0e14\u0e2a\u0e23\u0e38\u0e1b\u0e21\u0e32\u0e01\u0e48\u0e2d\u0e19");
     expect(th.system).not.toContain("\u0e40\u0e23\u0e34\u0e48\u0e21\u0e14\u0e49\u0e27\u0e22\u0e43\u0e08\u0e04\u0e27\u0e32\u0e21\u0e2b\u0e25\u0e31\u0e01");
-    expect(th.user).toContain("\u0e40\u0e25\u0e48\u0e32\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e40\u0e14\u0e35\u0e22\u0e27\u0e2a\u0e32\u0e21\u0e09\u0e32\u0e01\u0e15\u0e48\u0e2d\u0e40\u0e19\u0e37\u0e48\u0e2d\u0e07");
-    expect(en.user).toContain("three-scene story");
+    expect(th.user).toContain("\u0e40\u0e02\u0e35\u0e22\u0e19\u0e22\u0e48\u0e2d\u0e2b\u0e19\u0e49\u0e32\u0e44\u0e1e\u0e48\u0e15\u0e32\u0e21\u0e25\u0e33\u0e14\u0e31\u0e1a 1 2 3");
+    expect(en.user).toContain("in order 1-2-3 in plain words");
   });
 
   it("encodes HOW NGERN READS steps in both languages", () => {
@@ -955,6 +980,38 @@ describe("anchor card in prompt", () => {
   it("omits the anchor line when nothing matches", () => {
     const out = buildReadingPrompt({ lang: "en", topic: "general", question: "zxcv bnml", cards, prev: [], nickname: null });
     expect(out.user).not.toContain("Anchor card:");
+  });
+});
+
+describe("plain-language and question-type blocks", () => {
+  const dummyCard = {
+    id: 17, slug: "the-star", arcana: "major", suit: null, rank: 17,
+    imageKey: "cards/major-17", name: "The Star", nameEn: "The Star",
+    keywordsUpright: ["hope"], keywordsReversed: ["dim"],
+    upright: "hope returns", reversed: "hope dims",
+    love: null, career: null, money: null, health: null, imagery: null,
+  };
+  const cards = [toPromptCard(dummyCard as never, false, "general")];
+  it("ends both systems with PLAIN then QUESTION TYPE, overriding theatre wording", () => {
+    for (const lang of ["en", "th"] as const) {
+      const { system } = buildReadingPrompt({
+        lang, topic: "general", question: "hello", cards, prev: [], nickname: null,
+      });
+      const how = system.indexOf(lang === "en" ? "HOW NGERN READS" : "\u0e27\u0e34\u0e18\u0e35\u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e02\u0e2d\u0e07\u0e40\u0e07\u0e32\u0e30");
+      const plain = system.indexOf(lang === "en" ? "PLAIN-LANGUAGE CARD PARAGRAPHS" : "\u0e22\u0e48\u0e2d\u0e2b\u0e19\u0e49\u0e32\u0e44\u0e1e\u0e48\u0e20\u0e32\u0e29\u0e32\u0e18\u0e23\u0e23\u0e21\u0e14\u0e32");
+      const qtype = system.indexOf(lang === "en" ? "QUESTION TYPE & ANSWER WORDING" : "\u0e1b\u0e23\u0e30\u0e40\u0e20\u0e17\u0e04\u0e33\u0e16\u0e32\u0e21\u0e41\u0e25\u0e30\u0e16\u0e49\u0e2d\u0e22\u0e04\u0e33\u0e04\u0e33\u0e15\u0e2d\u0e1a");
+      expect(how).toBeGreaterThan(-1);
+      expect(plain).toBeGreaterThan(how);
+      expect(qtype).toBeGreaterThan(plain);
+      expect(system).toContain(lang === "en" ? "Clear explainer" : "\u0e19\u0e31\u0e01\u0e2d\u0e18\u0e34\u0e1a\u0e32\u0e22\u0e0a\u0e31\u0e14\u0e40\u0e08\u0e19");
+      expect(system).not.toContain("three-scene");
+    }
+    const en = buildReadingPrompt({ lang: "en", topic: "general", question: "hello", cards, prev: [], nickname: null }).system;
+    expect(en).toContain("The likely answer is...");
+    expect(en).not.toMatch(/[\u0e00-\u0e7f]/);
+    const th = buildReadingPrompt({ lang: "th", topic: "general", question: "hello", cards, prev: [], nickname: null }).system;
+    expect(th).toContain("\u0e08\u0e38\u0e14\u0e17\u0e35\u0e48\u0e15\u0e49\u0e2d\u0e07\u0e41\u0e01\u0e49\u0e04\u0e37\u0e2d");
+    expect(th).toContain("\u0e21\u0e35\u0e04\u0e48\u0e30 \u2014 \u0e08\u0e38\u0e14\u0e17\u0e35\u0e48\u0e04\u0e27\u0e23\u0e17\u0e33\u0e43\u0e2b\u0e49\u0e0a\u0e31\u0e14\u0e01\u0e48\u0e2d\u0e19\u0e04\u0e37\u0e2d");
   });
 });
 
