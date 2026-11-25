@@ -188,7 +188,32 @@ describe("prompt builder", () => {
       cards: [toPromptCard(card, false, "general")],
       prev: [], nickname: null,
     });
-    expect(system).toContain("at most once in the whole reading");
+    expect(system).toContain("every card paragraph must mention at least one");
+    expect(system).toContain("never invent visual details");
+  });
+
+  it("asks the question-first and one-story shape in both languages", () => {
+    const en = buildReadingPrompt({
+      lang: "en", topic: "general", question: "Will we match?",
+      cards: [toPromptCard(card, false, "general")],
+      prev: [], nickname: null,
+    }).system;
+    expect(en).toContain("QUESTION FIRST");
+    expect(en).toContain("TELL ONE STORY");
+    expect(en).toContain("Use ONLY elements");
+    expect(en).toContain("2-4 sentences");
+    expect(en).toContain("answering it directly in its first words");
+    expect(en).toContain("Your energy");
+    const th = buildReadingPrompt({
+      lang: "th", topic: "general", question: "\u0e2a\u0e33\u0e23\u0e31\u0e1a\u0e40\u0e17\u0e27\u0e32\u0e25\u0e31\u0e22\u0e40\u0e02\u0e49\u0e32\u0e01\u0e31\u0e19\u0e44\u0e2b\u0e21",
+      cards: [toPromptCard(card, false, "general")],
+      prev: [], nickname: null,
+    }).system;
+    expect(th).toContain("\u0e2d\u0e48\u0e32\u0e19\u0e04\u0e33\u0e16\u0e32\u0e21\u0e01\u0e48\u0e2d\u0e19\u0e40\u0e2a\u0e21\u0e2d");
+    expect(th).toContain("\u0e2d\u0e48\u0e32\u0e19\u0e20\u0e32\u0e1e \u0e40\u0e25\u0e48\u0e32\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e40\u0e14\u0e35\u0e22\u0e27");
+    expect(th).toContain("\u0e2b\u0e49\u0e32\u0e21\u0e41\u0e15\u0e48\u0e07\u0e23\u0e32\u0e22\u0e25\u0e30\u0e40\u0e2d\u0e35\u0e22\u0e14\u0e20\u0e32\u0e1e\u0e40\u0e1e\u0e34\u0e48\u0e21");
+    expect(th).toContain("\u0e22\u0e48\u0e2d\u0e2b\u0e19\u0e49\u0e32\u0e44\u0e1e\u0e48\u0e25\u0e30 2-4 \u0e1b\u0e23\u0e30\u0e42\u0e22\u0e04");
+    expect(th).toContain("\u0e2a\u0e23\u0e38\u0e1b: ");
   });
 
   it("tells the Thai prompt to spell every word completely (no dropped letters)", () => {
@@ -225,6 +250,25 @@ describe("prompt builder", () => {
 });
 
 describe("pickSpread", () => {
+  it("picks a compatibility spread for fit questions (en+th)", () => {
+    expect(pickSpread("Will we match?", "general", "en")).toEqual([
+      "Your energy",
+      "Its energy",
+      "The fit",
+    ]);
+    expect(pickSpread("\u0e2a\u0e33\u0e23\u0e31\u0e1a\u0e40\u0e17\u0e27\u0e32\u0e25\u0e31\u0e22\u0e40\u0e02\u0e49\u0e32\u0e01\u0e31\u0e19\u0e44\u0e2b\u0e21", "general", "th")).toEqual([
+      "\u0e1e\u0e25\u0e31\u0e07\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13",
+      "\u0e1e\u0e25\u0e31\u0e07\u0e02\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e1d\u0e48\u0e32\u0e22",
+      "\u0e04\u0e27\u0e32\u0e21\u0e40\u0e02\u0e49\u0e32\u0e01\u0e31\u0e19",
+    ]);
+    // A deck question stays on the deck, never drifting to decisions.
+    expect(pickSpread("Is this deck good for beginners?", "general", "en")).toEqual([
+      "Your energy",
+      "Its energy",
+      "The fit",
+    ]);
+  });
+
   it("picks a decision spread for should-I questions", () => {
     expect(pickSpread("Should I quit my job?", "career", "en")).toEqual([
       "Am I where I want to be",
@@ -377,7 +421,8 @@ describe("pickSpread", () => {
     expect(en.system).toContain("card 1 sets the scene, card 2 turns it, card 3 steadies or resolves it");
     expect(en.system).toContain("Write that sentence first");
     expect(en.system).toContain("never confirming a future event");
-    expect(en.system).toContain("at most once in the whole reading");
+    expect(en.system).toContain("every card paragraph must mention at least one");
+    expect(en.system).toContain("never invent visual details");
     expect(en.system).toContain("Each section has one job and must add something new");
     expect(en.system).toContain("If a sentence would fit any other spread, rewrite it for this one");
   });
@@ -478,7 +523,7 @@ describe("pickSpread", () => {
     expect(system).toContain("only when it adds meaning");
     expect(system).toContain("Do not repeat the card name");
     expect(system).toContain("Overview 2-3 sentences");
-    expect(system).toContain("each card 2 sentences");
+    expect(system).toContain("each card paragraph 2-4 sentences");
   });
 });
 
