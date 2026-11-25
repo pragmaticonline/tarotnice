@@ -622,6 +622,34 @@ export function buildReadingPrompt(input: {
   return { system, user: lines.join("\n") };
 }
 
+/**
+ * Cap a summary at max chars without breaking a word — and, for
+ * spaceless text (Thai often has no spaces), without stranding a
+ * combining vowel/tone mark from its base consonant (which renders
+ * as broken script, e.g. a live share truncated to "...\u0e25\u0e07\u0e15\u0e31\u0e27\u0e01\u0e48").
+ * Back off to the last space when there is one past 40 chars;
+ * otherwise step back to a whole grapheme cluster.
+ */
+export function capSummary(s: string, max = 140): string {
+  const t = s.trim();
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max);
+  const lastSpace = cut.lastIndexOf(" ");
+  if (lastSpace > 40) return cut.slice(0, lastSpace).trim();
+  try {
+    let out = "";
+    for (const g of new Intl.Segmenter("th", { granularity: "grapheme" }).segment(t)) {
+      const next = out + g.segment;
+      if (next.length > max) break;
+      out = next;
+    }
+    if (out) return out.trim();
+  } catch {
+    // Segmenter unavailable: fall through to the plain cut.
+  }
+  return cut.trim();
+}
+
 /** Pull the trailing "Summary: ..."/"\u0e2a\u0e23\u0e38\u0e1b: ..." line (\u2264140 chars).
  *  Falls back to the first sentence, truncated. */
 const SUMMARY_LINE_RE = /^(?:\*\*)?(?:summary|\u0e2a\u0e23\u0e38\u0e1b)\s*(?:\*\*)?\s*:\s*(?:\*\*)?\s*(.+?)(?:\*\*)?$/i;
@@ -756,11 +784,11 @@ export function parseSummary(text: string): string {
   // over any per-card "Summary:" closers further down.
   if (lines.length) {
     const first = summaryAt(lines, 0);
-    if (first) return first.slice(0, 140);
+    if (first) return capSummary(first);
   }
   for (let i = lines.length - 1; i >= 0; i--) {
     const found = summaryAt(lines, i);
-    if (found) return found.slice(0, 140);
+    if (found) return capSummary(found);
   }
   // Fallback: first sentence of the body. Strip a leading section
   // header first (it leaked into the glance lead verbatim, duplicated
@@ -770,10 +798,7 @@ export function parseSummary(text: string): string {
     "",
   );
   const first = (body.split(/(?<=[.!?])\s/)[0] ?? body).replace(/\s*\n\s*/g, " ").trim();
-  if (first.length <= 140) return first;
-  const cut = first.slice(0, 140);
-  const lastSpace = cut.lastIndexOf(" ");
-  return (lastSpace > 40 ? cut.slice(0, lastSpace) : cut).trim();
+  return capSummary(first);
 }
 
 // --- SSE streaming (provider-agnostic) ---

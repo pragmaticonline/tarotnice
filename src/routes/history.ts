@@ -288,6 +288,10 @@ export function historyDetailPage(opts: {
     // Normalize here too, so readings stored before the closer
     // rewrite still render with gaps and italics.
     const blocks = normalizeCardSummaries(r.aiText).split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
+    // New-format readings start with the Summary line and have no
+    // Overview paragraph: the lead already shows it, so it must not
+    // render again as the overview body.
+    const firstIsSummary = /^(?:\*\*)?(?:Summary|\u0e2a\u0e23\u0e38\u0e1b)\s*(?:\*\*)?\s*:/i.test(blocks[0] ?? "");
     const overview = (blocks[0] ?? "").replace(
       /^\s*(?:\*\*)?(?:Overview|\u0e20\u0e32\u0e1e\u0e23\u0e27\u0e21)\s*(?:\*\*)?\s*:?\s*(?:\*\*)?\s*\n?/i,
       "",
@@ -306,10 +310,11 @@ export function historyDetailPage(opts: {
       if (s.kind === "card") cards.push(s.html);
       else if (s.html) sections.push(s.html);
     }
+    const overviewBody = firstIsSummary && r.summary ? "" : overview;
     readingHtml =
       `<section class="panel-card detail-overview"><h2>${escapeHtml(d.overviewTitle)}</h2>` +
       (r.summary ? `<p class="detail-lead"><b>${escapeHtml(r.summary)}</b></p>` : "") +
-      `<p>${richText(overview)}</p></section>` +
+      (overviewBody ? `<p>${richText(overviewBody)}</p>` : "") + `</section>` +
       (cards.length ? `<section class="panel-card"><h2>${escapeHtml(d.eachCardTitle)}</h2>${cards.join("")}</section>` : "") +
       (sections.length ? `<div class="rtext">${sections.join("")}</div>` : "");
   }

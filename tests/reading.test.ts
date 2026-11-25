@@ -607,6 +607,36 @@ describe("parseSummary", () => {
     expect(body.charAt(out.length) === " " || out.length >= body.length).toBe(true);
   });
 
+  it("never cuts a Thai summary mid-word on the main path", () => {
+    const sentence = "\u0e21\u0e35\u0e42\u0e2d\u0e01\u0e32\u0e2a\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e40\u0e07\u0e34\u0e19\u0e41\u0e25\u0e30\u0e07\u0e32\u0e19\u0e1c\u0e48\u0e32\u0e19\u0e04\u0e27\u0e32\u0e21\u0e0a\u0e48\u0e27\u0e22\u0e40\u0e2b\u0e25\u0e37\u0e2d\u0e08\u0e32\u0e01\u0e04\u0e19\u0e04\u0e38\u0e49\u0e19\u0e40\u0e04\u0e22 \u0e41\u0e15\u0e48\u0e15\u0e49\u0e2d\u0e07\u0e08\u0e31\u0e14\u0e01\u0e32\u0e23\u0e04\u0e27\u0e32\u0e21\u0e27\u0e38\u0e48\u0e19\u0e27\u0e32\u0e22\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e01\u0e32\u0e23\u0e08\u0e31\u0e14\u0e2a\u0e23\u0e23\u0e17\u0e23\u0e31\u0e1e\u0e22\u0e32\u0e01\u0e23\u0e41\u0e25\u0e30\u0e1b\u0e31\u0e0d\u0e2b\u0e32\u0e01\u0e32\u0e23\u0e17\u0e33\u0e07\u0e32\u0e19\u0e23\u0e48\u0e27\u0e21\u0e01\u0e31\u0e1a\u0e1c\u0e39\u0e49\u0e2d\u0e37\u0e48\u0e19\u0e43\u0e2b\u0e49\u0e25\u0e07\u0e15\u0e31\u0e27\u0e01\u0e48\u0e2d\u0e19\u0e04\u0e48\u0e30";
+    const out = parseSummary("\u0e2a\u0e23\u0e38\u0e1b: " + sentence);
+    expect(out.length).toBeLessThanOrEqual(140);
+    // The exact live breakage: the cut must not strand a broken tail.
+    expect(out).not.toContain("\u0e25\u0e07\u0e15\u0e31\u0e27\u0e01\u0e48");
+    // Cut lands on a word boundary of the source sentence.
+    expect(sentence.startsWith(out)).toBe(true);
+    const rest = sentence.slice(out.length);
+    expect(rest === "" || rest[0] === " ").toBe(true);
+  });
+
+  it("never strands a combining mark in spaceless text", () => {
+    const s = "\u0e01" + "\u0e02".repeat(138) + "\u0e48\u0e04\u0e07";
+    const out = parseSummary("\u0e2a\u0e23\u0e38\u0e1b: " + s);
+    expect(out.length).toBeLessThanOrEqual(140);
+    expect(out.length).toBeGreaterThan(130);
+    const parts = [...new Intl.Segmenter("th", { granularity: "grapheme" }).segment(out)].map((g) => g.segment);
+    for (const p of parts) expect(/^[\u0e31\u0e34-\u0e3a\u0e47-\u0e4e]$/u.test(p)).toBe(false);
+  });
+
+  it("cuts English summaries at a word boundary on the main path", () => {
+    const sentence = "The quick brown fox jumps over the lazy dog. ".repeat(5).trim();
+    const out = parseSummary("Summary: " + sentence);
+    expect(out.length).toBeLessThanOrEqual(140);
+    expect(sentence.startsWith(out)).toBe(true);
+    const rest = sentence.slice(out.length);
+    expect(rest === "" || rest[0] === " ").toBe(true);
+  });
+
   it("hasSummaryLine detects plain and bold summary lines only", () => {
     expect(hasSummaryLine("Body.\nSummary: done.")).toBe(true);
     expect(hasSummaryLine("Body.\n**\u0e2a\u0e23\u0e38\u0e1b:** done.")).toBe(true);

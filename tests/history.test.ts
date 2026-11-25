@@ -180,6 +180,22 @@ describe("historyDetailPage", () => {
     expect(html).toContain("The Lovers");
   });
 
+  it("does not repeat a leading Summary line as the overview body", () => {
+    const aiText = [
+      "Summary: Trust the slow build.",
+      "1 \u00b7 The situation \u2014 **The Lovers**\nA choice calls.",
+      "2 \u00b7 What to handle \u2014 **The Tower**\nHold steady through change.",
+      "**Guidance:** Trust your own pace.",
+    ].join("\n\n");
+    const html = historyDetailPage({
+      ui: "en", origin: "https://tarotnice.com", streak: STREAK,
+      reading: { ...reading, aiText, summary: "Trust the slow build." },
+    });
+    expect(html).toContain("Trust the slow build.");
+    expect(html).not.toContain("Summary:");
+    expect(html.split("Trust the slow build.").length - 1).toBe(1);
+  });
+
   it("drops empty follow-up sections", () => {
     const aiText = ["Overview: You stand at a crossroads.", "Explore further:", "Summary: done."].join("\n\n");
     const html = historyDetailPage({
