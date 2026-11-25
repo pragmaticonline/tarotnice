@@ -8,7 +8,7 @@ import { isInviteCode } from "../lib/invite";
 import { PACK_LIST } from "../lib/stripe";
 import { computeStreak, localDayString } from "../lib/streaks";
 import { headerHtml, pageShell, siteFooterHtml, type HeaderAccount } from "./shell";
-import { LINE_ICON, type SocialOpts } from "./auth-pages";
+import { GOOGLE_ICON, LINE_ICON, type SocialOpts } from "./auth-pages";
 
 export type HomeOpts = {
   uiLang?: UiLang;
@@ -63,11 +63,11 @@ function signinNudge(ui: UiLang, social: SocialOpts): string {
     `<h2 id="nudge-title">${escapeHtml(d.nudgeTitle)}</h2>` +
     `<p>${escapeHtml(d.nudgeText)}</p>` +
     `<div class="nudge-opts">` +
-    `<button class="btn btn-outline" type="button" data-nudge-social="google"><b aria-hidden="true">G</b><span>${escapeHtml(d.continueWithGoogle)}</span></button>` +
+    `<button class="btn btn-outline" type="button" data-nudge-social="google">${GOOGLE_ICON}<span>${escapeHtml(d.continueWithGoogle)}</span></button>` +
     lineBtn +
     `</div>` +
     `<p class="nudge-or">${escapeHtml(d.orUseEmail)}</p>` +
-    `<p class="nudge-alt"><a class="btn btn-outline" href="/sign-in">${escapeHtml(d.signIn)}</a> <a class="nudge-register" href="/register">${escapeHtml(d.newToTarotNice)} ${escapeHtml(d.createAccountHeading)}</a></p>` +
+    `<p class="nudge-alt"><a class="btn" href="/sign-in">${escapeHtml(d.signIn)}</a> <a class="nudge-register" href="/register">${escapeHtml(d.newToTarotNice)} ${escapeHtml(d.createAccountHeading)}</a></p>` +
     `<p class="nudge-later"><button type="button" class="nudge-later-btn" data-nudge-close>${escapeHtml(d.nudgeLater)}</button></p>` +
     `</div></div>`;
 }
