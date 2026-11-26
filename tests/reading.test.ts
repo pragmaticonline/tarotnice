@@ -23,6 +23,7 @@ import {
   sseEvent,
   streamDeltas,
   toPromptCard,
+  inputShape,
 } from "../src/lib/reading";
 
 describe("question validation", () => {
@@ -217,7 +218,7 @@ describe("prompt builder", () => {
       prev: [], nickname: null,
     }).system;
     for (const marker of [
-      "\u0e27\u0e34\u0e18\u0e35\u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e02\u0e2d\u0e07\u0e40\u0e07\u0e32\u0e30", "STEP 1 \u2014 \u0e40\u0e02\u0e49\u0e32\u0e43\u0e08\u0e04\u0e33\u0e16\u0e32\u0e21\u0e01\u0e48\u0e2d\u0e19", "\u0e2d\u0e22\u0e48\u0e32\u0e1a\u0e23\u0e23\u0e22\u0e32\u0e22\u0e20\u0e32\u0e1e\u0e43\u0e2b\u0e49\u0e1c\u0e39\u0e49\u0e43\u0e0a\u0e49\u0e1f\u0e31\u0e07", "\u0e2a\u0e23\u0e38\u0e1b: ", "\u0e40\u0e2a\u0e35\u0e22\u0e07\u0e02\u0e2d\u0e07\u0e40\u0e07\u0e32\u0e30",
+      "\u0e27\u0e34\u0e18\u0e35\u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e02\u0e2d\u0e07\u0e19\u0e49\u0e2d\u0e07\u0e40\u0e07\u0e34\u0e19", "STEP 1 \u2014 \u0e40\u0e02\u0e49\u0e32\u0e43\u0e08\u0e04\u0e33\u0e16\u0e32\u0e21\u0e01\u0e48\u0e2d\u0e19", "\u0e2d\u0e22\u0e48\u0e32\u0e1a\u0e23\u0e23\u0e22\u0e32\u0e22\u0e20\u0e32\u0e1e\u0e43\u0e2b\u0e49\u0e1c\u0e39\u0e49\u0e43\u0e0a\u0e49\u0e1f\u0e31\u0e07", "\u0e2a\u0e23\u0e38\u0e1b: ", "\u0e40\u0e2a\u0e35\u0e22\u0e07\u0e02\u0e2d\u0e07\u0e19\u0e49\u0e2d\u0e07\u0e40\u0e07\u0e34\u0e19",
     ]) expect(th).toContain(marker);
   });
 
@@ -491,7 +492,7 @@ describe("pickSpread", () => {
     });
     expect(th.system).toContain("\u0e1a\u0e23\u0e23\u0e17\u0e31\u0e14\u0e2a\u0e23\u0e38\u0e1b\u0e21\u0e32\u0e01\u0e48\u0e2d\u0e19");
     expect(th.system).not.toContain("\u0e40\u0e23\u0e34\u0e48\u0e21\u0e14\u0e49\u0e27\u0e22\u0e43\u0e08\u0e04\u0e27\u0e32\u0e21\u0e2b\u0e25\u0e31\u0e01");
-    expect(th.user).toContain("\u0e40\u0e02\u0e35\u0e22\u0e19\u0e22\u0e48\u0e2d\u0e2b\u0e19\u0e49\u0e32\u0e44\u0e1e\u0e48\u0e15\u0e32\u0e21\u0e25\u0e33\u0e14\u0e31\u0e1a 1 2 3");
+    expect(th.user).toContain("\u0e22\u0e48\u0e2d\u0e2b\u0e19\u0e49\u0e32\u0e44\u0e1e\u0e48\u0e15\u0e32\u0e21\u0e25\u0e33\u0e14\u0e31\u0e1a 1 2 3");
     expect(en.user).toContain("in order 1-2-3 in plain words");
   });
 
@@ -517,7 +518,7 @@ describe("pickSpread", () => {
       lang: "th", topic: "general", question: "Should I quit my job?",
       cards: [], prev: [], nickname: null,
     });
-    expect(th.system).toContain("\u0e27\u0e34\u0e18\u0e35\u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e02\u0e2d\u0e07\u0e40\u0e07\u0e32\u0e30");
+    expect(th.system).toContain("\u0e27\u0e34\u0e18\u0e35\u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e02\u0e2d\u0e07\u0e19\u0e49\u0e2d\u0e07\u0e40\u0e07\u0e34\u0e19");
     expect(th.system).toContain("STEP 4 \u2014 \u0e44\u0e1e\u0e48\u0e01\u0e25\u0e31\u0e1a\u0e2b\u0e31\u0e27");
     expect(th.system).toContain("\u0e1a\u0e23\u0e23\u0e17\u0e31\u0e14\u0e2a\u0e23\u0e38\u0e1b\u0e21\u0e32\u0e01\u0e48\u0e2d\u0e19");
     expect(th.system).toContain("\u0e44\u0e21\u0e48\u0e21\u0e35\u0e22\u0e48\u0e2d\u0e2b\u0e19\u0e49\u0e32\u0e1b\u0e34\u0e14\u0e17\u0e49\u0e32\u0e22\u0e17\u0e35\u0e48\u0e1e\u0e39\u0e14\u0e2a\u0e23\u0e38\u0e1b\u0e0b\u0e49\u0e33");
@@ -584,7 +585,7 @@ describe("pickSpread", () => {
       lang: "th", topic: "general", question: "Should I quit my job?",
       cards: [], prev: [], nickname: null,
     });
-    expect(th.system).toContain("\u0e27\u0e34\u0e18\u0e35\u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e02\u0e2d\u0e07\u0e40\u0e07\u0e32\u0e30");
+    expect(th.system).toContain("\u0e27\u0e34\u0e18\u0e35\u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e02\u0e2d\u0e07\u0e19\u0e49\u0e2d\u0e07\u0e40\u0e07\u0e34\u0e19");
     expect(th.system).toContain("STEP 2 \u2014 \u0e40\u0e25\u0e37\u0e2d\u0e01\u0e15\u0e33\u0e41\u0e2b\u0e19\u0e48\u0e07\u0e15\u0e32\u0e21\u0e1b\u0e23\u0e30\u0e40\u0e20\u0e17\u0e04\u0e33\u0e16\u0e32\u0e21");
     expect(th.system).toContain("\u0e40\u0e02\u0e49\u0e32\u0e01\u0e31\u0e19\u0e44\u0e14\u0e49\u0e44\u0e2b\u0e21");
     expect(th.system).toContain("\u0e1a\u0e23\u0e23\u0e17\u0e31\u0e14\u0e2a\u0e23\u0e38\u0e1b\u0e21\u0e32\u0e01\u0e48\u0e2d\u0e19");
@@ -992,40 +993,42 @@ describe("plain-language and question-type blocks", () => {
     love: null, career: null, money: null, health: null, imagery: null,
   };
   const cards = [toPromptCard(dummyCard as never, false, "general")];
-  it("ends both systems with PLAIN then QUESTION TYPE, overriding theatre wording", () => {
+  it("ends both systems with THINKS, VOICE, FIXED FORMAT then QUESTION SHAPE, with no opener table or verdict scripts", () => {
     for (const lang of ["en", "th"] as const) {
       const { system } = buildReadingPrompt({
         lang, topic: "general", question: "hello", cards, prev: [], nickname: null,
       });
-      const how = system.indexOf(lang === "en" ? "HOW NGERN READS" : "\u0e27\u0e34\u0e18\u0e35\u0e2d\u0e48\u0e32\u0e19\u0e44\u0e1e\u0e48\u0e02\u0e2d\u0e07\u0e40\u0e07\u0e32\u0e30");
-      const plain = system.indexOf(lang === "en" ? "PLAIN-LANGUAGE CARD PARAGRAPHS" : "\u0e22\u0e48\u0e2d\u0e2b\u0e19\u0e49\u0e32\u0e44\u0e1e\u0e48\u0e20\u0e32\u0e29\u0e32\u0e18\u0e23\u0e23\u0e21\u0e14\u0e32");
-      const qtype = system.indexOf(lang === "en" ? "QUESTION TYPE & ANSWER WORDING" : "\u0e1b\u0e23\u0e30\u0e40\u0e20\u0e17\u0e04\u0e33\u0e16\u0e32\u0e21\u0e41\u0e25\u0e30\u0e16\u0e49\u0e2d\u0e22\u0e04\u0e33\u0e04\u0e33\u0e15\u0e2d\u0e1a");
-      expect(how).toBeGreaterThan(-1);
-      expect(plain).toBeGreaterThan(how);
-      expect(qtype).toBeGreaterThan(plain);
-      expect(system).toContain(lang === "en" ? "Clear explainer" : "\u0e19\u0e31\u0e01\u0e2d\u0e18\u0e34\u0e1a\u0e32\u0e22\u0e0a\u0e31\u0e14\u0e40\u0e08\u0e19");
-      expect(system).not.toContain("three-scene");
-    }
-    for (const lang of ["en", "th"] as const) {
-      const { system } = buildReadingPrompt({
-        lang, topic: "general", question: "hello", cards, prev: [], nickname: null,
-      });
-      const thinks = system.indexOf(lang === "en" ? "HOW NGERN THINKS" : "\u0e27\u0e34\u0e18\u0e35\u0e04\u0e34\u0e14\u0e02\u0e2d\u0e07\u0e40\u0e07\u0e32\u0e30");
-      const voice = system.indexOf(lang === "en" ? "NGERN'S VOICE" : "\u0e40\u0e2a\u0e35\u0e22\u0e07\u0e02\u0e2d\u0e07\u0e40\u0e07\u0e32\u0e30");
-      const fixed = system.indexOf(lang === "en" ? "FIXED FORMAT (the website depends on this)" : "\u0e23\u0e39\u0e1b\u0e41\u0e1a\u0e1a\u0e15\u0e32\u0e22\u0e15\u0e31\u0e27 (\u0e40\u0e27\u0e47\u0e1a\u0e44\u0e0b\u0e15\u0e4c\u0e15\u0e49\u0e2d\u0e07\u0e43\u0e0a\u0e49\u0e23\u0e39\u0e1b\u0e41\u0e1a\u0e1a\u0e19\u0e35\u0e49)");
-      const qtype = system.indexOf(lang === "en" ? "QUESTION TYPE & ANSWER WORDING" : "\u0e1b\u0e23\u0e30\u0e40\u0e20\u0e17\u0e04\u0e33\u0e16\u0e32\u0e21\u0e41\u0e25\u0e30\u0e16\u0e49\u0e2d\u0e22\u0e04\u0e33\u0e04\u0e33\u0e15\u0e2d\u0e1a");
+      const thinks = system.indexOf(lang === "en" ? "HOW NGERN THINKS" : "วิธีคิดของน้องเงิน");
+      const voice = system.indexOf(lang === "en" ? "NGERN'S VOICE" : "เสียงของน้องเงิน");
+      const fixed = system.indexOf(lang === "en" ? "FIXED FORMAT (the website depends on this)" : "รูปแบบตายตัว");
+      const shape = system.indexOf(lang === "en" ? "=== QUESTION SHAPE ===" : "=== รูปแบบคำถาม ===");
       expect(thinks).toBeGreaterThan(-1);
       expect(voice).toBeGreaterThan(thinks);
-      expect(fixed).toBeGreaterThan(-1);
-      expect(qtype).toBeGreaterThan(fixed);
-      expect(system).toContain(lang === "en" ? "Say each thing once" : "\u0e1e\u0e39\u0e14\u0e41\u0e15\u0e48\u0e25\u0e30\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e40\u0e1e\u0e35\u0e22\u0e07\u0e04\u0e23\u0e31\u0e49\u0e07\u0e40\u0e14\u0e35\u0e22\u0e27");
+      expect(fixed).toBeGreaterThan(voice);
+      expect(shape).toBeGreaterThan(fixed);
+      expect(system).toContain(lang === "en" ? "Clear explainer" : "นักอธิบายชัดเจน");
+      expect(system).not.toContain("PLAIN-LANGUAGE CARD PARAGRAPHS");
+      expect(system).not.toContain("QUESTION TYPE & ANSWER WORDING");
+      expect(system).not.toContain("เงาะ");
     }
     const en = buildReadingPrompt({ lang: "en", topic: "general", question: "hello", cards, prev: [], nickname: null }).system;
-    expect(en).toContain("The likely answer is...");
-    expect(en).not.toMatch(/[\u0e00-\u0e7f]/);
-    const th = buildReadingPrompt({ lang: "th", topic: "general", question: "hello", cards, prev: [], nickname: null }).system;
-    expect(th).toContain("\u0e08\u0e38\u0e14\u0e17\u0e35\u0e48\u0e15\u0e49\u0e2d\u0e07\u0e41\u0e01\u0e49\u0e04\u0e37\u0e2d");
-    expect(th).toContain("\u0e21\u0e35\u0e04\u0e48\u0e30 \u2014 \u0e08\u0e38\u0e14\u0e17\u0e35\u0e48\u0e04\u0e27\u0e23\u0e17\u0e33\u0e43\u0e2b\u0e49\u0e0a\u0e31\u0e14\u0e01\u0e48\u0e2d\u0e19\u0e04\u0e37\u0e2d");
+    expect(en).not.toContain("Yes, there is / No, there isn't");
+    expect(en).not.toMatch(/[฀-๿]/);
+  });
+
+  it("tells the model the input shape", () => {
+    const cat = "โอกาสเรื่องเงินและงานที่กำลังเดินทางมาหาคุณ (ผู้เลือกแมวตัวที่ 3)";
+    const find = "มีข้อมูลส่วนไหนของ TarotNice ที่ต้องทำให้ชัดก่อนโฆษณาไหม";
+    const yn = "เดือนหน้าการเงินจะดีขึ้นไหม";
+    const shapeOf = (q: string, lang: "th" | "en") => inputShape(q, pickSpread(q, guessTopic(q), lang), lang);
+    expect(shapeOf(cat, "th")).toBe("topic");
+    expect(shapeOf(find, "th")).toBe("find");
+    expect(shapeOf("Is there anything I should fix before running ads?", "en")).toBe("find");
+    expect(shapeOf("Your career next month", "en")).toBe("topic");
+    expect(shapeOf("How will the new job go?", "en")).toBe("question");
+    expect(["yesno", "question"]).toContain(shapeOf(yn, "th"));
+    const u = buildReadingPrompt({ lang: "en", topic: "general", question: "Your career next month", cards, prev: [], nickname: null }).user;
+    expect(u).toContain("Input shape: Topic (not a question)");
   });
 });
 
