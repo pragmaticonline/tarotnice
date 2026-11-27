@@ -72,11 +72,13 @@ async function runFollowUpFlow(postRemaining = 2, summary: unknown = null) {
   // The top-up sheet is always in the page: pre-fix, any gate opened it
   // (even for guests, whose only action inside is another sign-in link).
   const packSheet = makeEl({ hidden: true });
+  const submitBtn = makeEl();
   const form = makeEl({
     addEventListener: (type: string, fn: (e: unknown) => unknown) => {
       formHandlers[type] = fn;
     },
-    querySelector: () => null,
+    querySelector: (sel: string) =>
+      String(sel).includes('button[type="submit"]') ? submitBtn : null,
     querySelectorAll: () => formControls,
   });
   const question = makeEl({ value: "Will tomorrow go well?" });
@@ -230,7 +232,7 @@ async function runFollowUpFlow(postRemaining = 2, summary: unknown = null) {
   if (!followUp) throw new Error("renderReading never ran");
   (followUp as { onFollowUp: (q: string) => void }).onFollowUp("Is it serious?");
   await new Promise((r) => setTimeout(r, 400));
-  return { guideAskBubble, guideBubble, question, created, askLabel, readQ, freshRow, freshHandlers, readingOpts: followUp, win: sandbox.window, location: sandbox.location as { href?: string }, formControls, docListeners, packSheet };
+  return { guideAskBubble, guideBubble, question, created, askLabel, readQ, freshRow, freshHandlers, readingOpts: followUp, win: sandbox.window, location: sandbox.location as { href?: string }, formControls, docListeners, packSheet, submitBtn };
 }
 
 describe("ask flow step-1 bubble", () => {
@@ -348,6 +350,24 @@ describe("ask flow step-1 bubble", () => {
     expect(freshRow.hidden).toBe(true);
     expect(win.__tnTopic).toBe("general");
     expect(guideAskBubble.textContent).toBe("Hi, I'm Ngern. Ask me anything.");
+  }, 15000);
+
+  it("Ask something new re-enables the submit button disabled by the finished reading", async () => {
+    const r = await runFollowUpFlow(1) as unknown as {
+      readingOpts: { onFreshAsk: () => void } | null;
+      submitBtn: Record<string, unknown>;
+      question: Record<string, unknown>;
+    };
+    // The finished reading left the button disabled (submit() disables
+    // it; the follow-up tap above re-enabled it, so restore that state).
+    r.submitBtn.disabled = true;
+    expect(r.readingOpts).toBeTruthy();
+    r.readingOpts!.onFreshAsk();
+    expect(r.submitBtn.disabled).toBe(false);
+    // Typing a new question and submitting must be possible again:
+    // the button is the only gate, and it is now enabled.
+    r.question.value = "What should I focus on next?";
+    expect(String(r.question.value).length).toBeGreaterThan(0);
   }, 15000);
 
   it("sleep mode leaves every form control enabled so taps reach the gates", async () => {

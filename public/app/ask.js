@@ -298,6 +298,12 @@
     if (qf) { qf.value = ""; qf.focus(); }
     var ce = document.getElementById("q-count");
     if (ce) ce.textContent = "0";
+    // submit() disabled the button for the finished reading. Ask again
+    // and follow-ups re-enable it; a fresh start must too, or the
+    // shuffle button stays dead after "Ask something new".
+    var freshForm = document.getElementById("ask-form");
+    var freshSubmit = freshForm && freshForm.querySelector('button[type="submit"]');
+    if (freshSubmit) freshSubmit.disabled = false;
     if (window.TarotHome) window.TarotHome.refresh();
     if (cannotAfford()) {
       // No tokens to ask with: leave the resting state alone (no idle

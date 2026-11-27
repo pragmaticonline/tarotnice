@@ -341,6 +341,16 @@ describe("renderReading positions", () => {
     expect(html).toContain("urges you to plan before stepping out.");
   });
 
+  it("card body starting with a stray (reversed): prefix is stripped", () => {
+    const html = renderOnce(
+      "Together these cards tell a story of change.\n\n" +
+        "1 \u00b7 What are my options \u2014 **Two of Wands**: (reversed): Planning feels blocked until you map the options first.\n\n" +
+        "Summary: Map options before stepping out.",
+    );
+    expect(html).not.toContain("<p>(reversed)");
+    expect(html).toContain("Planning feels blocked until you map the options first.");
+  });
+
   it("card body starting with a reversed marker then the name is also stripped", () => {
     const html = renderOnce(
       "Together these cards tell a story of change.\n\n" +

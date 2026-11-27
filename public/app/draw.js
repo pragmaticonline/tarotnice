@@ -320,6 +320,13 @@
 
     async function reveal() {
       state = "reveal";
+      // The picked cards sit in the top slots while the fan is at the
+      // stage bottom: on a phone the slots can be off-screen when the
+      // 3rd pick lands, leaving an empty stage for the ~2.6s flip
+      // sequence. Bring the slots into view so the flips are seen.
+      if (stage.scrollIntoView) {
+        try { stage.scrollIntoView({ block: "start" }); } catch (e) {}
+      }
       stage.classList.remove("pick-on");
       setGuide("reveal");
       bubble(lang === "th" ? "\u0e01\u0e33\u0e25\u0e31\u0e07\u0e40\u0e1b\u0e34\u0e14\u0e44\u0e1e\u0e48\u2026" : "Turning the cards\u2026");
@@ -667,6 +674,10 @@
           usedCard[card.name] = true;
           var kw = (card.keywords || []).join(" \u00b7 ");
           var cBody = bodyPlain.replace(/^[\s:;,.—–\-)\]]+/, "");
+          // A stray "(reversed): " the model left at the body's start
+          // (the row title already shows the marker): strip it like
+          // the repeated-name lead below.
+          cBody = cBody.replace(new RegExp("^\\s*\\((?:reversed|" + TH_REVERSED + ")\\)[\\s:;,.\\u2014\\u2013\\-]+", "i"), "");
           // The name is already the row title: strip a repeated name
           // (with optional Thai card word / "The" / reversed marker)
           // from the body's first words, and never prepend it.

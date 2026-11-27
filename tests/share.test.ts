@@ -2,8 +2,19 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import vm from "node:vm";
 import app from "../src/index";
-import { fixThai, wrapText } from "../src/lib/share-images";
+import { fitLines, fixThai, wrapText } from "../src/lib/share-images";
 import { shareLandingPage, unsharedPage } from "../src/routes/share";
+
+describe("fitLines", () => {
+  it("keeps all lines when text fits", () => {
+    expect(fitLines("a b c", 10, 2)).toEqual(["a b c"]);
+  });
+  it("ellipsizes the last kept line when text overflows", () => {
+    const lines = fitLines("You can find relief by realizing that many traps are self imposed and escapable", 24, 2);
+    expect(lines).toHaveLength(2);
+    expect(lines[1].endsWith("\u2026")).toBe(true);
+  });
+});
 
 describe("wrapText", () => {
   it("wraps English by words", () => {

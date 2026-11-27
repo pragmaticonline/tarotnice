@@ -196,11 +196,12 @@ describe("prompt builder", () => {
   });
 
   it("asks the question-first and one-story shape in both languages", () => {
-    const en = buildReadingPrompt({
+    const enPrompt = buildReadingPrompt({
       lang: "en", topic: "general", question: "Will we match?",
       cards: [toPromptCard(card, false, "general")],
       prev: [], nickname: null,
-    }).system;
+    });
+    const en = enPrompt.system;
     for (const marker of [
       "HOW NGERN READS",
       "STEP 1 \u2014 UNDERSTAND THE QUESTION FIRST",
@@ -209,8 +210,9 @@ describe("prompt builder", () => {
       "DO NOT describe the pictures",
       "STEP 6 \u2014 OUTPUT",
       "NGERN'S VOICE",
-      "Your energy",
     ]) expect(en).toContain(marker);
+    // Positions travel in the user message (code-sent), not the system table.
+    expect(enPrompt.user).toContain("Your energy");
     expect(en).not.toMatch(/[\u0e00-\u0e7f]/);
     const th = buildReadingPrompt({
       lang: "th", topic: "general", question: "\u0e2a\u0e33\u0e23\u0e31\u0e1a\u0e40\u0e17\u0e27\u0e32\u0e25\u0e31\u0e22\u0e40\u0e02\u0e49\u0e32\u0e01\u0e31\u0e19\u0e44\u0e2b\u0e21",
@@ -578,9 +580,12 @@ describe("pickSpread", () => {
       "STEP 3 \u2014 READ THE THREE CARDS",
       "STEP 5 \u2014 ANSWER TYPES",
       "STEP 6 \u2014 OUTPUT",
-      "Fit / compatibility",
-      "Choice of 2 (A vs B)",
     ]) expect(en.system).toContain(step);
+    // The STEP 2 position table is gone: pickSpread sends the actual
+    // labels in the user message, so the system prompt must not
+    // re-list them (it only duplicated what the code already sends).
+    expect(en.system).not.toContain("Choice of 2 (A vs B):");
+    expect(en.system).not.toContain("Lost object:");
     const th = buildReadingPrompt({
       lang: "th", topic: "general", question: "Should I quit my job?",
       cards: [], prev: [], nickname: null,
@@ -636,9 +641,9 @@ describe("parseSummary", () => {
   it("never cuts a Thai summary mid-word on the main path", () => {
     const sentence = "\u0e21\u0e35\u0e42\u0e2d\u0e01\u0e32\u0e2a\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e40\u0e07\u0e34\u0e19\u0e41\u0e25\u0e30\u0e07\u0e32\u0e19\u0e1c\u0e48\u0e32\u0e19\u0e04\u0e27\u0e32\u0e21\u0e0a\u0e48\u0e27\u0e22\u0e40\u0e2b\u0e25\u0e37\u0e2d\u0e08\u0e32\u0e01\u0e04\u0e19\u0e04\u0e38\u0e49\u0e19\u0e40\u0e04\u0e22 \u0e41\u0e15\u0e48\u0e15\u0e49\u0e2d\u0e07\u0e08\u0e31\u0e14\u0e01\u0e32\u0e23\u0e04\u0e27\u0e32\u0e21\u0e27\u0e38\u0e48\u0e19\u0e27\u0e32\u0e22\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e01\u0e32\u0e23\u0e08\u0e31\u0e14\u0e2a\u0e23\u0e23\u0e17\u0e23\u0e31\u0e1e\u0e22\u0e32\u0e01\u0e23\u0e41\u0e25\u0e30\u0e1b\u0e31\u0e0d\u0e2b\u0e32\u0e01\u0e32\u0e23\u0e17\u0e33\u0e07\u0e32\u0e19\u0e23\u0e48\u0e27\u0e21\u0e01\u0e31\u0e1a\u0e1c\u0e39\u0e49\u0e2d\u0e37\u0e48\u0e19\u0e43\u0e2b\u0e49\u0e25\u0e07\u0e15\u0e31\u0e27\u0e01\u0e48\u0e2d\u0e19\u0e04\u0e48\u0e30";
     const out = parseSummary("\u0e2a\u0e23\u0e38\u0e1b: " + sentence);
-    expect(out.length).toBeLessThanOrEqual(140);
+    expect(out.length).toBeLessThanOrEqual(152);
     // The exact live breakage: the cut must not strand a broken tail.
-    expect(out).not.toContain("\u0e25\u0e07\u0e15\u0e31\u0e27\u0e01\u0e48");
+    expect(out).toBe(sentence);
     // Cut lands on a word boundary of the source sentence.
     expect(sentence.startsWith(out)).toBe(true);
     const rest = sentence.slice(out.length);
@@ -648,10 +653,16 @@ describe("parseSummary", () => {
   it("never strands a combining mark in spaceless text", () => {
     const s = "\u0e01" + "\u0e02".repeat(138) + "\u0e48\u0e04\u0e07";
     const out = parseSummary("\u0e2a\u0e23\u0e38\u0e1b: " + s);
-    expect(out.length).toBeLessThanOrEqual(140);
+    expect(out.length).toBeLessThanOrEqual(152);
     expect(out.length).toBeGreaterThan(130);
     const parts = [...new Intl.Segmenter("th", { granularity: "grapheme" }).segment(out)].map((g) => g.segment);
     for (const p of parts) expect(/^[\u0e31\u0e34-\u0e3a\u0e47-\u0e4e]$/u.test(p)).toBe(false);
+  });
+
+  it("keeps the final word when the overshoot is only a few chars", () => {
+    const sentence = "You can find relief by realizing that many of the mental traps causing your stress are self-imposed and can be escaped with a single, calm step.";
+    expect(sentence.length).toBe(144);
+    expect(parseSummary("Summary: " + sentence)).toBe(sentence);
   });
 
   it("cuts English summaries at a word boundary on the main path", () => {
@@ -998,28 +1009,28 @@ describe("plain-language and question-type blocks", () => {
       const { system } = buildReadingPrompt({
         lang, topic: "general", question: "hello", cards, prev: [], nickname: null,
       });
-      const thinks = system.indexOf(lang === "en" ? "HOW NGERN THINKS" : "วิธีคิดของน้องเงิน");
-      const voice = system.indexOf(lang === "en" ? "NGERN'S VOICE" : "เสียงของน้องเงิน");
-      const fixed = system.indexOf(lang === "en" ? "FIXED FORMAT (the website depends on this)" : "รูปแบบตายตัว");
-      const shape = system.indexOf(lang === "en" ? "=== QUESTION SHAPE ===" : "=== รูปแบบคำถาม ===");
+      const thinks = system.indexOf(lang === "en" ? "HOW NGERN THINKS" : "\u0e27\u0e34\u0e18\u0e35\u0e04\u0e34\u0e14\u0e02\u0e2d\u0e07\u0e19\u0e49\u0e2d\u0e07\u0e40\u0e07\u0e34\u0e19");
+      const voice = system.indexOf(lang === "en" ? "NGERN'S VOICE" : "\u0e40\u0e2a\u0e35\u0e22\u0e07\u0e02\u0e2d\u0e07\u0e19\u0e49\u0e2d\u0e07\u0e40\u0e07\u0e34\u0e19");
+      const fixed = system.indexOf(lang === "en" ? "FIXED FORMAT (the website depends on this)" : "\u0e23\u0e39\u0e1b\u0e41\u0e1a\u0e1a\u0e15\u0e32\u0e22\u0e15\u0e31\u0e27");
+      const shape = system.indexOf(lang === "en" ? "=== QUESTION SHAPE ===" : "=== \u0e23\u0e39\u0e1b\u0e41\u0e1a\u0e1a\u0e04\u0e33\u0e16\u0e32\u0e21 ===");
       expect(thinks).toBeGreaterThan(-1);
       expect(voice).toBeGreaterThan(thinks);
       expect(fixed).toBeGreaterThan(voice);
       expect(shape).toBeGreaterThan(fixed);
-      expect(system).toContain(lang === "en" ? "Clear explainer" : "นักอธิบายชัดเจน");
+      expect(system).toContain(lang === "en" ? "Clear explainer" : "\u0e19\u0e31\u0e01\u0e2d\u0e18\u0e34\u0e1a\u0e32\u0e22\u0e0a\u0e31\u0e14\u0e40\u0e08\u0e19");
       expect(system).not.toContain("PLAIN-LANGUAGE CARD PARAGRAPHS");
       expect(system).not.toContain("QUESTION TYPE & ANSWER WORDING");
-      expect(system).not.toContain("เงาะ");
+      expect(system).not.toContain("\u0e40\u0e07\u0e32\u0e30");
     }
     const en = buildReadingPrompt({ lang: "en", topic: "general", question: "hello", cards, prev: [], nickname: null }).system;
     expect(en).not.toContain("Yes, there is / No, there isn't");
-    expect(en).not.toMatch(/[฀-๿]/);
+    expect(en).not.toMatch(/[\u0e00-\u0e7f]/);
   });
 
   it("tells the model the input shape", () => {
-    const cat = "โอกาสเรื่องเงินและงานที่กำลังเดินทางมาหาคุณ (ผู้เลือกแมวตัวที่ 3)";
-    const find = "มีข้อมูลส่วนไหนของ TarotNice ที่ต้องทำให้ชัดก่อนโฆษณาไหม";
-    const yn = "เดือนหน้าการเงินจะดีขึ้นไหม";
+    const cat = "\u0e42\u0e2d\u0e01\u0e32\u0e2a\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e40\u0e07\u0e34\u0e19\u0e41\u0e25\u0e30\u0e07\u0e32\u0e19\u0e17\u0e35\u0e48\u0e01\u0e33\u0e25\u0e31\u0e07\u0e40\u0e14\u0e34\u0e19\u0e17\u0e32\u0e07\u0e21\u0e32\u0e2b\u0e32\u0e04\u0e38\u0e13 (\u0e1c\u0e39\u0e49\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e41\u0e21\u0e27\u0e15\u0e31\u0e27\u0e17\u0e35\u0e48 3)";
+    const find = "\u0e21\u0e35\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e2a\u0e48\u0e27\u0e19\u0e44\u0e2b\u0e19\u0e02\u0e2d\u0e07 TarotNice \u0e17\u0e35\u0e48\u0e15\u0e49\u0e2d\u0e07\u0e17\u0e33\u0e43\u0e2b\u0e49\u0e0a\u0e31\u0e14\u0e01\u0e48\u0e2d\u0e19\u0e42\u0e06\u0e29\u0e13\u0e32\u0e44\u0e2b\u0e21";
+    const yn = "\u0e40\u0e14\u0e37\u0e2d\u0e19\u0e2b\u0e19\u0e49\u0e32\u0e01\u0e32\u0e23\u0e40\u0e07\u0e34\u0e19\u0e08\u0e30\u0e14\u0e35\u0e02\u0e36\u0e49\u0e19\u0e44\u0e2b\u0e21";
     const shapeOf = (q: string, lang: "th" | "en") => inputShape(q, pickSpread(q, guessTopic(q), lang), lang);
     expect(shapeOf(cat, "th")).toBe("topic");
     expect(shapeOf(find, "th")).toBe("find");

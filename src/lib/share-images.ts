@@ -168,13 +168,26 @@ function cardImage(x: number, y: number, w: number, h: number, uri: string, reve
   return `${body}<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="#cdb27a" stroke-width="3" rx="10"/>`;
 }
 
+/** Wrap to at most maxLines lines; when text still overflows, the
+ *  last kept line ends with an ellipsis instead of silently
+ *  dropping the rest of the sentence. */
+export function fitLines(text: string, maxChars: number, maxLines: number): string[] {
+  const all = wrapText(text, maxChars);
+  if (all.length <= maxLines) return all;
+  const kept = all.slice(0, maxLines);
+  let last = kept[kept.length - 1];
+  if (last.length > maxChars - 1) last = last.slice(0, maxChars - 1).trimEnd();
+  kept[kept.length - 1] = last + "\u2026";
+  return kept;
+}
+
 function storySvg(p: ShareSpec & { uris: string[] }): string {
   const c = p.mode === "night" ? NIGHT : DAY;
   const s = STR[p.lang];
   const W = 1080;
   const question = p.question ?? s.keptPrivate;
   const qLines = wrapText(question, 30).slice(0, 2);
-  const sumLines = wrapText(p.summary, 32).slice(0, 5);
+  const sumLines = fitLines(p.summary, 32, 5);
   const n = p.cards.length;
   const cw = n === 1 ? 420 : 290;
   const ch = Math.round((cw * 2689) / 1537);
@@ -217,7 +230,7 @@ function ogSvg(p: ShareSpec & { uris: string[] }): string {
     cards += cardImage(x0 + i * (cw + gap), cardY, cw, ch, p.uris[i], card.reversed);
   });
   const tx = x0 + n * (cw + gap) + 50;
-  const sumLines = wrapText(p.summary, 24).slice(0, 4);
+  const sumLines = fitLines(p.summary, 24, 4);
   const ogLines = wrapText(s.ogLine, 28).slice(0, 2);
   let y = 250;
   let summary = "";
